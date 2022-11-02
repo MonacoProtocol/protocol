@@ -1,0 +1,12 @@
+[programs.localnet]
+monaco_protocol = "4UqmjWpDxXA7jgmfDYxmxj4fYrPCEXMRn95nJ3Uko9Ay"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn runJestTests"

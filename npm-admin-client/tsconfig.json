@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "allowJs": true,
+    "declaration": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "preserveConstEnums": true,
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "src",
+    "downlevelIteration": true,
+    "lib": ["es2022", "dom"],
+    "skipLibCheck": true
+  },
+  "include": ["./src/", "./types/"]
+}

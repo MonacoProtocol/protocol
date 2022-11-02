@@ -1,0 +1,18 @@
+{
+  "deploys": [
+      {
+        "deployment_id": 1,
+        "new_version": {
+          "version": null,
+          "checksum": null
+        },
+        "previous_version": {
+          "version": null,
+          "checksum": null
+        },
+        "time": null,
+        "actioned_by": null,
+        "notes": null
+      }
+    ]
+}

@@ -1,0 +1,26 @@
+[package]
+name = "monaco_protocol"
+version = "0.2.2"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "monaco_protocol"
+doctest = false
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+stable = []
+dev = []
+
+[dependencies]
+solana-program = "~1.10.29"
+anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-spl = "0.25.0"
+spl-token = "3.3.0"
+rust_decimal = "1.22.0"
+test-case = "2.0.2"

@@ -1,0 +1,249 @@
+use anchor_lang::prelude::*;
+
+use crate::context::SettleOrder;
+use crate::error::CoreError;
+use crate::instructions::{account, calculate_risk_from_stake, transfer};
+use crate::state::order_account::OrderStatus;
+use crate::state::order_account::OrderStatus::{SettledLose, SettledWin};
+use crate::{Market, Order};
+
+pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
+    let market_account = &ctx.accounts.market;
+
+    // validate the market is settled
+    require!(
+        market_account.market_winning_outcome_index.is_some(),
+        CoreError::SettlementMarketNotSettled
+    );
+
+    // refund first
+    let refund = ctx
+        .accounts
+        .market_position
+        .apply_offset(match ctx.accounts.order.for_outcome {
+            true => ctx.accounts.order.stake_unmatched,
+            false => calculate_risk_from_stake(
+                ctx.accounts.order.stake_unmatched,
+                ctx.accounts.order.expected_price,
+            ),
+        });
+
+    if ctx.accounts.order.stake_unmatched > 0_u64 {
+        let order = &mut ctx.accounts.order;
+        order.voided_stake = order.stake_unmatched;
+        order.stake_unmatched = 0_u64;
+    }
+
+    transfer::transfer_settlement_funds(&ctx, refund)?;
+
+    // if never matched close
+    if OrderStatus::Open.eq(&ctx.accounts.order.order_status) {
+        account::close_account(
+            &mut ctx.accounts.order.to_account_info(),
+            &mut ctx.accounts.purchaser.to_account_info(),
+        )?;
+        return Ok(());
+    }
+
+    // payout second
+    let is_winning_order = is_winning_order(&ctx.accounts.order, market_account);
+
+    match is_winning_order {
+        true => ctx.accounts.order.order_status = SettledWin,
+        false => ctx.accounts.order.order_status = SettledLose,
+    };
+
+    let payout = match is_winning_order {
+        true => {
+            let market_position = &mut ctx.accounts.market_position;
+            if market_position.offset == 0_u64 {
+                ctx.accounts.order.payout
+            } else {
+                market_position.apply_offset(ctx.accounts.order.payout)
+            }
+        }
+        false => 0_u64,
+    };
+
+    transfer::transfer_settlement_funds(&ctx, payout)?;
+
+    Ok(())
+}
+
+fn is_winning_order(order: &Order, market: &Market) -> bool {
+    match order.for_outcome {
+        true => order.market_outcome_index == market.market_winning_outcome_index.unwrap(),
+        false => order.market_outcome_index != market.market_winning_outcome_index.unwrap(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::market_account::MarketStatus;
+    use crate::state::market_type::EVENT_RESULT_WINNER;
+    use crate::state::order_account::OrderStatus;
+
+    use anchor_lang::prelude::Pubkey;
+    use solana_program::clock::UnixTimestamp;
+
+    /*
+       Test - fn is_winning_order(order: &Order, market: &Market) -> bool
+    */
+
+    #[test]
+    fn test_settle_order_win_for_order() {
+        // when
+        let mut order = Order {
+            market: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: true,
+            purchaser: Pubkey::new_unique(),
+
+            stake: 100000000,
+            expected_price: 2.10,
+            order_status: OrderStatus::Matched,
+            creation_timestamp: 0,
+
+            stake_unmatched: 100000000,
+            payout: 210000000,
+            voided_stake: 0,
+        };
+        let market = Market {
+            authority: Pubkey::new_unique(),
+            event_account: Pubkey::new_unique(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(1),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: UnixTimestamp::default(),
+            market_settle_timestamp: None,
+            title: String::from("META"),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: true,
+            suspended: false,
+        };
+
+        // then
+        assert_eq!(is_winning_order(&mut order, &market), true)
+    }
+
+    #[test]
+    fn test_settle_order_lose_for_order() {
+        // when
+        let mut order = Order {
+            market: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: true,
+            purchaser: Pubkey::new_unique(),
+
+            stake: 100000000,
+            expected_price: 2.10,
+            order_status: OrderStatus::Matched,
+            creation_timestamp: 0,
+
+            stake_unmatched: 100000000,
+            payout: 210000000,
+            voided_stake: 0,
+        };
+        let market = Market {
+            authority: Pubkey::new_unique(),
+            event_account: Pubkey::new_unique(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(2),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: UnixTimestamp::default(),
+            market_settle_timestamp: None,
+            title: String::from("META"),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: true,
+            suspended: false,
+        };
+
+        // then
+        assert_eq!(is_winning_order(&mut order, &market), false)
+    }
+
+    #[test]
+    fn test_settle_order_win_against_order() {
+        // when
+        let mut order = Order {
+            market: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: false,
+            purchaser: Pubkey::new_unique(),
+
+            stake: 100000000,
+            expected_price: 2.10,
+            order_status: OrderStatus::Matched,
+            creation_timestamp: 0,
+
+            stake_unmatched: 100000000,
+            payout: 210000000,
+            voided_stake: 0,
+        };
+        let market = Market {
+            authority: Pubkey::new_unique(),
+            event_account: Pubkey::new_unique(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(0),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: UnixTimestamp::default(),
+            market_settle_timestamp: None,
+            title: String::from("META"),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: true,
+            suspended: false,
+        };
+
+        // then
+        assert_eq!(is_winning_order(&mut order, &market), true)
+    }
+
+    #[test]
+    fn test_settle_order_lose_against_order() {
+        // when
+        let mut order = Order {
+            market: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: false,
+            purchaser: Pubkey::new_unique(),
+
+            stake: 100000000,
+            expected_price: 2.10,
+            order_status: OrderStatus::Matched,
+            creation_timestamp: 0,
+
+            stake_unmatched: 100000000,
+            payout: 210000000,
+            voided_stake: 0,
+        };
+        let market = Market {
+            authority: Pubkey::new_unique(),
+            event_account: Pubkey::new_unique(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(1),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: UnixTimestamp::default(),
+            market_settle_timestamp: None,
+            title: String::from("META"),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: true,
+            suspended: false,
+        };
+
+        // then
+        assert_eq!(is_winning_order(&mut order, &market), false)
+    }
+}
