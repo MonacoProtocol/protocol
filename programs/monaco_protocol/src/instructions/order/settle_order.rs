@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
+use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
 use crate::instructions::{account, calculate_risk_from_stake, transfer};
-use crate::state::order_account::OrderStatus;
-use crate::state::order_account::OrderStatus::{SettledLose, SettledWin};
+use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
@@ -16,7 +16,17 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         CoreError::SettlementMarketNotSettled
     );
 
-    // refund first
+    // exit early if already settled
+    if SettledLose.eq(&ctx.accounts.order.order_status) {
+        log::sol_log("order already settled as loss");
+        return Ok(());
+    }
+    if SettledWin.eq(&ctx.accounts.order.order_status) {
+        log::sol_log("order already settled as win");
+        return Ok(());
+    }
+
+    // refund unmatched funds first
     let refund = ctx
         .accounts
         .market_position
@@ -37,7 +47,7 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
     transfer::transfer_settlement_funds(&ctx, refund)?;
 
     // if never matched close
-    if OrderStatus::Open.eq(&ctx.accounts.order.order_status) {
+    if Open.eq(&ctx.accounts.order.order_status) {
         account::close_account(
             &mut ctx.accounts.order.to_account_info(),
             &mut ctx.accounts.purchaser.to_account_info(),

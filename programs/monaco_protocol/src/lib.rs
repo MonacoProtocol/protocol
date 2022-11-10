@@ -126,9 +126,20 @@ pub mod monaco_protocol {
 
         let for_stake_unmatched = ctx.accounts.order_for.stake_unmatched;
         let against_stake_unmatched = ctx.accounts.order_against.stake_unmatched;
-        if for_stake_unmatched > 0 && against_stake_unmatched > 0 {
-            instructions::matching::match_orders(&mut ctx)?;
+
+        if for_stake_unmatched == 0 || against_stake_unmatched == 0 {
+            instructions::close_account(
+                &mut ctx.accounts.trade_for.to_account_info(),
+                &mut ctx.accounts.crank_operator.to_account_info(),
+            )?;
+            instructions::close_account(
+                &mut ctx.accounts.trade_against.to_account_info(),
+                &mut ctx.accounts.crank_operator.to_account_info(),
+            )?;
+            return Ok(());
         }
+
+        instructions::matching::match_orders(&mut ctx)?;
 
         Ok(())
     }

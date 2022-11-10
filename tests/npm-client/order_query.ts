@@ -18,7 +18,7 @@ describe("Order Query", () => {
     const market = await monaco.create3WayMarket([price]);
     await market.airdropProvider(10_000.0);
 
-    await createOrderNpm(
+    const createOrderResponse = await createOrderNpm(
       monaco.getRawProgram(),
       market.pk,
       outcomeIndex,
@@ -26,6 +26,8 @@ describe("Order Query", () => {
       price,
       stake,
     );
+
+    assert(createOrderResponse.success);
 
     const responseByMarket = await getOrdersByMarketForProviderWallet(
       monaco.getRawProgram(),
