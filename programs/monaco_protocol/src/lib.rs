@@ -18,8 +18,6 @@ pub mod error;
 pub mod instructions;
 pub mod state;
 
-#[cfg(feature = "release")]
-declare_id!("DqrH5hKe1g7YsaUW4aPHLDuibSPwNPKTqzzDvyZvpV9o");
 #[cfg(feature = "stable")]
 declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
 #[cfg(feature = "dev")]

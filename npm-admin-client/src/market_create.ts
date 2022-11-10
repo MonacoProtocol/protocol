@@ -18,7 +18,6 @@ import {
 } from "./npm-client-duplicates";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
-import { confirmTransaction } from "./utils";
 
 /**
  * For the given parameters:
@@ -29,7 +28,7 @@ import { confirmTransaction } from "./utils";
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
- * @param marketType {MarketType} type of the market being created
+ * @param marketType {string} type of the market being created
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
@@ -41,7 +40,7 @@ import { confirmTransaction } from "./utils";
  * @example
  *
  * const name = "Full Time Result"
- * const type = MarketType.EventResultWinner
+ * const type = "FTR"
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -117,7 +116,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
- * @param marketType {MarketType} type of the market being created
+ * @param marketType {string} type of the market being created
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
@@ -126,7 +125,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
  * @example
  *
  * const name = "Full Time Result"
- * const type = MarketType.EventResultWinner
+ * const type = "FTR"
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -175,7 +174,6 @@ export async function createMarket(
       })
       .rpc();
 
-    await confirmTransaction(program, tnxId);
     const market = await getMarket(program, marketPda);
 
     response.addResponseData({

@@ -335,66 +335,6 @@
       "time": "19-09-22-18:46:06",
       "actioned_by": "eoin-betdex",
       "notes": "Auto-Deploy to Devnet"
-    },
-    {
-      "deployment_id": 29,
-      "new_version": {
-        "build": "0.2.1.dev.132bbbaf"
-      },
-      "previous_version": {
-        "build": "0.2.1.dev.e032a289"
-      },
-      "time": "27-09-22-14:28:19",
-      "actioned_by": "obi-ewan",
-      "notes": "Auto-Deploy to Devnet"
-    },
-    {
-      "deployment_id": 30,
-      "new_version": {
-        "build": "0.2.3.dev.9ba2c6ad"
-      },
-      "previous_version": {
-        "build": "0.2.1.dev.e032a289"
-      },
-      "time": "27-10-22-09:37:22",
-      "actioned_by": "eoin-betdex",
-      "notes": "Auto-Deploy to Devnet"
-    },
-    {
-      "deployment_id": 31,
-      "new_version": {
-        "build": "0.2.3.dev.d9008d79"
-      },
-      "previous_version": {
-        "build": "0.2.3.dev.9ba2c6ad"
-      },
-      "time": "27-10-22-14:20:14",
-      "actioned_by": "druspencer",
-      "notes": "Auto-Deploy to Devnet"
-    },
-    {
-      "deployment_id": 32,
-      "new_version": {
-        "build": "0.2.5.dev.60a78444"
-      },
-      "previous_version": {
-        "build": "0.2.3.dev.d9008d79"
-      },
-      "time": "07-11-22-17:48:23",
-      "actioned_by": "obi-ewan",
-      "notes": "Auto-Deploy to Devnet"
-    },
-    {
-      "deployment_id": 33,
-      "new_version": {
-        "build": "0.2.5.dev.e95b75cd"
-      },
-      "previous_version": {
-        "build": "0.2.5.dev.60a78444"
-      },
-      "time": "10-11-22-16:18:40",
-      "actioned_by": "eoin-betdex",
-      "notes": "Auto-Deploy to Devnet"
     }
   ]
 }

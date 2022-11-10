@@ -23,7 +23,7 @@ Helper function to return a pda from the supplied seeds
 ```javascript
 const seed1 = Buffer.from("seed2")
 const seed2 = Buffer.from("seed2")
-const pda = await findPdaWithSeeds(program.programId, [seed1, seed2])
+const pda = await findPdaWithSeeds([seed1, seed2], program.programId)
 ```
 
 Returns **publicKey** pda constructed from the supplied seeds for the given program
@@ -44,7 +44,7 @@ const tnxId = "4aaXfPEgc6hcMiKMJAxZLv3QcjTAWPXrsyAswBJzXhoMn8bvViX8DMmmUx7gaNGWw
 await confirmTransaction(program, tnxId)
 ```
 
-Returns **[Promise][11]\<any>** (SignatureResult) null or error
+Returns **[Promise][11]\<void>** (SignatureResult) null or error
 
 [1]: #findpdawithseeds
 

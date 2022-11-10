@@ -36,7 +36,6 @@
     "format": "prettier --write \"**/*.{ts,js}\"",
     "prepare": "husky install",
     "getAllMarkets": "ts-node admin/client.ts get_all_markets",
-    "getAllMarketsReadyForSettlement": "ts-node admin/client.ts getAllMarketsReadyForSettlement",
     "createMarket": "ts-node admin/client.ts create_market",
     "printMarket": "ts-node admin/client.ts print_market",
     "settleMarket": "ts-node admin/client.ts settle_market",

@@ -1,8 +1,6 @@
 import { BorshAccountsCoder } from "@project-serum/anchor";
 import bs58 from "bs58";
 import { getAnchorProvider, getProtocolProgram } from "./util";
-import { Markets } from "../npm-client/src/market_query";
-import { MarketStatus } from "../npm-client/types/market";
 
 export async function get_all_markets() {
   const program = await getProtocolProgram();
@@ -27,16 +25,4 @@ export async function get_all_markets() {
       },
       (reason) => console.log(reason),
     );
-}
-
-export async function getAllMarketsReadyForSettlement() {
-  console.log(
-    JSON.stringify(
-      await Markets.marketQuery(await getProtocolProgram())
-        .filterByStatus(MarketStatus.ReadyForSettlement)
-        .fetchPublicKeys(),
-      null,
-      2,
-    ),
-  );
 }

@@ -11,7 +11,7 @@ import { PublicKey } from "@solana/web3.js";
  * @example
  * const seed1 = Buffer.from("seed2")
  * const seed2 = Buffer.from("seed2")
- * const pda = await findPdaWithSeeds(program.programId, [seed1, seed2])
+ * const pda = await findPdaWithSeeds([seed1, seed2], program.programId)
  */
 export async function findPdaWithSeeds(
   program: Program,
@@ -37,16 +37,5 @@ export async function confirmTransaction(
   transactionId: string,
 ) {
   const provider = program.provider as AnchorProvider;
-  try {
-    const blockHash = await provider.connection.getLatestBlockhash();
-    const confirmRequest = {
-      blockhash: blockHash.blockhash,
-      lastValidBlockHeight: blockHash.lastValidBlockHeight,
-      signature: transactionId,
-    };
-
-    await provider.connection.confirmTransaction(confirmRequest, "finalized");
-  } catch (e) {
-    return e;
-  }
+  await provider.connection.confirmTransaction(transactionId, "confirmed");
 }

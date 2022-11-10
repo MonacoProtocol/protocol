@@ -61,7 +61,7 @@ export async function addPricesToOutcome(
         authorisedOperators: authorisedOperatorsPda.data.pda,
         marketOperator: provider.wallet.publicKey,
       })
-      .rpc({ commitment: "confirmed" });
+      .rpc();
 
     response.addResponseData({
       priceLadder: priceLadder,

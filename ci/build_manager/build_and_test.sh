@@ -2,7 +2,7 @@
 
 # build and test program outputting build and logs
 
-# usage  ./ci/build_manager/build_and_test.sh -t BUILD_TYPE < stable | dev | release >
+# usage  ./ci/build_manager/build_and_test.sh -t BUILD_TYPE < stable | dev >
 # ./ci/build_manager/build_and_test.sh -t dev
 
 set -euxo pipefail
