@@ -10,7 +10,10 @@ import {
 } from "./update_market_status";
 import { print_market_liquidity } from "./market_liquidity";
 import { dequeue_order, get_all_orders, print_order } from "./orders";
-import { get_all_markets } from "./get_all_markets";
+import {
+  get_all_markets,
+  getAllMarketsReadyForSettlement,
+} from "./get_all_markets";
 import {
   authoriseAdminOperator,
   authoriseOperator,
@@ -32,6 +35,9 @@ const script = process.argv[2];
 switch (script) {
   case "get_all_markets":
     get_all_markets();
+    break;
+  case "getAllMarketsReadyForSettlement":
+    getAllMarketsReadyForSettlement();
     break;
   case "create_market":
     create_market();

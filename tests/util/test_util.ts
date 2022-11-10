@@ -371,7 +371,7 @@ export async function createAuthorisedOperatorsPda(
 
 export async function createWalletWithBalance(
   provider: Provider,
-  lamportBalance = 100000000,
+  lamportBalance = 1000000000,
 ) {
   const payer = Keypair.generate();
   await provider.connection.confirmTransaction(

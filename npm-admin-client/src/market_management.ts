@@ -320,6 +320,51 @@ export async function updateMarketLocktime(
   return response.body;
 }
 
+/**
+ * Open a Market, moving it from Intializing to Open status.
+ *
+ * Once Open, outcomes can no longer be added to a market.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to open
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * await openMarket(program, marketPk)
+ */
+export async function openMarket(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .openMarket()
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+  return response.body;
+}
+
 async function setupManagementRequest(program: Program) {
   const response = new ResponseFactory({} as TransactionResponse);
   const provider = program.provider as AnchorProvider;

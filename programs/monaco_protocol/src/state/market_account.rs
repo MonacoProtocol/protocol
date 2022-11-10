@@ -95,7 +95,7 @@ pub struct MarketMatchingPool {
 }
 
 impl MarketMatchingPool {
-    pub const QUEUE_LENGTH: usize = 20;
+    pub const QUEUE_LENGTH: usize = 100;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // purchaser

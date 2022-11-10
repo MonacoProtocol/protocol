@@ -21,7 +21,7 @@ For the given parameters:
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketName` **[string][7]** {string} title of the market being created
-*   `marketType` **MarketType** {string} type of the market being created
+*   `marketType` **MarketType** {MarketType} type of the market being created
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
@@ -33,7 +33,7 @@ For the given parameters:
 
 ```javascript
 const name = "Full Time Result"
-const type = "FTR"
+const type = MarketType.EventResultWinner
 const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const marketLock = 1633042800
 const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -53,7 +53,7 @@ For the given parameters, create a wagering market that accepts orders in the pr
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketName` **[string][7]** {string} title of the market being created
-*   `marketType` **MarketType** {string} type of the market being created
+*   `marketType` **MarketType** {MarketType} type of the market being created
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
@@ -62,7 +62,7 @@ For the given parameters, create a wagering market that accepts orders in the pr
 
 ```javascript
 const name = "Full Time Result"
-const type = "FTR"
+const type = MarketType.EventResultWinner
 const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const marketLock = 1633042800
 const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')

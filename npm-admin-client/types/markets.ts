@@ -13,7 +13,7 @@ export type CreateMarketWithOutcomesAndPriceLadderResponse =
   };
 
 export type OutcomePdaResponse = {
-  outcomeIndex: number;
+  outcome: string;
   outcomePda: PublicKey;
 };
 

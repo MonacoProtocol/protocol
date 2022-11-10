@@ -1,0 +1,133 @@
+import assert from "assert";
+import { createWalletWithBalance } from "../util/test_util";
+import { monaco } from "../util/wrappers";
+
+/*
+ * Testing security of the endpoint
+ */
+describe("Security: Settle Order", () => {
+  it("Settling Order twice does not payout twice", async () => {
+    // Given
+    const outcomeA = 0;
+    const price = 3.0;
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, purchaserC, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+    await market.airdrop(purchaserC, 100.0);
+
+    // CREATE --------------------------------------------------------------------
+
+    const pA_forA_pk = await market.forOrder(outcomeA, 1, price, purchaserA);
+    const pB_forA_pk = await market.forOrder(outcomeA, 10, price, purchaserB);
+    const pC_againstA_pk = await market.againstOrder(
+      outcomeA,
+      11,
+      price,
+      purchaserC,
+    );
+
+    await market.match(pA_forA_pk, pC_againstA_pk);
+    await market.match(pB_forA_pk, pC_againstA_pk);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(purchaserA),
+        market.getMarketPosition(purchaserB),
+        market.getMarketPosition(purchaserC),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+        market.getTokenBalance(purchaserC),
+      ]),
+      [
+        { matched: [2, -1, -1], maxExposure: [0, 1, 1], offset: 0 },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-22, 11, 11], maxExposure: [22, 0, 0], offset: 0 },
+        33,
+        99,
+        90,
+        78,
+      ],
+    );
+
+    // SETTLE ---------------------------------------------------------------------
+
+    await market.settle(outcomeA);
+
+    await market.settleOrder(pA_forA_pk); // <- calling 1st time
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(purchaserA),
+        market.getMarketPosition(purchaserB),
+        market.getMarketPosition(purchaserC),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+        market.getTokenBalance(purchaserC),
+      ]),
+      [
+        { matched: [2, -1, -1], maxExposure: [0, 1, 1], offset: 0 },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-22, 11, 11], maxExposure: [22, 0, 0], offset: 0 },
+        30,
+        102, // <- paid out: 102 - 99 = 3 !
+        90,
+        78,
+      ],
+    );
+
+    await market.settleOrder(pA_forA_pk); // <- calling 2nd time
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(purchaserA),
+        market.getMarketPosition(purchaserB),
+        market.getMarketPosition(purchaserC),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+        market.getTokenBalance(purchaserC),
+      ]),
+      [
+        { matched: [2, -1, -1], maxExposure: [0, 1, 1], offset: 0 },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-22, 11, 11], maxExposure: [22, 0, 0], offset: 0 },
+        30,
+        102, // <- no change !
+        90,
+        78,
+      ],
+    );
+
+    await market.settleOrder(pB_forA_pk);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(purchaserA),
+        market.getMarketPosition(purchaserB),
+        market.getMarketPosition(purchaserC),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+        market.getTokenBalance(purchaserC),
+      ]),
+      [
+        { matched: [2, -1, -1], maxExposure: [0, 1, 1], offset: 0 },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-22, 11, 11], maxExposure: [22, 0, 0], offset: 0 },
+        0,
+        102,
+        120,
+        78,
+      ],
+    );
+  });
+});

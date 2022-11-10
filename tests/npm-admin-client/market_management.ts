@@ -14,6 +14,7 @@ import {
   unsuspendMarket,
   updateMarketTitle,
   updateMarketLocktime,
+  openMarket,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
 
@@ -145,5 +146,35 @@ describe("Set new locktime", () => {
     assert(suspend.data.tnxId);
     assert.deepEqual(suspend.errors, []);
     assert.deepEqual(updatedMarket.marketLockTimestamp, new BN(newLocktime));
+  });
+});
+
+describe("Open market", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+
+  it("Open market", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.createMarket(
+      ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
+      [1.001],
+    );
+    const openMarketResponse = await openMarket(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert(openMarketResponse.success);
+    assert(openMarketResponse.data.tnxId);
+    assert.deepEqual(openMarketResponse.errors, []);
+    assert.deepEqual(updatedMarket.marketStatus, { open: {} });
+  });
+
+  it("Fails when market isn't in Initializing status", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const openMarketResponse = await openMarket(protocolProgram, market.pk);
+
+    assert.equal(openMarketResponse.success, false);
+    assert.equal(openMarketResponse.data, undefined);
+    assert(openMarketResponse.errors);
   });
 });

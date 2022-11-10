@@ -23,6 +23,9 @@
 *   [updateMarketLocktime][19]
     *   [Parameters][20]
     *   [Examples][21]
+*   [openMarket][22]
+    *   [Parameters][23]
+    *   [Examples][24]
 
 ## settleMarket
 
@@ -32,7 +35,7 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `winningOutcomeIndex` **[number][22]** {number} index representing the winning outcome of the event associated with the market
+*   `winningOutcomeIndex` **[number][25]** {number} index representing the winning outcome of the event associated with the market
 
 ### Examples
 
@@ -124,7 +127,7 @@ For the given market, update the title
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
-*   `title` **[string][23]** {string} new title to apply to the provided market
+*   `title` **[string][26]** {string} new title to apply to the provided market
 
 ### Examples
 
@@ -152,6 +155,26 @@ For the given market, update the lock time
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketLock = 1633042800
 const update = await updateMarketLocktime(program, marketPk, marketLock)
+```
+
+Returns **TransactionResponse** transaction ID of the request
+
+## openMarket
+
+Open a Market, moving it from Intializing to Open status.
+
+Once Open, outcomes can no longer be added to a market.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to open
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+await openMarket(program, marketPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -198,6 +221,12 @@ Returns **TransactionResponse** transaction ID of the request
 
 [21]: #examples-6
 
-[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[22]: #openmarket
 
-[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[23]: #parameters-7
+
+[24]: #examples-7
+
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
