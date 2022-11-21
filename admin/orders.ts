@@ -2,10 +2,6 @@ import { BorshAccountsCoder } from "@project-serum/anchor";
 import bs58 from "bs58";
 import { PublicKey } from "@solana/web3.js";
 import { getAnchorProvider, getProtocolProgram } from "./util";
-import {
-  findAuthorisedOperatorsAccountPda,
-  Operator,
-} from "../npm-admin-client/src";
 
 export async function get_all_orders() {
   const program = await getProtocolProgram();
@@ -48,30 +44,4 @@ export function print_order() {
 async function get_order(orderPK: PublicKey) {
   const program = await getProtocolProgram();
   return await program.account.order.fetch(orderPK);
-}
-
-export async function dequeue_order() {
-  if (process.argv.length != 5) {
-    console.log("Usage: yarn run dequeueOrder <MATCHING_POOL_ID> <ORDER_ID>");
-    process.exit(1);
-  }
-
-  const matchingPoolPk = process.argv[3];
-  const orderPk = new PublicKey(process.argv[4]);
-
-  const program = await getProtocolProgram();
-
-  const authorisedOperators = await findAuthorisedOperatorsAccountPda(
-    program,
-    Operator.MARKET,
-  );
-
-  await program.methods
-    .dequeueOrder(orderPk)
-    .accounts({
-      matchingPool: matchingPoolPk,
-      authorisedOperators: authorisedOperators.data.pda,
-      crankOperator: getAnchorProvider().wallet.publicKey,
-    })
-    .rpc();
 }

@@ -39,6 +39,7 @@ export async function findMarketMatchingPoolPda(
     [
       marketPk.toBuffer(),
       Buffer.from(marketOutcomeIndex.toString()),
+      Buffer.from("-"),
       Buffer.from(price.toFixed(priceDecimalPlaces).toString()),
       Buffer.from(forOutcome.toString()),
     ],

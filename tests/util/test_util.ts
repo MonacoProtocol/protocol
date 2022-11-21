@@ -175,7 +175,7 @@ export async function createMarket(
   }
   if (authorisedMarketOperators == null) {
     const [authorisedOperatorsAccountPda] = await PublicKey.findProgramAddress(
-      [Buffer.from("MARKET")],
+      [Buffer.from("authorised_operators"), Buffer.from("MARKET")],
       protocolProgram.programId,
     );
     authorisedMarketOperators = authorisedOperatorsAccountPda;
@@ -363,7 +363,10 @@ export async function createAuthorisedOperatorsPda(
 ): Promise<PublicKey> {
   const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
   const [authorisedOperatorsAccountPda] = await PublicKey.findProgramAddress(
-    [Buffer.from(OperatorType[operatorType].toUpperCase())],
+    [
+      Buffer.from("authorised_operators"),
+      Buffer.from(OperatorType[operatorType].toUpperCase()),
+    ],
     program.programId,
   );
   return authorisedOperatorsAccountPda;

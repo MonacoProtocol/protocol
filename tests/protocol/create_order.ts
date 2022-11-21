@@ -3,7 +3,6 @@ import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   authoriseOperator,
   createAssociatedTokenAccountWithBalance,
-  createAuthorisedOperatorsPda,
   createOrder,
   createMarket,
   createNewMint,
@@ -723,67 +722,5 @@ describe("Protocol - Create Order", () => {
         assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
       },
     );
-  });
-
-  it("dequeue order", async () => {
-    const protocolProgram = anchor.workspace
-      .MonacoProtocol as Program<MonacoProtocol>;
-
-    // Order parameters
-    const stake = 1000;
-    const outcomeIndex = 0;
-    const price = 2.0;
-    const forOutcome = true;
-
-    // Set up Market and related accounts
-    const { mintPk, marketPda, matchingPools } = await createMarket(
-      protocolProgram,
-      provider,
-      [price],
-      null,
-      null,
-      ["A", "B", "C"],
-    );
-
-    await createAssociatedTokenAccountWithBalance(
-      mintPk,
-      provider.wallet.publicKey,
-      10000,
-    );
-
-    const orderResponse = await createOrderNpm(
-      protocolProgram as Program<anchor.Idl>,
-      marketPda,
-      outcomeIndex,
-      forOutcome,
-      price,
-      new BN(stake),
-    );
-
-    const marketMatchingPools = matchingPools[outcomeIndex][price];
-    const matchingPoolPk = forOutcome
-      ? marketMatchingPools.forOutcome
-      : marketMatchingPools.against;
-
-    let matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
-      matchingPoolPk,
-    );
-    assert.equal(matchingPool.orders.len, 1);
-
-    await protocolProgram.methods
-      .dequeueOrder(orderResponse.data.orderPk)
-      .accounts({
-        matchingPool: matchingPoolPk,
-        authorisedOperators: await createAuthorisedOperatorsPda(
-          OperatorType.CRANK,
-        ),
-        crankOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
-      matchingPoolPk,
-    );
-    assert.equal(matchingPool.orders.len, 0);
   });
 });

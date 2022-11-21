@@ -16,7 +16,7 @@ export async function findAuthorisedOperatorsPda(
   program: Program,
 ) {
   const [pk] = await PublicKey.findProgramAddress(
-    [Buffer.from(operatorType)],
+    [Buffer.from("authorised_operators"), Buffer.from(operatorType)],
     program.programId,
   );
   return pk;

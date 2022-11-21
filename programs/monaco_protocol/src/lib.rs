@@ -23,7 +23,7 @@ declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
 #[cfg(feature = "dev")]
 declare_id!("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9");
 #[cfg(not(any(feature = "stable", feature = "dev")))]
-declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
+declare_id!("4UqmjWpDxXA7jgmfDYxmxj4fYrPCEXMRn95nJ3Uko9Ay");
 
 #[program]
 pub mod monaco_protocol {
@@ -140,20 +140,6 @@ pub mod monaco_protocol {
         }
 
         instructions::matching::match_orders(&mut ctx)?;
-
-        Ok(())
-    }
-
-    pub fn dequeue_order(ctx: Context<DequeueOrder>, order: Pubkey) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        instructions::matching::matching_pool::remove_order_from_matching_queue(
-            &mut ctx.accounts.matching_pool.orders,
-            order,
-        )?;
 
         Ok(())
     }

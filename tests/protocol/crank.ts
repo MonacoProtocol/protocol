@@ -159,7 +159,7 @@ describe("Protocol - Crank - Authorised Operator List", () => {
     const operatorType = "cRaNk";
 
     const [authorisedOperatorsPk] = await PublicKey.findProgramAddress(
-      [Buffer.from(operatorType)],
+      [Buffer.from("authorised_operators"), Buffer.from(operatorType)],
       protocolProgram.programId,
     );
 
