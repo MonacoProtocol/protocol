@@ -111,7 +111,10 @@ export async function findAuthorisedOperatorsAccountPda(
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
-    const pda = await findPdaWithSeeds(program, [Buffer.from(operatorType)]);
+    const pda = await findPdaWithSeeds(program, [
+      Buffer.from("authorised_operators"),
+      Buffer.from(operatorType),
+    ]);
     response.addResponseData({
       pda: pda,
     });

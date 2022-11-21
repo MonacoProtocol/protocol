@@ -9,7 +9,7 @@ import {
   unsuspend_market,
 } from "./update_market_status";
 import { print_market_liquidity } from "./market_liquidity";
-import { dequeue_order, get_all_orders, print_order } from "./orders";
+import { get_all_orders, print_order } from "./orders";
 import { get_all_markets } from "./get_all_markets";
 import {
   authoriseAdminOperator,
@@ -71,9 +71,6 @@ switch (script) {
     break;
   case "addPricesToLadder":
     addPricesToLadder();
-    break;
-  case "dequeueOrder":
-    dequeue_order();
     break;
   case "getTokenLeaderboard":
     getTokenLeaderboard();

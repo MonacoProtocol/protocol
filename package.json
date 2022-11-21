@@ -51,7 +51,6 @@
     "authoriseAdminOperator": "ts-node admin/client.ts authoriseAdminOperator",
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
-    "dequeueOrder": "ts-node admin/client.ts dequeueOrder",
     "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
     "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards"
   },

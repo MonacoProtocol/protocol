@@ -50,6 +50,7 @@ pub struct CreateOrder<'info> {
         seeds = [
             market.key().as_ref(),
             market_outcome.index.to_string().as_ref(),
+            b"-".as_ref(),
             format!("{:.3}", data.price).as_ref(),
             data.for_outcome.to_string().as_ref()
         ],
@@ -103,6 +104,7 @@ pub struct CancelOrder<'info> {
         seeds = [
             market.key().as_ref(),
             order.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
             format!("{:.3}", order.expected_price).as_ref(),
             order.for_outcome.to_string().as_ref(),
         ],
@@ -128,7 +130,7 @@ pub struct CancelOrder<'info> {
 pub struct AuthoriseAdminOperator<'info> {
     #[account(
         init_if_needed,
-        seeds = [b"ADMIN".as_ref()],
+        seeds = [b"authorised_operators".as_ref(), b"ADMIN".as_ref()],
         payer = admin_operator,
         bump,
         space = AuthorisedOperators::SIZE
@@ -145,7 +147,7 @@ pub struct AuthoriseAdminOperator<'info> {
 pub struct AuthoriseOperator<'info> {
     #[account(
         init_if_needed,
-        seeds = [operator_type.as_ref()],
+        seeds = [b"authorised_operators".as_ref(), operator_type.as_ref()],
         payer = admin_operator,
         bump,
         space = AuthorisedOperators::SIZE,
@@ -154,22 +156,10 @@ pub struct AuthoriseOperator<'info> {
     pub authorised_operators: Account<'info, AuthorisedOperators>,
     #[account(mut)]
     pub admin_operator: Signer<'info>,
-    #[account(seeds = [b"ADMIN".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"ADMIN".as_ref()], bump)]
     pub admin_operators: Account<'info, AuthorisedOperators>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct DequeueOrder<'info> {
-    // #[soteria(ignore)] TODO remove me
-    #[account(mut)]
-    pub matching_pool: Account<'info, MarketMatchingPool>,
-
-    // crank operator --------------------------------------------
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -205,6 +195,7 @@ pub struct MatchOrders<'info> {
         seeds = [
             market.key().as_ref(),
             order_against.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
             format!("{:.3}", order_against.expected_price).as_ref(),
             false.to_string().as_ref(),
         ],
@@ -244,6 +235,7 @@ pub struct MatchOrders<'info> {
         seeds = [
             market.key().as_ref(),
             order_for.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
             format!("{:.3}", order_for.expected_price).as_ref(),
             true.to_string().as_ref(),
         ],
@@ -266,7 +258,7 @@ pub struct MatchOrders<'info> {
     // crank operator --------------------------------------------
     #[account(mut)]
     pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"CRANK".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
     pub authorised_operators: Box<Account<'info, AuthorisedOperators>>,
 
     // token account --------------------------------------------
@@ -321,7 +313,7 @@ pub struct SettleOrder<'info> {
     // crank operator --------------------------------------------
     #[account(mut)]
     pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"CRANK".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -363,7 +355,7 @@ pub struct CreateMarket<'info> {
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
-    #[account(seeds = [b"MARKET".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -382,6 +374,7 @@ pub struct CloseMarketMatchingPool<'info> {
         seeds = [
             market.key().as_ref(),
             market_outcome.index.to_string().as_ref(),
+            b"-".as_ref(),
             format!("{:.3}", _price).as_ref(),
             _for_outcome.to_string().as_ref(),
         ],
@@ -394,7 +387,7 @@ pub struct CloseMarketMatchingPool<'info> {
     // crank operator --------------------------------------------
     #[account(mut)]
     pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"CRANK".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -419,7 +412,7 @@ pub struct InitializeMarketOutcome<'info> {
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
-    #[account(seeds = [b"MARKET".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -441,7 +434,7 @@ pub struct UpdateMarketOutcome<'info> {
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
-    #[account(seeds = [b"MARKET".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -452,7 +445,7 @@ pub struct UpdateMarket<'info> {
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
-    #[account(seeds = [b"MARKET".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -463,7 +456,7 @@ pub struct CompleteMarketSettlement<'info> {
 
     #[account(mut)]
     pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"CRANK".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -474,7 +467,7 @@ pub struct CloseMarket<'info> {
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
-    #[account(seeds = [b"MARKET".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -482,7 +475,7 @@ pub struct CloseMarket<'info> {
 pub struct CloseAccount<'info> {
     #[account(mut)]
     pub admin_operator: Signer<'info>,
-    #[account(seeds = [b"ADMIN".as_ref()], bump)]
+    #[account(seeds = [b"authorised_operators".as_ref(), b"ADMIN".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
     /// CHECK:
     #[account(mut)]
