@@ -23,7 +23,7 @@ declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
 #[cfg(feature = "dev")]
 declare_id!("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9");
 #[cfg(not(any(feature = "stable", feature = "dev")))]
-declare_id!("4UqmjWpDxXA7jgmfDYxmxj4fYrPCEXMRn95nJ3Uko9Ay");
+declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 
 #[program]
 pub mod monaco_protocol {
