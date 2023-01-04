@@ -31,5 +31,3 @@ git add .
 read -p "Please enter commit message for your changes: " COMMIT_MESSAGE
 git commit -m "${COMMIT_MESSAGE}"
 git push origin ${CURRENT_BRANCH}
-
-echo "Check your pull request at: https://github.com/BetDexLabs/protocol/compare/${CURRENT_BRANCH}"
