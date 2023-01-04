@@ -52,7 +52,8 @@
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
     "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
-    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards"
+    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards",
+    "sync": "$PWD/sync.sh"
   },
   "lint-staged": {
     "*.{js,ts}": [
