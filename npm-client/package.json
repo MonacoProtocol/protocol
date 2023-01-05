@@ -6,12 +6,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MonacoProtocol/client.git"
+    "url": "git+https://github.com/MonacoProtocol/protocol.git",
+    "directory": "npm-client"
   },
   "bugs": {
-    "url": "https://github.com/MonacoProtocol/client/issues"
+    "url": "https://github.com/MonacoProtocol/protocol/issues"
   },
-  "homepage": "https://github.com/MonacoProtocol/client#readme",
+  "homepage": "https://github.com/MonacoProtocol/protocol/blob/main/npm-client/README.md",
   "main": "src/index.js",
   "module": "src/index.js",
   "files": [
