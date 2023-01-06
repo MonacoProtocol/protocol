@@ -60,7 +60,7 @@ pub enum MarketStatus {
     Locked,
     ReadyForSettlement,
     Settled,
-    Complete,
+    ReadyToClose,
 }
 
 #[account]

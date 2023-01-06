@@ -8,6 +8,12 @@
 *   [getMarketMatchingPoolAccounts][4]
     *   [Parameters][5]
     *   [Examples][6]
+*   [getAllMarketMatchingPools][7]
+    *   [Parameters][8]
+    *   [Examples][9]
+*   [findAllMarketMatchingPoolPks][10]
+    *   [Parameters][11]
+    *   [Examples][12]
 
 ## findMarketMatchingPoolPda
 
@@ -17,9 +23,9 @@ For the provided market publicKey, outcome, price and forOutcome, return the PDA
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `marketOutcomeIndex` **[number][7]** {number} index representing a market outcome
-*   `price` **[number][7]** {number} price for the matching pool
-*   `forOutcome` **[boolean][8]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][13]** {number} index representing a market outcome
+*   `price` **[number][13]** {number} price for the matching pool
+*   `forOutcome` **[boolean][14]** {boolean} bool representing for or against a market outcome
 
 ### Examples
 
@@ -40,7 +46,7 @@ For the provided marketMatchingPool PDAs, return the market matching pool accoun
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketMatchingPoolPDAs` **[Array][9]\<PublicKey>** {PublicKey\[]} PDAs of market matching pools
+*   `marketMatchingPoolPDAs` **[Array][15]\<PublicKey>** {PublicKey\[]} PDAs of market matching pools
 
 ### Examples
 
@@ -52,6 +58,46 @@ const marketMatchingPools = await getMarketMatchingPoolAccounts(program, marketM
 ```
 
 Returns **MarketMatchingPoolAccounts**&#x20;
+
+## getAllMarketMatchingPools
+
+For the provided market, find any existing matching pools. Total number of matching pools can be
+calculated as (number of prices \* number of outcomes \* 2)
+
+Note: due to the number of possible matching pools, caching this data is recommended for quick access
+
+### Parameters
+
+*   `program` **Program** {Program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} public key of market
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
+const matchingPools = await getAllMarketMatchingPools(program, marketPk);
+```
+
+Returns **MarketMatchingPoolAccounts** list of matching pool accounts
+
+## findAllMarketMatchingPoolPks
+
+For the provided market, find all possible matching pool pda addresses. Total number of matching pools can be
+calculated as (number of prices \* number of outcomes \* 2)
+
+### Parameters
+
+*   `program` **Program** {Program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} public key of market
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
+const matchingPoolPks = await findAllMarketMatchingPoolPks(program, marketPk);
+```
+
+Returns **GetPublicKeys** list of PublicKeys
 
 [1]: #findmarketmatchingpoolpda
 
@@ -65,8 +111,20 @@ Returns **MarketMatchingPoolAccounts**&#x20;
 
 [6]: #examples-1
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[7]: #getallmarketmatchingpools
 
-[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[8]: #parameters-2
 
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[9]: #examples-2
+
+[10]: #findallmarketmatchingpoolpks
+
+[11]: #parameters-3
+
+[12]: #examples-3
+
+[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

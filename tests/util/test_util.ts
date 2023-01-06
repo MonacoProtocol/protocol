@@ -384,6 +384,18 @@ export async function createWalletWithBalance(
   return payer;
 }
 
+export async function createWalletsWithBalance(
+  provider: Provider,
+  numberOfWallets: number,
+  lamportBalance = 1000000000,
+) {
+  const promises: Promise<Keypair>[] = [];
+  for (let i = 0; i < numberOfWallets; i++) {
+    promises.push(createWalletWithBalance(provider, lamportBalance));
+  }
+  return Promise.all(promises);
+}
+
 export async function createAssociatedTokenAccountWithBalance(
   mintPk: PublicKey,
   owner: PublicKey,

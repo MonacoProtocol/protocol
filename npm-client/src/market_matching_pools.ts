@@ -3,10 +3,13 @@ import { PublicKey } from "@solana/web3.js";
 import {
   ClientResponse,
   ResponseFactory,
-  MarketMatchingPoolAccounts,
   MarketMatchingPoolAccount,
+  MarketMatchingPoolAccounts,
+  GetPublicKeys,
+  GetAccount,
 } from "../types";
 import { FindPdaResponse } from "../types";
+import { getMarketOutcomesByMarket } from "./market_outcome_query";
 
 /**
  * For the provided market publicKey, outcome, price and forOutcome, return the PDA (publicKey) of the matching account.
@@ -85,5 +88,118 @@ export async function getMarketMatchingPoolAccounts(
   } catch (e) {
     response.addErrors([e]);
   }
+  return response.body;
+}
+
+/**
+ * For the provided market, find any existing matching pools. Total number of matching pools can be
+ * calculated as (number of prices * number of outcomes * 2)
+ *
+ * Note: due to the number of possible matching pools, caching this data is recommended for quick access
+ *
+ * @param program {Program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} public key of market
+ * @returns {MarketMatchingPoolAccounts} list of matching pool accounts
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
+ * const matchingPools = await getAllMarketMatchingPools(program, marketPk);
+ */
+export async function getAllMarketMatchingPools(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<MarketMatchingPoolAccounts>> {
+  const response = new ResponseFactory({} as MarketMatchingPoolAccounts);
+
+  try {
+    const marketMatchingPools: GetAccount<MarketMatchingPoolAccount>[] = [];
+    const matchingPoolPksResponse = await findAllMarketMatchingPoolPks(
+      program,
+      marketPk,
+    );
+    const matchingPoolPks = matchingPoolPksResponse.data.publicKeys;
+    const batchSize = 50;
+
+    for (let i = 0; i < matchingPoolPks.length; i += batchSize) {
+      const matchingPools = await getMarketMatchingPoolAccounts(
+        program,
+        matchingPoolPks.slice(i, i + batchSize),
+      );
+      matchingPools.data.marketMatchingPools.forEach((pool) =>
+        marketMatchingPools.push(pool),
+      );
+    }
+
+    response.addResponseData({ marketMatchingPools: marketMatchingPools });
+  } catch (e) {
+    response.addErrors([e]);
+  }
+
+  return response.body;
+}
+
+/**
+ * For the provided market, find all possible matching pool pda addresses. Total number of matching pools can be
+ * calculated as (number of prices * number of outcomes * 2)
+ *
+ * @param program {Program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} public key of market
+ * @returns {GetPublicKeys} list of PublicKeys
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
+ * const matchingPoolPks = await findAllMarketMatchingPoolPks(program, marketPk);
+ */
+export async function findAllMarketMatchingPoolPks(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<GetPublicKeys>> {
+  const response = new ResponseFactory({} as GetPublicKeys);
+
+  try {
+    const outcomeAccounts = await getMarketOutcomesByMarket(program, marketPk);
+    const priceLadder =
+      outcomeAccounts.data.marketOutcomeAccounts[0].account.priceLadder;
+    const outcomes = outcomeAccounts.data.marketOutcomeAccounts.map(
+      (outcome) => outcome.account.index,
+    );
+
+    const seedsMatrix: string[][] = [];
+    for (const price of priceLadder) {
+      for (const outcome of outcomes) {
+        for (const forOutcome of [true, false]) {
+          const seeds = [
+            outcome.toString(),
+            price.toFixed(3).toString(),
+            forOutcome.toString(),
+          ];
+          seedsMatrix.push(seeds);
+        }
+      }
+    }
+
+    const pdas = await Promise.all(
+      seedsMatrix.map(async (seeds) => {
+        const [pda, _] = await PublicKey.findProgramAddress(
+          [
+            marketPk.toBuffer(),
+            Buffer.from(seeds[0]), // outcome index
+            Buffer.from("-"),
+            Buffer.from(seeds[1]), // price
+            Buffer.from(seeds[2]), // for outcome
+          ],
+          program.programId,
+        );
+        return pda;
+      }),
+    );
+
+    response.addResponseData({ publicKeys: pdas });
+  } catch (e) {
+    response.addErrors([e]);
+  }
+
   return response.body;
 }

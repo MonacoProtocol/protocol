@@ -14,8 +14,10 @@ import {
   unsuspendMarket,
   updateMarketTitle,
   updateMarketLocktime,
+  setMarketReadyToClose,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
+import { checkEnumValue } from "../../admin/leaderboard/util";
 
 describe("Settle market", () => {
   const provider = AnchorProvider.local();
@@ -145,5 +147,37 @@ describe("Set new locktime", () => {
     assert(suspend.data.tnxId);
     assert.deepEqual(suspend.errors, []);
     assert.deepEqual(updatedMarket.marketLockTimestamp, new BN(newLocktime));
+  });
+});
+
+describe("Market ready to close", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+
+  it("Set market as ready to close", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    await market.settle(0);
+    await market.completeSettlement();
+
+    const response = await setMarketReadyToClose(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert(response.success);
+    assert(response.data.tnxId);
+    assert.deepEqual(response.errors, []);
+    checkEnumValue(updatedMarket.marketStatus, "readyToClose");
+  });
+
+  it("Fails if market not settled", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const response = await setMarketReadyToClose(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert.equal(response.success, false);
+    assert.equal(response.data, undefined);
+    assert(response.errors);
+    checkEnumValue(updatedMarket.marketStatus, "open");
   });
 });

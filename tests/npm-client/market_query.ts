@@ -27,7 +27,7 @@ describe("Market Query", () => {
 
     const responseComplete = await getMarketAccountsByStatus(
       monaco.getRawProgram(),
-      MarketStatus.Complete,
+      MarketStatus.ReadyToClose,
     );
 
     assert(responseComplete.success);

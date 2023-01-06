@@ -201,7 +201,11 @@ export class Monaco {
     return market;
   }
 
-  async createMarket(outcomes: string[], priceLadder: number[]) {
+  async createMarket(
+    outcomes: string[],
+    priceLadder: number[],
+    marketOperatorKeypair?: Keypair,
+  ) {
     const event = anchor.web3.Keypair.generate();
     const marketType = MarketType.EventResultWinner;
     const marketTitle = "SOME TITLE";
@@ -245,10 +249,16 @@ export class Monaco {
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
-        marketOperator: this.operatorPk,
+        marketOperator:
+          marketOperatorKeypair instanceof Keypair
+            ? marketOperatorKeypair.publicKey
+            : this.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
+      .signers(
+        marketOperatorKeypair instanceof Keypair ? [marketOperatorKeypair] : [],
+      )
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -654,7 +664,11 @@ export class MonacoMarket {
       });
   }
 
-  async match(forOrderPk: PublicKey, againstOrderPk: PublicKey) {
+  async match(
+    forOrderPk: PublicKey,
+    againstOrderPk: PublicKey,
+    crankOperatorKeypair?: Keypair,
+  ) {
     const [forOrder, againstOrder, authorisedOperatorsPk] = await Promise.all([
       this.monaco.fetchOrder(forOrderPk),
       this.monaco.fetchOrder(againstOrderPk),
@@ -711,11 +725,17 @@ export class MonacoMarket {
         marketOutcome: outcomePk,
         marketMatchingPoolFor: forMatchingPoolPk,
         marketMatchingPoolAgainst: againstMatchingPoolPk,
-        crankOperator: this.monaco.operatorPk,
+        crankOperator:
+          crankOperatorKeypair instanceof Keypair
+            ? crankOperatorKeypair.publicKey
+            : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
+      .signers(
+        crankOperatorKeypair instanceof Keypair ? [crankOperatorKeypair] : [],
+      )
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -777,6 +797,42 @@ export class MonacoMarket {
           await this.monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: this.monaco.operatorPk,
       })
-      .rpc();
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async completeSettlement() {
+    await this.monaco.program.methods
+      .completeMarketSettlement()
+      .accounts({
+        market: this.pk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findCrankAuthorisedOperatorsPda(),
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async readyToClose() {
+    await this.monaco.program.methods
+      .setMarketReadyToClose()
+      .accounts({
+        market: this.pk,
+        marketOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
   }
 }
