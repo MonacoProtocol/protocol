@@ -70,10 +70,19 @@ pub fn unsuspend(ctx: Context<UpdateMarket>) -> Result<()> {
     Ok(())
 }
 
+pub fn ready_to_close(market: &mut Market) -> Result<()> {
+    require!(
+        Settled.eq(&market.market_status),
+        CoreError::MarketNotSettled
+    );
+    market.market_status = ReadyToClose;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::error::CoreError;
-    use crate::instructions::market::{open, settle};
+    use crate::instructions::market::{open, ready_to_close, settle};
     use crate::state::market_account::MarketStatus;
     use crate::Market;
     use anchor_lang::error;
@@ -111,7 +120,7 @@ mod tests {
             authority: Default::default(),
             event_account: Default::default(),
             mint_account: Default::default(),
-            market_status: MarketStatus::Complete,
+            market_status: MarketStatus::ReadyToClose,
             market_type: "".to_string(),
             decimal_limit: 0,
             published: false,
@@ -210,6 +219,56 @@ mod tests {
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotInitializing));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn ready_to_close_market() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Settled,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let result = ready_to_close(&mut market);
+        assert!(result.is_ok());
+        assert_eq!(market.market_status, MarketStatus::ReadyToClose)
+    }
+
+    #[test]
+    fn ready_to_close_market_market_not_settled() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::ReadyForSettlement,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let result = ready_to_close(&mut market);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::MarketNotSettled));
         assert_eq!(expected_error, result)
     }
 }

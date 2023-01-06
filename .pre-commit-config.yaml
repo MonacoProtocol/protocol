@@ -1,0 +1,27 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+    -   id: fmt
+    -   id: cargo-check
+    -   id: clippy
+-   repo: local
+    hooks:
+    -   id: generate-admin-client-docs
+        name: generate-admin-client-docs
+        entry: npm-admin-client/generate_docs.sh
+        language: script
+        files: ^npm-admin-client/
+        pass_filenames: true
+    -   id: generate-client-docs
+        name: generate-client-docs
+        entry: npm-client/generate_docs.sh
+        language: script
+        files: ^npm-client/
+        pass_filenames: true

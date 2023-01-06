@@ -360,38 +360,6 @@ pub struct CreateMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(_price: f64, _for_outcome: bool)]
-pub struct CloseMarketMatchingPool<'info> {
-    pub market: Account<'info, Market>,
-    #[account(has_one = market)]
-    pub market_outcome: Account<'info, MarketOutcome>,
-    #[account(mut)]
-    pub purchaser: SystemAccount<'info>,
-
-    // accounts being closed --------------------------------------------
-    #[account(
-        mut,
-        seeds = [
-            market.key().as_ref(),
-            market_outcome.index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{:.3}", _price).as_ref(),
-            _for_outcome.to_string().as_ref(),
-        ],
-        bump,
-        has_one = purchaser,
-        close = purchaser,
-    )]
-    pub market_matching_pool: Account<'info, MarketMatchingPool>,
-
-    // crank operator --------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-}
-
-#[derive(Accounts)]
 pub struct InitializeMarketOutcome<'info> {
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -457,17 +425,6 @@ pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub crank_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-}
-
-#[derive(Accounts)]
-pub struct CloseMarket<'info> {
-    #[account(mut, close = market_operator)]
-    pub market: Account<'info, Market>,
-
-    #[account(mut)]
-    pub market_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
@@ -595,4 +552,138 @@ pub struct ProductConfigMultisigAuth<'info> {
         bump
     )]
     pub multisig_pda_signer: Signer<'info>,
+}
+
+/*
+Close accounts
+ */
+
+#[derive(Accounts)]
+pub struct CloseOrder<'info> {
+    #[account(
+        mut,
+        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = purchaser,
+    )]
+    pub order: Account<'info, Order>,
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub purchaser: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct CloseTrade<'info> {
+    #[account(
+        mut,
+        has_one = payer @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = payer,
+    )]
+    pub trade: Account<'info, Trade>,
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub payer: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct CloseMarketPosition<'info> {
+    #[account(
+        mut,
+        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = purchaser,
+    )]
+    pub market_position: Account<'info, MarketPosition>,
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub purchaser: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+#[instruction(_price: f64, _for_outcome: bool)]
+pub struct CloseMarketMatchingPool<'info> {
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(has_one = market @ CoreError::CloseAccountMarketMismatch)]
+    pub market_outcome: Account<'info, MarketOutcome>,
+    #[account(mut)]
+    pub purchaser: SystemAccount<'info>,
+
+    // accounts being closed --------------------------------------------
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            market_outcome.index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", _price).as_ref(),
+            _for_outcome.to_string().as_ref(),
+        ],
+        bump,
+        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+        close = purchaser,
+    )]
+    pub market_matching_pool: Account<'info, MarketMatchingPool>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct CloseMarketOutcome<'info> {
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub market_outcome: Account<'info, MarketOutcome>,
+    #[account(
+        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+    )]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub authority: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct CloseMarket<'info> {
+    #[account(
+        mut,
+        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+        close = authority,
+    )]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub authority: SystemAccount<'info>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }

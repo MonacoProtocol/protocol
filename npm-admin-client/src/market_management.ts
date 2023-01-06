@@ -320,6 +320,49 @@ export async function updateMarketLocktime(
   return response.body;
 }
 
+/**
+ * Set a Settled market to the Ready to Close status
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const readyToCloseMarket = await setMarketReadyToClose(program, marketPk)
+ */
+export async function setMarketReadyToClose(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .setMarketReadyToClose()
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+  return response.body;
+}
+
 async function setupManagementRequest(program: Program) {
   const response = new ResponseFactory({} as TransactionResponse);
   const provider = program.provider as AnchorProvider;

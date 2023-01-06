@@ -1,0 +1,13 @@
+# ignore all
+/*
+
+# except
+!/npm-client
+!/npm-admin-client
+!/admin
+!/tests
+!/migrations
+
+# ignore
+/**/package-lock.json
+/*.md

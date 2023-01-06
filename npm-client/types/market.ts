@@ -9,7 +9,7 @@ export enum MarketStatus {
   Locked = 0x02,
   ReadyForSettlement = 0x03,
   Settled = 0x04,
-  Complete = 0x05,
+  ReadyToClose = 0x05,
 }
 
 export enum MarketType {

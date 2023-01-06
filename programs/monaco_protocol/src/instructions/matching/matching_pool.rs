@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::state::market_account::Cirque;
-use crate::state::market_account::MarketStatus::Settled;
-use crate::{CloseMarketMatchingPool, CoreError, MarketMatchingPool, MarketOutcome, Order};
+use crate::{CoreError, MarketMatchingPool, MarketOutcome, Order};
 
 pub fn update_on_match(
     market_outcome: &mut Account<MarketOutcome>,
@@ -112,17 +111,6 @@ pub fn update_on_cancel(
         .checked_sub(order.voided_stake)
         .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
     matching_pool.orders.remove_item(&order.key());
-
-    Ok(())
-}
-
-pub fn close_matching_pool(ctx: Context<CloseMarketMatchingPool>) -> Result<()> {
-    let accounts = ctx.accounts;
-
-    require!(
-        Settled.eq(&accounts.market.market_status),
-        CoreError::SettlementMarketNotSettled
-    );
 
     Ok(())
 }

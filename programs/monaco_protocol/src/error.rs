@@ -141,6 +141,10 @@ pub enum CoreError {
     MarketOutcomeMarketInvalidStatus,
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
+    #[msg("Market: market is not settled")]
+    MarketNotSettled,
+    #[msg("Market: market is not ready to close")]
+    MarketNotReadyToClose,
 
     /*
     MultisigGroup
@@ -170,4 +174,12 @@ pub enum CoreError {
     ProductConfigTitleLen,
     #[msg(ProductConfig: Commission supports up to 3 decimal places.)]
     CommissionPrecisionTooLarge,
+
+    /*
+    Close Account
+     */
+    #[msg("CloseAccount: Purchaser does not match")]
+    CloseAccountPurchaserMismatch,
+    #[msg("CloseAccount: Market does not match")]
+    CloseAccountMarketMismatch,
 }

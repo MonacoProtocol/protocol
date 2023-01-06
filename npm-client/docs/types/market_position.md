@@ -4,26 +4,40 @@
 
 *   [MarketPosition][1]
     *   [Properties][2]
+*   [MarketPositionAccounts][3]
+    *   [Properties][4]
 
 ## MarketPosition
 
-Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeSums: [Array][3]\<BN>, marketOutcomeUnmatchedSums: [Array][3]\<BN>, offset: BN, outcomePositions: [Map][4]<[string][5], BN>}
+Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeSums: [Array][5]\<BN>, outcomeMaxExposure: [Array][5]\<BN>, offset: BN, outcomePositions: [Map][6]<[string][7], BN>}
 
 ### Properties
 
 *   `purchaser` **PublicKey**&#x20;
 *   `market` **PublicKey**&#x20;
-*   `marketOutcomeSums` **[Array][3]\<BN>**&#x20;
-*   `marketOutcomeUnmatchedSums` **[Array][3]\<BN>**&#x20;
+*   `marketOutcomeSums` **[Array][5]\<BN>**&#x20;
+*   `outcomeMaxExposure` **[Array][5]\<BN>**&#x20;
 *   `offset` **BN**&#x20;
-*   `outcomePositions` **[Map][4]<[string][5], BN>**&#x20;
+*   `outcomePositions` **[Map][6]<[string][7], BN>**&#x20;
+
+## MarketPositionAccounts
+
+Type: {marketPositionAccounts: [Array][5]\<GetAccount<[MarketPosition][1]>>}
+
+### Properties
+
+*   `marketPositionAccounts` **[Array][5]\<GetAccount<[MarketPosition][1]>>**&#x20;
 
 [1]: #marketposition
 
 [2]: #properties
 
-[3]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[3]: #marketpositionaccounts
 
-[4]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map
+[4]: #properties-1
 
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map
+
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

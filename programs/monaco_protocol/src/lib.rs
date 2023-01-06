@@ -3,7 +3,9 @@ use anchor_lang::prelude::*;
 use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::verify_operator_authority;
-use crate::state::market_account::{Market, MarketMatchingPool, MarketOutcome};
+use crate::state::market_account::{
+    Market, MarketMatchingPool, MarketOutcome, MarketStatus::ReadyToClose,
+};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
 use crate::state::multisig::{InstructionAccount, MultisigGroup};
@@ -144,15 +146,6 @@ pub mod monaco_protocol {
         Ok(())
     }
 
-    pub fn close_market_matching_pool(
-        ctx: Context<CloseMarketMatchingPool>,
-        _price: f64,
-        _for_outcome: bool,
-    ) -> Result<()> {
-        instructions::matching::close_matching_pool(ctx)?;
-        Ok(())
-    }
-
     pub fn create_market(
         ctx: Context<CreateMarket>,
         event_account: Pubkey,
@@ -277,15 +270,14 @@ pub mod monaco_protocol {
         instructions::market::unsuspend(ctx)
     }
 
-    pub fn close_market(ctx: Context<CloseMarket>) -> Result<()> {
+    pub fn set_market_ready_to_close(ctx: Context<UpdateMarket>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
-        instructions::market::validate_close_market(
-            &ctx.accounts.market_operator.key(),
-            &ctx.accounts.market,
-        )?;
+
+        instructions::market::ready_to_close(&mut ctx.accounts.market)?;
+
         Ok(())
     }
 
@@ -386,6 +378,98 @@ pub mod monaco_protocol {
             &ctx.accounts.multisig_group.key(),
             ctx.remaining_accounts,
         )?;
+        Ok(())
+    }
+
+    /*
+    Close accounts
+     */
+
+    pub fn close_order(ctx: Context<CloseOrder>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
+        Ok(())
+    }
+
+    pub fn close_trade(ctx: Context<CloseTrade>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
+        Ok(())
+    }
+
+    pub fn close_market_position(ctx: Context<CloseMarketPosition>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
+        Ok(())
+    }
+
+    pub fn close_market_matching_pool(
+        ctx: Context<CloseMarketMatchingPool>,
+        _price: f64,
+        _for_outcome: bool,
+    ) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
+        Ok(())
+    }
+
+    pub fn close_market_outcome(ctx: Context<CloseMarketOutcome>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
+        Ok(())
+    }
+
+    pub fn close_market(ctx: Context<CloseMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        require!(
+            ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketNotReadyToClose
+        );
+
         Ok(())
     }
 }
