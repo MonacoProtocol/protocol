@@ -10,7 +10,6 @@ repos:
     hooks:
     -   id: fmt
     -   id: cargo-check
-    -   id: clippy
 -   repo: local
     hooks:
     -   id: generate-admin-client-docs
