@@ -284,9 +284,17 @@ export class Monaco {
             outcome: outcomePks[outcomeIndex],
             market: marketPdaResponse.data.pda,
             authorisedOperators: authorisedOperatorsPk,
-            marketOperator: this.operatorPk,
+            marketOperator:
+              marketOperatorKeypair instanceof Keypair
+                ? marketOperatorKeypair.publicKey
+                : this.operatorPk,
             systemProgram: SystemProgram.programId,
           })
+          .signers(
+            marketOperatorKeypair instanceof Keypair
+              ? [marketOperatorKeypair]
+              : [],
+          )
           .rpc()
           .catch((e) => {
             console.error(e);
@@ -317,6 +325,7 @@ export class Monaco {
       event.publicKey,
       mintPk,
       mintInfo,
+      marketOperatorKeypair,
     );
     return bmarket;
   }
@@ -452,6 +461,7 @@ export class MonacoMarket {
   readonly eventPk: PublicKey;
   readonly mintPk: PublicKey;
   readonly mintInfo: Mint;
+  readonly marketAuthority?: Keypair;
 
   private purchaserTokenPks = new Map<string, PublicKey>();
   private marketPositionPkCache = new Map<string, PublicKey>();
@@ -468,6 +478,7 @@ export class MonacoMarket {
     eventPk: PublicKey,
     mintPk: PublicKey,
     mintInfo: Mint,
+    marketAuthority?: Keypair,
   ) {
     this.monaco = monaco;
     this.pk = pk;
@@ -477,6 +488,7 @@ export class MonacoMarket {
     this.eventPk = eventPk;
     this.mintPk = mintPk;
     this.mintInfo = mintInfo;
+    this.marketAuthority = marketAuthority;
   }
 
   toAmountInteger(amount: number): number {
@@ -751,9 +763,12 @@ export class MonacoMarket {
       .settleMarket(outcome)
       .accounts({
         market: this.pk,
-        marketOperator: this.monaco.operatorPk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
       })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -795,8 +810,11 @@ export class MonacoMarket {
         market: this.pk,
         authorisedOperators:
           await this.monaco.findMarketAuthorisedOperatorsPda(),
-        marketOperator: this.monaco.operatorPk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
       })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -825,10 +843,13 @@ export class MonacoMarket {
       .setMarketReadyToClose()
       .accounts({
         market: this.pk,
-        marketOperator: this.monaco.operatorPk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
         authorisedOperators:
           await this.monaco.findMarketAuthorisedOperatorsPda(),
       })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
       .catch((e) => {
         console.error(e);

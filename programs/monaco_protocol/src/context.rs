@@ -385,7 +385,7 @@ pub struct InitializeMarketOutcome<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(_market: Pubkey, _outcome_index: u16)]
+#[instruction(_outcome_index: u16)]
 pub struct UpdateMarketOutcome<'info> {
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -393,12 +393,16 @@ pub struct UpdateMarketOutcome<'info> {
     #[account(
         mut,
         seeds = [
-            _market.as_ref(),
+            market.key().as_ref(),
             _outcome_index.to_string().as_ref(),
         ],
         bump,
+        constraint = _outcome_index < market.market_outcomes_count
     )]
     pub outcome: Account<'info, MarketOutcome>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
 
     #[account(mut)]
     pub market_operator: Signer<'info>,

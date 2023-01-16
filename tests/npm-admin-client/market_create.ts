@@ -85,6 +85,7 @@ describe("Admin Client Create Full Market", () => {
       market.data.marketPk,
     );
 
+    assert.deepEqual(market.errors, []);
     assert(market.success);
     assert(market.data.market);
     assert(market.data.priceLadderResults);

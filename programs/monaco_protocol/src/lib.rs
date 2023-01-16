@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::*;
 use crate::error::CoreError;
+use crate::instructions::market::verify_market_authority;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{
     Market, MarketMatchingPool, MarketOutcome, MarketStatus::ReadyToClose,
@@ -181,6 +182,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::initialize_outcome(ctx, title, price_ladder)?;
         msg!("Initialized market outcome");
         Ok(())
@@ -188,7 +194,6 @@ pub mod monaco_protocol {
 
     pub fn add_prices_to_market_outcome(
         ctx: Context<UpdateMarketOutcome>,
-        _market: Pubkey,
         _outcome_index: u16,
         new_prices: Vec<f64>,
     ) -> Result<()> {
@@ -196,6 +201,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::add_prices_to_market_outcome(&mut ctx.accounts.outcome, new_prices)?;
         Ok(())
     }
@@ -205,6 +215,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::update_title(ctx, title)
     }
 
@@ -213,6 +228,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::update_locktime(ctx, lock_time)
     }
 
@@ -221,6 +241,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::open(&mut ctx.accounts.market)
     }
 
@@ -229,12 +254,21 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
 
         let settle_time = Clock::get().unwrap().unix_timestamp;
         instructions::market::settle(&mut ctx.accounts.market, winning_outcome_index, settle_time)
     }
 
     pub fn complete_market_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
         instructions::market::complete_settlement(ctx)
     }
 
@@ -243,6 +277,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::publish(ctx)
     }
 
@@ -251,6 +290,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::unpublish(ctx)
     }
 
@@ -259,6 +303,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::suspend(ctx)
     }
 
@@ -267,6 +316,11 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
         instructions::market::unsuspend(ctx)
     }
 
@@ -275,10 +329,12 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
 
-        instructions::market::ready_to_close(&mut ctx.accounts.market)?;
-
-        Ok(())
+        instructions::market::ready_to_close(&mut ctx.accounts.market)
     }
 
     pub fn create_product_config(

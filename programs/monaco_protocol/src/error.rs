@@ -145,6 +145,8 @@ pub enum CoreError {
     MarketNotSettled,
     #[msg("Market: market is not ready to close")]
     MarketNotReadyToClose,
+    #[msg("Market: market authority does not match operator")]
+    MarketAuthorityMismatch,
 
     /*
     MultisigGroup
