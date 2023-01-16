@@ -1,8 +1,15 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@project-serum/anchor";
-import { Order, OrderAccounts, orderPdaResponse } from "../types/order";
+import {
+  Order,
+  OrderAccounts,
+  orderPdaResponse,
+  OrderStatus,
+  PendingOrders,
+} from "../types/order";
 import { ClientResponse, ResponseFactory } from "../types/client";
 import { GetAccount } from "../types/get_account";
+import { Orders } from "./order_query";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -109,4 +116,189 @@ export async function getOrders(
     response.addError(e);
   }
   return response.body;
+}
+
+/**
+ * For the provided market publicKey, return all pending orders for that market. Pending orders are classed as open orders or matched orders that have only been partially matched.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of a market
+ * @returns {PendingOrders} a list of all pending order accounts
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const pendingOrders = await getPendingOrdersForMarket(program, marketPK)
+ */
+export async function getPendingOrdersForMarket(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<PendingOrders>> {
+  const response = new ResponseFactory({} as PendingOrders);
+
+  const [matchedOrdersResponse, openOrdersResponse] = await Promise.all([
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByStatus(OrderStatus.Matched)
+      .fetch(),
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByStatus(OrderStatus.Open)
+      .fetch(),
+  ]);
+
+  return constructPendingOrdersResponse(
+    response,
+    matchedOrdersResponse,
+    openOrdersResponse,
+  ).body;
+}
+
+/**
+ * For the provided market publicKey and outcome index, return all pending orders matching the criteria. Pending orders are classed as open orders or matched orders that have only been partially matched.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of a market
+ * @returns {PendingOrders} a list of all pending order accounts
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const outcomeIndex = 2
+ * const pendingOrders = await getPendingOrdersForMarketByOutcomeIndex(program, marketPK, outcomeIndex)
+ */
+export async function getPendingOrdersForMarketByOutcomeIndex(
+  program: Program,
+  marketPk: PublicKey,
+  outcomeIndex: number,
+): Promise<ClientResponse<PendingOrders>> {
+  const response = new ResponseFactory({} as PendingOrders);
+
+  const [matchedOrdersResponse, openOrdersResponse] = await Promise.all([
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByMarketOutcomeIndex(outcomeIndex)
+      .filterByStatus(OrderStatus.Matched)
+      .fetch(),
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByMarketOutcomeIndex(outcomeIndex)
+      .filterByStatus(OrderStatus.Open)
+      .fetch(),
+  ]);
+
+  return constructPendingOrdersResponse(
+    response,
+    matchedOrdersResponse,
+    openOrdersResponse,
+  ).body;
+}
+
+/**
+ * For the provided market publicKey, outcome index and forOrder bool, return all pending orders matching the criteria. Pending orders are classed as open orders or matched orders that have only been partially matched.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of a market
+ * @param forOutcome {boolean} filter for orders that are for or against the outcome
+ * @returns {PendingOrders} a list of all pending order accounts
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const outcomeIndex = 2
+ * const forOutcome = false
+ * const pendingOrders = await filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(program, marketPK, outcomeIndex, forOutcome)
+ */
+export async function filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(
+  program: Program,
+  marketPk: PublicKey,
+  outcomeIndex: number,
+  forOutcome: boolean,
+): Promise<ClientResponse<PendingOrders>> {
+  const response = new ResponseFactory({} as PendingOrders);
+
+  const [matchedOrdersResponse, openOrdersResponse] = await Promise.all([
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByMarketOutcomeIndex(outcomeIndex)
+      .filterByForOutcome(forOutcome)
+      .filterByStatus(OrderStatus.Matched)
+      .fetch(),
+    await new Orders(program)
+      .filterByMarket(marketPk)
+      .filterByMarketOutcomeIndex(outcomeIndex)
+      .filterByForOutcome(forOutcome)
+      .filterByStatus(OrderStatus.Open)
+      .fetch(),
+  ]);
+
+  return constructPendingOrdersResponse(
+    response,
+    matchedOrdersResponse,
+    openOrdersResponse,
+  ).body;
+}
+
+/**
+ * Internal helper to construct a pending order response, returning a ResponseFactory object with pending orders or relevant errors.
+ *
+ * @param response {ResponseFactory} the primary response factory object for the pending orders endpoint
+ * @param matchedOrders {ClientResponse<OrderAccounts>} full client response from an Orders query for matched orders
+ * @param openOrders {ClientResponse<OrderAccounts>} full client response from an Orders query for open orders
+ * @returns {ResponseFactory} pending orders filtered from successful matchedOrders and openOrders response objects
+ *
+ * @example
+ *
+ * const response = new ResponseFactory({} as PendingOrders)
+ * const matchedOrders = await new Orders(program).filterByMarket(marketPk).filterByStatus(OrderStatus.Matched).fetch(),
+ * const openOrders = await new Orders(program).filterByMarket(marketPk).filterByStatus(OrderStatus.Open).fetch(),
+ * return constructPendingOrdersResponse(matchedOrders, openOrders).body
+ */
+function constructPendingOrdersResponse(
+  response: ResponseFactory,
+  matchedOrders: ClientResponse<OrderAccounts>,
+  openOrders: ClientResponse<OrderAccounts>,
+): ResponseFactory {
+  if (!matchedOrders.success || !openOrders.success) {
+    response.addErrors(matchedOrders.errors);
+    response.addErrors(openOrders.errors);
+    return response;
+  }
+
+  const pendingOrders = filterPendingOrders(
+    matchedOrders.data.orderAccounts,
+    openOrders.data.orderAccounts,
+  );
+
+  response.addResponseData({
+    pendingOrders: pendingOrders,
+  });
+
+  return response;
+}
+
+/**
+ * Internal helper function to filter out fully matched orders and combine the remaining with open orders in order to return pending orders.
+ *
+ * @param matchedOrders {GetAccount<Order>[]} list of matched orders obtained through an Orders query
+ * @param openOrders {GetAccount<Order>[]} list of open orders obtained through an Orders query
+ * @returns {GetAccount<Order>[]} list of pending orders
+ *
+ * @example
+ *
+ * const matchedOrders = await new Orders(program).filterByMarket(marketPk).filterByStatus(OrderStatus.Matched).fetch(),
+ * const openOrders = await new Orders(program).filterByMarket(marketPk).filterByStatus(OrderStatus.Open).fetch(),
+ * const pendingOrders = filterPendingOrders(matchedOrders.data.orderAccounts, openOrders.data.orderAccounts)
+ */
+function filterPendingOrders(
+  matchedOrders: GetAccount<Order>[],
+  openOrders: GetAccount<Order>[],
+): GetAccount<Order>[] {
+  const partiallyMatchedOrders = matchedOrders.filter(
+    (order) => order.account.stakeUnmatched.toNumber() > 0,
+  );
+
+  const pendingOrders = partiallyMatchedOrders.concat(openOrders);
+
+  return pendingOrders;
 }

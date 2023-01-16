@@ -1,6 +1,5 @@
-import { PublicKey, MemcmpFilter } from "@solana/web3.js";
-import { Program, BorshAccountsCoder } from "@project-serum/anchor";
-import bs58 from "bs58";
+import { PublicKey } from "@solana/web3.js";
+import { Program } from "@project-serum/anchor";
 import {
   ResponseFactory,
   ClientResponse,
@@ -9,6 +8,7 @@ import {
   MarketOutcomeAccounts,
   MarketOutcomeTitlesResponse,
 } from "../types";
+import { PublicKeyCriterion, toFilters } from "./queries";
 
 /**
  * Base market outcome query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -35,25 +35,15 @@ export class MarketOutcomes {
   }
 
   private program: Program;
-  private _filter: MemcmpFilter[] = [];
+  private market: PublicKeyCriterion = new PublicKeyCriterion(8);
 
   constructor(program: Program) {
     this.program = program;
-    this._filter.push(
-      this.toFilter(
-        0,
-        bs58.encode(BorshAccountsCoder.accountDiscriminator("market_outcome")),
-      ),
-    );
   }
 
   filterByMarket(market: PublicKey): MarketOutcomes {
-    this._filter.push(this.toFilter(8, market.toBase58()));
+    this.market.setValue(market);
     return this;
-  }
-
-  private toFilter(offset: number, bytes: string): MemcmpFilter {
-    return { memcmp: { offset: offset, bytes: bytes } };
   }
 
   /**
@@ -69,7 +59,7 @@ export class MarketOutcomes {
         this.program.programId,
         {
           dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: this._filter,
+          filters: toFilters("market_outcome", this.market),
         },
       );
       const publicKeys = accounts.map((account) => account.pubkey);

@@ -1,10 +1,5 @@
-import { PublicKey, MemcmpFilter } from "@solana/web3.js";
-import {
-  Program,
-  BorshAccountsCoder,
-  AnchorProvider,
-} from "@project-serum/anchor";
-import bs58 from "bs58";
+import { PublicKey } from "@solana/web3.js";
+import { Program, AnchorProvider } from "@project-serum/anchor";
 import {
   Trade,
   ClientResponse,
@@ -12,6 +7,7 @@ import {
   GetPublicKeys,
   TradeAccounts,
 } from "../types";
+import { PublicKeyCriterion, toFilters } from "./queries";
 
 /**
  * Base trade query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -42,35 +38,28 @@ export class Trades {
   }
 
   private program: Program;
-  private _filter: MemcmpFilter[] = [];
+
+  private purchaser: PublicKeyCriterion = new PublicKeyCriterion(8);
+  private market: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
+  private order: PublicKeyCriterion = new PublicKeyCriterion(8 + 32 + 32);
 
   constructor(program: Program) {
     this.program = program;
-    this._filter.push(
-      this.toFilter(
-        0,
-        bs58.encode(BorshAccountsCoder.accountDiscriminator("trade")),
-      ),
-    );
   }
 
   filterByPurchaser(purchaser: PublicKey): Trades {
-    this._filter.push(this.toFilter(8, purchaser.toBase58()));
+    this.purchaser.setValue(purchaser);
     return this;
   }
 
   filterByMarket(market: PublicKey): Trades {
-    this._filter.push(this.toFilter(8 + 32, market.toBase58()));
+    this.market.setValue(market);
     return this;
   }
 
   filterByOrder(order: PublicKey): Trades {
-    this._filter.push(this.toFilter(8 + 32 + 32, order.toBase58()));
+    this.order.setValue(order);
     return this;
-  }
-
-  private toFilter(offset: number, bytes: string): MemcmpFilter {
-    return { memcmp: { offset: offset, bytes: bytes } };
   }
 
   /**
@@ -86,7 +75,7 @@ export class Trades {
         this.program.programId,
         {
           dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: this._filter,
+          filters: toFilters("trade", this.purchaser, this.market, this.order),
         },
       );
       const publicKeys = accounts.map((account) => account.pubkey);

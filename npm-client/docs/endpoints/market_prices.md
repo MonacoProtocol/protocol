@@ -5,6 +5,9 @@
 *   [getMarketPrices][1]
     *   [Parameters][2]
     *   [Examples][3]
+*   [getMarketPricesWithMatchingPoolsFromOrders][4]
+    *   [Parameters][5]
+    *   [Examples][6]
 
 ## getMarketPrices
 
@@ -15,6 +18,8 @@ For the provided market publicKey return:
 *   The market prices for the market
 
 Market prices are all unique pending order combinations (OUTCOME, PRICE, FOR) and their corresponding matching pool accounts.
+
+Note that this is an intensive request the larger the market in terms of outcomes and pending orders.
 
 ### Parameters
 
@@ -28,10 +33,46 @@ const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketPrices = await getMarketPrices(program, marketPK)
 ```
 
-Returns **MarketPrices** Market account, pending orders and marketPrices with matching pools
+Returns **MarketPricesAndPendingOrders** Market account, pending orders and marketPrices with matching pools
+
+## getMarketPricesWithMatchingPoolsFromOrders
+
+For the provided market publicKey, orders, and market outcome titles, return:
+
+*   The market prices for the market mapped to the outcome titles
+
+Market prices are all unique pending order combinations (OUTCOME, PRICE, FOR) and their corresponding matching pool accounts.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+*   `orders` **[Array][7]\<GetAccount\<Order>>** {GetAccount<Order>\[]} list of orders obtained through an Orders query
+*   `marketOutcomeTitles` **[Array][7]<[string][8]>** {string\[]} ordered list of the market outcome titles obtained through `getMarketOutcomesByMarket` or `getMarketOutcomeTitlesByMarket`
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const pendingOrders = await getPendingOrdersForMarket(program, marketPk)
+const marketTitles = await getMarketOutcomeTitlesByMarket(program, marketPk)
+const marketPrices = await getMarketPricesWithMatchingPoolsFromOrders(program, marketPk, pendingOrders.data.pendingOrders, marketTitles.data.marketOutcomeTitles)
+```
+
+Returns **MarketPrices** marketPrices with matching pools mapped to outcome titles
 
 [1]: #getmarketprices
 
 [2]: #parameters
 
 [3]: #examples
+
+[4]: #getmarketpriceswithmatchingpoolsfromorders
+
+[5]: #parameters-1
+
+[6]: #examples-1
+
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

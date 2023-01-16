@@ -1,19 +1,21 @@
 import { Program } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Orders } from "./order_query";
-import { getMarketOutcomeTitlesByMarket } from "./market_outcome_query";
+import { getMarketOutcomesByMarket } from "./market_outcome_query";
 import { getMarket } from "./markets";
 import {
   findMarketMatchingPoolPda,
   getMarketMatchingPoolAccounts,
 } from "./market_matching_pools";
 import {
-  OrderStatus,
   MarketPrice,
   MarketPrices,
+  MarketPricesAndPendingOrders,
   ClientResponse,
   ResponseFactory,
+  GetAccount,
+  Order,
 } from "../types";
+import { getPendingOrdersForMarket } from "./order";
 
 /**
  * For the provided market publicKey return:
@@ -24,9 +26,11 @@ import {
  *
  *  Market prices are all unique pending order combinations (OUTCOME, PRICE, FOR) and their corresponding matching pool accounts.
  *
+ *  Note that this is an intensive request the larger the market in terms of outcomes and pending orders.
+ *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
- * @returns {MarketPrices} Market account, pending orders and marketPrices with matching pools
+ * @returns {MarketPricesAndPendingOrders} Market account, pending orders and marketPrices with matching pools
  *
  * @example
  *
@@ -36,63 +40,76 @@ import {
 export async function getMarketPrices(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<MarketPrices>> {
-  const response = new ResponseFactory({} as MarketPrices);
-  const [matchedOrders, openOrders, market, marketOutcomeTitles] =
-    await Promise.all([
-      await new Orders(program)
-        .filterByMarket(marketPk)
-        .filterByStatus(OrderStatus.Matched)
-        .fetch(),
-      await new Orders(program)
-        .filterByMarket(marketPk)
-        .filterByStatus(OrderStatus.Open)
-        .fetch(),
-      await getMarket(program, marketPk),
-      await getMarketOutcomeTitlesByMarket(program, marketPk),
-    ]);
+): Promise<ClientResponse<MarketPricesAndPendingOrders>> {
+  const response = new ResponseFactory({} as MarketPricesAndPendingOrders);
+  const [pendingOrdersResponse, market, marketOutcomes] = await Promise.all([
+    getPendingOrdersForMarket(program, marketPk),
+    getMarket(program, marketPk),
+    getMarketOutcomesByMarket(program, marketPk),
+  ]);
 
-  if (!matchedOrders.success || !openOrders.success || !market.success) {
-    response.addErrors(matchedOrders.errors);
-    response.addErrors(openOrders.errors);
+  if (!market.success || !marketOutcomes.success) {
     response.addErrors(market.errors);
+    response.addErrors(marketOutcomes.errors);
     return response.body;
   }
 
-  const partiallyMatchedOrders = matchedOrders.data.orderAccounts.filter(
-    (order) => order.account.stakeUnmatched.toNumber() > 0,
+  const pendingOrders = pendingOrdersResponse.data.pendingOrders;
+  const marketOutcomeTitles = marketOutcomes.data.marketOutcomeAccounts.map(
+    (market) => market.account.title,
   );
 
-  const pendingOrders = partiallyMatchedOrders.concat(
-    openOrders.data.orderAccounts,
+  const marketPrices = await getMarketPricesWithMatchingPoolsFromOrders(
+    program,
+    marketPk,
+    pendingOrders,
+    marketOutcomeTitles,
   );
 
-  const marketPricesSet = new Set();
-  pendingOrders.map((pendingOrder) => {
-    const account = pendingOrder.account;
-
-    const price = {
-      marketOutcome:
-        marketOutcomeTitles.data.marketOutcomeTitles[
-          account.marketOutcomeIndex
-        ],
-      marketOutcomeIndex: account.marketOutcomeIndex,
-      price: account.expectedPrice,
-      forOutcome: account.forOutcome,
-    };
-    marketPricesSet.add(JSON.stringify(price));
+  response.addResponseData({
+    market: market.data.account,
+    pendingOrders: pendingOrders,
+    marketPrices: marketPrices.data.marketPrices,
+    marketOutcomeAccounts: marketOutcomes.data.marketOutcomeAccounts,
   });
 
-  const marketPrices = Array.from(marketPricesSet).map(function (price) {
-    return JSON.parse(price as string) as MarketPrice;
-  });
+  return response.body;
+}
 
+/**
+ * For the provided market publicKey, orders, and market outcome titles, return:
+ *
+ * - The market prices for the market mapped to the outcome titles
+ *
+ *  Market prices are all unique pending order combinations (OUTCOME, PRICE, FOR) and their corresponding matching pool accounts.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of a market
+ * @param orders {GetAccount<Order>[]} list of orders obtained through an Orders query
+ * @param marketOutcomeTitles {string[]} ordered list of the market outcome titles obtained through `getMarketOutcomesByMarket` or `getMarketOutcomeTitlesByMarket`
+ * @returns {MarketPrices} marketPrices with matching pools mapped to outcome titles
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const pendingOrders = await getPendingOrdersForMarket(program, marketPk)
+ * const marketTitles = await getMarketOutcomeTitlesByMarket(program, marketPk)
+ * const marketPrices = await getMarketPricesWithMatchingPoolsFromOrders(program, marketPk, pendingOrders.data.pendingOrders, marketTitles.data.marketOutcomeTitles)
+ */
+export async function getMarketPricesWithMatchingPoolsFromOrders(
+  program: Program,
+  marketPk: PublicKey,
+  orders: GetAccount<Order>[],
+  marketOutcomeTitles: string[],
+): Promise<ClientResponse<MarketPrices>> {
+  const response = new ResponseFactory({} as MarketPrice);
+  const marketPrices = marketPricesFromOrders(orders, marketOutcomeTitles);
   const marketMatchingPoolPdas = [] as PublicKey[];
   await Promise.all(
     marketPrices.map(async function (price) {
       const matchingPoolPDA = await findMarketMatchingPoolPda(
         program,
-        market.data.publicKey,
+        marketPk,
         price.marketOutcomeIndex,
         price.price,
         price.forOutcome,
@@ -126,11 +143,51 @@ export async function getMarketPrices(
     }
   });
 
-  response.addResponseData({
-    market: market.data.account,
-    pendingOrders: pendingOrders,
-    marketPrices: marketPrices,
-  });
+  response.addResponseData({ marketPrices: marketPrices });
 
   return response.body;
+}
+
+/**
+ * Internal helper function to filter a list of orders to return all the unique market price combinations of:
+ *
+ * - Outcome index
+ * - Price
+ * - forOutcome
+ *
+ * This also maps the outcome titles to the unique prices for accessability.
+ *
+ * @param orders {GetAccount<Order>[]} list of orders obtained through an Orders query
+ * @param marketOutcomeTitles {string[]} ordered list of the market outcome titles obtained through `getMarketOutcomesByMarket` or `getMarketOutcomeTitlesByMarket`
+ * @returns {MarketPrice[]} list of unique market price combinations
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const pendingOrders = await getPendingOrdersForMarket(program, marketPk)
+ * const marketTitles = await getMarketOutcomeTitlesByMarket(program, marketPk)
+ * const marketPrices = await getMarketPrices(program, pendingOrders.data.pendingOrders, marketTitles.data.marketOutcomeTitles)
+ */
+function marketPricesFromOrders(
+  orders: GetAccount<Order>[],
+  marketOutcomeTitles: string[],
+): MarketPrice[] {
+  const marketPricesSet = new Set();
+  orders.map((order) => {
+    const account = order.account;
+
+    const price = {
+      marketOutcome: marketOutcomeTitles[account.marketOutcomeIndex],
+      marketOutcomeIndex: account.marketOutcomeIndex,
+      price: account.expectedPrice,
+      forOutcome: account.forOutcome,
+    };
+    marketPricesSet.add(JSON.stringify(price));
+  });
+
+  const marketPrices = Array.from(marketPricesSet).map(function (price) {
+    return JSON.parse(price as string) as MarketPrice;
+  });
+
+  return marketPrices;
 }
