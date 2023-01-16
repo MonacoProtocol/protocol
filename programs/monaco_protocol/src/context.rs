@@ -639,7 +639,7 @@ pub struct CloseMarketMatchingPool<'info> {
             market.key().as_ref(),
             market_outcome.index.to_string().as_ref(),
             b"-".as_ref(),
-            format!("{:.3}", _price).as_ref(),
+            format!("{_price:.3}").as_ref(),
             _for_outcome.to_string().as_ref(),
         ],
         bump,

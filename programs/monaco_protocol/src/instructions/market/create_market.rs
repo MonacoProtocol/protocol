@@ -79,7 +79,7 @@ fn verify_prices_precision(prices: &[f64]) -> Result<()> {
     require!(
         prices
             .iter()
-            .all(|&value| format!("{}", value) <= format!("{:.3}", value)),
+            .all(|&value| format!("{value}") <= format!("{value:.3}")),
         CoreError::MarketPricePrecisionTooLarge
     );
     Ok(())
