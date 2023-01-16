@@ -24,7 +24,8 @@
     "build": "tsc --downlevelIteration",
     "clean": "tsc --build --clean",
     "generateDocs": "./generate_docs.sh && npm run clean",
-    "publishClient": "npm install && npm run build && npm publish --access public && npm run clean"
+    "publishClient": "npm install && npm run build && npm publish --access public && npm run clean",
+    "publishDevClient": "npm install && npm run build && npm publish --tag dev --access public && npm run clean"
   },
   "peerDependencies": {
     "bs58": "^4.0.1",

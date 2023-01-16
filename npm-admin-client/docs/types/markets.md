@@ -24,15 +24,16 @@
 *   [MarketStatus][20]
 *   [MarketAccount][21]
     *   [Properties][22]
+*   [EpochTimeStamp][23]
 
 ## CreateMarketResponse
 
-Type: {marketPk: PublicKey, tnxId: [string][23], market: [MarketAccount][21]}
+Type: {marketPk: PublicKey, tnxId: [string][24], market: [MarketAccount][21]}
 
 ### Properties
 
 *   `marketPk` **PublicKey**&#x20;
-*   `tnxId` **[string][23]**&#x20;
+*   `tnxId` **[string][24]**&#x20;
 *   `market` **[MarketAccount][21]**&#x20;
 
 ## CreateMarketWithOutcomesAndPriceLadderResponse
@@ -41,11 +42,11 @@ Type: any
 
 ## OutcomePdaResponse
 
-Type: {outcomeIndex: [number][24], outcomePda: PublicKey}
+Type: {outcomeIndex: [number][25], outcomePda: PublicKey}
 
 ### Properties
 
-*   `outcomeIndex` **[number][24]**&#x20;
+*   `outcomeIndex` **[number][25]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
 
 ## OutcomeInitialisationResponse
@@ -58,77 +59,81 @@ Type: any
 
 ## OutcomePdasResponse
 
-Type: {outcomePdas: [Array][25]<[OutcomePdaResponse][4]>}
+Type: {outcomePdas: [Array][26]<[OutcomePdaResponse][4]>}
 
 ### Properties
 
-*   `outcomePdas` **[Array][25]<[OutcomePdaResponse][4]>**&#x20;
+*   `outcomePdas` **[Array][26]<[OutcomePdaResponse][4]>**&#x20;
 
 ## OutcomeInitialisationsResponse
 
-Type: {outcomes: [Array][25]<[OutcomeInitialisationResponse][6]>}
+Type: {outcomes: [Array][26]<[OutcomeInitialisationResponse][6]>}
 
 ### Properties
 
-*   `outcomes` **[Array][25]<[OutcomeInitialisationResponse][6]>**&#x20;
+*   `outcomes` **[Array][26]<[OutcomeInitialisationResponse][6]>**&#x20;
 
 ## AddPricesToOutcomeResponse
 
-Type: {priceLadder: [Array][25]<[number][24]>, tnxId: [string][23]}
+Type: {priceLadder: [Array][26]<[number][25]>, tnxId: [string][24]}
 
 ### Properties
 
-*   `priceLadder` **[Array][25]<[number][24]>**&#x20;
-*   `tnxId` **[string][23]**&#x20;
+*   `priceLadder` **[Array][26]<[number][25]>**&#x20;
+*   `tnxId` **[string][24]**&#x20;
 
 ## BatchAddPricesToOutcomeResponse
 
-Type: {batches: [Array][25]<[AddPricesToOutcomeResponse][12]>}
+Type: {batches: [Array][26]<[AddPricesToOutcomeResponse][12]>}
 
 ### Properties
 
-*   `batches` **[Array][25]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][26]<[AddPricesToOutcomeResponse][12]>**&#x20;
 
 ## BatchAddPricesToOutcomes
 
-Type: {outcomeIndex: [number][24], outcomePda: PublicKey, batches: [Array][25]<[AddPricesToOutcomeResponse][12]>}
+Type: {outcomeIndex: [number][25], outcomePda: PublicKey, batches: [Array][26]<[AddPricesToOutcomeResponse][12]>}
 
 ### Properties
 
-*   `outcomeIndex` **[number][24]**&#x20;
+*   `outcomeIndex` **[number][25]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
-*   `batches` **[Array][25]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][26]<[AddPricesToOutcomeResponse][12]>**&#x20;
 
 ## BatchAddPricesToOutcomesResponse
 
-Type: {results: [Array][25]<[BatchAddPricesToOutcomes][16]>}
+Type: {results: [Array][26]<[BatchAddPricesToOutcomes][16]>}
 
 ### Properties
 
-*   `results` **[Array][25]<[BatchAddPricesToOutcomes][16]>**&#x20;
+*   `results` **[Array][26]<[BatchAddPricesToOutcomes][16]>**&#x20;
 
 ## MarketStatus
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][24], escrowAccountBump: [number][24], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][24], marketSettleTimestamp: null?, marketStatus: [MarketStatus][20], marketType: [string][23], marketWinningOutcomeIndex: [number][24]?, mintAccount: PublicKey, published: [boolean][26], suspended: [boolean][26], title: [string][23]}
+Type: {authority: BN, decimalLimit: [number][25], escrowAccountBump: [number][25], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][25], marketSettleTimestamp: null?, marketStatus: [MarketStatus][20], marketType: [string][24], marketWinningOutcomeIndex: [number][25]?, mintAccount: PublicKey, published: [boolean][27], suspended: [boolean][27], title: [string][24]}
 
 ### Properties
 
 *   `authority` **BN**&#x20;
-*   `decimalLimit` **[number][24]**&#x20;
-*   `escrowAccountBump` **[number][24]**&#x20;
+*   `decimalLimit` **[number][25]**&#x20;
+*   `escrowAccountBump` **[number][25]**&#x20;
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
-*   `marketOutcomesCount` **[number][24]**&#x20;
+*   `marketOutcomesCount` **[number][25]**&#x20;
 *   `marketSettleTimestamp` **null?**&#x20;
 *   `marketStatus` **[MarketStatus][20]**&#x20;
-*   `marketType` **[string][23]**&#x20;
-*   `marketWinningOutcomeIndex` **[number][24]?**&#x20;
+*   `marketType` **[string][24]**&#x20;
+*   `marketWinningOutcomeIndex` **[number][25]?**&#x20;
 *   `mintAccount` **PublicKey**&#x20;
-*   `published` **[boolean][26]**&#x20;
-*   `suspended` **[boolean][26]**&#x20;
-*   `title` **[string][23]**&#x20;
+*   `published` **[boolean][27]**&#x20;
+*   `suspended` **[boolean][27]**&#x20;
+*   `title` **[string][24]**&#x20;
+
+## EpochTimeStamp
+
+Type: [number][25]
 
 [1]: #createmarketresponse
 
@@ -174,10 +179,12 @@ Type: {authority: BN, decimalLimit: [number][24], escrowAccountBump: [number][24
 
 [22]: #properties-8
 
-[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[23]: #epochtimestamp
 
-[24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

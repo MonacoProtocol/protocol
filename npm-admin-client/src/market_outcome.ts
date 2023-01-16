@@ -99,18 +99,45 @@ export async function initialiseOutcomes(
   outcomes: string[],
 ): Promise<ClientResponse<OutcomeInitialisationsResponse>> {
   const response = new ResponseFactory({} as OutcomeInitialisationsResponse);
+  const provider = program.provider as AnchorProvider;
+  const [authorisedOperatorsPda, market] = await Promise.all([
+    findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
+    program.account.market.fetch(marketPk),
+  ]);
 
-  const transactions = { outcomes: [] } as OutcomeInitialisationsResponse;
-  for (const outcome of outcomes) {
-    const initalisationResponse = await initialiseOutcome(
-      program,
-      marketPk,
-      outcome,
-    );
-    if (initalisationResponse.success) {
-      transactions.outcomes.push(initalisationResponse.data);
-    } else {
-      response.addErrors(initalisationResponse.errors);
+  if (!authorisedOperatorsPda.success) {
+    response.addErrors(authorisedOperatorsPda.errors);
+    return response.body;
+  }
+
+  const transactions = [] as OutcomeInitialisationResponse[];
+  for (const i in outcomes) {
+    try {
+      const outcomeIndex = market.marketOutcomesCount + parseInt(i);
+      const nextOutcomePda = await findMarketOutcomePda(
+        program,
+        marketPk,
+        outcomeIndex,
+      );
+      const tnxId = await program.methods
+        .initializeMarketOutcome(outcomes[i], [])
+        .accounts({
+          systemProgram: SystemProgram.programId,
+          outcome: nextOutcomePda.data.pda,
+          market: marketPk,
+          authorisedOperators: authorisedOperatorsPda.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .rpc();
+
+      await confirmTransaction(program, tnxId);
+      transactions.push({
+        outcomeIndex: outcomeIndex,
+        outcomePda: nextOutcomePda.data.pda,
+        tnxId: tnxId,
+      });
+    } catch (e) {
+      response.addError(e);
     }
   }
   return response.body;
