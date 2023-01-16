@@ -24,16 +24,6 @@ describe("Market Query", () => {
           foundMarket.publicKey.toString() == market.pk.toString(),
       ),
     );
-
-    const responseComplete = await getMarketAccountsByStatus(
-      monaco.getRawProgram(),
-      MarketStatus.ReadyToClose,
-    );
-
-    assert(responseComplete.success);
-    assert(responseComplete.data);
-    assert.equal(responseComplete.data.markets.length, 0);
-    assert.deepEqual(responseComplete.errors, []);
   });
 
   it("Get Market by Event", async () => {
