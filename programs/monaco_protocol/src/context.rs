@@ -397,7 +397,6 @@ pub struct UpdateMarketOutcome<'info> {
             _outcome_index.to_string().as_ref(),
         ],
         bump,
-        constraint = _outcome_index < market.market_outcomes_count
     )]
     pub outcome: Account<'info, MarketOutcome>,
 
