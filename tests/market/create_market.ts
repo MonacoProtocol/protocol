@@ -121,9 +121,10 @@ describe("Market: creation", () => {
     const pricesToAdd = [9.999, 9.99, 9.9];
 
     await monaco.program.methods
-      .addPricesToMarketOutcome(market.pk, 0, pricesToAdd)
+      .addPricesToMarketOutcome(0, pricesToAdd)
       .accounts({
         outcome: market.outcomePks[0],
+        market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,

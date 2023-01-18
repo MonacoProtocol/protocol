@@ -26,7 +26,7 @@ pub fn create_product_config(
         CoreError::ProductConfigTitleLen
     );
     require!(
-        format!("{}", commission_rate) <= format!("{:.3}", commission_rate),
+        format!("{commission_rate}") <= format!("{commission_rate:.3}"),
         CoreError::CommissionPrecisionTooLarge
     );
 

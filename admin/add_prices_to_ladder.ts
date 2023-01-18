@@ -36,10 +36,11 @@ export async function addPricesToLadder() {
         protocolProgram,
       );
       await protocolProgram.methods
-        .addPricesToMarketOutcome(marketPda, marketOutcomeIndex, pricesToAdd)
+        .addPricesToMarketOutcome(marketOutcomeIndex, pricesToAdd)
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePda,
+          market: marketPda,
           marketOperator: getAnchorProvider().wallet.publicKey,
           authorisedOperators: authorisedOperators.data.pda,
         })

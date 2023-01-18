@@ -10,7 +10,11 @@ repos:
     hooks:
     -   id: fmt
     -   id: cargo-check
+-   repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
     -   id: clippy
+        args: ["--", "-D", "warnings", "-A", "clippy::result_large_err"]
 -   repo: local
     hooks:
     -   id: generate-admin-client-docs
