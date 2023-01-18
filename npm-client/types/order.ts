@@ -27,7 +27,10 @@ export type Order = {
   creationTimestamp: BN;
   stakeUnmatched: BN;
   payout: BN;
-  matches: Match[];
+};
+
+export type PendingOrders = {
+  pendingOrders: GetAccount<Order>[];
 };
 
 export type OrderAccounts = {

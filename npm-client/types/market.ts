@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { Order } from "./order";
+import { Order, PendingOrders } from "./order";
 import { GetAccount } from "./get_account";
 
 export enum MarketStatus {
@@ -20,7 +20,7 @@ export enum MarketType {
 }
 
 export type MarketAccount = {
-  authority: BN;
+  authority: PublicKey;
   decimalLimit: number;
   escrowAccountBump: number;
   eventAccount: PublicKey;
@@ -94,3 +94,9 @@ export type MarketPrices = {
   pendingOrders: Order[];
   marketPrices: MarketPrice[];
 };
+
+export type MarketPricesAndPendingOrders = {
+  market: MarketAccount;
+} & MarketOutcomeAccounts &
+  MarketPrices &
+  PendingOrders;

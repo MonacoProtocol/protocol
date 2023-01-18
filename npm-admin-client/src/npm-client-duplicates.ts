@@ -11,8 +11,6 @@ import {
 import { AnchorProvider } from "@project-serum/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 
-// TODO remove on the next npm-client release
-
 export enum MarketType {
   EventResultFullTime = "EventResultFullTime",
   EventResultHalfTime = "EventResultHalfTime",

@@ -11,6 +11,15 @@
 *   [getOrders][7]
     *   [Parameters][8]
     *   [Examples][9]
+*   [getPendingOrdersForMarket][10]
+    *   [Parameters][11]
+    *   [Examples][12]
+*   [getPendingOrdersForMarketByOutcomeIndex][13]
+    *   [Parameters][14]
+    *   [Examples][15]
+*   [filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome][16]
+    *   [Parameters][17]
+    *   [Examples][18]
 
 ## findOrderPda
 
@@ -57,7 +66,7 @@ For the provided order publicKeys, get the order accounts.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `orderPks` **[Array][10]\<PublicKey>** {PublicKey\[]} a list of publicKeys of orders
+*   `orderPks` **[Array][19]\<PublicKey>** {PublicKey\[]} a list of publicKeys of orders
 
 ### Examples
 
@@ -69,6 +78,66 @@ const Order = await getOrder(program, orderPks)
 ```
 
 Returns **OrderAccounts** order account details
+
+## getPendingOrdersForMarket
+
+For the provided market publicKey, return all pending orders for that market. Pending orders are classed as open orders or matched orders that have only been partially matched.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const pendingOrders = await getPendingOrdersForMarket(program, marketPK)
+```
+
+Returns **PendingOrders** a list of all pending order accounts
+
+## getPendingOrdersForMarketByOutcomeIndex
+
+For the provided market publicKey and outcome index, return all pending orders matching the criteria. Pending orders are classed as open orders or matched orders that have only been partially matched.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+*   `outcomeIndex` **[number][20]**&#x20;
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const outcomeIndex = 2
+const pendingOrders = await getPendingOrdersForMarketByOutcomeIndex(program, marketPK, outcomeIndex)
+```
+
+Returns **PendingOrders** a list of all pending order accounts
+
+## filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome
+
+For the provided market publicKey, outcome index and forOrder bool, return all pending orders matching the criteria. Pending orders are classed as open orders or matched orders that have only been partially matched.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+*   `outcomeIndex` **[number][20]**&#x20;
+*   `forOutcome` **[boolean][21]** {boolean} filter for orders that are for or against the outcome
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const outcomeIndex = 2
+const forOutcome = false
+const pendingOrders = await filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(program, marketPK, outcomeIndex, forOutcome)
+```
+
+Returns **PendingOrders** a list of all pending order accounts
 
 [1]: #findorderpda
 
@@ -88,4 +157,26 @@ Returns **OrderAccounts** order account details
 
 [9]: #examples-2
 
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[10]: #getpendingordersformarket
+
+[11]: #parameters-3
+
+[12]: #examples-3
+
+[13]: #getpendingordersformarketbyoutcomeindex
+
+[14]: #parameters-4
+
+[15]: #examples-4
+
+[16]: #filterbymarketandmarketoutcomeindexandstatusandforoutcome
+
+[17]: #parameters-5
+
+[18]: #examples-5
+
+[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

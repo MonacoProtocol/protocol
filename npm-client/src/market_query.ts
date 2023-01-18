@@ -1,6 +1,5 @@
-import { PublicKey, MemcmpFilter } from "@solana/web3.js";
-import { Program, BorshAccountsCoder } from "@project-serum/anchor";
-import bs58 from "bs58";
+import { PublicKey } from "@solana/web3.js";
+import { Program } from "@project-serum/anchor";
 import {
   ClientResponse,
   ResponseFactory,
@@ -9,6 +8,7 @@ import {
   GetPublicKeys,
   MarketStatus,
 } from "../types";
+import { PublicKeyCriterion, ByteCriterion, toFilters } from "./queries";
 
 export class Markets {
   /**
@@ -39,40 +39,34 @@ export class Markets {
   }
 
   private program: Program;
-  private _filter: MemcmpFilter[] = [];
+
+  private authority: PublicKeyCriterion = new PublicKeyCriterion(8);
+  private event: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
+  private mintAccount: PublicKeyCriterion = new PublicKeyCriterion(8 + 32 + 32);
+  private status: ByteCriterion = new ByteCriterion(8 + 32 + 32 + 32);
 
   constructor(program: Program) {
     this.program = program;
-    this._filter.push(
-      this.toFilter(
-        0,
-        bs58.encode(BorshAccountsCoder.accountDiscriminator("market")),
-      ),
-    );
   }
 
   filterByAuthority(authority: PublicKey): Markets {
-    this._filter.push(this.toFilter(8, authority.toBase58()));
+    this.authority.setValue(authority);
     return this;
   }
 
   filterByEvent(event: PublicKey): Markets {
-    this._filter.push(this.toFilter(8 + 32, event.toBase58()));
+    this.event.setValue(event);
     return this;
   }
 
   filterByMintAccount(mintAccount: PublicKey): Markets {
-    this._filter.push(this.toFilter(8 + 32 + 32, mintAccount.toBase58()));
+    this.mintAccount.setValue(mintAccount);
     return this;
   }
 
   filterByStatus(status: MarketStatus): Markets {
-    this._filter.push(this.toFilter(8 + 32 + 32 + 32, bs58.encode([status])));
+    this.status.setValue(status);
     return this;
-  }
-
-  private toFilter(offset: number, bytes: string): MemcmpFilter {
-    return { memcmp: { offset: offset, bytes: bytes } };
   }
 
   /**
@@ -88,7 +82,13 @@ export class Markets {
         this.program.programId,
         {
           dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: this._filter,
+          filters: toFilters(
+            "market",
+            this.authority,
+            this.event,
+            this.mintAccount,
+            this.status,
+          ),
         },
       );
       const publicKeys = accounts.map((account) => account.pubkey);

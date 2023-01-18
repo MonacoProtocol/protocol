@@ -78,3 +78,5 @@ export type MarketAccount = {
   suspended: boolean;
   title: string;
 };
+
+export type EpochTimeStamp = number;
