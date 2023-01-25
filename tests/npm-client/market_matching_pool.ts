@@ -1,6 +1,7 @@
 import { monaco } from "../util/wrappers";
 import {
   findAllMarketMatchingPoolPks,
+  findMarketMatchingPoolPda,
   getAllMarketMatchingPools,
 } from "../../npm-client/src/market_matching_pools";
 import * as assert from "assert";
@@ -23,9 +24,49 @@ describe("Market Matching Pools", () => {
     );
 
     assert.equal(
-      matchingPoolPks.data.publicKeys.length,
+      matchingPoolPks.data.marketMatchingPoolPksWithSeeds.map(
+        (i) => i.publicKey,
+      ).length,
       expectedNumberOfMatchingPools,
     );
+  });
+
+  it("fetch market matching pool pks - verify seeds returned match pk", async () => {
+    const priceLadder = [2.0];
+    const numberOfOutcomes = 3;
+    const market = await monaco.create3WayMarket(priceLadder);
+
+    const matchingPoolPks = await findAllMarketMatchingPoolPks(
+      monaco.getRawProgram(),
+      market.pk,
+    );
+
+    for (
+      let outcomeIndex = 0;
+      outcomeIndex < numberOfOutcomes;
+      outcomeIndex++
+    ) {
+      for (const forOutcome of [true, false]) {
+        const pda = await findMarketMatchingPoolPda(
+          monaco.getRawProgram(),
+          market.pk,
+          outcomeIndex,
+          2.0,
+          forOutcome,
+        );
+        const matchingPk =
+          matchingPoolPks.data.marketMatchingPoolPksWithSeeds.find((pk) => {
+            const seeds = pk.seeds;
+            return (
+              seeds.forOutcome == forOutcome.toString() &&
+              seeds.outcomeIndex == outcomeIndex.toString() &&
+              seeds.price == "2.000"
+            );
+          });
+
+        assert.equal(pda.data.pda.toBase58(), matchingPk.publicKey.toBase58());
+      }
+    }
   });
 
   it("fetch market matching pools", async () => {
@@ -40,7 +81,7 @@ describe("Market Matching Pools", () => {
     );
 
     // matching pools do not exist until order placement
-    assert.equal(matchingPools.data.marketMatchingPools.length, 0);
+    assert.equal(matchingPools.data.marketMatchingPoolsWithSeeds.length, 0);
 
     await Promise.all([
       market.forOrder(0, 1, priceLadder[0], purchaser),
@@ -54,7 +95,60 @@ describe("Market Matching Pools", () => {
     );
 
     // 3 back orders have been placed at different price points
-    assert.equal(matchingPools.data.marketMatchingPools.length, 3);
+    assert.equal(matchingPools.data.marketMatchingPoolsWithSeeds.length, 3);
+  });
+
+  it("fetch market matching pools - verify seeds returned match pools", async () => {
+    const numberOfOutcomes = 3;
+    const priceLadder = [2.0];
+    const market = await monaco.create3WayMarket(priceLadder);
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+
+    await Promise.all([
+      market.forOrder(0, 1, priceLadder[0], purchaser),
+      market.forOrder(1, 1, priceLadder[0], purchaser),
+      market.forOrder(2, 1, priceLadder[0], purchaser),
+
+      market.againstOrder(0, 1, priceLadder[0], purchaser),
+      market.againstOrder(1, 1, priceLadder[0], purchaser),
+      market.againstOrder(2, 1, priceLadder[0], purchaser),
+    ]);
+
+    const matchingPools = await getAllMarketMatchingPools(
+      monaco.getRawProgram(),
+      market.pk,
+    );
+
+    for (
+      let outcomeIndex = 0;
+      outcomeIndex < numberOfOutcomes;
+      outcomeIndex++
+    ) {
+      for (const forOutcome of [true, false]) {
+        const pda = await findMarketMatchingPoolPda(
+          monaco.getRawProgram(),
+          market.pk,
+          outcomeIndex,
+          2.0,
+          forOutcome,
+        );
+        const matchingPool =
+          matchingPools.data.marketMatchingPoolsWithSeeds.find((pool) => {
+            const seeds = pool.account.seeds;
+            return (
+              seeds.forOutcome == forOutcome.toString() &&
+              seeds.outcomeIndex == outcomeIndex.toString() &&
+              seeds.price == "2.000"
+            );
+          });
+
+        assert.equal(
+          pda.data.pda.toBase58(),
+          matchingPool.publicKey.toBase58(),
+        );
+      }
+    }
   });
 
   it("fetch market matching pools - large number of pools", async () => {
@@ -81,7 +175,7 @@ describe("Market Matching Pools", () => {
     );
 
     // matching pools do not exist until order placement
-    assert.equal(matchingPools.data.marketMatchingPools.length, 0);
+    assert.equal(matchingPools.data.marketMatchingPoolsWithSeeds.length, 0);
 
     await Promise.all(
       priceLadder.map(async (price) => {
@@ -103,7 +197,7 @@ describe("Market Matching Pools", () => {
 
     const expectedNumberOfMatchingPools = priceLadder.length * 3 * 2;
     assert.equal(
-      matchingPools.data.marketMatchingPools.length,
+      matchingPools.data.marketMatchingPoolsWithSeeds.length,
       expectedNumberOfMatchingPools,
     );
   });

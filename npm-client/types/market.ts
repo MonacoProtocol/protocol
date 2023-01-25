@@ -55,6 +55,30 @@ export type MarketMatchingPoolAccounts = {
   marketMatchingPools: GetAccount<MarketMatchingPoolAccount>[];
 };
 
+export type MarketMatchingPoolsWithSeeds = {
+  marketMatchingPoolsWithSeeds: GetAccount<MarketMatchingPoolWithSeeds>[];
+};
+
+export type MarketMatchingPoolWithSeeds = {
+  seeds: MarketMatchingPoolSeeds;
+  marketMatchingPool: MarketMatchingPoolAccount;
+};
+
+export type MarketMatchingPoolPublicKeysWithSeeds = {
+  marketMatchingPoolPksWithSeeds: MarketMatchingPoolPublicKeyWithSeeds[];
+};
+
+export type MarketMatchingPoolPublicKeyWithSeeds = {
+  seeds: MarketMatchingPoolSeeds;
+  publicKey: PublicKey;
+};
+
+export type MarketMatchingPoolSeeds = {
+  outcomeIndex: string;
+  price: string;
+  forOutcome: string;
+};
+
 export type MarketOutcomeAccount = {
   index: number;
   title: string;

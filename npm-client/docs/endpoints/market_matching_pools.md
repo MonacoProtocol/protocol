@@ -62,7 +62,8 @@ Returns **MarketMatchingPoolAccounts**&#x20;
 ## getAllMarketMatchingPools
 
 For the provided market, find any existing matching pools. Total number of matching pools can be
-calculated as (number of prices \* number of outcomes \* 2)
+calculated as (number of prices \* number of outcomes \* 2). This also returns the seeds used to generate the PDA for
+the matching pools.
 
 Note: due to the number of possible matching pools, caching this data is recommended for quick access
 
@@ -78,12 +79,13 @@ const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
 const matchingPools = await getAllMarketMatchingPools(program, marketPk);
 ```
 
-Returns **MarketMatchingPoolAccounts** list of matching pool accounts
+Returns **MarketMatchingPoolsWithSeeds** list of matching pool accounts
 
 ## findAllMarketMatchingPoolPks
 
 For the provided market, find all possible matching pool pda addresses. Total number of matching pools can be
-calculated as (number of prices \* number of outcomes \* 2)
+calculated as (number of prices \* number of outcomes \* 2). This also returns the seeds used to generate the PDA for
+the matching pools.
 
 ### Parameters
 
@@ -97,7 +99,7 @@ const marketPk = new PublicKey("DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R");
 const matchingPoolPks = await findAllMarketMatchingPoolPks(program, marketPk);
 ```
 
-Returns **GetPublicKeys** list of PublicKeys
+Returns **MarketMatchingPoolPublicKeysWithSeeds** list of PublicKeys
 
 [1]: #findmarketmatchingpoolpda
 
