@@ -24,6 +24,7 @@ export async function create_market() {
     eventAccountKeyPair.publicKey,
     ["Aduana Stars", "Draw", "Bechem United"],
     DEFAULT_PRICE_LADDER,
+    20,
   );
 
   if (createMarketResponse.success) {
