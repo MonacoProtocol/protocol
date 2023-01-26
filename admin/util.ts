@@ -125,3 +125,12 @@ export async function batchProcessInstructions(
     }
   }
 }
+
+export function checkResponse(response: {
+  success: boolean;
+  errors: object[];
+}) {
+  if (!response.success) {
+    console.error(JSON.stringify(response.errors));
+  }
+}

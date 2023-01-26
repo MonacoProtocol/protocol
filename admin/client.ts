@@ -2,7 +2,9 @@ import * as anchor from "@project-serum/anchor";
 import { create_market, print_market } from "./create_market";
 import { create_order } from "./create_order";
 import {
+  openMarket,
   publish_market,
+  setMarketReadyToClose,
   settle_market,
   suspend_market,
   unpublish_market,
@@ -39,8 +41,14 @@ switch (script) {
   case "print_market":
     print_market();
     break;
+  case "openMarket":
+    openMarket();
+    break;
   case "settle_market":
     settle_market();
+    break;
+  case "setMarketReadyToClose":
+    setMarketReadyToClose();
     break;
   case "publish_market":
     publish_market();
