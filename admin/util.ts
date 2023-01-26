@@ -131,6 +131,6 @@ export function checkResponse(response: {
   errors: object[];
 }) {
   if (!response.success) {
-    console.error(JSON.stringify(response.errors));
+    console.error(JSON.stringify(response.errors, null, 2));
   }
 }
