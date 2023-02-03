@@ -1,8 +1,7 @@
 use crate::error::CoreError;
-use crate::state::multisig::MultisigTransaction;
 use crate::{
-    AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, MultisigGroup,
-    Order, OrderData, ProductConfig, Trade,
+    AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, Order,
+    OrderData, ProductConfig, Trade,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -448,113 +447,34 @@ pub struct CloseAccount<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(group_title: String)]
-pub struct CreateMultisigGroup<'info> {
-    #[account(
-        init,
-        seeds = [b"multisig".as_ref(), group_title.as_ref()],
-        bump,
-        payer = signer,
-        space = MultisigGroup::SIZE
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(_distinct_seed: String)]
-pub struct CreateMultisigTransaction<'info> {
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        init,
-        seeds = [_distinct_seed.as_ref()],
-        bump,
-        payer = multisig_member,
-        space = MultisigTransaction::SIZE
-    )]
-    pub multisig_transaction: Account<'info, MultisigTransaction>,
-    #[account(mut)]
-    pub multisig_member: Signer<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct AuthoriseMultisigInstruction<'info> {
-    #[account(mut)]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump
-    )]
-    pub multisig_pda_signer: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ApproveMultisigTransaction<'info> {
-    #[account(
-        constraint = multisig_group.members_version == multisig_transaction.members_version
-            @ CoreError::MultisigMembersChanged
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut, has_one = multisig_group)]
-    pub multisig_transaction: Account<'info, MultisigTransaction>,
-    pub multisig_member: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ExecuteMultisigTransaction<'info> {
-    #[account(
-        constraint = multisig_group.members_version == multisig_transaction.members_version
-            @ CoreError::MultisigMembersChanged
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut, has_one = multisig_group)]
-    pub multisig_transaction: Box<Account<'info, MultisigTransaction>>,
-    /// CHECK: multisig_pda_signer is never read/written it is purely used as a pda signer
-    /// It cannot be of Signer type, as the signing is done within the program. If the seeds are
-    /// wrong, the tx will fail.
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump,
-    )]
-    pub multisig_pda_signer: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
 #[instruction(product_title: String)]
 pub struct CreateProductConfig<'info> {
     #[account(
         init,
         seeds = [b"product_config".as_ref(), product_title.as_ref()],
         bump,
-        payer = product_operator,
+        payer = payer,
         space = ProductConfig::SIZE
     )]
     pub product_config: Account<'info, ProductConfig>,
     pub commission_escrow: SystemAccount<'info>,
 
-    pub multisig_group: Account<'info, MultisigGroup>,
+    // payer may differ from authority in the case of multisig pda as authority
     #[account(mut)]
-    pub product_operator: Signer<'info>,
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-pub struct ProductConfigMultisigAuth<'info> {
-    #[account(mut, has_one = multisig_group)]
+pub struct UpdateProductConfig<'info> {
+    #[account(mut, has_one = authority)]
     pub product_config: Account<'info, ProductConfig>,
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump
-    )]
-    pub multisig_pda_signer: Signer<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
 }
 
 /*

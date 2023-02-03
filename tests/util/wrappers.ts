@@ -1,4 +1,4 @@
-import { AccountMeta, Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   Mint,
   TOKEN_PROGRAM_ID,
@@ -7,7 +7,7 @@ import {
   mintTo,
 } from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
-import { BN, Program } from "@project-serum/anchor";
+import { Program } from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
@@ -25,12 +25,7 @@ import {
   createNewMint,
   OperatorType,
 } from "../util/test_util";
-import {
-  findAuthorisedOperatorsPda,
-  findMultisigGroupPda,
-  findMultisigTransactionPda,
-  findProductConfigPda,
-} from "../util/pdas";
+import { findAuthorisedOperatorsPda, findProductConfigPda } from "../util/pdas";
 
 const { SystemProgram } = anchor.web3;
 
@@ -330,103 +325,12 @@ export class Monaco {
     return bmarket;
   }
 
-  async createMultisigGroup(
-    groupTitle: string,
-    signers: PublicKey[],
-    approvalThreshold: number,
-  ): Promise<PublicKey> {
-    const multisigGroupPk = await findMultisigGroupPda(
-      groupTitle,
-      this.getRawProgram(),
-    );
-    await this.program.methods
-      .createMultisig(groupTitle, signers, new BN(approvalThreshold))
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        signer: monaco.provider.wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-
-    return multisigGroupPk;
-  }
-
-  async createMultisigTransaction(
-    multisigGroupPk: PublicKey,
-    multisigMemberPk: PublicKey,
-    instructionData: Buffer,
-    instructionAccounts: AccountMeta[],
-  ): Promise<PublicKey> {
-    const distinctSeed = Date.now().toString();
-    const txPk = await findMultisigTransactionPda(
-      distinctSeed,
-      this.getRawProgram(),
-    );
-
-    await monaco.program.methods
-      .createMultisigTransaction(
-        distinctSeed,
-        instructionAccounts,
-        instructionData,
-      )
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        multisigTransaction: txPk,
-        multisigMember: multisigMemberPk,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
-
-    return txPk;
-  }
-
-  async executeMultisigTransaction(
-    multisigGroupPk: PublicKey,
-    multisigTransactionPk: PublicKey,
-    multisigPdaSignerPk: PublicKey,
-    instructionAccounts: AccountMeta[],
-  ) {
-    // Construct remainingAccounts
-    // map isSigner to false for executing transaction (unsure why I have to do this but it's required)
-    const updatedAccounts = instructionAccounts.map((acc) => {
-      return {
-        pubkey: acc.pubkey,
-        isSigner: false,
-        isWritable: acc.isWritable,
-      };
-    });
-    // ensure monaco program account is passed
-    const updatedAccountsWithProgram = updatedAccounts.concat({
-      pubkey: monaco.program.programId,
-      isWritable: false,
-      isSigner: false,
-    });
-
-    // execute transaction
-    await monaco.program.methods
-      .executeMultisigTransaction()
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        multisigTransaction: multisigTransactionPk,
-        multisigPdaSigner: multisigPdaSignerPk,
-      })
-      .remainingAccounts(updatedAccountsWithProgram)
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-  }
-
   async createProductConfig(
     productTitle: string,
     commissionRate: number,
-    multisigGroupPk: PublicKey,
+    authority?: Keypair,
   ) {
+    const defaultAuthority = authority == undefined;
     const productConfigPk = await findProductConfigPda(
       productTitle,
       this.getRawProgram(),
@@ -436,10 +340,13 @@ export class Monaco {
       .accounts({
         productConfig: productConfigPk,
         commissionEscrow: Keypair.generate().publicKey,
-        multisigGroup: multisigGroupPk,
-        productOperator: monaco.provider.wallet.publicKey,
+        authority: defaultAuthority
+          ? monaco.provider.publicKey
+          : authority.publicKey,
+        payer: monaco.provider.publicKey,
         systemProgram: SystemProgram.programId,
       })
+      .signers(defaultAuthority ? [] : [authority])
       .rpc()
       .catch((e) => {
         throw e;

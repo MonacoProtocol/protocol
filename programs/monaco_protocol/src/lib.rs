@@ -9,7 +9,6 @@ use crate::state::market_account::{
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
-use crate::state::multisig::{InstructionAccount, MultisigGroup};
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderData;
@@ -337,6 +336,10 @@ pub mod monaco_protocol {
         instructions::market::ready_to_close(&mut ctx.accounts.market)
     }
 
+    /*
+    Product Config
+    */
+
     pub fn create_product_config(
         ctx: Context<CreateProductConfig>,
         product_title: String,
@@ -344,9 +347,8 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::create_product_config(
             &mut ctx.accounts.product_config,
-            &ctx.accounts.multisig_group.key(),
-            &ctx.accounts.multisig_group.members,
-            &ctx.accounts.product_operator.key(),
+            &ctx.accounts.authority.key(),
+            &ctx.accounts.payer.key(),
             product_title,
             commission_rate,
             ctx.accounts.commission_escrow.key(),
@@ -355,7 +357,7 @@ pub mod monaco_protocol {
     }
 
     pub fn update_product_commission_escrow(
-        ctx: Context<ProductConfigMultisigAuth>,
+        ctx: Context<UpdateProductConfig>,
         updated_commission_escrow: Pubkey,
     ) -> Result<()> {
         instructions::update_product_commission_escrow(
@@ -366,73 +368,12 @@ pub mod monaco_protocol {
     }
 
     pub fn update_product_commission_rate(
-        ctx: Context<ProductConfigMultisigAuth>,
+        ctx: Context<UpdateProductConfig>,
         updated_commission_rate: f32,
     ) -> Result<()> {
         instructions::update_product_commission_rate(
             &mut ctx.accounts.product_config,
             updated_commission_rate,
-        )?;
-        Ok(())
-    }
-
-    pub fn create_multisig(
-        ctx: Context<CreateMultisigGroup>,
-        group_title: String,
-        members: Vec<Pubkey>,
-        approval_threshold: u64,
-    ) -> Result<()> {
-        instructions::create_multisig(
-            &mut ctx.accounts.multisig_group,
-            group_title,
-            members,
-            approval_threshold,
-        )?;
-        Ok(())
-    }
-
-    pub fn create_multisig_transaction(
-        ctx: Context<CreateMultisigTransaction>,
-        _distinct_seed: String,
-        instruction_accounts: Vec<InstructionAccount>,
-        instruction_data: Vec<u8>,
-    ) -> Result<()> {
-        instructions::create_multisig_transaction(
-            &ctx.accounts.multisig_group,
-            &ctx.accounts.multisig_group.key(),
-            &ctx.accounts.multisig_member.key(),
-            &mut ctx.accounts.multisig_transaction,
-            instruction_accounts,
-            instruction_data,
-        )?;
-        Ok(())
-    }
-
-    pub fn set_multisig_members(
-        ctx: Context<AuthoriseMultisigInstruction>,
-        new_members: Vec<Pubkey>,
-    ) -> Result<()> {
-        instructions::set_multisig_members(new_members, &mut ctx.accounts.multisig_group)?;
-        Ok(())
-    }
-
-    pub fn approve_multisig_transaction(ctx: Context<ApproveMultisigTransaction>) -> Result<()> {
-        instructions::approve_multisig_transaction(
-            ctx.accounts.multisig_member.key,
-            &ctx.accounts.multisig_group.members,
-            &mut ctx.accounts.multisig_transaction,
-        )?;
-        Ok(())
-    }
-
-    pub fn execute_multisig_transaction(ctx: Context<ExecuteMultisigTransaction>) -> Result<()> {
-        instructions::execute_multisig_transaction(
-            &mut ctx.accounts.multisig_transaction,
-            &ctx.accounts.multisig_pda_signer.key(),
-            *ctx.bumps.get("multisig_pda_signer").unwrap(),
-            &ctx.accounts.multisig_group,
-            &ctx.accounts.multisig_group.key(),
-            ctx.remaining_accounts,
         )?;
         Ok(())
     }

@@ -89,27 +89,6 @@ export async function findMarketPdas(
   };
 }
 
-export async function findMultisigGroupPda(title: string, program: Program) {
-  const [multisigGroupPk] = await PublicKey.findProgramAddress(
-    [Buffer.from("multisig"), Buffer.from(title)],
-    program.programId,
-  );
-
-  return multisigGroupPk;
-}
-
-export async function findMultisigTransactionPda(
-  distinctSeed: string,
-  program: Program,
-) {
-  const [txPk] = await PublicKey.findProgramAddress(
-    [Buffer.from(distinctSeed)],
-    program.programId,
-  );
-
-  return txPk;
-}
-
 export async function findProductConfigPda(title: string, program: Program) {
   const [productConfigPk] = await PublicKey.findProgramAddress(
     [Buffer.from("product_config"), Buffer.from(title)],

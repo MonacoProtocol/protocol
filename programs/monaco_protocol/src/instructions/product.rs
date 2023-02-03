@@ -4,19 +4,12 @@ use anchor_lang::prelude::*;
 // create product/protocol configuration account
 pub fn create_product_config(
     product_config: &mut ProductConfig,
-    multisig_key: &Pubkey,
-    multisig_members: &[Pubkey],
-    product_operator: &Pubkey,
+    authority: &Pubkey,
+    payer: &Pubkey,
     product_title: String,
     commission_rate: f32,
     commission_escrow: Pubkey,
 ) -> Result<()> {
-    // ensure signer belongs to multisig members
-    multisig_members
-        .iter()
-        .position(|a| a == product_operator)
-        .ok_or(CoreError::SignerNotFound)?;
-
     require!(
         (0.0..=100.0).contains(&commission_rate),
         CoreError::InvalidCommissionRate
@@ -30,7 +23,8 @@ pub fn create_product_config(
         CoreError::CommissionPrecisionTooLarge
     );
 
-    product_config.multisig_group = *multisig_key;
+    product_config.authority = *authority;
+    product_config.payer = *payer;
     product_config.product_title = product_title;
     product_config.commission_rate = commission_rate;
     product_config.commission_escrow = commission_escrow;
@@ -65,19 +59,17 @@ mod tests {
     #[test]
     fn test_ok_response() {
         let mut empty_product_config_account = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
         };
 
-        let signer = Pubkey::new_unique();
-
         let result = create_product_config(
             &mut empty_product_config_account,
             &Pubkey::new_unique(),
-            &vec![signer, Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
+            &Pubkey::new_unique(),
             "TITLE".to_string(),
             1.1,
             Pubkey::new_unique(),
@@ -86,45 +78,19 @@ mod tests {
     }
 
     #[test]
-    fn test_signer_not_found() {
-        let mut empty_product_config_account = ProductConfig {
-            multisig_group: Default::default(),
-            commission_escrow: Default::default(),
-            product_title: "".to_string(),
-            commission_rate: 0.0,
-        };
-
-        let signer = Pubkey::new_unique();
-
-        let result = create_product_config(
-            &mut empty_product_config_account,
-            &Pubkey::new_unique(),
-            &vec![Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
-            "TITLE".to_string(),
-            1.1,
-            Pubkey::new_unique(),
-        );
-        let expected_error = Err(error!(CoreError::SignerNotFound));
-        assert_eq!(expected_error, result);
-    }
-
-    #[test]
     fn test_invalid_commission_rate() {
         let mut empty_product_config_account = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
         };
 
-        let signer = Pubkey::new_unique();
-
         let result = create_product_config(
             &mut empty_product_config_account,
             &Pubkey::new_unique(),
-            &vec![signer, Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
+            &Pubkey::new_unique(),
             "TITLE".to_string(),
             99.9999,
             Pubkey::new_unique(),
@@ -136,19 +102,17 @@ mod tests {
     #[test]
     fn test_invalid_commission_rate_precision_too_large() {
         let mut empty_product_config_account = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
         };
 
-        let signer = Pubkey::new_unique();
-
         let result = create_product_config(
             &mut empty_product_config_account,
             &Pubkey::new_unique(),
-            &vec![signer, Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
+            &Pubkey::new_unique(),
             "TITLE".to_string(),
             101.11,
             Pubkey::new_unique(),
@@ -160,19 +124,17 @@ mod tests {
     #[test]
     fn test_title_length_validation() {
         let mut empty_product_config_account = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
         };
 
-        let signer = Pubkey::new_unique();
-
         let result = create_product_config(
             &mut empty_product_config_account,
             &Pubkey::new_unique(),
-            &vec![signer, Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
+            &Pubkey::new_unique(),
             "123456789012345678901234567890123456789012345678901".to_string(),
             99.99,
             Pubkey::new_unique(),
@@ -183,8 +145,7 @@ mod tests {
         let result = create_product_config(
             &mut empty_product_config_account,
             &Pubkey::new_unique(),
-            &vec![signer, Pubkey::new_unique(), Pubkey::new_unique()],
-            &signer,
+            &Pubkey::new_unique(),
             "".to_string(),
             99.99,
             Pubkey::new_unique(),
@@ -196,7 +157,8 @@ mod tests {
     #[test]
     fn test_update_commission_rate_ok_result() {
         let mut product_config = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
@@ -211,7 +173,8 @@ mod tests {
     #[test]
     fn test_update_commission_rate_invalid_commission_rate() {
         let mut product_config = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
@@ -226,7 +189,8 @@ mod tests {
     #[test]
     fn test_update_commission_escrow_ok_result() {
         let mut product_config = ProductConfig {
-            multisig_group: Default::default(),
+            authority: Default::default(),
+            payer: Default::default(),
             commission_escrow: Default::default(),
             product_title: "".to_string(),
             commission_rate: 0.0,
