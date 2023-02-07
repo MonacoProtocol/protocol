@@ -12,7 +12,10 @@ describe("Product Config Updates", () => {
 
     const updatedCommissionRate = 75.75;
     await monaco.program.methods
-      .updateProductCommissionRate(updatedCommissionRate)
+      .updateProductCommissionRate(
+        "UPDATE_COMMISSION_RATE",
+        updatedCommissionRate,
+      )
       .accounts({
         productConfig: productConfigPk,
         authority: monaco.provider.publicKey,
@@ -32,7 +35,10 @@ describe("Product Config Updates", () => {
 
     const updatedCommissionEscrow = Keypair.generate().publicKey;
     await monaco.program.methods
-      .updateProductCommissionEscrow(updatedCommissionEscrow)
+      .updateProductCommissionEscrow(
+        "UPDATE_COMMISSION_ESCROW",
+        updatedCommissionEscrow,
+      )
       .accounts({
         productConfig: productConfigPk,
         authority: monaco.provider.publicKey,
@@ -57,7 +63,10 @@ describe("Product Config Updates", () => {
 
     const updatedCommissionRate = 75.75;
     await monaco.program.methods
-      .updateProductCommissionRate(updatedCommissionRate)
+      .updateProductCommissionRate(
+        "UPDATE_COMMISSION_RATE_2",
+        updatedCommissionRate,
+      )
       .accounts({
         productConfig: productConfigPk,
         authority: authority.publicKey,
@@ -68,5 +77,30 @@ describe("Product Config Updates", () => {
     const updatedProductConfig =
       await monaco.program.account.productConfig.fetch(productConfigPk);
     assert.equal(updatedProductConfig.commissionRate, updatedCommissionRate);
+  });
+
+  it("Update product authority - system account authority", async () => {
+    const productConfigPk = await monaco.createProductConfig(
+      "UPDATE_AUTHORITY",
+      50.0,
+    );
+    const updatedAuthority = await createWalletWithBalance(monaco.provider);
+
+    await monaco.program.methods
+      .updateProductAuthority("UPDATE_AUTHORITY")
+      .accounts({
+        productConfig: productConfigPk,
+        authority: monaco.provider.publicKey,
+        updatedAuthority: updatedAuthority.publicKey,
+      })
+      .signers([updatedAuthority])
+      .rpc();
+
+    const updatedProductConfig =
+      await monaco.program.account.productConfig.fetch(productConfigPk);
+    assert.equal(
+      updatedProductConfig.authority.toBase58(),
+      updatedAuthority.publicKey.toBase58(),
+    );
   });
 });

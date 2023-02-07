@@ -358,6 +358,7 @@ pub mod monaco_protocol {
 
     pub fn update_product_commission_escrow(
         ctx: Context<UpdateProductConfig>,
+        _product_title: String,
         updated_commission_escrow: Pubkey,
     ) -> Result<()> {
         instructions::update_product_commission_escrow(
@@ -369,11 +370,23 @@ pub mod monaco_protocol {
 
     pub fn update_product_commission_rate(
         ctx: Context<UpdateProductConfig>,
+        _product_title: String,
         updated_commission_rate: f32,
     ) -> Result<()> {
         instructions::update_product_commission_rate(
             &mut ctx.accounts.product_config,
             updated_commission_rate,
+        )?;
+        Ok(())
+    }
+
+    pub fn update_product_authority(
+        ctx: Context<UpdateProductAuthority>,
+        _product_title: String,
+    ) -> Result<()> {
+        instructions::update_product_authority(
+            &mut ctx.accounts.product_config,
+            ctx.accounts.updated_authority.key(),
         )?;
         Ok(())
     }

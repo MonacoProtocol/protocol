@@ -470,11 +470,33 @@ pub struct CreateProductConfig<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(_product_title: String)]
 pub struct UpdateProductConfig<'info> {
-    #[account(mut, has_one = authority)]
+    #[account(
+        mut,
+        has_one = authority,
+        seeds = [b"product_config".as_ref(), _product_title.as_ref()],
+        bump,
+    )]
     pub product_config: Account<'info, ProductConfig>,
     #[account(mut)]
     pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(_product_title: String)]
+pub struct UpdateProductAuthority<'info> {
+    #[account(
+        mut,
+        has_one = authority,
+        seeds = [b"product_config".as_ref(), _product_title.as_ref()],
+        bump,
+    )]
+    pub product_config: Account<'info, ProductConfig>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(mut)]
+    pub updated_authority: Signer<'info>,
 }
 
 /*

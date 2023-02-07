@@ -52,6 +52,14 @@ pub fn update_product_commission_rate(
     Ok(())
 }
 
+pub fn update_product_authority(
+    product_config: &mut ProductConfig,
+    updated_authority: Pubkey,
+) -> Result<()> {
+    product_config.authority = updated_authority;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

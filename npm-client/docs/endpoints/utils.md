@@ -14,6 +14,9 @@
 *   [getMintInfo][10]
     *   [Parameters][11]
     *   [Examples][12]
+*   [findProductConfigPda][13]
+    *   [Parameters][14]
+    *   [Examples][15]
 
 ## getMarketAccounts
 
@@ -23,9 +26,9 @@ For the provided market, outcome, price and forOutcome condition - return all th
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `forOutcome` **[boolean][13]** {boolean} bool representing for or against a market outcome
-*   `marketOutcomeIndex` **[number][14]** {number} index representing the chosen outcome of a market
-*   `price` **[number][14]** {number} price for order
+*   `forOutcome` **[boolean][16]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][17]** {number} index representing the chosen outcome of a market
+*   `price` **[number][17]** {number} price for order
 
 ### Examples
 
@@ -37,7 +40,7 @@ const price = 5.9
 const marketAccounts = await getMarketAccounts(program, marketPK, forOutcome, marketOutcomeIndex, price)
 ```
 
-Returns **[Promise][15]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
+Returns **[Promise][18]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
 
 ## uiStakeToInteger
 
@@ -46,7 +49,7 @@ For the provided stake and market, get a BN representation of the stake adjusted
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `stake` **[number][14]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
+*   `stake` **[number][17]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
 
 ### Examples
@@ -94,6 +97,23 @@ const getMintInfo = await findEscrowPda(program, mintPk)
 
 Returns **MintInfo** mint information including mint authority and decimals
 
+## findProductConfigPda
+
+For the provided product title, get the pda for the Product Config account
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `productTitle` **[string][19]** title of product
+
+### Examples
+
+```javascript
+const productConfigPk = await findProductConfigPda(program, "EXAMPLE_BETTING_EXCHANGE")
+```
+
+Returns **[Promise][18]\<PublicKey>**&#x20;
+
 [1]: #getmarketaccounts
 
 [2]: #parameters
@@ -118,8 +138,16 @@ Returns **MintInfo** mint information including mint authority and decimals
 
 [12]: #examples-3
 
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[13]: #findproductconfigpda
 
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[14]: #parameters-4
 
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[15]: #examples-4
+
+[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
