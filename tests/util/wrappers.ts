@@ -279,7 +279,7 @@ export class Monaco {
     for (const outcomeIndex in outcomes) {
       await this.provider.connection.confirmTransaction(
         await this.program.methods
-          .initializeMarketOutcome(outcomes[outcomeIndex], priceLadder)
+          .initializeMarketOutcome(outcomes[outcomeIndex])
           .accounts({
             outcome: outcomePks[outcomeIndex],
             market: marketPdaResponse.data.pda,
@@ -302,6 +302,36 @@ export class Monaco {
           }),
         "confirmed",
       );
+
+      const priceLadderBatchSize = 20;
+      for (let i = 0; i < priceLadder.length; i += priceLadderBatchSize) {
+        const batch = priceLadder.slice(i, i + priceLadderBatchSize);
+        await this.provider.connection.confirmTransaction(
+          await this.program.methods
+            .addPricesToMarketOutcome(parseInt(outcomeIndex), batch)
+            .accounts({
+              outcome: outcomePks[outcomeIndex],
+              market: marketPdaResponse.data.pda,
+              authorisedOperators: authorisedOperatorsPk,
+              marketOperator:
+                marketOperatorKeypair instanceof Keypair
+                  ? marketOperatorKeypair.publicKey
+                  : this.operatorPk,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers(
+              marketOperatorKeypair instanceof Keypair
+                ? [marketOperatorKeypair]
+                : [],
+            )
+            .rpc()
+            .catch((e) => {
+              console.error(e);
+              throw e;
+            }),
+          "confirmed",
+        );
+      }
     }
 
     let matchingPools: { against: PublicKey; forOutcome: PublicKey }[][] = [];
