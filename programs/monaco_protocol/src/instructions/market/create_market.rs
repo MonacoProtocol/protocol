@@ -49,23 +49,18 @@ pub fn create(
     Ok(())
 }
 
-pub fn initialize_outcome(
-    ctx: Context<InitializeMarketOutcome>,
-    title: String,
-    price_ladder: Vec<f64>,
-) -> Result<()> {
+pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) -> Result<()> {
     require!(
         ctx.accounts.market.market_status == MarketStatus::Initializing,
         CoreError::MarketOutcomeMarketInvalidStatus
     );
-    verify_prices_precision(&price_ladder)?;
 
     ctx.accounts.outcome.market = ctx.accounts.market.key();
     ctx.accounts.outcome.index = ctx.accounts.market.market_outcomes_count;
     ctx.accounts.outcome.title = title;
     ctx.accounts.outcome.latest_matched_price = 0_f64;
     ctx.accounts.outcome.matched_total = 0_u64;
-    ctx.accounts.outcome.price_ladder = price_ladder;
+    ctx.accounts.outcome.price_ladder = vec![];
 
     ctx.accounts
         .market

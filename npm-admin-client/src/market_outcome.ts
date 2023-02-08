@@ -12,28 +12,25 @@ import { confirmTransaction } from "./utils";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 
 /**
- * For the given market account, initialise an outcome account for the provided outcome; optional priceLadder added to the outcome if supplied.
+ * For the given market account, initialise an outcome account for the provided outcome.
  *
- * **Note** It is advised to create an outcome with an empty priceLadder then use `batchAddPricesToOutcomePool` if adding a large priceLadder.
+ * **Note** To add prices to an outcome use `batchAddPricesToOutcomePool`.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
  * @param outcome {string} string representation of the outcome
- * @param priceLadder {number[]} optional priceLadder to add to the outcome at time of creation
  * @returns {OutcomeInitialisationResponse} the outcome provided, the pda for the outcome account and the transaction ID of the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const outcome = "Draw"
- * const priceLadder = [1, 2, 3, 4]
- * const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome, priceLadder)
+ * const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome)
  */
 export async function initialiseOutcome(
   program: Program,
   marketPk: PublicKey,
   outcome: string,
-  priceLadder: number[] = [],
 ): Promise<ClientResponse<OutcomeInitialisationResponse>> {
   const response = new ResponseFactory({} as OutcomeInitialisationResponse);
   const provider = program.provider as AnchorProvider;
@@ -54,7 +51,7 @@ export async function initialiseOutcome(
   }
   try {
     const tnxId = await program.methods
-      .initializeMarketOutcome(outcome, priceLadder)
+      .initializeMarketOutcome(outcome)
       .accounts({
         systemProgram: SystemProgram.programId,
         outcome: nextOutcomePda.data.pda,
@@ -120,7 +117,7 @@ export async function initialiseOutcomes(
         outcomeIndex,
       );
       const tnxId = await program.methods
-        .initializeMarketOutcome(outcomes[i], [])
+        .initializeMarketOutcome(outcomes[i])
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: nextOutcomePda.data.pda,

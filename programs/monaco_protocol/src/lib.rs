@@ -175,7 +175,6 @@ pub mod monaco_protocol {
     pub fn initialize_market_outcome(
         ctx: Context<InitializeMarketOutcome>,
         title: String,
-        price_ladder: Vec<f64>,
     ) -> Result<()> {
         msg!("Initializing market outcome");
         verify_operator_authority(
@@ -187,7 +186,7 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::initialize_outcome(ctx, title, price_ladder)?;
+        instructions::market::initialize_outcome(ctx, title)?;
         msg!("Initialized market outcome");
         Ok(())
     }

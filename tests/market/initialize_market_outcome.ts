@@ -22,7 +22,7 @@ describe("Market: creation", () => {
     );
 
     await monaco.program.methods
-      .initializeMarketOutcome("EXTRA", [1.001, 1.01, 1.1, 1.2])
+      .initializeMarketOutcome("EXTRA")
       .accounts({
         systemProgram: SystemProgram.programId,
         outcome: marketOutcomePk,
@@ -43,7 +43,7 @@ describe("Market: creation", () => {
     const marketOutcome = await monaco.fetchMarketOutcome(marketOutcomePk);
     assert.deepEqual(marketOutcome.index, 3);
     assert.deepEqual(marketOutcome.title, "EXTRA");
-    assert.deepEqual(marketOutcome.priceLadder, [1.001, 1.01, 1.1, 1.2]);
+    assert.deepEqual(marketOutcome.priceLadder, []);
   });
 
   it("Failure: using incorrect market account", async () => {
@@ -66,7 +66,7 @@ describe("Market: creation", () => {
 
     try {
       await monaco.program.methods
-        .initializeMarketOutcome("EXTRA", [1.001, 1.01, 1.1, 1.2])
+        .initializeMarketOutcome("EXTRA")
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
@@ -116,7 +116,7 @@ describe("Market: creation", () => {
 
     try {
       await monaco.program.methods
-        .initializeMarketOutcome("EXTRA", [1.001, 1.01, 1.1, 1.2])
+        .initializeMarketOutcome("EXTRA")
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
@@ -165,7 +165,7 @@ describe("Market: creation", () => {
 
     try {
       await monaco.program.methods
-        .initializeMarketOutcome("EXTRA", [1.001, 1.01, 1.1, 1.2])
+        .initializeMarketOutcome("EXTRA")
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
