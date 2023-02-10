@@ -27,7 +27,11 @@ import {
   findTradePda,
   MarketType,
 } from "../../npm-client/src";
-import { findUserPdas, findMarketPdas } from "../util/pdas";
+import {
+  findUserPdas,
+  findMarketPdas,
+  findProductConfigPda,
+} from "../util/pdas";
 import * as assert from "assert";
 import { AssertionError } from "assert";
 
@@ -490,6 +494,10 @@ export async function createOrder(
       marketOutcome: marketOutcomePk,
       purchaserToken: purchaserTokenAccount,
       marketEscrow: marketEscrowPk,
+      productConfig: await findProductConfigPda(
+        "BETDEX_EXCHANGE",
+        protocolProgram as Program,
+      ),
     })
     .signers(purchaser instanceof Keypair ? [purchaser] : [])
     .rpc()
@@ -570,4 +578,31 @@ export async function retryOnException(
 
 export function getAnchorProvider(): AnchorProvider {
   return getProvider() as AnchorProvider;
+}
+
+export async function createProductConfig(
+  productTitle: string,
+  commissionRate = 5.0,
+  provider: AnchorProvider,
+) {
+  const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
+  const productConfigPk = await findProductConfigPda(
+    productTitle,
+    program as Program,
+  );
+  await program.methods
+    .createProductConfig(productTitle, commissionRate)
+    .accounts({
+      productConfig: productConfigPk,
+      commissionEscrow: provider.wallet.publicKey,
+      authority: provider.wallet.publicKey,
+      payer: provider.wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+    .catch((e) => {
+      throw e;
+    });
+
+  return productConfigPk;
 }

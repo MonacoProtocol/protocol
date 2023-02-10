@@ -5,6 +5,7 @@ import {
   getMint,
   createAssociatedTokenAccount,
   mintTo,
+  getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
@@ -373,6 +374,10 @@ export class MonacoMarket {
   private purchaserTokenPks = new Map<string, PublicKey>();
   private marketPositionPkCache = new Map<string, PublicKey>();
 
+  private protocolConfigPk: PublicKey;
+  private protocolCommissionEscrowPk: PublicKey;
+  private productConfigEscrowCache = new Map<PublicKey, PublicKey>();
+
   constructor(
     monaco: Monaco,
     pk: PublicKey,
@@ -683,23 +688,69 @@ export class MonacoMarket {
       });
   }
 
+  async cacheProductCommissionEscrowPk(productPk: PublicKey) {
+    if (this.productConfigEscrowCache.get(productPk) == undefined) {
+      const wallet = this.monaco.provider.wallet as NodeWallet;
+      const productConfig =
+        await this.monaco.program.account.productConfig.fetch(productPk);
+      const productCommissionTokenAccount =
+        await getOrCreateAssociatedTokenAccount(
+          this.monaco.provider.connection,
+          wallet.payer,
+          this.mintPk,
+          productConfig.commissionEscrow,
+        );
+      this.productConfigEscrowCache.set(
+        productPk,
+        productCommissionTokenAccount.address,
+      );
+    }
+
+    return this.productConfigEscrowCache.get(productPk);
+  }
+
+  async cacheProtocolCommissionPks() {
+    if (
+      this.protocolConfigPk == undefined ||
+      this.protocolCommissionEscrowPk == undefined
+    ) {
+      const wallet = this.monaco.provider.wallet as NodeWallet;
+      const protocolConfigPk = await findProductConfigPda(
+        "MONACO_PROTOCOL",
+        this.monaco.program as Program,
+      );
+      const protocolConfig =
+        await this.monaco.program.account.productConfig.fetch(protocolConfigPk);
+      const protocolCommissionTokenAccount =
+        await getOrCreateAssociatedTokenAccount(
+          this.monaco.provider.connection,
+          wallet.payer,
+          this.mintPk,
+          protocolConfig.commissionEscrow,
+        );
+
+      this.protocolConfigPk = protocolConfigPk;
+      this.protocolCommissionEscrowPk = protocolCommissionTokenAccount.address;
+    }
+
+    return {
+      protocolConfigPk: this.protocolConfigPk,
+      protocolCommissionEscrowPk: this.protocolCommissionEscrowPk,
+    };
+  }
+
   async settleOrder(orderPk: PublicKey) {
     const [order, authorisedOperatorsPk] = await Promise.all([
       this.monaco.fetchOrder(orderPk),
       await this.monaco.findCrankAuthorisedOperatorsPda(),
     ]);
-    const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
-    const marketPositionPk = await this.cacheMarketPositionPk(order.purchaser);
+
     await this.monaco.program.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: orderPk,
         market: this.pk,
-        purchaserTokenAccount: purchaserTokenPk,
         purchaser: order.purchaser,
-        marketPosition: marketPositionPk,
-        marketEscrow: this.escrowPk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
       })
@@ -757,6 +808,35 @@ export class MonacoMarket {
           await this.monaco.findMarketAuthorisedOperatorsPda(),
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async settleMarketPositionForPurchaser(purchaser: PublicKey) {
+    const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
+    const authorisedOperatorsPk =
+      await this.monaco.findCrankAuthorisedOperatorsPda();
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
+    const protocolCommissionPks = await this.cacheProtocolCommissionPks();
+
+    await this.monaco.program.methods
+      .settleMarketPosition()
+      .accounts({
+        tokenProgram: TOKEN_PROGRAM_ID,
+        market: this.pk,
+        purchaserTokenAccount: purchaserTokenPk,
+        purchaser: purchaser,
+        marketPosition: marketPositionPk,
+        marketEscrow: this.escrowPk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
+        protocolConfig: protocolCommissionPks.protocolConfigPk,
+        protocolCommissionTokenAccount:
+          protocolCommissionPks.protocolCommissionEscrowPk,
+      })
       .rpc()
       .catch((e) => {
         console.error(e);

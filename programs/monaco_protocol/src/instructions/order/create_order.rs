@@ -14,6 +14,7 @@ pub fn create_order(ctx: Context<CreateOrder>, data: OrderData) -> Result<()> {
         &ctx.accounts.market,
         &ctx.accounts.purchaser,
         &ctx.accounts.market_outcome,
+        ctx.accounts.product_config.key(),
         &data,
     )?;
 
@@ -55,6 +56,7 @@ fn initialize_order(
     market: &Account<Market>,
     purchaser: &Signer,
     market_outcome: &Account<MarketOutcome>,
+    product_config: Pubkey,
     data: &OrderData,
 ) -> Result<()> {
     let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
@@ -93,6 +95,8 @@ fn initialize_order(
 
     order.stake_unmatched = data.stake;
     order.payout = 0_u64;
+
+    order.product_config = product_config;
 
     Ok(())
 }

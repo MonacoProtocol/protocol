@@ -54,6 +54,8 @@ pub enum CoreError {
     SettlementMarketNotSettled,
     #[msg("Core Settlement: market not ready for settlement")]
     SettlementMarketNotReadyForSettlement,
+    #[msg("Core Settlement: error calculating settlement payment.")]
+    SettlementPaymentCalculation,
 
     /*
     Authorised Operator

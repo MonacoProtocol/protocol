@@ -71,18 +71,10 @@ describe("Order Settlement Payment 10", () => {
     // Settlement
     await market.settle(0);
 
+    market.settleMarketPositionForPurchaser(purchaser.publicKey);
+
     // Settle Against 5
     await market.settleOrder(againstOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 10, 90],
-    );
-
     // Settle For 10
     await market.settleOrder(forOrderPk);
 
@@ -92,7 +84,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 0, 100],
+      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 10 }, 0, 100],
     );
   });
 
@@ -138,18 +130,9 @@ describe("Order Settlement Payment 10", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     // Settle For 10
     await market.settleOrder(forOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 15, 85],
-    );
-
     // Settle Against 5
     await market.settleOrder(againstOrderPk);
 
@@ -159,7 +142,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 0, 100],
+      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 10 }, 0, 100],
     );
   });
 
@@ -205,18 +188,10 @@ describe("Order Settlement Payment 10", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     // Settle Against 5
+
     await market.settleOrder(againstOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 10, 90],
-    );
-
     // Settle For 10
     await market.settleOrder(forOrderPk);
 
@@ -226,7 +201,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 0, 100],
+      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 10 }, 0, 100],
     );
   });
 
@@ -272,18 +247,9 @@ describe("Order Settlement Payment 10", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     // Settle For 10
     await market.settleOrder(forOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 15, 85],
-    );
-
     // Settle Against 5
     await market.settleOrder(againstOrderPk);
 
@@ -293,7 +259,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 0 }, 0, 100],
+      [{ matched: [0, 0, 0], maxExposure: [10, 15, 10], offset: 10 }, 0, 100],
     );
   });
 });

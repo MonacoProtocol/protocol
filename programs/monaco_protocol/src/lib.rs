@@ -60,6 +60,17 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        instructions::market_position::settle_market_position(ctx)?;
+
+        Ok(())
+    }
+
     pub fn authorise_admin_operator(
         ctx: Context<AuthoriseAdminOperator>,
         operator: Pubkey,

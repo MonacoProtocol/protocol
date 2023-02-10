@@ -55,6 +55,10 @@ export class MarketPositions {
     this._filter.push(this.toFilter(8 + 32, market.toBase58()));
     return this;
   }
+  filterByPaid(paid: boolean): MarketPositions {
+    this._filter.push(this.toFilter(8 + 32 + 32, bs58.encode([paid ? 1 : 0])));
+    return this;
+  }
 
   /**
    *

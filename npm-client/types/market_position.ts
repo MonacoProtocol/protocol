@@ -5,6 +5,7 @@ import { GetAccount } from "./get_account";
 export type MarketPosition = {
   purchaser: PublicKey;
   market: PublicKey;
+  paid: boolean;
   marketOutcomeSums: BN[];
   outcomeMaxExposure: BN[];
   offset: BN;

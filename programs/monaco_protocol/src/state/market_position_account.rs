@@ -8,6 +8,7 @@ use anchor_lang::prelude::*;
 pub struct MarketPosition {
     pub purchaser: Pubkey,
     pub market: Pubkey,
+    pub paid: bool,
     pub market_outcome_sums: Vec<i128>,
     pub outcome_max_exposure: Vec<u64>,
     pub offset: u64,
@@ -18,6 +19,7 @@ impl MarketPosition {
         DISCRIMINATOR_SIZE
             + PUB_KEY_SIZE // purchaser
             + PUB_KEY_SIZE // market
+            + BOOL_SIZE // paid
             + vec_size(I128_SIZE, number_of_market_outcomes) // market_outcome_sums
             + vec_size(U64_SIZE, number_of_market_outcomes) // outcome_max_exposure
             + U64_SIZE // offset
@@ -397,6 +399,7 @@ mod tests {
             market_outcome_sums,
             outcome_max_exposure,
             offset,
+            paid: false,
         }
     }
 }

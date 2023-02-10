@@ -21,6 +21,7 @@ import {
 } from "../../npm-client/src";
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
+import { findProductConfigPda } from "../util/pdas";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -157,6 +158,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       price,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const orderPk = orderResponse.data.orderPk;
@@ -204,6 +206,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       price,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const thrownError = orderResponse.errors[0] as AnchorError;
@@ -275,6 +278,10 @@ describe("Protocol - Create Order", () => {
         marketOutcome: MarketAccounts.data.marketOutcomePda,
         purchaserToken: purchaserTokenAccount,
         marketEscrow: MarketAccounts.data.escrowPda,
+        productConfig: await findProductConfigPda(
+          "BETDEX_EXCHANGE",
+          protocolProgram as Program,
+        ),
       })
       .rpc({ commitment: "confirmed" })
       .catch((e) => {
@@ -327,6 +334,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       price,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const thrownError = orderResponse.errors[0] as AnchorError;
@@ -378,6 +386,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       price,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const thrownError = orderResponse.errors[0] as AnchorError;
@@ -449,6 +458,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       price,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const orderPk = orderResponse.data.orderPk;
@@ -509,6 +519,7 @@ describe("Protocol - Create Order", () => {
       forOutcome,
       orderPrice,
       stakeInteger,
+      "BETDEX_EXCHANGE",
     );
 
     const thrownError = orderResponse.errors[0] as AnchorError;

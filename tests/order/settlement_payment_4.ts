@@ -59,6 +59,9 @@ describe("Order Settlement Payment 4", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
+
     for (const orderPk of orderPks) {
       await market.settleOrder(orderPk);
     }
@@ -73,11 +76,11 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 0], offset: 0 },
+        { matched: [-10, -10, 20], maxExposure: [20, 20, 0], offset: 20 },
         { matched: [10, 10, -20], maxExposure: [10, 10, 20], offset: 0 },
         0,
         990,
-        1010,
+        1009,
       ],
     );
   });
@@ -131,6 +134,9 @@ describe("Order Settlement Payment 4", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
+
     for (const orderPk of orderPks) {
       await market.settleOrder(orderPk);
     }
@@ -145,11 +151,11 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 0], offset: 0 },
+        { matched: [-20, 10, 10], maxExposure: [20, 20, 0], offset: 20 },
         { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
         0,
         980,
-        1020,
+        1018,
       ],
     );
   });

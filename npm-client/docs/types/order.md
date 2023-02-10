@@ -35,7 +35,7 @@ Type: {price: [number][20], stake: [number][20]}
 
 ## Order
 
-Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20], forOutcome: [boolean][21], orderStatus: [OrderStatus][1], stake: BN, voidedStake: BN, expectedPrice: [number][20], creationTimestamp: BN, stakeUnmatched: BN, payout: BN}
+Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20], forOutcome: [boolean][21], orderStatus: [OrderStatus][1], productConfig: PublicKey, stake: BN, voidedStake: BN, expectedPrice: [number][20], creationTimestamp: BN, stakeUnmatched: BN, payout: BN}
 
 ### Properties
 
@@ -44,6 +44,7 @@ Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20]
 *   `marketOutcomeIndex` **[number][20]**&#x20;
 *   `forOutcome` **[boolean][21]**&#x20;
 *   `orderStatus` **[OrderStatus][1]**&#x20;
+*   `productConfig` **PublicKey**&#x20;
 *   `stake` **BN**&#x20;
 *   `voidedStake` **BN**&#x20;
 *   `expectedPrice` **[number][20]**&#x20;

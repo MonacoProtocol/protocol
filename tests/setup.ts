@@ -4,6 +4,7 @@ import { MonacoProtocol } from "../target/types/monaco_protocol";
 import {
   authoriseAdminOperator,
   authoriseOperator,
+  createProductConfig,
   OperatorType,
 } from "./util/test_util";
 
@@ -26,4 +27,6 @@ module.exports = async function (_globalConfig, _projectConfig) {
     provider,
     OperatorType.CRANK,
   );
+  await createProductConfig("MONACO_PROTOCOL", 10.0, provider);
+  await createProductConfig("BETDEX_EXCHANGE", 5.0, provider);
 };

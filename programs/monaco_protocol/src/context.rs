@@ -76,6 +76,8 @@ pub struct CreateOrder<'info> {
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
 
+    pub product_config: Box<Account<'info, ProductConfig>>,
+
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(address = anchor_spl::token::ID)]
@@ -287,13 +289,27 @@ pub struct SettleOrder<'info> {
     pub order: Account<'info, Order>,
     #[account(mut, address = order.purchaser @ CoreError::SettlementPurchaserMismatch)]
     pub purchaser: SystemAccount<'info>,
+    #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
+    pub market: Box<Account<'info, Market>>,
+
+    // crank operator --------------------------------------------
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct SettleMarketPosition<'info> {
+    #[account(address = market_position.purchaser @ CoreError::SettlementPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
     #[account(
         mut,
         associated_token::mint = market.mint_account,
         associated_token::authority = purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-    #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
+    #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
@@ -306,10 +322,19 @@ pub struct SettleOrder<'info> {
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
     pub market_position: Box<Account<'info, MarketPosition>>,
 
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = protocol_config.commission_escrow,
+    )]
+    pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(seeds = [b"product_config".as_ref(), b"MONACO_PROTOCOL".as_ref()], bump)]
+    pub protocol_config: Box<Account<'info, ProductConfig>>,
+
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 
-    // crank operator --------------------------------------------
+    // crank operator -------------------------------------------
     #[account(mut)]
     pub crank_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]

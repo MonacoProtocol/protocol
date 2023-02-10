@@ -28,6 +28,7 @@ pub struct Order {
     pub market_outcome_index: u16, // market outcome on which order was made
     pub for_outcome: bool, // is order for or against the outcome
     pub order_status: OrderStatus, // status
+    pub product_config: Pubkey, // config for product this order was placed on
     pub stake: u64,        // total stake amount provided by purchaser
     pub voided_stake: u64, // stake amount returned to purchaser due to cancelation or settlement for partially matched orders
     pub expected_price: f64, // expected price provided by purchaser
@@ -39,7 +40,7 @@ pub struct Order {
 
 impl Order {
     pub const SIZE: usize = DISCRIMINATOR_SIZE
-        + (PUB_KEY_SIZE * 2) // purchaser and market
+        + (PUB_KEY_SIZE * 3) // purchaser, market & product_config
         + U16_SIZE // market_outcome_index
         + BOOL_SIZE // for outcome
         + ENUM_SIZE // order_status

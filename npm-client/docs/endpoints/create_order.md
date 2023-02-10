@@ -21,6 +21,7 @@ Create an order account on the Monaco protocol using a UI stake value, the clien
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
+*   `productTitle` **[string][9]?** {string} title of product this order was created on, defaults to "BETDEX\_EXCHANGE"
 
 ### Examples
 
@@ -47,6 +48,7 @@ Create an order account on the Monaco protocol using the raw token value for the
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {number} raw token value of the order taking into account the decimal amount of the token associated with the market
+*   `productTitle` **[string][9]** {string} title of product this order was created on
 
 ### Examples
 
@@ -76,3 +78,5 @@ Returns **CreateOrderResponse** derived order publicKey and transactionID for th
 [7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
 [8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
