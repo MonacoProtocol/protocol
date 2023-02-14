@@ -44,8 +44,8 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 0], offset: 20 },
-        { matched: [10, 10, -20], maxExposure: [10, 10, 20], offset: 0 },
+        { matched: [-10, -10, 20], maxExposure: [20, 20, 0] },
+        { matched: [10, 10, -20], maxExposure: [10, 10, 20] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
@@ -76,8 +76,8 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 0], offset: 20 },
-        { matched: [10, 10, -20], maxExposure: [10, 10, 20], offset: 0 },
+        { matched: [-10, -10, 20], maxExposure: [20, 20, 0] },
+        { matched: [10, 10, -20], maxExposure: [10, 10, 20] },
         0,
         990,
         1009,
@@ -120,8 +120,8 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 0], offset: 20 },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-20, 10, 10], maxExposure: [20, 20, 0] },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -151,8 +151,8 @@ describe("Order Settlement Payment 4", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 0], offset: 20 },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10], offset: 0 },
+        { matched: [-20, 10, 10], maxExposure: [20, 20, 0] },
+        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
         0,
         980,
         1018,

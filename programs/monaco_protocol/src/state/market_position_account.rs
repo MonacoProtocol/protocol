@@ -11,7 +11,6 @@ pub struct MarketPosition {
     pub paid: bool,
     pub market_outcome_sums: Vec<i128>,
     pub outcome_max_exposure: Vec<u64>,
-    pub offset: u64,
 }
 
 impl MarketPosition {
@@ -22,7 +21,6 @@ impl MarketPosition {
             + BOOL_SIZE // paid
             + vec_size(I128_SIZE, number_of_market_outcomes) // market_outcome_sums
             + vec_size(U64_SIZE, number_of_market_outcomes) // outcome_max_exposure
-            + U64_SIZE // offset
     }
 
     pub fn exposure(&self) -> i128 {
@@ -102,16 +100,6 @@ impl MarketPosition {
             .checked_sub(self.max_exposure())
             .ok_or(CoreError::ArithmeticError)?;
 
-        // offset change
-        self.offset = self
-            .offset
-            .checked_sub(
-                risk_change
-                    .checked_sub(max_exposure_change)
-                    .ok_or(CoreError::ArithmeticError)?,
-            )
-            .ok_or(CoreError::ArithmeticError)?;
-
         Ok(max_exposure_change)
     }
 
@@ -147,16 +135,6 @@ impl MarketPosition {
         let max_exposure_change = self
             .max_exposure()
             .checked_sub(max_exposure)
-            .ok_or(CoreError::ArithmeticError)?;
-
-        // offset change
-        self.offset = self
-            .offset
-            .checked_add(
-                exposure
-                    .checked_sub(max_exposure_change)
-                    .ok_or(CoreError::ArithmeticError)?,
-            )
             .ok_or(CoreError::ArithmeticError)?;
 
         Ok(max_exposure_change)
@@ -195,23 +173,7 @@ impl MarketPosition {
             .checked_sub(self.max_exposure())
             .ok_or(CoreError::ArithmeticError)?;
 
-        // offset change
-        self.offset = self
-            .offset
-            .checked_sub(
-                exposure
-                    .checked_sub(max_exposure_change)
-                    .ok_or(CoreError::ArithmeticError)?,
-            )
-            .ok_or(CoreError::ArithmeticError)?;
-
         Ok(max_exposure_change)
-    }
-
-    pub fn apply_offset(&mut self, amount: u64) -> u64 {
-        let offset = self.offset;
-        self.offset = self.offset.saturating_sub(amount);
-        amount.saturating_sub(offset)
     }
 }
 
@@ -368,37 +330,15 @@ mod tests {
         assert_eq!(market_position.market_outcome_sums, expected_position);
     }
 
-    #[test_case(50, 0, 50, 0 ; "offset is zero")]
-    #[test_case(50, 1, 49, 0 ; "offset is 1")]
-    #[test_case(50, 30, 20, 0 ; "offset is more than half")]
-    #[test_case(50, 50, 0, 0 ; "offset equals payout")]
-    #[test_case(50, 51, 0, 1 ; "offset is 1 more than payout")]
-    #[test_case(50, 100, 0, 50  ; "offset is much more than payout")]
-    fn test_calculate_amended_payout(
-        payout: u64,
-        offset: u64,
-        expected_amended_payout: u64,
-        expected_offset: u64,
-    ) {
-        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3], offset);
-        assert_eq!(
-            market_position.apply_offset(payout),
-            expected_amended_payout
-        );
-        assert_eq!(market_position.offset, expected_offset)
-    }
-
     fn market_position(
         market_outcome_sums: Vec<i128>,
         outcome_max_exposure: Vec<u64>,
-        offset: u64,
     ) -> MarketPosition {
         MarketPosition {
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_sums,
             outcome_max_exposure,
-            offset,
             paid: false,
         }
     }

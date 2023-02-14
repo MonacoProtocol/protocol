@@ -8,7 +8,6 @@ export type MarketPosition = {
   paid: boolean;
   marketOutcomeSums: BN[];
   outcomeMaxExposure: BN[];
-  offset: BN;
   outcomePositions: Map<string, BN>;
 };
 

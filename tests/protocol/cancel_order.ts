@@ -90,7 +90,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -154,7 +154,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -213,7 +213,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -277,7 +277,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -344,7 +344,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -410,7 +410,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -476,7 +476,7 @@ describe("Security: Cancel Order", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
         { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
@@ -538,7 +538,7 @@ async function setupUnmatchedOrder(
     ]),
     [
       { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-      { matched: [0, 0, 0], maxExposure: [2000, 0, 2000], offset: 0 },
+      { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
       { len: 1, liquidity: 2000, matched: 0 },
       2000,
       8000,
