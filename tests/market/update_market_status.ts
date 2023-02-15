@@ -1,5 +1,6 @@
 import assert from "assert";
 import { monaco } from "../util/wrappers";
+import { createWalletWithBalance } from "../util/test_util";
 
 describe("Market: update status", () => {
   it("Settle market", async () => {
@@ -83,6 +84,50 @@ describe("Market: update status", () => {
 
     const marketAccount = await monaco.fetchMarket(market.pk);
     assert.deepEqual(marketAccount.marketStatus, { settled: {} });
+  });
+
+  it("Complete market settlement fails when escrow is non-zero", async () => {
+    // create a new market and purchaser
+    const [market, purchaser] = await Promise.all([
+      monaco.create3WayMarket([4.2]),
+      createWalletWithBalance(monaco.provider),
+    ]);
+    await market.airdrop(purchaser, 100.0);
+
+    // This order is never matched or cancelled or settled
+    await market.forOrder(0, 1, 4.2, purchaser);
+
+    await monaco.program.methods
+      .settleMarket(1)
+      .accounts({
+        market: market.pk,
+        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    let marketAccount = await monaco.fetchMarket(market.pk);
+    assert.deepEqual(marketAccount.marketStatus, { readyForSettlement: {} });
+
+    await monaco.program.methods
+      .completeMarketSettlement()
+      .accounts({
+        market: market.pk,
+        marketEscrow: market.escrowPk,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        crankOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        assert.equal(e.error.errorCode.code, "SettlementMarketEscrowNonZero");
+      });
+
+    marketAccount = await monaco.fetchMarket(market.pk);
+    assert.deepEqual(marketAccount.marketStatus, { readyForSettlement: {} });
   });
 
   it("Publish and unpublish", async () => {
