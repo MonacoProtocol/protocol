@@ -71,6 +71,7 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
+        marketEscrow: market.escrowPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
       })
