@@ -129,6 +129,8 @@ pub enum CoreError {
     MarketInvalidStatus,
     #[msg("Market: price list is full")]
     MarketPriceListIsFull,
+    #[msg("Market: price cannot be 1.0 or less")]
+    MarketPriceOneOrLess,
     #[msg("Market: price support up to 3 decimal places only")]
     MarketPricePrecisionTooLarge,
     #[msg("mint.decimals must be >= PRICE_SCALE (3)")]
