@@ -70,13 +70,15 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
     Ok(())
 }
 
-fn verify_prices_precision(prices: &[f64]) -> Result<()> {
-    require!(
-        prices
-            .iter()
-            .all(|&value| (format!("{value}")).len() <= (format!("{value:.3}")).len()),
-        CoreError::MarketPricePrecisionTooLarge
-    );
+fn validate_prices(prices: &[f64]) -> Result<()> {
+    let prices_iter = prices.iter();
+    for price in prices_iter {
+        require!(
+            (format!("{price}")).len() <= (format!("{price:.3}")).len(),
+            CoreError::MarketPricePrecisionTooLarge
+        );
+        require!(*price > 1_f64, CoreError::MarketPriceOneOrLess);
+    }
     Ok(())
 }
 
@@ -95,7 +97,7 @@ pub fn add_prices_to_market_outcome(
     market_outcome: &mut MarketOutcome,
     new_prices: Vec<f64>,
 ) -> Result<()> {
-    verify_prices_precision(&new_prices)?;
+    validate_prices(&new_prices)?;
 
     let mut ladder = market_outcome.price_ladder.clone();
 
@@ -116,7 +118,7 @@ pub fn add_prices_to_market_outcome(
 #[cfg(test)]
 mod tests {
     use crate::instructions::market::create_market::{
-        add_prices_to_market_outcome, verify_prices_precision,
+        add_prices_to_market_outcome, validate_prices,
     };
     use crate::MarketOutcome;
 
@@ -141,23 +143,35 @@ mod tests {
     }
 
     #[test]
-    fn test_verify_prices_precision() {
-        let ok = verify_prices_precision(&vec![1.111, 1.11, 1.1, 1_f64]);
-        assert!(ok.is_ok());
+    fn test_validate_prices() {
+        let precision_ok = validate_prices(&vec![1.111, 1.11, 1.1]);
+        assert!(precision_ok.is_ok());
 
-        let not_ok_0 = verify_prices_precision(&vec![1.1111, 1.111, 1.11, 1.1, 1_f64]);
-        assert!(not_ok_0.is_err());
+        let precision_not_ok_0 = validate_prices(&vec![1.1111, 1.111, 1.11, 1.1]);
+        assert!(precision_not_ok_0.is_err());
 
-        let not_ok_1 = verify_prices_precision(&vec![1.111, 1.1111, 1.11, 1.1, 1_f64]);
-        assert!(not_ok_1.is_err());
+        let precision_not_ok_1 = validate_prices(&vec![1.111, 1.1111, 1.11, 1.1]);
+        assert!(precision_not_ok_1.is_err());
 
-        let not_ok_2 = verify_prices_precision(&vec![1.111, 1.11, 1.1111, 1.1, 1_f64]);
-        assert!(not_ok_2.is_err());
+        let precision_not_ok_2 = validate_prices(&vec![1.111, 1.11, 1.1111, 1.1]);
+        assert!(precision_not_ok_2.is_err());
 
-        let not_ok_3 = verify_prices_precision(&vec![1.111, 1.11, 1.1, 1_f64, 1.1111]);
-        assert!(not_ok_3.is_err());
+        let precision_not_ok_3 = validate_prices(&vec![1.111, 1.11, 1.1, 1_f64, 1.1111]);
+        assert!(precision_not_ok_3.is_err());
 
-        let attempting_to_round_not_ok = verify_prices_precision(&vec![1.1118]);
+        let attempting_to_round_not_ok = validate_prices(&vec![1.1118]);
         assert!(attempting_to_round_not_ok.is_err());
+
+        let one_not_ok = validate_prices(&vec![1_f64]);
+        assert!(one_not_ok.is_err());
+
+        let fraction_not_ok = validate_prices(&vec![0.5_f64]);
+        assert!(fraction_not_ok.is_err());
+
+        let zero_not_ok = validate_prices(&vec![0_f64]);
+        assert!(zero_not_ok.is_err());
+
+        let neg_not_ok = validate_prices(&vec![-1_f64]);
+        assert!(neg_not_ok.is_err());
     }
 }
