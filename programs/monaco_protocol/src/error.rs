@@ -54,6 +54,8 @@ pub enum CoreError {
     SettlementMarketNotSettled,
     #[msg("Core Settlement: market not ready for settlement")]
     SettlementMarketNotReadyForSettlement,
+    #[msg("Core Settlement: market escrow is non zero")]
+    SettlementMarketEscrowNonZero,
 
     /*
     Authorised Operator
@@ -180,6 +182,8 @@ pub enum CoreError {
     /*
     Close Account
      */
+    #[msg("CloseAccount: Order not complete")]
+    CloseAccountOrderNotComplete,
     #[msg("CloseAccount: Purchaser does not match")]
     CloseAccountPurchaserMismatch,
     #[msg("CloseAccount: Market does not match")]

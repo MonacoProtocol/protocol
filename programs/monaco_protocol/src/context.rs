@@ -424,6 +424,14 @@ pub struct UpdateMarket<'info> {
 pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub crank_operator: Signer<'info>,

@@ -857,6 +857,7 @@ export class MonacoMarket {
       .completeMarketSettlement()
       .accounts({
         market: this.pk,
+        marketEscrow: this.escrowPk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators:
           await this.monaco.findCrankAuthorisedOperatorsPda(),

@@ -451,6 +451,11 @@ pub mod monaco_protocol {
             CoreError::MarketNotReadyToClose
         );
 
+        require!(
+            ctx.accounts.order.is_completed(),
+            CoreError::CloseAccountOrderNotComplete
+        );
+
         Ok(())
     }
 
