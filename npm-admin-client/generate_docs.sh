@@ -7,7 +7,7 @@ declare -a endpoints=(
     "market_create"
     "market_management"
     "market_outcome_prices"
-    "market_outcomes"
+    "market_outcome"
     "operators"
     "utils"
 )

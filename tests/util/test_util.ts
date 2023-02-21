@@ -248,7 +248,7 @@ export async function createMarket(
   for (let index = 0; index < outcomes.length; index++) {
     await getAnchorProvider().connection.confirmTransaction(
       await protocolProgram.methods
-        .initializeMarketOutcome(outcomes[index], priceLadder)
+        .initializeMarketOutcome(outcomes[index])
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: outcomePdas[index],
@@ -264,6 +264,29 @@ export async function createMarket(
         }),
       "confirmed",
     );
+
+    const priceLadderBatchSize = 20;
+    for (let i = 0; i < priceLadder.length; i += priceLadderBatchSize) {
+      const batch = priceLadder.slice(i, i + priceLadderBatchSize);
+      await getAnchorProvider().connection.confirmTransaction(
+        await protocolProgram.methods
+          .addPricesToMarketOutcome(index, batch)
+          .accounts({
+            systemProgram: SystemProgram.programId,
+            outcome: outcomePdas[index],
+            market: marketPda,
+            authorisedOperators: authorisedMarketOperators,
+            marketOperator: marketOperator.publicKey,
+          })
+          .signers([marketOperator])
+          .rpc()
+          .catch((e) => {
+            console.error(e);
+            throw e;
+          }),
+        "confirmed",
+      );
+    }
   }
 
   let matchingPools: { against: PublicKey; forOutcome: PublicKey }[][] = [];

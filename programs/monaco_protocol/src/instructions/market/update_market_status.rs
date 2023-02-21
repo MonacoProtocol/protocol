@@ -37,6 +37,11 @@ pub fn settle(
 }
 
 pub fn complete_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
+    require!(
+        ctx.accounts.market_escrow.amount == 0_u64,
+        CoreError::SettlementMarketEscrowNonZero
+    );
+
     let market = &mut ctx.accounts.market;
     require!(
         ReadyForSettlement.eq(&market.market_status),
