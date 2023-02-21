@@ -4,7 +4,7 @@ import {
   setProvider,
   workspace,
   BN,
-} from "@project-serum/anchor";
+} from "@coral-xyz/anchor";
 import assert from "assert";
 import {
   settleMarket,

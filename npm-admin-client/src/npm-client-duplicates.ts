@@ -1,4 +1,4 @@
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
 import {
@@ -8,7 +8,7 @@ import {
   GetAccount,
   MarketAccount,
 } from "../types";
-import { AnchorProvider } from "@project-serum/anchor";
+import { AnchorProvider } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 
 export enum MarketType {

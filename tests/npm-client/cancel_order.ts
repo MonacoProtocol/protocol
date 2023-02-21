@@ -1,5 +1,5 @@
-import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
 import {
@@ -38,7 +38,10 @@ describe("NPM client", () => {
       await monaco.getOrder(orderPk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + orderPk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + orderPk,
+      );
     }
   });
 
@@ -77,14 +80,20 @@ describe("NPM client", () => {
       await monaco.getOrder(order1Pk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + order1Pk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + order1Pk,
+      );
     }
     // check order was deleted
     try {
       await monaco.getOrder(order2Pk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + order2Pk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + order2Pk,
+      );
     }
   });
 });

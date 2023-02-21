@@ -1,5 +1,5 @@
 import { PublicKey, Signer, SystemProgram } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { ClientResponse, ResponseFactory } from "../types";
 import { CreateProductConfigResponse } from "../types/product_config";
 import { findProductConfigPda } from "./utils";

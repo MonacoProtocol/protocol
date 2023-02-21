@@ -1,5 +1,5 @@
 import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
-import { AnchorProvider, BN, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   findProductConfigPda,

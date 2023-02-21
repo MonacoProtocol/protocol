@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { create_market, print_market } from "./create_market";
 import { create_order } from "./create_order";
 import {

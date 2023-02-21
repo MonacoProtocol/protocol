@@ -78,9 +78,8 @@ describe("Market: creation", () => {
       assert(false, "an exception should have been thrown");
     } catch (e) {
       console.error(e);
-      assert.equal(
-        e.message,
-        "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: Cross-program invocation with unauthorized signer or writable account",
+      expect(e.message).toMatch(
+        /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
     }
 
@@ -92,7 +91,10 @@ describe("Market: creation", () => {
       await monaco.fetchMarketOutcome(marketOutcomePk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + marketOutcomePk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + marketOutcomePk,
+      );
     }
   });
 
@@ -128,9 +130,8 @@ describe("Market: creation", () => {
       assert(false, "an exception should have been thrown");
     } catch (e) {
       console.error(e);
-      assert.equal(
-        e.message,
-        "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: Cross-program invocation with unauthorized signer or writable account",
+      expect(e.message).toMatch(
+        /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
     }
 
@@ -142,7 +143,10 @@ describe("Market: creation", () => {
       await monaco.fetchMarketOutcome(marketOutcomePk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + marketOutcomePk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + marketOutcomePk,
+      );
     }
   });
 
@@ -177,9 +181,8 @@ describe("Market: creation", () => {
       assert(false, "an exception should have been thrown");
     } catch (e) {
       console.error(e);
-      assert.equal(
-        e.message,
-        "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: Cross-program invocation with unauthorized signer or writable account",
+      expect(e.message).toMatch(
+        /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
     }
 
@@ -191,7 +194,10 @@ describe("Market: creation", () => {
       await monaco.fetchMarketOutcome(marketOutcomePk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + marketOutcomePk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + marketOutcomePk,
+      );
     }
   });
 });

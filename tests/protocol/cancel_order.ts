@@ -1,5 +1,5 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import assert from "assert";
 import {
   createWalletWithBalance,
@@ -40,7 +40,10 @@ describe("Security: Cancel Order", () => {
       await monaco.program.account.order.fetch(orderPk);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + orderPk);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + orderPk,
+      );
     }
   });
 

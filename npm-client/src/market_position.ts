@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program, BN } from "@project-serum/anchor";
+import { Program, BN } from "@coral-xyz/anchor";
 import { MarketPosition } from "../types";
 import { ClientResponse, ResponseFactory, FindPdaResponse } from "../types";
 import { getMarketOutcomeTitlesByMarket } from "./market_outcome_query";

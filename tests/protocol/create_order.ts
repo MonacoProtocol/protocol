@@ -1,5 +1,5 @@
-import * as anchor from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   authoriseOperator,
   createAssociatedTokenAccountWithBalance,
@@ -10,7 +10,7 @@ import {
   OperatorType,
 } from "../util/test_util";
 import assert from "assert";
-import { AnchorError, Program, BN } from "@project-serum/anchor";
+import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import { SystemProgram } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
@@ -438,8 +438,8 @@ describe("Protocol - Create Order", () => {
       );
     } catch (e) {
       assert.equal(
-        e,
-        "Error: Account does not exist " + matchingPoolPda.data.pda,
+        e.message,
+        "Account does not exist or has no data " + matchingPoolPda.data.pda,
       );
     }
 

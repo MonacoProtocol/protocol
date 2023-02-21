@@ -1,5 +1,5 @@
 import { monaco } from "../util/wrappers";
-import { AnchorProvider } from "@project-serum/anchor";
+import { AnchorProvider } from "@coral-xyz/anchor";
 import * as assert from "assert";
 import { ProductConfig } from "../../npm-client/types/product_config";
 import {

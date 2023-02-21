@@ -7,16 +7,16 @@ import {
   mintTo,
   getMint,
 } from "@solana/spl-token";
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import {
   AnchorProvider,
   BN,
   getProvider,
   Program,
   Provider,
-} from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+} from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
