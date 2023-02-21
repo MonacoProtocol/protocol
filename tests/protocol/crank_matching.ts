@@ -1,5 +1,5 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { AnchorError } from "@project-serum/anchor";
+import { AnchorError } from "@coral-xyz/anchor";
 import assert from "assert";
 import {
   createAuthorisedOperatorsPda,

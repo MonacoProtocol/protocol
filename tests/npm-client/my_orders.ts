@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 
 import { Orders } from "../../npm-client/src/order_query";

@@ -1,4 +1,4 @@
-import { BorshAccountsCoder, Program } from "@project-serum/anchor";
+import { BorshAccountsCoder, Program } from "@coral-xyz/anchor";
 import { MemcmpFilter, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import {
@@ -104,7 +104,6 @@ export class MarketPositions {
       const accountsWithData =
         (await this.program.account.marketPosition.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-          "confirmed",
         )) as MarketPosition[];
 
       const result = accountPublicKeys.data.publicKeys

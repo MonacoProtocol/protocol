@@ -3,8 +3,8 @@ import {
   AnchorProvider,
   setProvider,
   workspace,
-} from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+} from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import assert from "assert";
 import { getWalletTokenBalancesWithSol } from "../../npm-client/src";
 import {

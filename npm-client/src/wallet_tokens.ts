@@ -1,5 +1,5 @@
 import { PublicKey, LAMPORTS_PER_SOL, TokenAmount } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import {
   ClientResponse,

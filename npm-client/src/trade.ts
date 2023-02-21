@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { Trade, TradePdaResponse } from "../types/trade";
 import { ClientResponse, ResponseFactory } from "../types/client";
 import { GetAccount } from "../types/get_account";

@@ -1,6 +1,6 @@
-import * as anchor from "@project-serum/anchor";
-import { AnchorProvider, Program } from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   createAssociatedTokenAccountWithBalance,
   createAuthorisedOperatorsPda,
@@ -1954,7 +1954,10 @@ describe("Settlement Crank", () => {
       await protocolProgram.account.order.fetch(forOrderPK);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + forOrderPK);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + forOrderPK,
+      );
     }
   });
 

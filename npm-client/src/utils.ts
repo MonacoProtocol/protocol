@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { AnchorProvider, BN, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 import { getMarket } from "./markets";
 import { findMarketPositionPda } from "./market_position";
