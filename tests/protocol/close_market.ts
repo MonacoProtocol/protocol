@@ -46,10 +46,24 @@ describe("Close market accounts", () => {
 
     const balanceAfterMarketClosed =
       await monaco.provider.connection.getBalance(marketOperator.publicKey);
+
+    // ensure rent has been returned
     const expectedBalanceAfterMarketClosed =
       balanceMarketCreated + marketRent + escrowRent;
-
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
+
+    await monaco.program.account.market.fetch(market.pk).catch((e) => {
+      assert.equal(e.message, `Account does not exist ${market.pk.toBase58()}`);
+    });
+
+    await monaco.provider.connection
+      .getAccountInfo(market.escrowPk)
+      .catch((e) => {
+        assert.equal(
+          e.message,
+          `Account does not exist ${market.escrowPk.toBase58()}`,
+        );
+      });
   });
 
   it("close market: market incorrect status", async () => {
