@@ -697,7 +697,7 @@ pub struct CloseMarket<'info> {
         seeds = [b"escrow".as_ref(), market.key().as_ref()],
         bump,
     )]
-    pub market_escrow: Box<Account<'info, TokenAccount>>,
+    pub market_escrow: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,
