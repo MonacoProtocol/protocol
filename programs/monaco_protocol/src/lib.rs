@@ -530,6 +530,8 @@ pub mod monaco_protocol {
             CoreError::MarketNotReadyToClose
         );
 
+        instructions::market::close_escrow_token_account(&ctx)?;
+
         Ok(())
     }
 }

@@ -690,6 +690,15 @@ pub struct CloseMarket<'info> {
         close = authority,
     )]
     pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+
     #[account(mut)]
     pub authority: SystemAccount<'info>,
 
@@ -697,4 +706,7 @@ pub struct CloseMarket<'info> {
     pub crank_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
 }
