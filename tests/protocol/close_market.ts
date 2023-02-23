@@ -28,11 +28,15 @@ describe("Close market accounts", () => {
     await market.readyToClose();
 
     const marketRent = await monaco.provider.connection.getBalance(market.pk);
+    const escrowRent = await monaco.provider.connection.getBalance(
+      market.escrowPk,
+    );
 
     await monaco.program.methods
       .closeMarket()
       .accounts({
         market: market.pk,
+        marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -42,9 +46,24 @@ describe("Close market accounts", () => {
 
     const balanceAfterMarketClosed =
       await monaco.provider.connection.getBalance(marketOperator.publicKey);
-    const expectedBalanceAfterMarketClosed = balanceMarketCreated + marketRent;
 
+    // ensure rent has been returned
+    const expectedBalanceAfterMarketClosed =
+      balanceMarketCreated + marketRent + escrowRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
+
+    await monaco.program.account.market.fetch(market.pk).catch((e) => {
+      assert.equal(e.message, `Account does not exist ${market.pk.toBase58()}`);
+    });
+
+    await monaco.provider.connection
+      .getAccountInfo(market.escrowPk)
+      .catch((e) => {
+        assert.equal(
+          e.message,
+          `Account does not exist ${market.escrowPk.toBase58()}`,
+        );
+      });
   });
 
   it("close market: market incorrect status", async () => {
@@ -68,6 +87,7 @@ describe("Close market accounts", () => {
       .closeMarket()
       .accounts({
         market: market.pk,
+        marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -100,6 +120,7 @@ describe("Close market accounts", () => {
       .closeMarket()
       .accounts({
         market: market.pk,
+        marketEscrow: market.escrowPk,
         authority: monaco.operatorPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -142,6 +163,7 @@ describe("Close market accounts", () => {
       .closeMarket()
       .accounts({
         market: marketB.pk,
+        marketEscrow: marketB.escrowPk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
