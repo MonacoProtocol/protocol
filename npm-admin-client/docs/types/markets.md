@@ -112,7 +112,7 @@ Type: {results: [Array][26]<[BatchAddPricesToOutcomes][16]>}
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][25], escrowAccountBump: [number][25], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][25], marketSettleTimestamp: null?, marketStatus: [MarketStatus][20], marketType: [string][24], marketWinningOutcomeIndex: [number][25]?, mintAccount: PublicKey, published: [boolean][27], suspended: [boolean][27], title: [string][24]}
+Type: {authority: BN, decimalLimit: [number][25], escrowAccountBump: [number][25], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][25], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][20], marketType: [string][24], marketWinningOutcomeIndex: [number][25]?, mintAccount: PublicKey, published: [boolean][27], suspended: [boolean][27], title: [string][24]}
 
 ### Properties
 
@@ -122,7 +122,7 @@ Type: {authority: BN, decimalLimit: [number][25], escrowAccountBump: [number][25
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
 *   `marketOutcomesCount` **[number][25]**&#x20;
-*   `marketSettleTimestamp` **null?**&#x20;
+*   `marketSettleTimestamp` **BN?**&#x20;
 *   `marketStatus` **[MarketStatus][20]**&#x20;
 *   `marketType` **[string][24]**&#x20;
 *   `marketWinningOutcomeIndex` **[number][25]?**&#x20;
