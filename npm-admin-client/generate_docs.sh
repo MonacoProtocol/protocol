@@ -8,6 +8,8 @@ declare -a endpoints=(
     "market_management"
     "market_outcome_prices"
     "market_outcome"
+    "market_validate"
+    "npm-client-duplicates"
     "operators"
     "utils"
 )
@@ -16,6 +18,7 @@ declare -a types=(
     "client"
     "default_price_ladder"
     "markets"
+    "npm-client-duplicates"
     "operator"
 )
 

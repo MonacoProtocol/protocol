@@ -52,6 +52,28 @@ export type BatchAddPricesToOutcomesResponse = {
   results: BatchAddPricesToOutcomes[];
 };
 
+export type ValidateMarketOutcomeTitles = {
+  outcomesValid: boolean;
+  missingOutcomes: string[];
+  additionalOutcomes: string[];
+};
+
+export type ValidateMarketOutcomePriceLadder = {
+  priceLadderValid: boolean;
+  outcomePk: PublicKey;
+  missingPrices: number[];
+  additionalPrices: number[];
+};
+
+export type ValidateMarketResponse = {
+  outcomesValid: boolean;
+  priceLaddersValid: boolean;
+  marketValid: boolean;
+  missingOutcomes: string[];
+  additionalOutcomes: string[];
+  priceLadderValidation: ValidateMarketOutcomePriceLadder[];
+};
+
 // Duplicates from primary client
 
 export enum MarketStatus {
