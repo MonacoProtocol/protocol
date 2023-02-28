@@ -12,11 +12,11 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 # Where to find the protocol :mag:
 
-| Address                                       | Network        | Description                                        |
-|-----------------------------------------------|----------------|----------------------------------------------------|
-| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `mainnet-beta` | `stable` - The latest stable official release      |
-| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `devnet`       | `stable` - The latest stable official release      |
-| `TBA`                                         | `devnet`       | `bleeding-edge` - The most recently merged changes |
+| Address                                                         | Network        | Description                                        |
+|-----------------------------------------------------------------|----------------|----------------------------------------------------|
+| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih`                   | `mainnet-beta` | `stable` - The latest stable official release      |
+| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih`                   | `devnet`       | `stable` - The latest stable official release      |
+| `mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU` **(coming soon)** | `devnet`       | `bleeding-edge` - The most recently merged changes |
 
 # Recent releases <sup>:rocket:</sup>
 
