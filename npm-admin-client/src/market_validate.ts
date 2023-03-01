@@ -1,6 +1,6 @@
 import { Program } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { getMarketOutcomesByMarket } from "./npm-client-duplicates";
+import { getMarketOutcomesByMarket } from "./market_helpers";
 import {
   ClientResponse,
   ResponseFactory,

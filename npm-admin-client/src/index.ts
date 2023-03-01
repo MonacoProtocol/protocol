@@ -4,6 +4,6 @@ export * from "./operators";
 export * from "./market_outcome";
 export * from "./market_outcome_prices";
 export * from "./market_validate";
-export * from "./npm-client-duplicates";
+export * from "./market_helpers";
 export * from "./utils";
 export * from "../types";
