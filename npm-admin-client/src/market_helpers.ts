@@ -108,7 +108,7 @@ export async function getMarket(
  * @example
  *
  * const mintPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
- * const getMintInfo = await findEscrowPda(program, mintPk)
+ * const mintInfo = await getMintInfo(program, mintPk)
  */
 export async function getMintInfo(
   program: Program,
