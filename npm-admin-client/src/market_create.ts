@@ -87,7 +87,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   );
 
   if (!initialiseOutcomePoolsResponse.success) {
-    response.addErrors(initialiseOutcomePoolsResponse);
+    response.addErrors(initialiseOutcomePoolsResponse.errors);
     return response.body;
   }
 
