@@ -3,13 +3,13 @@ import { PublicKey } from "@solana/web3.js";
 import { Order, PendingOrders } from "./order";
 import { GetAccount } from "./get_account";
 
-export enum MarketStatus {
-  Initializing = 0x00,
-  Open = 0x01,
-  Locked = 0x02,
-  ReadyForSettlement = 0x03,
-  Settled = 0x04,
-  ReadyToClose = 0x05,
+export interface MarketStatus {
+  readonly initializing?: Record<string, never>;
+  readonly open?: Record<string, never>;
+  readonly locked?: Record<string, never>;
+  readonly readyForSettlement?: Record<string, never>;
+  readonly settled?: Record<string, never>;
+  readonly readyToClose?: Record<string, never>;
 }
 
 export enum MarketType {

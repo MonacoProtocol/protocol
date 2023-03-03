@@ -2,16 +2,19 @@
 
 ### Table of Contents
 
-*   [Markets][1]
-*   [getMarketAccountsByStatus][2]
-    *   [Parameters][3]
-    *   [Examples][4]
-*   [getMarketAccountsByEvent][5]
-    *   [Parameters][6]
-    *   [Examples][7]
-*   [getMarketAccountsByStatusAndMintAccount][8]
-    *   [Parameters][9]
-    *   [Examples][10]
+*   [MarketStatusFilter][1]
+*   [Markets][2]
+*   [getMarketAccountsByStatus][3]
+    *   [Parameters][4]
+    *   [Examples][5]
+*   [getMarketAccountsByEvent][6]
+    *   [Parameters][7]
+    *   [Examples][8]
+*   [getMarketAccountsByStatusAndMintAccount][9]
+    *   [Parameters][10]
+    *   [Examples][11]
+
+## MarketStatusFilter
 
 ## Markets
 
@@ -22,12 +25,12 @@ Get all market accounts for the provided market status.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `status` **MarketStatus** {MarketStatus} status of the market, provided by the MarketStatus enum
+*   `status` **[MarketStatusFilter][1]** {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
 
 ### Examples
 
 ```javascript
-const status = MarketStatus.Open
+const status = MarketStatusFilter.Open
 const marketAccounts = await getMarketAccountsByStatus(program, status)
 ```
 
@@ -58,35 +61,37 @@ Get all market accounts for the provided market status and mint account.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `status` **MarketStatus** {MarketStatus} status of the market, provided by the MarketStatus enum
+*   `status` **[MarketStatusFilter][1]** {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
 *   `mintAccount` **PublicKey** {PublicKey} publicKey of the mint account
 
 ### Examples
 
 ```javascript
-const status = MarketStatus.Open
+const status = MarketStatusFilter.Open
 const mintAccount = new PublicKey("7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU")
 const marketAccounts = await getMarketAccountsByStatusAndMintAccount(program, status, mintAccount)
 ```
 
 Returns **MarketAccounts** fetched market accounts mapped to their publicKey
 
-[1]: #markets
+[1]: #marketstatusfilter
 
-[2]: #getmarketaccountsbystatus
+[2]: #markets
 
-[3]: #parameters
+[3]: #getmarketaccountsbystatus
 
-[4]: #examples
+[4]: #parameters
 
-[5]: #getmarketaccountsbyevent
+[5]: #examples
 
-[6]: #parameters-1
+[6]: #getmarketaccountsbyevent
 
-[7]: #examples-1
+[7]: #parameters-1
 
-[8]: #getmarketaccountsbystatusandmintaccount
+[8]: #examples-1
 
-[9]: #parameters-2
+[9]: #getmarketaccountsbystatusandmintaccount
 
-[10]: #examples-2
+[10]: #parameters-2
+
+[11]: #examples-2
