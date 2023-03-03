@@ -5,7 +5,7 @@ import {
   OrderStatusFilter,
   MarketAccount,
 } from "../../npm-client/src";
-import { checkEnumValue, fetchTokenData, numberAsPnlString } from "./util";
+import { fetchTokenData, numberAsPnlString } from "./util";
 import { KNOWN_WALLETS } from "./data";
 import { getProtocolProgram } from "../util";
 
@@ -108,10 +108,10 @@ function constructMarketLeaderboard(
       const orderMatchedStake = stake - voidedStake;
       totalStakeMatched += orderMatchedStake;
 
-      if (checkEnumValue(order.orderStatus, "settledWin")) {
+      if (order.orderStatus.settledWin) {
         winCount += 1;
         totalStakeReturn += payout;
-      } else if (checkEnumValue(order.orderStatus, "settledLose")) {
+      } else if (order.orderStatus.settledLose) {
         lossCount += 1;
         totalStakeReturn -= orderMatchedStake;
       }
