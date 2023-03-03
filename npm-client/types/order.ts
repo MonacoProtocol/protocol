@@ -3,11 +3,11 @@ import { BN } from "@project-serum/anchor";
 import { GetAccount } from "./get_account";
 
 export class OrderStatus {
-  open?: Record<string, never>;
-  matched?: Record<string, never>;
-  settledWin?: Record<string, never>;
-  settledLose?: Record<string, never>;
-  cancelled?: Record<string, never>;
+  readonly open?: Record<string, never>;
+  readonly matched?: Record<string, never>;
+  readonly settledWin?: Record<string, never>;
+  readonly settledLose?: Record<string, never>;
+  readonly cancelled?: Record<string, never>;
 }
 
 export type Match = {
