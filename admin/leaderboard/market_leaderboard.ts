@@ -2,7 +2,7 @@ import {
   AccountData,
   Order,
   Orders,
-  OrderStatus,
+  OrderStatusFilter,
   MarketAccount,
 } from "../../npm-client/src";
 import { checkEnumValue, fetchTokenData, numberAsPnlString } from "./util";
@@ -23,10 +23,10 @@ export async function getLeaderboardPerMarket() {
 
   // get all orders for settled markets
   const winningOrdersResponse = await new Orders(program)
-    .filterByStatus(OrderStatus.SettledWin)
+    .filterByStatus(OrderStatusFilter.SettledWin)
     .fetch();
   const losingOrdersResponse = await new Orders(program)
-    .filterByStatus(OrderStatus.SettledLose)
+    .filterByStatus(OrderStatusFilter.SettledLose)
     .fetch();
 
   const winningOrders = winningOrdersResponse.data.orderAccounts;

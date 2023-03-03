@@ -2,21 +2,24 @@
 
 ### Table of Contents
 
-*   [Orders][1]
-    *   [Parameters][2]
-    *   [Examples][3]
-*   [getOrdersByStatusForProviderWallet][4]
-    *   [Parameters][5]
-    *   [Examples][6]
-*   [getOrdersByMarketForProviderWallet][7]
-    *   [Parameters][8]
-    *   [Examples][9]
-*   [getCancellableOrdersByMarketForProviderWallet][10]
-    *   [Parameters][11]
-    *   [Examples][12]
-*   [getOrdersByEventForProviderWallet][13]
-    *   [Parameters][14]
-    *   [Examples][15]
+*   [OrderStatusFilter][1]
+*   [Orders][2]
+    *   [Parameters][3]
+    *   [Examples][4]
+*   [getOrdersByStatusForProviderWallet][5]
+    *   [Parameters][6]
+    *   [Examples][7]
+*   [getOrdersByMarketForProviderWallet][8]
+    *   [Parameters][9]
+    *   [Examples][10]
+*   [getCancellableOrdersByMarketForProviderWallet][11]
+    *   [Parameters][12]
+    *   [Examples][13]
+*   [getOrdersByEventForProviderWallet][14]
+    *   [Parameters][15]
+    *   [Examples][16]
+
+## OrderStatusFilter
 
 ## Orders
 
@@ -40,7 +43,7 @@ const purchaserPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk'
 const orders = await Orders.orderQuery(program)
       .filterByMarket(marketPk)
       .filterByPurchaser(purchaserPk)
-      .filterByStatus(OrderStatus.Open)
+      .filterByStatus(OrderStatusFilter.Open)
       .fetch();
 
 // Returns all open order accounts for the specified market and purchasing wallet.
@@ -53,12 +56,12 @@ Get all orders owned by the program provider wallet - by order status
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `status` **OrderStatus** {orderStatus} status of the order, provided by the orderStatus enum
+*   `status` **[OrderStatusFilter][1]** {orderStatus} status of the order, provided by the orderStatus enum
 
 ### Examples
 
 ```javascript
-const status = OrderStatus.Open
+const status = OrderStatusFilter.Open
 const orders = await getOrdersByStatusForProviderWallet(program, status)
 ```
 
@@ -86,7 +89,7 @@ Returns **OrderAccounts** fetched order accounts mapped to their publicKey
 
 Get all cancellable orders owned by the program provider for the given market. Orders can be cancelled if they:
 
-*   Have the status of OrderStatus.OPEN
+*   Have the status of OPEN
 *   Are partially matched (only unmatched stake will be cancelled)
 
 ### Parameters
@@ -121,32 +124,34 @@ const orders = await getOrdersByEventForProviderWallet(program, eventPk)
 
 Returns **OrderAccounts** fetched order accounts mapped to their publicKey
 
-[1]: #orders
+[1]: #orderstatusfilter
 
-[2]: #parameters
+[2]: #orders
 
-[3]: #examples
+[3]: #parameters
 
-[4]: #getordersbystatusforproviderwallet
+[4]: #examples
 
-[5]: #parameters-1
+[5]: #getordersbystatusforproviderwallet
 
-[6]: #examples-1
+[6]: #parameters-1
 
-[7]: #getordersbymarketforproviderwallet
+[7]: #examples-1
 
-[8]: #parameters-2
+[8]: #getordersbymarketforproviderwallet
 
-[9]: #examples-2
+[9]: #parameters-2
 
-[10]: #getcancellableordersbymarketforproviderwallet
+[10]: #examples-2
 
-[11]: #parameters-3
+[11]: #getcancellableordersbymarketforproviderwallet
 
-[12]: #examples-3
+[12]: #parameters-3
 
-[13]: #getordersbyeventforproviderwallet
+[13]: #examples-3
 
-[14]: #parameters-4
+[14]: #getordersbyeventforproviderwallet
 
-[15]: #examples-4
+[15]: #parameters-4
+
+[16]: #examples-4

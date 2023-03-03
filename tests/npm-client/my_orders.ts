@@ -2,8 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { Program } from "@project-serum/anchor";
 import assert from "assert";
 
-import { Orders } from "../../npm-client/src/order_query";
-import { OrderStatus } from "../../npm-client/types/order";
+import { Orders, OrderStatusFilter } from "../../npm-client/src/order_query";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
@@ -144,23 +143,23 @@ describe("Order", () => {
         .fetch(),
       new Orders(monaco.program as Program)
         .filterByPurchaser(wallet1.publicKey)
-        .filterByStatus(OrderStatus.Open)
+        .filterByStatus(OrderStatusFilter.Open)
         .fetch(),
       new Orders(monaco.program as Program)
         .filterByPurchaser(wallet1.publicKey)
-        .filterByStatus(OrderStatus.Matched)
+        .filterByStatus(OrderStatusFilter.Matched)
         .fetch(),
       new Orders(monaco.program as Program)
         .filterByPurchaser(wallet1.publicKey)
         .filterByMarket(market1.pk)
-        .filterByStatus(OrderStatus.Matched)
+        .filterByStatus(OrderStatusFilter.Matched)
         .fetch(),
       new Orders(monaco.program as Program)
-        .filterByStatus(OrderStatus.SettledWin)
+        .filterByStatus(OrderStatusFilter.SettledWin)
         .filterByMarket(market1.pk)
         .fetch(),
       new Orders(monaco.program as Program)
-        .filterByStatus(OrderStatus.SettledWin)
+        .filterByStatus(OrderStatusFilter.SettledWin)
         .filterByMarket(market2.pk)
         .fetch(),
     ]);

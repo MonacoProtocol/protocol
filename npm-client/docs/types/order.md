@@ -3,105 +3,130 @@
 ### Table of Contents
 
 *   [OrderStatus][1]
-*   [Match][2]
-    *   [Properties][3]
-*   [Order][4]
-    *   [Properties][5]
-*   [PendingOrders][6]
-    *   [Properties][7]
-*   [OrderAccounts][8]
-    *   [Properties][9]
-*   [CreateOrderResponse][10]
-    *   [Properties][11]
-*   [CancelOrderResponse][12]
-    *   [Properties][13]
-*   [CancelOrdersResponse][14]
-    *   [Properties][15]
-*   [orderPdaResponse][16]
-    *   [Properties][17]
-*   [StakeInteger][18]
-    *   [Properties][19]
+    *   [open][2]
+    *   [matched][3]
+    *   [settledWin][4]
+    *   [settledLose][5]
+    *   [cancelled][6]
+*   [Match][7]
+    *   [Properties][8]
+*   [Order][9]
+    *   [Properties][10]
+*   [PendingOrders][11]
+    *   [Properties][12]
+*   [OrderAccounts][13]
+    *   [Properties][14]
+*   [CreateOrderResponse][15]
+    *   [Properties][16]
+*   [CancelOrderResponse][17]
+    *   [Properties][18]
+*   [CancelOrdersResponse][19]
+    *   [Properties][20]
+*   [orderPdaResponse][21]
+    *   [Properties][22]
+*   [StakeInteger][23]
+    *   [Properties][24]
 
 ## OrderStatus
 
+### open
+
+Type: Record<[string][25], never>
+
+### matched
+
+Type: Record<[string][25], never>
+
+### settledWin
+
+Type: Record<[string][25], never>
+
+### settledLose
+
+Type: Record<[string][25], never>
+
+### cancelled
+
+Type: Record<[string][25], never>
+
 ## Match
 
-Type: {price: [number][20], stake: [number][20]}
+Type: {price: [number][26], stake: [number][26]}
 
 ### Properties
 
-*   `price` **[number][20]**&#x20;
-*   `stake` **[number][20]**&#x20;
+*   `price` **[number][26]**&#x20;
+*   `stake` **[number][26]**&#x20;
 
 ## Order
 
-Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20], forOutcome: [boolean][21], orderStatus: [OrderStatus][1], stake: BN, voidedStake: BN, expectedPrice: [number][20], creationTimestamp: BN, stakeUnmatched: BN, payout: BN}
+Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][26], forOutcome: [boolean][27], orderStatus: [OrderStatus][1], stake: BN, voidedStake: BN, expectedPrice: [number][26], creationTimestamp: BN, stakeUnmatched: BN, payout: BN}
 
 ### Properties
 
 *   `purchaser` **PublicKey**&#x20;
 *   `market` **PublicKey**&#x20;
-*   `marketOutcomeIndex` **[number][20]**&#x20;
-*   `forOutcome` **[boolean][21]**&#x20;
+*   `marketOutcomeIndex` **[number][26]**&#x20;
+*   `forOutcome` **[boolean][27]**&#x20;
 *   `orderStatus` **[OrderStatus][1]**&#x20;
 *   `stake` **BN**&#x20;
 *   `voidedStake` **BN**&#x20;
-*   `expectedPrice` **[number][20]**&#x20;
+*   `expectedPrice` **[number][26]**&#x20;
 *   `creationTimestamp` **BN**&#x20;
 *   `stakeUnmatched` **BN**&#x20;
 *   `payout` **BN**&#x20;
 
 ## PendingOrders
 
-Type: {pendingOrders: [Array][22]\<GetAccount<[Order][4]>>}
+Type: {pendingOrders: [Array][28]\<GetAccount<[Order][9]>>}
 
 ### Properties
 
-*   `pendingOrders` **[Array][22]\<GetAccount<[Order][4]>>**&#x20;
+*   `pendingOrders` **[Array][28]\<GetAccount<[Order][9]>>**&#x20;
 
 ## OrderAccounts
 
-Type: {orderAccounts: [Array][22]\<GetAccount<[Order][4]>>}
+Type: {orderAccounts: [Array][28]\<GetAccount<[Order][9]>>}
 
 ### Properties
 
-*   `orderAccounts` **[Array][22]\<GetAccount<[Order][4]>>**&#x20;
+*   `orderAccounts` **[Array][28]\<GetAccount<[Order][9]>>**&#x20;
 
 ## CreateOrderResponse
 
-Type: {orderPk: PublicKey, tnxID: ([string][23] | void)}
+Type: {orderPk: PublicKey, tnxID: ([string][25] | void)}
 
 ### Properties
 
 *   `orderPk` **PublicKey**&#x20;
-*   `tnxID` **([string][23] | void)**&#x20;
+*   `tnxID` **([string][25] | void)**&#x20;
 
 ## CancelOrderResponse
 
-Type: {orderPk: PublicKey, tnxID: [string][23]}
+Type: {orderPk: PublicKey, tnxID: [string][25]}
 
 ### Properties
 
 *   `orderPk` **PublicKey**&#x20;
-*   `tnxID` **[string][23]**&#x20;
+*   `tnxID` **[string][25]**&#x20;
 
 ## CancelOrdersResponse
 
-Type: {failedCancellationOrders: [Array][22]\<PublicKey>, tnxIDs: [Array][22]<[string][23]>}
+Type: {failedCancellationOrders: [Array][28]\<PublicKey>, tnxIDs: [Array][28]<[string][25]>}
 
 ### Properties
 
-*   `failedCancellationOrders` **[Array][22]\<PublicKey>**&#x20;
-*   `tnxIDs` **[Array][22]<[string][23]>**&#x20;
+*   `failedCancellationOrders` **[Array][28]\<PublicKey>**&#x20;
+*   `tnxIDs` **[Array][28]<[string][25]>**&#x20;
 
 ## orderPdaResponse
 
-Type: {orderPk: PublicKey, distinctSeed: [string][23]}
+Type: {orderPk: PublicKey, distinctSeed: [string][25]}
 
 ### Properties
 
 *   `orderPk` **PublicKey**&#x20;
-*   `distinctSeed` **[string][23]**&#x20;
+*   `distinctSeed` **[string][25]**&#x20;
 
 ## StakeInteger
 
@@ -113,46 +138,56 @@ Type: {stakeInteger: BN}
 
 [1]: #orderstatus
 
-[2]: #match
+[2]: #open
 
-[3]: #properties
+[3]: #matched
 
-[4]: #order
+[4]: #settledwin
 
-[5]: #properties-1
+[5]: #settledlose
 
-[6]: #pendingorders
+[6]: #cancelled
 
-[7]: #properties-2
+[7]: #match
 
-[8]: #orderaccounts
+[8]: #properties
 
-[9]: #properties-3
+[9]: #order
 
-[10]: #createorderresponse
+[10]: #properties-1
 
-[11]: #properties-4
+[11]: #pendingorders
 
-[12]: #cancelorderresponse
+[12]: #properties-2
 
-[13]: #properties-5
+[13]: #orderaccounts
 
-[14]: #cancelordersresponse
+[14]: #properties-3
 
-[15]: #properties-6
+[15]: #createorderresponse
 
-[16]: #orderpdaresponse
+[16]: #properties-4
 
-[17]: #properties-7
+[17]: #cancelorderresponse
 
-[18]: #stakeinteger
+[18]: #properties-5
 
-[19]: #properties-8
+[19]: #cancelordersresponse
 
-[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[20]: #properties-6
 
-[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[21]: #orderpdaresponse
 
-[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[22]: #properties-7
 
-[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[23]: #stakeinteger
+
+[24]: #properties-8
+
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
