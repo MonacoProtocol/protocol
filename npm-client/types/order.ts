@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 import { GetAccount } from "./get_account";
 
-export class OrderStatus {
+export interface OrderStatus {
   readonly open?: Record<string, never>;
   readonly matched?: Record<string, never>;
   readonly settledWin?: Record<string, never>;
