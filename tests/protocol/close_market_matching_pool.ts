@@ -24,6 +24,8 @@ describe("Close market matching pool accounts", () => {
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.completeSettlement();
     await market.readyToClose();
 
@@ -75,6 +77,8 @@ describe("Close market matching pool accounts", () => {
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.completeSettlement();
 
     const matchingPoolPk = market.matchingPools[0][2.0].forOutcome;
@@ -113,6 +117,8 @@ describe("Close market matching pool accounts", () => {
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.completeSettlement();
     await market.readyToClose();
 
@@ -153,6 +159,8 @@ describe("Close market matching pool accounts", () => {
     await marketA.settle(0);
     await marketA.settleOrder(forOrder);
     await marketA.settleOrder(againstOrder);
+    await marketA.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await marketA.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await marketA.completeSettlement();
     await marketA.readyToClose();
 
@@ -197,6 +205,8 @@ describe("Close market matching pool accounts", () => {
     await marketA.settle(0);
     await marketA.settleOrder(forOrder);
     await marketA.settleOrder(againstOrder);
+    await marketA.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await marketA.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await marketA.completeSettlement();
     await marketA.readyToClose();
 
