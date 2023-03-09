@@ -50,6 +50,7 @@ export class Monaco {
   readonly provider: anchor.AnchorProvider;
   readonly program: Program<MonacoProtocol>;
   readonly operatorPk: PublicKey;
+  readonly operatorWallet: NodeWallet;
 
   private marketAuthorisedOperatorsPk: PublicKey;
   private crankAuthorisedOperatorsPk: PublicKey;
@@ -61,6 +62,7 @@ export class Monaco {
     this.provider = provider;
     this.program = program;
     this.operatorPk = provider.wallet.publicKey;
+    this.operatorWallet = provider.wallet as NodeWallet;
   }
 
   getRawProgram(): Program {
@@ -857,7 +859,6 @@ export class MonacoMarket {
       .completeMarketSettlement()
       .accounts({
         market: this.pk,
-        marketEscrow: this.escrowPk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators:
           await this.monaco.findCrankAuthorisedOperatorsPda(),
@@ -874,6 +875,7 @@ export class MonacoMarket {
       .setMarketReadyToClose()
       .accounts({
         market: this.pk,
+        marketEscrow: this.escrowPk,
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
