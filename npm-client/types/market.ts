@@ -115,7 +115,7 @@ export type MarketPrice = {
 
 export type MarketPrices = {
   market: MarketAccount;
-  pendingOrders: Order[];
+  pendingOrders: GetAccount<Order>[];
   marketPrices: MarketPrice[];
 };
 
