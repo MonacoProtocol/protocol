@@ -18,7 +18,6 @@ import {
   openMarket,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
-import { checkEnumValue } from "../../admin/leaderboard/util";
 
 describe("Settle market", () => {
   const provider = AnchorProvider.local();
@@ -197,7 +196,7 @@ describe("Market ready to close", () => {
     assert(response.success);
     assert(response.data.tnxId);
     assert.deepEqual(response.errors, []);
-    checkEnumValue(updatedMarket.marketStatus, "readyToClose");
+    assert.deepEqual(updatedMarket.marketStatus, { readyToClose: {} });
   });
 
   it("Fails if market not settled", async () => {
@@ -209,6 +208,6 @@ describe("Market ready to close", () => {
     assert.equal(response.success, false);
     assert.equal(response.data, undefined);
     assert(response.errors);
-    checkEnumValue(updatedMarket.marketStatus, "open");
+    assert.deepEqual(updatedMarket.marketStatus, { open: {} });
   });
 });

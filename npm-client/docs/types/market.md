@@ -188,12 +188,12 @@ Type: {marketOutcome: [string][35], marketOutcomeIndex: [number][34], price: [nu
 
 ## MarketPrices
 
-Type: {market: [MarketAccount][3], pendingOrders: [Array][37]\<Order>, marketPrices: [Array][37]<[MarketPrice][29]>}
+Type: {market: [MarketAccount][3], pendingOrders: [Array][37]\<GetAccount\<Order>>, marketPrices: [Array][37]<[MarketPrice][29]>}
 
 ### Properties
 
 *   `market` **[MarketAccount][3]**&#x20;
-*   `pendingOrders` **[Array][37]\<Order>**&#x20;
+*   `pendingOrders` **[Array][37]\<GetAccount\<Order>>**&#x20;
 *   `marketPrices` **[Array][37]<[MarketPrice][29]>**&#x20;
 
 ## MarketPricesAndPendingOrders

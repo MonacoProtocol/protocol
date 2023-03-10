@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { AnchorProvider, BN, Program } from "@project-serum/anchor";
 import { Mint, getMint } from "@solana/spl-token";
+import { Big } from "big.js";
 import { getMarket } from "./markets";
 import { findMarketPositionPda } from "./market_position";
 import { findMarketMatchingPoolPda } from "./market_matching_pools";
@@ -109,7 +110,9 @@ export async function uiStakeToInteger(
     return response.body;
   }
 
-  const stakeInteger = new BN(stake * 10 ** mintInfo.data.decimals);
+  const stakeInteger = new BN(
+    new Big(stake).times(10 ** mintInfo.data.decimals).toNumber(),
+  );
   response.addResponseData({
     stakeInteger: stakeInteger,
   });
