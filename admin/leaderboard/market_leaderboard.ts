@@ -2,10 +2,10 @@ import {
   AccountData,
   Order,
   Orders,
-  OrderStatus,
+  OrderStatusFilter,
   MarketAccount,
 } from "../../npm-client/src";
-import { checkEnumValue, fetchTokenData, numberAsPnlString } from "./util";
+import { fetchTokenData, numberAsPnlString } from "./util";
 import { KNOWN_WALLETS } from "./data";
 import { getProtocolProgram } from "../util";
 
@@ -23,10 +23,10 @@ export async function getLeaderboardPerMarket() {
 
   // get all orders for settled markets
   const winningOrdersResponse = await new Orders(program)
-    .filterByStatus(OrderStatus.SettledWin)
+    .filterByStatus(OrderStatusFilter.SettledWin)
     .fetch();
   const losingOrdersResponse = await new Orders(program)
-    .filterByStatus(OrderStatus.SettledLose)
+    .filterByStatus(OrderStatusFilter.SettledLose)
     .fetch();
 
   const winningOrders = winningOrdersResponse.data.orderAccounts;
@@ -108,10 +108,10 @@ function constructMarketLeaderboard(
       const orderMatchedStake = stake - voidedStake;
       totalStakeMatched += orderMatchedStake;
 
-      if (checkEnumValue(order.orderStatus, "settledWin")) {
+      if (order.orderStatus.settledWin) {
         winCount += 1;
         totalStakeReturn += payout;
-      } else if (checkEnumValue(order.orderStatus, "settledLose")) {
+      } else if (order.orderStatus.settledLose) {
         lossCount += 1;
         totalStakeReturn -= orderMatchedStake;
       }

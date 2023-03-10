@@ -43,7 +43,3 @@ export function numberAsPnlString(value: number) {
   }
   return value > 0 ? `+${value.toFixed(2)}` : `${value.toFixed(2)}`;
 }
-
-export function checkEnumValue(value: any, jsonKey: string) {
-  return Object.prototype.hasOwnProperty.call(value, jsonKey);
-}

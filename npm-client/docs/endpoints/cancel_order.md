@@ -13,7 +13,7 @@
 
 For the provided order publicKey, cancel the order if the program provider owns the order.Orders can be cancelled if they:
 
-*   Have the status of OrderStatus.OPEN
+*   Have the status of OPEN
 *   Are partially matched (only unmatched stake will be cancelled)
 
 ### Parameters
@@ -34,7 +34,7 @@ Returns **CancelOrderResponse** the provided order publicKey and the transaction
 
 For the provided market publicKey, attempt to cancel all cancellable orders owned by the program provider wallet. Orders can be cancelled if they:
 
-*   Have the status of OrderStatus.OPEN
+*   Have the status of OPEN
 *   Are partially matched (only unmatched stake will be cancelled)
 
 ### Parameters

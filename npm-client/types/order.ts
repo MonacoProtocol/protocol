@@ -2,12 +2,12 @@ import { PublicKey } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 import { GetAccount } from "./get_account";
 
-export enum OrderStatus {
-  Open = 0x00,
-  Matched = 0x01,
-  SettledWin = 0x02,
-  SettledLose = 0x03,
-  Cancelled = 0x04,
+export interface OrderStatus {
+  readonly open?: Record<string, never>;
+  readonly matched?: Record<string, never>;
+  readonly settledWin?: Record<string, never>;
+  readonly settledLose?: Record<string, never>;
+  readonly cancelled?: Record<string, never>;
 }
 
 export type Match = {

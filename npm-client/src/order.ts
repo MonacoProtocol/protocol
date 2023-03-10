@@ -4,12 +4,11 @@ import {
   Order,
   OrderAccounts,
   orderPdaResponse,
-  OrderStatus,
   PendingOrders,
 } from "../types/order";
 import { ClientResponse, ResponseFactory } from "../types/client";
 import { GetAccount } from "../types/get_account";
-import { Orders } from "./order_query";
+import { Orders, OrderStatusFilter } from "./order_query";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -139,11 +138,11 @@ export async function getPendingOrdersForMarket(
   const [matchedOrdersResponse, openOrdersResponse] = await Promise.all([
     await new Orders(program)
       .filterByMarket(marketPk)
-      .filterByStatus(OrderStatus.Matched)
+      .filterByStatus(OrderStatusFilter.Matched)
       .fetch(),
     await new Orders(program)
       .filterByMarket(marketPk)
-      .filterByStatus(OrderStatus.Open)
+      .filterByStatus(OrderStatusFilter.Open)
       .fetch(),
   ]);
 
@@ -178,12 +177,12 @@ export async function getPendingOrdersForMarketByOutcomeIndex(
     await new Orders(program)
       .filterByMarket(marketPk)
       .filterByMarketOutcomeIndex(outcomeIndex)
-      .filterByStatus(OrderStatus.Matched)
+      .filterByStatus(OrderStatusFilter.Matched)
       .fetch(),
     await new Orders(program)
       .filterByMarket(marketPk)
       .filterByMarketOutcomeIndex(outcomeIndex)
-      .filterByStatus(OrderStatus.Open)
+      .filterByStatus(OrderStatusFilter.Open)
       .fetch(),
   ]);
 
@@ -222,13 +221,13 @@ export async function filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(
       .filterByMarket(marketPk)
       .filterByMarketOutcomeIndex(outcomeIndex)
       .filterByForOutcome(forOutcome)
-      .filterByStatus(OrderStatus.Matched)
+      .filterByStatus(OrderStatusFilter.Matched)
       .fetch(),
     await new Orders(program)
       .filterByMarket(marketPk)
       .filterByMarketOutcomeIndex(outcomeIndex)
       .filterByForOutcome(forOutcome)
-      .filterByStatus(OrderStatus.Open)
+      .filterByStatus(OrderStatusFilter.Open)
       .fetch(),
   ]);
 
