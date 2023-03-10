@@ -26,7 +26,7 @@ export type MarketAccount = {
   eventAccount: PublicKey;
   marketLockTimestamp: BN;
   marketOutcomesCount: number;
-  marketSettleTimestamp?: null;
+  marketSettleTimestamp?: BN;
   marketStatus: MarketStatus;
   marketType: string;
   marketWinningOutcomeIndex?: number;

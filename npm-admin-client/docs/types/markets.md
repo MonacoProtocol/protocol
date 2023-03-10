@@ -142,7 +142,7 @@ Type: Record<[string][30], never>
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][31], escrowAccountBump: [number][31], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][31], marketSettleTimestamp: null?, marketStatus: [MarketStatus][20], marketType: [string][30], marketWinningOutcomeIndex: [number][31]?, mintAccount: PublicKey, published: [boolean][33], suspended: [boolean][33], title: [string][30]}
+Type: {authority: BN, decimalLimit: [number][31], escrowAccountBump: [number][31], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][31], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][20], marketType: [string][30], marketWinningOutcomeIndex: [number][31]?, mintAccount: PublicKey, published: [boolean][33], suspended: [boolean][33], title: [string][30]}
 
 ### Properties
 
@@ -152,7 +152,7 @@ Type: {authority: BN, decimalLimit: [number][31], escrowAccountBump: [number][31
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
 *   `marketOutcomesCount` **[number][31]**&#x20;
-*   `marketSettleTimestamp` **null?**&#x20;
+*   `marketSettleTimestamp` **BN?**&#x20;
 *   `marketStatus` **[MarketStatus][20]**&#x20;
 *   `marketType` **[string][30]**&#x20;
 *   `marketWinningOutcomeIndex` **[number][31]?**&#x20;
