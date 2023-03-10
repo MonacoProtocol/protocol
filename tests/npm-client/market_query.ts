@@ -3,7 +3,7 @@ import {
   getMarketAccountsByEvent,
   getMarketAccountsByStatus,
   getMarketAccountsByStatusAndMintAccount,
-  MarketStatus,
+  MarketStatusFilter,
 } from "../../npm-client/src/";
 import { monaco } from "../util/wrappers";
 
@@ -13,7 +13,7 @@ describe("Market Query", () => {
 
     const responseOpen = await getMarketAccountsByStatus(
       monaco.getRawProgram(),
-      MarketStatus.Open,
+      MarketStatusFilter.Open,
     );
 
     assert(responseOpen.success);
@@ -68,7 +68,7 @@ describe("Market Query", () => {
     {
       const response = await getMarketAccountsByStatusAndMintAccount(
         monaco.getRawProgram(),
-        MarketStatus.Open,
+        MarketStatusFilter.Open,
         market1.mintPk,
       );
 
@@ -84,7 +84,7 @@ describe("Market Query", () => {
     {
       const response = await getMarketAccountsByStatusAndMintAccount(
         monaco.getRawProgram(),
-        MarketStatus.Open,
+        MarketStatusFilter.Open,
         market2.mintPk,
       );
 
