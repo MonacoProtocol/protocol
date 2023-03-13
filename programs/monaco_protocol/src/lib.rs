@@ -343,7 +343,7 @@ pub mod monaco_protocol {
         instructions::market::unsuspend(ctx)
     }
 
-    pub fn set_market_ready_to_close(ctx: Context<UpdateMarket>) -> Result<()> {
+    pub fn set_market_ready_to_close(ctx: Context<SetMarketReadyToClose>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -353,7 +353,25 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::ready_to_close(&mut ctx.accounts.market)
+        instructions::market::ready_to_close(&mut ctx.accounts.market, &ctx.accounts.market_escrow)
+    }
+
+    pub fn transfer_market_escrow_surplus(ctx: Context<TransferMarketEscrowSurplus>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        instructions::market::transfer_market_escrow_surplus(
+            &ctx.accounts.market,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.market_authority_token,
+            &ctx.accounts.token_program,
+        )
     }
 
     /*

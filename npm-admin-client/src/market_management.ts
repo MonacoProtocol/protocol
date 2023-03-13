@@ -8,6 +8,7 @@ import {
   EpochTimeStamp,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
+import { findEscrowPda } from "./npm-client-duplicates";
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -390,11 +391,18 @@ export async function setMarketReadyToClose(
     return response.body;
   }
 
+  const marketEscrow = await findEscrowPda(program, marketPk);
+  if (!marketEscrow.success) {
+    response.addErrors(marketEscrow.errors);
+    return response.body;
+  }
+
   try {
     const tnxId = await program.methods
       .setMarketReadyToClose()
       .accounts({
         market: marketPk,
+        marketEscrow: marketEscrow.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
       })

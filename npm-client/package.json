@@ -1,6 +1,6 @@
 {
   "name": "@monaco-protocol/client",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Interface package for the Monaco Protocol on Solana",
   "author": "Monaco Protocol",
   "license": "MIT",
@@ -30,11 +30,14 @@
     "@coral-xyz/anchor": "~0.26.0",
     "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.68.0",
-    "typescript": "^4.5.4",
-    "bs58": "^4.0.1"
+    "bs58": "^4.0.1",
+    "typescript": "^4.5.4"
   },
   "devDependencies": {
     "@types/bs58": "^4.0.1",
     "documentation": "^14.0.0"
+  },
+  "dependencies": {
+    "big.js": "^6.2.1"
   }
 }

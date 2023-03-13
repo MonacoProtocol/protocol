@@ -5,7 +5,7 @@ import {
   getOrdersByStatusForProviderWallet,
   getOrdersByEventForProviderWallet,
   getCancellableOrdersByMarketForProviderWallet,
-  OrderStatus,
+  OrderStatusFilter,
   Orders,
 } from "../../npm-client/src";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
@@ -57,7 +57,7 @@ describe("Order Query", () => {
 
     const responseByStatus = await getOrdersByStatusForProviderWallet(
       monaco.getRawProgram(),
-      OrderStatus.Open,
+      OrderStatusFilter.Open,
     );
 
     assert(responseByStatus.success);

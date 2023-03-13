@@ -6,9 +6,17 @@ import {
   MarketAccounts,
   MarketAccount,
   GetPublicKeys,
-  MarketStatus,
 } from "../types";
 import { PublicKeyCriterion, ByteCriterion, toFilters } from "./queries";
+
+export enum MarketStatusFilter {
+  Initializing = 0x00,
+  Open = 0x01,
+  Locked = 0x02,
+  ReadyForSettlement = 0x03,
+  Settled = 0x04,
+  ReadyToClose = 0x05,
+}
 
 export class Markets {
   /**
@@ -28,7 +36,7 @@ export class Markets {
    * const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
    * const markets = await Markets.marketQuery(program)
    *      .filterByAuthority(authorityPk)
-   *      .filterByStatus(MarketStatus.Settled)
+   *      .filterByStatus(MarketStatusFilter.Settled)
    *      .filterByEvent(eventPk)
    *      .fetch();
    *
@@ -64,7 +72,7 @@ export class Markets {
     return this;
   }
 
-  filterByStatus(status: MarketStatus): Markets {
+  filterByStatus(status: MarketStatusFilter): Markets {
     this.status.setValue(status);
     return this;
   }
@@ -137,16 +145,16 @@ export class Markets {
  * Get all market accounts for the provided market status.
  *
  * @param program {program} anchor program initialized by the consuming client
- * @param status {MarketStatus} status of the market, provided by the MarketStatus enum
+ * @param status {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
  * @returns { MarketAccounts } fetched market accounts mapped to their publicKey
  *
  * @example
- * const status = MarketStatus.Open
+ * const status = MarketStatusFilter.Open
  * const marketAccounts = await getMarketAccountsByStatus(program, status)
  */
 export async function getMarketAccountsByStatus(
   program: Program,
-  status: MarketStatus,
+  status: MarketStatusFilter,
 ): Promise<ClientResponse<MarketAccounts>> {
   return await Markets.marketQuery(program).filterByStatus(status).fetch();
 }
@@ -173,18 +181,18 @@ export async function getMarketAccountsByEvent(
  * Get all market accounts for the provided market status and mint account.
  *
  * @param program {program} anchor program initialized by the consuming client
- * @param status {MarketStatus} status of the market, provided by the MarketStatus enum
+ * @param status {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
  * @param mintAccount {PublicKey} publicKey of the mint account
  * @returns {MarketAccounts} fetched market accounts mapped to their publicKey
  *
  * @example
- * const status = MarketStatus.Open
+ * const status = MarketStatusFilter.Open
  * const mintAccount = new PublicKey("7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU")
  * const marketAccounts = await getMarketAccountsByStatusAndMintAccount(program, status, mintAccount)
  */
 export async function getMarketAccountsByStatusAndMintAccount(
   program: Program,
-  status: MarketStatus,
+  status: MarketStatusFilter,
   mintAccount: PublicKey,
 ): Promise<ClientResponse<MarketAccounts>> {
   return await Markets.marketQuery(program)

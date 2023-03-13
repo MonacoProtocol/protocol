@@ -54,12 +54,13 @@ export type BatchAddPricesToOutcomesResponse = {
 
 // Duplicates from primary client
 
-export enum MarketStatus {
-  Open = 0x00,
-  Locked = 0x01,
-  ReadyForSettlement = 0x02,
-  Settled = 0x03,
-  Complete = 0x04,
+export class MarketStatus {
+  initializing?: Record<string, never>;
+  open?: Record<string, never>;
+  locked?: Record<string, never>;
+  readyForSettlement?: Record<string, never>;
+  settled?: Record<string, never>;
+  readyToClose?: Record<string, never>;
 }
 
 export type MarketAccount = {
@@ -69,7 +70,7 @@ export type MarketAccount = {
   eventAccount: PublicKey;
   marketLockTimestamp: BN;
   marketOutcomesCount: number;
-  marketSettleTimestamp?: null;
+  marketSettleTimestamp?: BN;
   marketStatus: MarketStatus;
   marketType: string;
   marketWinningOutcomeIndex?: number;

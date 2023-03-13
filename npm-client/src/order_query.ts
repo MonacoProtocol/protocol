@@ -3,7 +3,6 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { GetAccount } from "../types/get_account";
 import {
   Order,
-  OrderStatus,
   ClientResponse,
   ResponseFactory,
   GetPublicKeys,
@@ -16,6 +15,14 @@ import {
   ByteCriterion,
   toFilters,
 } from "./queries";
+
+export enum OrderStatusFilter {
+  Open = 0x00,
+  Matched = 0x01,
+  SettledWin = 0x02,
+  SettledLose = 0x03,
+  Cancelled = 0x04,
+}
 
 /**
  * Base order query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -35,7 +42,7 @@ import {
  * const orders = await Orders.orderQuery(program)
  *       .filterByMarket(marketPk)
  *       .filterByPurchaser(purchaserPk)
- *       .filterByStatus(OrderStatus.Open)
+ *       .filterByStatus(OrderStatusFilter.Open)
  *       .fetch();
  *
  * // Returns all open order accounts for the specified market and purchasing wallet.
@@ -77,7 +84,7 @@ export class Orders {
     return this;
   }
 
-  filterByStatus(status: OrderStatus): Orders {
+  filterByStatus(status: OrderStatusFilter): Orders {
     this.status.setValue(status);
     return this;
   }
@@ -160,12 +167,12 @@ export class Orders {
  * @returns {OrderAccounts} fetched order accounts mapped to their publicKey
  *
  * @example
- * const status = OrderStatus.Open
+ * const status = OrderStatusFilter.Open
  * const orders = await getOrdersByStatusForProviderWallet(program, status)
  */
 export async function getOrdersByStatusForProviderWallet(
   program: Program,
-  status: OrderStatus,
+  status: OrderStatusFilter,
 ): Promise<ClientResponse<OrderAccounts>> {
   const provider = program.provider as AnchorProvider;
   return await Orders.orderQuery(program)
@@ -198,7 +205,7 @@ export async function getOrdersByMarketForProviderWallet(
 /**
  * Get all cancellable orders owned by the program provider for the given market. Orders can be cancelled if they:
  *
- * - Have the status of OrderStatus.OPEN
+ * - Have the status of OPEN
  * - Are partially matched (only unmatched stake will be cancelled)
  *
  * @param program {program} anchor program initialized by the consuming client
