@@ -421,9 +421,39 @@ pub struct UpdateMarket<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SetMarketReadyToClose<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct TransferMarketEscrowSurplus<'info> {
+    #[account()]
+    pub market: Account<'info, Market>,
+
     #[account(
         mut,
         token::mint = market.mint_account,
@@ -431,12 +461,22 @@ pub struct CompleteMarketSettlement<'info> {
         seeds = [b"escrow".as_ref(), market.key().as_ref()],
         bump,
     )]
-    pub market_escrow: Box<Account<'info, TokenAccount>>,
+    pub market_escrow: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = market.authority,
+    )]
+    pub market_authority_token: Account<'info, TokenAccount>,
+
+    pub market_operator: Signer<'info>,
+
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
