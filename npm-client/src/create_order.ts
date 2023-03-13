@@ -103,7 +103,7 @@ export async function createOrder(
   const distinctSeed = orderPdaResponse.data.distinctSeed;
 
   const tnxID = await program.methods
-    .createOrder(distinctSeed, {
+    .createOrderV2(distinctSeed, {
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: stake,

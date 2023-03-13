@@ -1,52 +1,98 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 use solana_program::clock::UnixTimestamp;
 
-use crate::context::CreateOrder;
+use crate::context::{CreateOrder, CreateOrderV2};
 use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
 use crate::instructions::{calculate_risk_from_stake, market, market_position, matching, transfer};
 use crate::state::market_account::*;
+use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 
+// create order using default product (system_program.key())
 pub fn create_order(ctx: Context<CreateOrder>, data: OrderData) -> Result<()> {
-    initialize_order(
+    create_order_internal(
         &mut ctx.accounts.order,
         &ctx.accounts.market,
         &ctx.accounts.purchaser,
+        &ctx.accounts.purchaser_token,
+        &ctx.accounts.token_program,
+        ctx.accounts.system_program.key(),
+        &mut ctx.accounts.market_matching_pool,
+        &mut ctx.accounts.market_position,
+        &ctx.accounts.market_escrow,
         &ctx.accounts.market_outcome,
+        data,
+    )
+}
+
+pub fn create_order_v2(ctx: Context<CreateOrderV2>, data: OrderData) -> Result<()> {
+    create_order_internal(
+        &mut ctx.accounts.order,
+        &ctx.accounts.market,
+        &ctx.accounts.purchaser,
+        &ctx.accounts.purchaser_token,
+        &ctx.accounts.token_program,
         ctx.accounts.product_config.key(),
-        &data,
+        &mut ctx.accounts.market_matching_pool,
+        &mut ctx.accounts.market_position,
+        &ctx.accounts.market_escrow,
+        &ctx.accounts.market_outcome,
+        data,
+    )
+}
+
+fn create_order_internal<'info>(
+    order: &mut Account<Order>,
+    market: &Account<Market>,
+    purchaser: &Signer<'info>,
+    purchaser_token_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    product_config: Pubkey,
+    matching_pool: &mut Account<MarketMatchingPool>,
+    market_position: &mut Account<MarketPosition>,
+    market_escrow: &Account<'info, TokenAccount>,
+    market_outcome: &Account<MarketOutcome>,
+    data: OrderData,
+) -> Result<()> {
+    initialize_order(
+        order,
+        market,
+        purchaser,
+        market_outcome,
+        product_config,
+        data,
     )?;
 
     // initialize market position
-    market_position::create_market_position(
-        &ctx.accounts.purchaser,
-        &ctx.accounts.market,
-        &mut ctx.accounts.market_position,
-    )?;
-
-    let matching_pool = &mut ctx.accounts.market_matching_pool;
+    market_position::create_market_position(purchaser, market, market_position)?;
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {
-        market::initialize_market_matching_pool(matching_pool, ctx.accounts.purchaser.key())?;
+        market::initialize_market_matching_pool(matching_pool, purchaser.key())?;
     }
-    matching::update_matching_queue_with_new_order(matching_pool, &ctx.accounts.order)?;
+    matching::update_matching_queue_with_new_order(matching_pool, order)?;
 
     // expected payment
-    let order = &ctx.accounts.order;
     let order_exposure = match order.for_outcome {
         true => order.stake,
         false => calculate_risk_from_stake(order.stake, order.expected_price),
     };
 
     // calculate payment
-    let payment = ctx.accounts.market_position.update_on_creation(
+    let payment = market_position.update_on_creation(
         order.market_outcome_index as usize,
         order.for_outcome,
         order_exposure,
     )?;
-    transfer::order_creation_payment(ctx, payment)?;
+    transfer::order_creation_payment(
+        market_escrow,
+        purchaser,
+        purchaser_token_account,
+        token_program,
+        payment,
+    )?;
 
     Ok(())
 }
@@ -57,7 +103,7 @@ fn initialize_order(
     purchaser: &Signer,
     market_outcome: &Account<MarketOutcome>,
     product_config: Pubkey,
-    data: &OrderData,
+    data: OrderData,
 ) -> Result<()> {
     let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
     validate_market_for_order(market, now)?;

@@ -43,6 +43,16 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn create_order_v2(
+        ctx: Context<CreateOrderV2>,
+        _distinct_seed: String,
+        data: OrderData,
+    ) -> Result<()> {
+        instructions::order::create_order_v2(ctx, data)?;
+
+        Ok(())
+    }
+
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         instructions::order::cancel_order(ctx)?;
 

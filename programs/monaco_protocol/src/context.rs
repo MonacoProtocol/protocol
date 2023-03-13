@@ -76,6 +76,80 @@ pub struct CreateOrder<'info> {
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
 
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(_distinct_seed: String, data: OrderData)]
+pub struct CreateOrderV2<'info> {
+    #[account(
+        init,
+        seeds = [
+            market.key().as_ref(),
+            purchaser.key().as_ref(),
+            _distinct_seed.as_ref()
+        ],
+        bump,
+        payer = purchaser,
+        space = Order::SIZE,
+    )]
+    pub order: Account<'info, Order>,
+    #[account(
+        init_if_needed,
+        seeds = [
+            purchaser.key().as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+        payer = purchaser,
+        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
+    )]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+    #[account(mut)]
+    pub purchaser: Signer<'info>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    pub market: Box<Account<'info, Market>>,
+    #[account(
+        init_if_needed,
+        seeds = [
+            market.key().as_ref(),
+            market_outcome.index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", data.price).as_ref(),
+            data.for_outcome.to_string().as_ref()
+        ],
+        payer = purchaser,
+        bump,
+        space = MarketMatchingPool::SIZE
+    )]
+    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            data.market_outcome_index.to_string().as_ref(),
+        ],
+        bump,
+    )]
+    pub market_outcome: Account<'info, MarketOutcome>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
+
     pub product_config: Box<Account<'info, ProductConfig>>,
 
     #[account(address = system_program::ID)]

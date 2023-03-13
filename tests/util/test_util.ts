@@ -500,7 +500,7 @@ export async function createOrder(
   const stakeInteger = uiAmountToAmount(stake);
 
   await protocolProgram.methods
-    .createOrder(orderDistinctSeed, {
+    .createOrderV2(orderDistinctSeed, {
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: new BN(stakeInteger),

@@ -5,14 +5,18 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::context::CreateOrder;
 
-pub fn order_creation_payment(ctx: Context<CreateOrder>, amount: u64) -> Result<()> {
-    let accounts = &ctx.accounts;
-
+pub fn order_creation_payment<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    purchaser: &Signer<'info>,
+    purchaser_token_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    amount: u64,
+) -> Result<()> {
     transfer_to_market_escrow(
-        &accounts.market_escrow,
-        &accounts.purchaser,
-        &accounts.purchaser_token,
-        &accounts.token_program,
+        market_escrow,
+        purchaser,
+        purchaser_token_account,
+        token_program,
         amount,
     )
 }
