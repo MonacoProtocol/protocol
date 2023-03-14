@@ -27,7 +27,7 @@
     "publishDevClient": "npm install && npm run build && npm publish --tag dev --access public && npm run clean"
   },
   "peerDependencies": {
-    "@coral-xyz/anchor": "~0.26.0",
+    "@coral-xyz/anchor": "~0.27.0",
     "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.68.0",
     "bs58": "^4.0.1",

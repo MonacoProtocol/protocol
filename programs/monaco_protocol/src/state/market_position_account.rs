@@ -312,7 +312,7 @@ mod tests {
     OrderData{outcome_index: 2, price: 2.0, stake: 1000000, for_outcome: false}
     ]), vec![0,0,0] ; "Same price, same stake, 3 different outcomes, for and against them in order to end up neutral")]
     fn test_update_on_match(orders: Box<[OrderData]>, expected_position: Vec<i128>) {
-        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3], 0);
+        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3]);
 
         for order in orders.into_vec() {
             market_position

@@ -18,9 +18,9 @@ stable = []
 dev = []
 
 [dependencies]
-solana-program = "~1.13.5"
-anchor-lang = { version = "0.26.0", features = ["init-if-needed"] }
-anchor-spl = "0.26.0"
-spl-token = "3.3.0"
+solana-program = "1.14.16"
+anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
+anchor-spl = "0.27.0"
+spl-token = "3.5.0"
 rust_decimal = "1.22.0"
 test-case = "2.0.2"

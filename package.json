@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@coral-xyz/anchor": "~0.26.0",
+    "@coral-xyz/anchor": "~0.27.0",
     "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.68.0",
     "axios": "^0.27.2"
