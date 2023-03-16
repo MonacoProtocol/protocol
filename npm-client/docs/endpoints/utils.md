@@ -14,7 +14,7 @@
 *   [getMintInfo][10]
     *   [Parameters][11]
     *   [Examples][12]
-*   [findProductConfigPda][13]
+*   [findProductPda][13]
     *   [Parameters][14]
     *   [Examples][15]
 
@@ -97,9 +97,9 @@ const getMintInfo = await findEscrowPda(program, mintPk)
 
 Returns **MintInfo** mint information including mint authority and decimals
 
-## findProductConfigPda
+## findProductPda
 
-For the provided product title, get the pda for the Product Config account
+For the provided product title, get the pda for the Product account
 
 ### Parameters
 
@@ -109,7 +109,7 @@ For the provided product title, get the pda for the Product Config account
 ### Examples
 
 ```javascript
-const productConfigPk = await findProductConfigPda(program, "EXAMPLE_BETTING_EXCHANGE")
+const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
 ```
 
 Returns **[Promise][18]\<PublicKey>**&#x20;
@@ -138,7 +138,7 @@ Returns **[Promise][18]\<PublicKey>**&#x20;
 
 [12]: #examples-3
 
-[13]: #findproductconfigpda
+[13]: #findproductpda
 
 [14]: #parameters-4
 

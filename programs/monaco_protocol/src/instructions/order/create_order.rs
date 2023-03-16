@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
+use protocol_product::state::product::Product;
 use solana_program::clock::UnixTimestamp;
 
 use crate::context::{CreateOrder, CreateOrderV2};
@@ -10,15 +11,16 @@ use crate::state::market_account::*;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 
-// create order using default product (system_program.key())
+// create order using default product
 pub fn create_order(ctx: Context<CreateOrder>, data: OrderData) -> Result<()> {
+    let product: Option<Account<Product>> = None;
     create_order_internal(
         &mut ctx.accounts.order,
         &ctx.accounts.market,
         &ctx.accounts.purchaser,
         &ctx.accounts.purchaser_token,
         &ctx.accounts.token_program,
-        ctx.accounts.system_program.key(),
+        &product,
         &mut ctx.accounts.market_matching_pool,
         &mut ctx.accounts.market_position,
         &ctx.accounts.market_escrow,
@@ -34,7 +36,7 @@ pub fn create_order_v2(ctx: Context<CreateOrderV2>, data: OrderData) -> Result<(
         &ctx.accounts.purchaser,
         &ctx.accounts.purchaser_token,
         &ctx.accounts.token_program,
-        ctx.accounts.product_config.key(),
+        &ctx.accounts.product,
         &mut ctx.accounts.market_matching_pool,
         &mut ctx.accounts.market_position,
         &ctx.accounts.market_escrow,
@@ -49,21 +51,14 @@ fn create_order_internal<'info>(
     purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-    product_config: Pubkey,
+    product: &Option<Account<Product>>,
     matching_pool: &mut Account<MarketMatchingPool>,
     market_position: &mut Account<MarketPosition>,
     market_escrow: &Account<'info, TokenAccount>,
     market_outcome: &Account<MarketOutcome>,
     data: OrderData,
 ) -> Result<()> {
-    initialize_order(
-        order,
-        market,
-        purchaser,
-        market_outcome,
-        product_config,
-        data,
-    )?;
+    initialize_order(order, market, purchaser, market_outcome, product, data)?;
 
     // initialize market position
     market_position::create_market_position(purchaser, market, market_position)?;
@@ -102,7 +97,7 @@ fn initialize_order(
     market: &Account<Market>,
     purchaser: &Signer,
     market_outcome: &Account<MarketOutcome>,
-    product_config: Pubkey,
+    product: &Option<Account<Product>>,
     data: OrderData,
 ) -> Result<()> {
     let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
@@ -142,7 +137,10 @@ fn initialize_order(
     order.stake_unmatched = data.stake;
     order.payout = 0_u64;
 
-    order.product_config = product_config;
+    order.product = match product {
+        Some(product_account) => product_account.key(),
+        None => Pubkey::default(),
+    };
 
     Ok(())
 }

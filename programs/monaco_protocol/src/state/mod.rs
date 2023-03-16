@@ -3,6 +3,5 @@ pub(crate) mod market_position_account;
 pub(crate) mod market_type;
 pub(crate) mod operator_account;
 pub(crate) mod order_account;
-pub(crate) mod product;
 pub(crate) mod trade_account;
 pub(crate) mod type_size;

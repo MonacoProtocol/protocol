@@ -1,12 +1,14 @@
 use crate::error::CoreError;
 use crate::{
     AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, Order,
-    OrderData, ProductConfig, Trade,
+    OrderData, Trade,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
+
+use protocol_product::state::product::Product;
 
 #[derive(Accounts)]
 #[instruction(_distinct_seed: String, data: OrderData)]
@@ -150,7 +152,7 @@ pub struct CreateOrderV2<'info> {
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
 
-    pub product_config: Box<Account<'info, ProductConfig>>,
+    pub product: Option<Account<'info, Product>>,
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -402,8 +404,8 @@ pub struct SettleMarketPosition<'info> {
         associated_token::authority = protocol_config.commission_escrow,
     )]
     pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(seeds = [b"product_config".as_ref(), b"MONACO_PROTOCOL".as_ref()], bump)]
-    pub protocol_config: Box<Account<'info, ProductConfig>>,
+    #[account(seeds = [b"product".as_ref(), b"MONACO_PROTOCOL".as_ref()], seeds::program=&protocol_product::ID, bump)]
+    pub protocol_config: Box<Account<'info, Product>>,
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
@@ -575,75 +577,6 @@ pub struct TransferMarketEscrowSurplus<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-pub struct CloseAccount<'info> {
-    #[account(mut)]
-    pub admin_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"ADMIN".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-    /// CHECK:
-    #[account(mut)]
-    // #[soteria(ignore)] no reasonable way to verify
-    pub to_close: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    // #[soteria(ignore)] no reasonable way to verify
-    pub lamport_destination: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(product_title: String)]
-pub struct CreateProductConfig<'info> {
-    #[account(
-        init,
-        seeds = [b"product_config".as_ref(), product_title.as_ref()],
-        bump,
-        payer = payer,
-        space = ProductConfig::SIZE
-    )]
-    pub product_config: Account<'info, ProductConfig>,
-    pub commission_escrow: SystemAccount<'info>,
-
-    // payer may differ from authority in the case of multisig pda as authority
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(_product_title: String)]
-pub struct UpdateProductConfig<'info> {
-    #[account(
-        mut,
-        has_one = authority,
-        seeds = [b"product_config".as_ref(), _product_title.as_ref()],
-        bump,
-    )]
-    pub product_config: Account<'info, ProductConfig>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(_product_title: String)]
-pub struct UpdateProductAuthority<'info> {
-    #[account(
-        mut,
-        has_one = authority,
-        seeds = [b"product_config".as_ref(), _product_title.as_ref()],
-        bump,
-    )]
-    pub product_config: Account<'info, ProductConfig>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    #[account(mut)]
-    pub updated_authority: Signer<'info>,
 }
 
 /*

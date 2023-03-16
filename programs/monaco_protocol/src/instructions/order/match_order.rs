@@ -71,7 +71,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
-            product_config: Default::default(),
+            product: Default::default(),
         };
         let stake_matched = 100000100;
 
@@ -101,7 +101,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
-            product_config: Default::default(),
+            product: Default::default(),
         };
         let stake_matched = order.stake_unmatched - 100;
 
@@ -131,7 +131,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
-            product_config: Default::default(),
+            product: Default::default(),
         };
         let stake_matched = order.stake_unmatched;
 

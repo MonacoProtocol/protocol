@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub const DISCRIMINATOR_SIZE: usize = 8;
 pub const BOOL_SIZE: usize = 1;
 pub const ENUM_SIZE: usize = 1; // for data/field-less enums

@@ -24,3 +24,4 @@ anchor-spl = "0.27.0"
 spl-token = "3.5.0"
 rust_decimal = "1.22.0"
 test-case = "2.0.2"
+protocol_product = { git = "https://github.com/BetDexLabs/protocol-product", rev = "c34a46c", features = ["no-entrypoint"] }

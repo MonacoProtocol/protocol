@@ -2,7 +2,7 @@
 
 ### Table of Contents
 
-*   [createProductConfig][1]
+*   [createProduct][1]
     *   [Parameters][2]
     *   [Examples][3]
 *   [updateProductCommissionRate][4]
@@ -15,7 +15,7 @@
     *   [Parameters][11]
     *   [Examples][12]
 
-## createProductConfig
+## createProduct
 
 Register a new product config account on the Monaco Protocol, this will contain the wallet that commission will be paid into
 for orders which are placed using this product.
@@ -26,7 +26,7 @@ for orders which are placed using this product.
 *   `productTitle` **[string][13]** {string} title of product
 *   `commissionRate` **[number][14]** {number} rate of commission to be deducted on order settlement
 *   `commissionEscrow` **PublicKey** {PublicKey} address of wallet commission will be paid to on order settlement
-*   `authorityPk` **PublicKey** {PublicKey} address wallet with ownership over this product
+*   `authority` **Keypair?** {Keypair | undefined} address of wallet with ownership over this product, if not provided will default to the current provider
 
 ### Examples
 
@@ -34,10 +34,10 @@ for orders which are placed using this product.
 const authorityPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
 const productTitle = "EXAMPLE_BETTING_EXCHANGE";
 const commissionRate = 1.23 // 1.23% commission rate
-const productConfig = await createProductConfig(program, productTitle, commissionRate, authority);
+const product = await createproduct(program, productTitle, commissionRate, authority);
 ```
 
-Returns **[Promise][15]\<ClientResponse\<CreateProductConfigResponse>>**&#x20;
+Returns **[Promise][15]\<ClientResponse\<CreateProductResponse>>**&#x20;
 
 ## updateProductCommissionRate
 
@@ -56,10 +56,10 @@ Update commission rate for an existing product config
 const authorityPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
 const productTitle = "EXAMPLE_BETTING_EXCHANGE";
 const commissionRate = 1.23 // 1.23% commission rate
-const productConfig = await updateProductCommissionRate(program, productTitle, commissionRate, authority);
+const product = await updateProductCommissionRate(program, productTitle, commissionRate, authority);
 ```
 
-Returns **[Promise][15]\<ClientResponse\<CreateProductConfigResponse>>**&#x20;
+Returns **[Promise][15]\<ClientResponse\<CreateProductResponse>>**&#x20;
 
 ## updateProductCommissionEscrow
 
@@ -78,10 +78,10 @@ Update address of commission escrow account for an existing product config
 const authorityPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
 const productTitle = "EXAMPLE_BETTING_EXCHANGE";
 const updatedEscrowPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
-const productConfig = await updateProductCommissionEscrow(program, productTitle, commissionRate, authority);
+const product = await updateProductCommissionEscrow(program, productTitle, commissionRate, authority);
 ```
 
-Returns **[Promise][15]\<ClientResponse\<CreateProductConfigResponse>>**&#x20;
+Returns **[Promise][15]\<ClientResponse\<CreateProductResponse>>**&#x20;
 
 ## updateProductAuthority
 
@@ -100,12 +100,12 @@ Update authority of product config account
 const authorityPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
 const updatedAuthorityPk = new PublicKey('8o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33B');
 const productTitle = "EXAMPLE_BETTING_EXCHANGE";
-const productConfig = await updateProductAuthority(program, productTitle, commissionRate, authority);
+const product = await updateProductAuthority(program, productTitle, commissionRate, authority);
 ```
 
-Returns **[Promise][15]\<ClientResponse\<CreateProductConfigResponse>>**&#x20;
+Returns **[Promise][15]\<ClientResponse\<CreateProductResponse>>**&#x20;
 
-[1]: #createproductconfig
+[1]: #createproduct
 
 [2]: #parameters
 

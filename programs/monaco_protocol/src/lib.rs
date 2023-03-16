@@ -12,7 +12,6 @@ use crate::state::market_type::verify_market_type;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderData;
-use crate::state::product::ProductConfig;
 use crate::state::trade_account::Trade;
 
 pub mod context;
@@ -372,61 +371,6 @@ pub mod monaco_protocol {
             &ctx.accounts.market_authority_token,
             &ctx.accounts.token_program,
         )
-    }
-
-    /*
-    Product Config
-    */
-
-    pub fn create_product_config(
-        ctx: Context<CreateProductConfig>,
-        product_title: String,
-        commission_rate: f32,
-    ) -> Result<()> {
-        instructions::create_product_config(
-            &mut ctx.accounts.product_config,
-            &ctx.accounts.authority.key(),
-            &ctx.accounts.payer.key(),
-            product_title,
-            commission_rate,
-            ctx.accounts.commission_escrow.key(),
-        )?;
-        Ok(())
-    }
-
-    pub fn update_product_commission_escrow(
-        ctx: Context<UpdateProductConfig>,
-        _product_title: String,
-        updated_commission_escrow: Pubkey,
-    ) -> Result<()> {
-        instructions::update_product_commission_escrow(
-            &mut ctx.accounts.product_config,
-            updated_commission_escrow,
-        )?;
-        Ok(())
-    }
-
-    pub fn update_product_commission_rate(
-        ctx: Context<UpdateProductConfig>,
-        _product_title: String,
-        updated_commission_rate: f32,
-    ) -> Result<()> {
-        instructions::update_product_commission_rate(
-            &mut ctx.accounts.product_config,
-            updated_commission_rate,
-        )?;
-        Ok(())
-    }
-
-    pub fn update_product_authority(
-        ctx: Context<UpdateProductAuthority>,
-        _product_title: String,
-    ) -> Result<()> {
-        instructions::update_product_authority(
-            &mut ctx.accounts.product_config,
-            ctx.accounts.updated_authority.key(),
-        )?;
-        Ok(())
     }
 
     /*

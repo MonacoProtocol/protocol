@@ -180,22 +180,19 @@ export async function getMintInfo(
 }
 
 /**
- * For the provided product title, get the pda for the Product Config account
+ * For the provided product title, get the pda for the Product account
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param productTitle title of product
  *
  * @example
  *
- * const productConfigPk = await findProductConfigPda(program, "EXAMPLE_BETTING_EXCHANGE")
+ * const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
  */
-export async function findProductConfigPda(
-  program: Program,
-  productTitle: string,
-) {
-  const [productConfigPk] = await PublicKey.findProgramAddress(
-    [Buffer.from("product_config"), Buffer.from(productTitle)],
+export async function findProductPda(program: Program, productTitle: string) {
+  const [productPk] = await PublicKey.findProgramAddress(
+    [Buffer.from("product"), Buffer.from(productTitle)],
     program.programId,
   );
-  return productConfigPk;
+  return productPk;
 }

@@ -89,10 +89,10 @@ export async function findMarketPdas(
   };
 }
 
-export async function findProductConfigPda(title: string, program: Program) {
-  const [productConfigPk] = await PublicKey.findProgramAddress(
-    [Buffer.from("product_config"), Buffer.from(title)],
+export async function findProductPda(title: string, program: Program) {
+  const [productPk] = PublicKey.findProgramAddressSync(
+    [Buffer.from("product"), Buffer.from(title)],
     program.programId,
   );
-  return productConfigPk;
+  return productPk;
 }

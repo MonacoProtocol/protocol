@@ -1244,6 +1244,7 @@ version = "0.7.0-rc1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "protocol_product",
  "rust_decimal",
  "solana-program",
  "spl-token",
@@ -1485,6 +1486,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "protocol_product"
+version = "0.1.0"
+source = "git+https://github.com/BetDexLabs/protocol-product?rev=c34a46c#c34a46c9348f4a05dafaf3b7c13cee9f859ff251"
+dependencies = [
+ "anchor-lang",
+ "solana-program",
 ]
 
 [[package]]

@@ -21,7 +21,7 @@ export type Order = {
   marketOutcomeIndex: number;
   forOutcome: boolean;
   orderStatus: OrderStatus;
-  productConfig: PublicKey;
+  product: PublicKey;
   stake: BN;
   voidedStake: BN;
   expectedPrice: number;

@@ -25,20 +25,28 @@ import {
   getMarketMatchingPoolsPks,
   createNewMint,
   OperatorType,
+  getProtocolProductProgram,
 } from "../util/test_util";
-import { findAuthorisedOperatorsPda, findProductConfigPda } from "../util/pdas";
+import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
+import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 
 const { SystemProgram } = anchor.web3;
 
 const TOKEN_DECIMALS = 6;
 
 export let monaco: Monaco;
+export let externalPrograms: ExternalPrograms;
 
 beforeAll(async () => {
   // Programs
   monaco = new Monaco(
     anchor.getProvider() as anchor.AnchorProvider,
     anchor.workspace.MonacoProtocol,
+  );
+
+  externalPrograms = new ExternalPrograms(
+    anchor.getProvider() as anchor.AnchorProvider,
+    getProtocolProductProgram(),
   );
 });
 
@@ -345,6 +353,7 @@ export class Monaco {
 
     const bmarket = new MonacoMarket(
       this,
+      externalPrograms,
       marketPdaResponse.data.pda,
       marketEscrowPk.data.pda,
       outcomePks,
@@ -356,40 +365,11 @@ export class Monaco {
     );
     return bmarket;
   }
-
-  async createProductConfig(
-    productTitle: string,
-    commissionRate: number,
-    authority?: Keypair,
-  ) {
-    const defaultAuthority = authority == undefined;
-    const productConfigPk = await findProductConfigPda(
-      productTitle,
-      this.getRawProgram(),
-    );
-    await monaco.program.methods
-      .createProductConfig(productTitle, commissionRate)
-      .accounts({
-        productConfig: productConfigPk,
-        commissionEscrow: Keypair.generate().publicKey,
-        authority: defaultAuthority
-          ? monaco.provider.publicKey
-          : authority.publicKey,
-        payer: monaco.provider.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers(defaultAuthority ? [] : [authority])
-      .rpc()
-      .catch((e) => {
-        throw e;
-      });
-
-    return productConfigPk;
-  }
 }
 
 export class MonacoMarket {
   private monaco: Monaco;
+  private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
   readonly outcomePks: PublicKey[];
@@ -407,10 +387,11 @@ export class MonacoMarket {
 
   private protocolConfigPk: PublicKey;
   private protocolCommissionEscrowPk: PublicKey;
-  private productConfigEscrowCache = new Map<PublicKey, PublicKey>();
+  private productEscrowCache = new Map<PublicKey, PublicKey>();
 
   constructor(
     monaco: Monaco,
+    externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
     outcomePks: PublicKey[],
@@ -424,6 +405,7 @@ export class MonacoMarket {
     marketAuthority?: Keypair,
   ) {
     this.monaco = monaco;
+    this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
     this.outcomePks = outcomePks;
@@ -720,24 +702,26 @@ export class MonacoMarket {
   }
 
   async cacheProductCommissionEscrowPk(productPk: PublicKey) {
-    if (this.productConfigEscrowCache.get(productPk) == undefined) {
+    if (this.productEscrowCache.get(productPk) == undefined) {
       const wallet = this.monaco.provider.wallet as NodeWallet;
-      const productConfig =
-        await this.monaco.program.account.productConfig.fetch(productPk);
+      const product =
+        await this.externalPrograms.protocolProduct.account.product.fetch(
+          productPk,
+        );
       const productCommissionTokenAccount =
         await getOrCreateAssociatedTokenAccount(
           this.monaco.provider.connection,
           wallet.payer,
           this.mintPk,
-          productConfig.commissionEscrow,
+          product.commissionEscrow,
         );
-      this.productConfigEscrowCache.set(
+      this.productEscrowCache.set(
         productPk,
         productCommissionTokenAccount.address,
       );
     }
 
-    return this.productConfigEscrowCache.get(productPk);
+    return this.productEscrowCache.get(productPk);
   }
 
   async cacheProtocolCommissionPks() {
@@ -746,12 +730,14 @@ export class MonacoMarket {
       this.protocolCommissionEscrowPk == undefined
     ) {
       const wallet = this.monaco.provider.wallet as NodeWallet;
-      const protocolConfigPk = await findProductConfigPda(
+      const productPk = await findProductPda(
         "MONACO_PROTOCOL",
-        this.monaco.program as Program,
+        this.externalPrograms.protocolProduct as Program,
       );
       const protocolConfig =
-        await this.monaco.program.account.productConfig.fetch(protocolConfigPk);
+        await this.externalPrograms.protocolProduct.account.product.fetch(
+          productPk,
+        );
       const protocolCommissionTokenAccount =
         await getOrCreateAssociatedTokenAccount(
           this.monaco.provider.connection,
@@ -760,7 +746,7 @@ export class MonacoMarket {
           protocolConfig.commissionEscrow,
         );
 
-      this.protocolConfigPk = protocolConfigPk;
+      this.protocolConfigPk = productPk;
       this.protocolCommissionEscrowPk = protocolCommissionTokenAccount.address;
     }
 
@@ -874,5 +860,49 @@ export class MonacoMarket {
         console.error(e);
         throw e;
       });
+  }
+}
+
+export class ExternalPrograms {
+  readonly provider: anchor.AnchorProvider;
+
+  readonly protocolProduct: Program<ProtocolProduct>;
+
+  constructor(
+    provider: anchor.AnchorProvider,
+    protocolProduct: Program<ProtocolProduct>,
+  ) {
+    this.provider = provider;
+    this.protocolProduct = protocolProduct;
+  }
+
+  async createProduct(
+    productTitle: string,
+    commissionRate: number,
+    authority?: Keypair,
+  ) {
+    const defaultAuthority = authority == undefined;
+    const productPk = await findProductPda(
+      productTitle,
+      this.protocolProduct as Program,
+    );
+    await this.protocolProduct.methods
+      .createProduct(productTitle, commissionRate)
+      .accounts({
+        product: productPk,
+        commissionEscrow: Keypair.generate().publicKey,
+        authority: defaultAuthority
+          ? monaco.provider.publicKey
+          : authority.publicKey,
+        payer: monaco.provider.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers(defaultAuthority ? [] : [authority])
+      .rpc()
+      .catch((e) => {
+        throw e;
+      });
+
+    return productPk;
   }
 }

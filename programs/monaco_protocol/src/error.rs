@@ -155,16 +155,6 @@ pub enum CoreError {
     MarketAuthorityMismatch,
 
     /*
-    Product Config
-     */
-    #[msg(ProductConfig: commission rate must be >= 0 and <= 100.)]
-    InvalidCommissionRate,
-    #[msg(ProductConfig: title length must be between 1 and 50 characters.)]
-    ProductConfigTitleLen,
-    #[msg(ProductConfig: Commission supports up to 3 decimal places.)]
-    CommissionPrecisionTooLarge,
-
-    /*
     Close Account
      */
     #[msg("CloseAccount: Order not complete")]
