@@ -8,12 +8,12 @@ import {
   EpochTimeStamp,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
-import { findEscrowPda } from "./npm-client-duplicates";
 import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import { findEscrowPda } from "./market_helpers";
 
 /**
  * Settle a market by setting the winningOutcomeIndex
