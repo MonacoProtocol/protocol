@@ -9,6 +9,11 @@ import {
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import { findEscrowPda } from "./npm-client-duplicates";
+import {
+  getOrCreateAssociatedTokenAccount,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -412,6 +417,70 @@ export async function setMarketReadyToClose(
     });
   } catch (e) {
     response.addError(e);
+    return response.body;
+  }
+  return response.body;
+}
+
+/**
+ * Attempts to transfer any surplus token balance in a market's escrow account into an associated token account belonging to the calling client.
+ *
+ * This will only work if the calling client is the authority for the given market, and if the market has at least the status of Settled, i.e., all orders must be settled before escrow can be transferred from.
+ *
+ * The token balance will only be transferred into an ATA belonging to the market authority, as such, if no ATA exists, one must be created, and so might cost a small amount of SOL in rent exemption.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market with a surplus escrow balance
+ * @param mintPk {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
+ * const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+ */
+export async function transferMarketEscrowSurplus(
+  program: Program,
+  marketPk: PublicKey,
+  mintPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  const marketEscrow = await findEscrowPda(program, marketPk);
+  if (!marketEscrow.success) {
+    response.addErrors(marketEscrow.errors);
+    return response.body;
+  }
+
+  const tokenAccount = await getOrCreateAssociatedTokenAccount(
+    provider.connection,
+    (provider.wallet as NodeWallet).payer,
+    mintPk,
+    provider.wallet.publicKey,
+  );
+
+  try {
+    const tnxId = await program.methods
+      .transferMarketEscrowSurplus()
+      .accounts({
+        market: marketPk,
+        marketEscrow: marketEscrow.data.pda,
+        marketAuthorityToken: tokenAccount.address,
+        marketOperator: provider.wallet.publicKey,
+        authorisedOperators: authorisedOperators.data.pda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+    response.addResponseData({ tnxId });
+  } catch (e) {
+    response.addErrors(e);
     return response.body;
   }
   return response.body;
