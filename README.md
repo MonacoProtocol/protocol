@@ -20,10 +20,11 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 # Recent releases <sup>:rocket:</sup>
 
-| Date       | Commit                                                                                                       | Protocol | Client | Admin client | Audit reports                                                                     | Program address                               |
-|------------|--------------------------------------------------------------------------------------------------------------|----------|--------|--------------|-----------------------------------------------------------------------------------|-----------------------------------------------|
-| 2023-03-02 | [`4d7ad27ecf801a1933130d7b5d7983e93b02e72c`](https://github.com/MonacoProtocol/protocol/releases/tag/v0.6.0) | 0.6.0    | 3.0.0  | 2.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.6.0.pdf) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| 2022-11-25 | [`ac86fc54ff87195de6a69397fd15beb2c01ff8fe`](https://github.com/MonacoProtocol/protocol/releases/tag/v0.5.0) | 0.5.0    | 2.0.0  | 1.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.5.0.pdf) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| Date       | Commit                                                                      | Protocol | Client       | Admin client | Audit reports                                                                     | Program address                               |
+|------------|-----------------------------------------------------------------------------|----------|--------------|--------------|-----------------------------------------------------------------------------------|-----------------------------------------------|
+| 2023-03-16 | [`6d49ace`](https://github.com/MonacoProtocol/protocol/releases/tag/v0.7.0) | 0.7.0    | 4.x.x        | 3.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.7.0.pdf) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2023-03-02 | [`4d7ad27`](https://github.com/MonacoProtocol/protocol/releases/tag/v0.6.0) | 0.6.0    | 3.x.x, 4.0.x | 2.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.6.0.pdf) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2022-11-25 | [`ac86fc5`](https://github.com/MonacoProtocol/protocol/releases/tag/v0.5.0) | 0.5.0    | 2.0.0        | 1.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.5.0.pdf) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 
 # More info :books:
 
