@@ -16,8 +16,10 @@ import {
   updateMarketLocktime,
   setMarketReadyToClose,
   openMarket,
+  transferMarketEscrowSurplus,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
+import { createWalletWithBalance } from "../util/test_util";
 
 describe("Settle market", () => {
   const provider = AnchorProvider.local();
@@ -209,5 +211,59 @@ describe("Market ready to close", () => {
     assert.equal(response.data, undefined);
     assert(response.errors);
     assert.deepEqual(updatedMarket.marketStatus, { open: {} });
+  });
+});
+
+describe("Transfer market escrow surplus", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+
+  it("Successfully transfer surplus", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 1);
+    // This order is never matched or cancelled or settled
+    await market.forOrder(0, 1, 1.001, purchaser);
+    await market.settle(0);
+    await market.completeSettlement();
+
+    const response = await setMarketReadyToClose(protocolProgram, market.pk);
+    assert(!response.success);
+
+    const transferResponse = await transferMarketEscrowSurplus(
+      protocolProgram,
+      market.pk,
+      market.mintPk,
+    );
+    assert(transferResponse.success);
+
+    const tryAgain = await setMarketReadyToClose(protocolProgram, market.pk);
+    assert(tryAgain.success);
+
+    assert.equal(
+      (await monaco.provider.connection.getTokenAccountBalance(market.escrowPk))
+        .value.uiAmount,
+      0,
+    );
+    assert.equal(await market.getTokenBalance(purchaser), 0);
+    assert.equal(await market.getTokenBalance(provider.wallet.publicKey), 1);
+  });
+
+  it("Fails if market not settled", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 1);
+    // This order is never matched or cancelled or settled
+    await market.forOrder(0, 1, 1.001, purchaser);
+    await market.settle(0);
+
+    const transferResponse = await transferMarketEscrowSurplus(
+      protocolProgram,
+      market.pk,
+      market.mintPk,
+    );
+    assert(!transferResponse.success);
   });
 });

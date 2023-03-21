@@ -16,7 +16,7 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
-} from "./npm-client-duplicates";
+} from "./market_helpers";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
 import { confirmTransaction } from "./utils";

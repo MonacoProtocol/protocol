@@ -3,7 +3,7 @@ import {
   Mint,
   TOKEN_PROGRAM_ID,
   getMint,
-  createAssociatedTokenAccount,
+  getOrCreateAssociatedTokenAccount,
   mintTo,
   getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
@@ -441,12 +441,14 @@ export class MonacoMarket {
     const wallet = this.monaco.provider.wallet as NodeWallet;
     const provider = this.monaco.provider;
     if (purchaserTokenPk == undefined) {
-      purchaserTokenPk = await createAssociatedTokenAccount(
-        provider.connection,
-        wallet.payer,
-        this.mintPk,
-        purchaserPk,
-      );
+      purchaserTokenPk = (
+        await getOrCreateAssociatedTokenAccount(
+          provider.connection,
+          wallet.payer,
+          this.mintPk,
+          purchaserPk,
+        )
+      ).address;
       this.purchaserTokenPks.set(purchaserPk.toBase58(), purchaserTokenPk);
     }
     return purchaserTokenPk;
@@ -490,9 +492,9 @@ export class MonacoMarket {
     return await this.monaco.getTokenBalance(this.escrowPk);
   }
 
-  async getTokenBalance(purchaser: Keypair) {
+  async getTokenBalance(purchaser: Keypair | PublicKey) {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
-      purchaser.publicKey,
+      purchaser instanceof Keypair ? purchaser.publicKey : purchaser,
     );
     return await this.monaco.getTokenBalance(purchaserTokenPk);
   }

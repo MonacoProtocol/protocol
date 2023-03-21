@@ -29,6 +29,9 @@
 *   [setMarketReadyToClose][25]
     *   [Parameters][26]
     *   [Examples][27]
+*   [transferMarketEscrowSurplus][28]
+    *   [Parameters][29]
+    *   [Examples][30]
 
 ## settleMarket
 
@@ -38,7 +41,7 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `winningOutcomeIndex` **[number][28]** {number} index representing the winning outcome of the event associated with the market
+*   `winningOutcomeIndex` **[number][31]** {number} index representing the winning outcome of the event associated with the market
 
 ### Examples
 
@@ -130,7 +133,7 @@ For the given market, update the title
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
-*   `title` **[string][29]** {string} new title to apply to the provided market
+*   `title` **[string][32]** {string} new title to apply to the provided market
 
 ### Examples
 
@@ -200,6 +203,30 @@ const readyToCloseMarket = await setMarketReadyToClose(program, marketPk)
 
 Returns **TransactionResponse** transaction ID of the request
 
+## transferMarketEscrowSurplus
+
+Attempts to transfer any surplus token balance in a market's escrow account into an associated token account belonging to the calling client.
+
+This will only work if the calling client is the authority for the given market, and if the market has at least the status of Settled, i.e., all orders must be settled before escrow can be transferred from.
+
+The token balance will only be transferred into an ATA belonging to the market authority, as such, if no ATA exists, one must be created, and so might cost a small amount of SOL in rent exemption.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of the market with a surplus escrow balance
+*   `mintPk` **PublicKey** {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
+const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+```
+
+Returns **TransactionResponse** transaction ID of the request
+
 [1]: #settlemarket
 
 [2]: #parameters
@@ -254,6 +281,12 @@ Returns **TransactionResponse** transaction ID of the request
 
 [27]: #examples-8
 
-[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[28]: #transfermarketescrowsurplus
 
-[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[29]: #parameters-9
+
+[30]: #examples-9
+
+[31]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[32]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
