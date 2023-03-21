@@ -12,5 +12,5 @@ wallet = "~/.config/solana/id.json"
 test = "yarn runJestTests"
 
 [[test.genesis]]
-address = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+address = "mppFrYmM6A4Ud3AxRbGXsGisX1HUsbDfp1nrg9FQJEE"
 program = "tests/anchor/protocol_product/protocol_product.so"

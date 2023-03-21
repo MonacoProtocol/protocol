@@ -2,7 +2,7 @@
 
 <a href="https://doc.rust-lang.org/std/"><img alt="Repo Language Rust"  src="http://img.shields.io/badge/language-rust-orange"></a>
 <a href="https://docs.solana.com/developing/programming-model/overview"><img alt="Repo Platform Solana"  src="http://img.shields.io/badge/platform-solana-blue"></a>
-<a href="https://github.com/project-serum/anchor"><img alt="Repo Framework Anchor"  src="http://img.shields.io/badge/framework-anchor-9cf"></a><br/>
+<a href="https://github.com/coral-xyz/anchor"><img alt="Repo Framework Anchor"  src="http://img.shields.io/badge/framework-anchor-9cf"></a><br/>
 
 # About :books:
 

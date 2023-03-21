@@ -603,7 +603,7 @@ export function getAnchorProvider(): AnchorProvider {
 export function getProtocolProductProgram(): Program<ProtocolProduct> {
   return new Program(
     JSON.parse(JSON.stringify(idl)),
-    "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+    "mppFrYmM6A4Ud3AxRbGXsGisX1HUsbDfp1nrg9FQJEE",
     anchor.getProvider(),
   );
 }

@@ -38,7 +38,7 @@
         },
         {
           "name": "commissionRate",
-          "type": "f32"
+          "type": "f64"
         }
       ]
     },
@@ -88,7 +88,7 @@
         },
         {
           "name": "updatedCommissionRate",
-          "type": "f32"
+          "type": "f64"
         }
       ]
     },
@@ -143,7 +143,7 @@
           },
           {
             "name": "commissionRate",
-            "type": "f32"
+            "type": "f64"
           }
         ]
       }
@@ -153,17 +153,17 @@
     {
       "code": 6000,
       "name": "InvalidCommissionRate",
-      "msg": "Product"
+      "msg": "Product: commission rate must be >= 0 and <= 100."
     },
     {
       "code": 6001,
       "name": "ProductTitleLen",
-      "msg": "Product"
+      "msg": "Product: title length must be between 1 and 50 characters."
     },
     {
       "code": 6002,
       "name": "CommissionPrecisionTooLarge",
-      "msg": "Product"
+      "msg": "Product: Commission supports up to 3 decimal places."
     }
   ]
 }

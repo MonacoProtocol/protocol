@@ -31,8 +31,8 @@ pub fn stake_precision_is_within_range(stake: u64, decimal_limit: u8) -> bool {
         .is_zero()
 }
 
-pub fn calculate_commission(commission_rate: f32, profit: i128) -> u64 {
-    let commission_rate_decimal = Decimal::from_f32(commission_rate).unwrap();
+pub fn calculate_commission(commission_rate: f64, profit: i128) -> u64 {
+    let commission_rate_decimal = Decimal::from_f64(commission_rate).unwrap();
     Decimal::from(profit)
         .max(Decimal::ZERO)
         .mul(commission_rate_decimal)

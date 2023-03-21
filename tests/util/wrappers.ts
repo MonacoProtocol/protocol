@@ -5,7 +5,6 @@ import {
   getMint,
   getOrCreateAssociatedTokenAccount,
   mintTo,
-  getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";

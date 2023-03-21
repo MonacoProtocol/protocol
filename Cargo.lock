@@ -1469,6 +1469,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "protocol_product"
+version = "0.1.0"
+source = "git+https://github.com/MonacoProtocol/protocol-product?rev=1a04c11#1a04c11033f3ef0d1808ff3601626f37a9cf23a7"
+dependencies = [
+ "anchor-lang",
+ "rust_decimal",
+ "solana-program",
+]
+
+[[package]]
 name = "ptr_meta"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1486,15 +1496,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "protocol_product"
-version = "0.1.0"
-source = "git+https://github.com/BetDexLabs/protocol-product?rev=c34a46c#c34a46c9348f4a05dafaf3b7c13cee9f859ff251"
-dependencies = [
- "anchor-lang",
- "solana-program",
 ]
 
 [[package]]
