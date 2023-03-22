@@ -55,7 +55,8 @@
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
     "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
-    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards"
+    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards",
+    "createProduct": "ts-node admin/client.ts createProduct"
   },
   "lint-staged": {
     "*.{js,ts}": [
