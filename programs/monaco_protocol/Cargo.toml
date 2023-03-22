@@ -22,5 +22,5 @@ solana-program = "~1.10.29"
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 anchor-spl = "0.25.0"
 spl-token = "3.3.0"
-rust_decimal = "1.22.0"
+rust_decimal = "1.29.0"
 test-case = "2.0.2"

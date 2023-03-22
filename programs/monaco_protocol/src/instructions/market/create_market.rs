@@ -1,4 +1,6 @@
 use anchor_lang::prelude::*;
+use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::Decimal;
 
 use crate::context::{CreateMarket, InitializeMarketOutcome};
 use crate::monaco_protocol::PRICE_SCALE;
@@ -73,8 +75,11 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
 fn validate_prices(prices: &[f64]) -> Result<()> {
     let prices_iter = prices.iter();
     for price in prices_iter {
+        let decimal = Decimal::from_f64(*price).unwrap();
+        let decimal_with_scale = decimal.trunc_with_scale(3);
+
         require!(
-            (format!("{price}")).len() <= (format!("{price:.3}")).len(),
+            decimal.eq(&decimal_with_scale),
             CoreError::MarketPricePrecisionTooLarge
         );
         require!(*price > 1_f64, CoreError::MarketPriceOneOrLess);
@@ -161,6 +166,9 @@ mod tests {
 
         let attempting_to_round_not_ok = validate_prices(&vec![1.1118]);
         assert!(attempting_to_round_not_ok.is_err());
+
+        let attempting_to_round_2_not_ok = validate_prices(&vec![9.9999]);
+        assert!(attempting_to_round_2_not_ok.is_err());
 
         let one_not_ok = validate_prices(&vec![1_f64]);
         assert!(one_not_ok.is_err());
