@@ -132,10 +132,10 @@ fn transfer_to_market_escrow<'info>(
     token_program: &Program<'info, Token>,
     amount: u64,
 ) -> Result<()> {
-    msg!("Transferring to escrow");
     if amount == 0_u64 {
         return Ok(());
     }
+    msg!("Transferring to escrow");
     token::transfer(
         CpiContext::new(
             token_program.to_account_info(),
@@ -156,10 +156,10 @@ fn transfer_from_market_escrow<'info>(
     market: &Account<Market>,
     amount: u64,
 ) -> Result<()> {
-    msg!("Transferring from escrow");
     if amount == 0_u64 {
         return Ok(());
     }
+    msg!("Transferring from escrow");
     token::transfer(
         CpiContext::new_with_signer(
             token_program.to_account_info(),
