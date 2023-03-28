@@ -3,7 +3,7 @@ import {
   AnchorProvider,
   setProvider,
   workspace,
-} from "@project-serum/anchor";
+} from "@coral-xyz/anchor";
 import assert from "assert";
 import { validateMarketOutcomes } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";

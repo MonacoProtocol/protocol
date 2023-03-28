@@ -1,9 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../target/types/monaco_protocol";
 import {
   authoriseAdminOperator,
   authoriseOperator,
+  createProtocolProduct,
   OperatorType,
 } from "./util/test_util";
 
@@ -26,4 +27,6 @@ module.exports = async function (_globalConfig, _projectConfig) {
     provider,
     OperatorType.CRANK,
   );
+
+  await createProtocolProduct(provider);
 };

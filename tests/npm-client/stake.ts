@@ -1,6 +1,6 @@
 import { monaco } from "../util/wrappers";
 import { uiStakeToInteger } from "../../npm-client";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 
 describe("Stake calculations", () => {

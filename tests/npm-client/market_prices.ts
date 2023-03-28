@@ -1,4 +1,4 @@
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { getMarketPrices } from "../../npm-client/src";
 import { monaco } from "../util/wrappers";

@@ -9,11 +9,9 @@ use crate::state::market_account::{
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
-use crate::state::multisig::{InstructionAccount, MultisigGroup};
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderData;
-use crate::state::product::ProductConfig;
 use crate::state::trade_account::Trade;
 
 pub mod context;
@@ -44,6 +42,16 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn create_order_v2(
+        ctx: Context<CreateOrderV2>,
+        _distinct_seed: String,
+        data: OrderData,
+    ) -> Result<()> {
+        instructions::order::create_order_v2(ctx, data)?;
+
+        Ok(())
+    }
+
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         instructions::order::cancel_order(ctx)?;
 
@@ -57,6 +65,17 @@ pub mod monaco_protocol {
         )?;
 
         instructions::order::settle_order(ctx)?;
+
+        Ok(())
+    }
+
+    pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        instructions::market_position::settle_market_position(ctx)?;
 
         Ok(())
     }
@@ -352,106 +371,6 @@ pub mod monaco_protocol {
             &ctx.accounts.market_authority_token,
             &ctx.accounts.token_program,
         )
-    }
-
-    pub fn create_product_config(
-        ctx: Context<CreateProductConfig>,
-        product_title: String,
-        commission_rate: f32,
-    ) -> Result<()> {
-        instructions::create_product_config(
-            &mut ctx.accounts.product_config,
-            &ctx.accounts.multisig_group.key(),
-            &ctx.accounts.multisig_group.members,
-            &ctx.accounts.product_operator.key(),
-            product_title,
-            commission_rate,
-            ctx.accounts.commission_escrow.key(),
-        )?;
-        Ok(())
-    }
-
-    pub fn update_product_commission_escrow(
-        ctx: Context<ProductConfigMultisigAuth>,
-        updated_commission_escrow: Pubkey,
-    ) -> Result<()> {
-        instructions::update_product_commission_escrow(
-            &mut ctx.accounts.product_config,
-            updated_commission_escrow,
-        )?;
-        Ok(())
-    }
-
-    pub fn update_product_commission_rate(
-        ctx: Context<ProductConfigMultisigAuth>,
-        updated_commission_rate: f32,
-    ) -> Result<()> {
-        instructions::update_product_commission_rate(
-            &mut ctx.accounts.product_config,
-            updated_commission_rate,
-        )?;
-        Ok(())
-    }
-
-    pub fn create_multisig(
-        ctx: Context<CreateMultisigGroup>,
-        group_title: String,
-        members: Vec<Pubkey>,
-        approval_threshold: u64,
-    ) -> Result<()> {
-        instructions::create_multisig(
-            &mut ctx.accounts.multisig_group,
-            group_title,
-            members,
-            approval_threshold,
-        )?;
-        Ok(())
-    }
-
-    pub fn create_multisig_transaction(
-        ctx: Context<CreateMultisigTransaction>,
-        _distinct_seed: String,
-        instruction_accounts: Vec<InstructionAccount>,
-        instruction_data: Vec<u8>,
-    ) -> Result<()> {
-        instructions::create_multisig_transaction(
-            &ctx.accounts.multisig_group,
-            &ctx.accounts.multisig_group.key(),
-            &ctx.accounts.multisig_member.key(),
-            &mut ctx.accounts.multisig_transaction,
-            instruction_accounts,
-            instruction_data,
-        )?;
-        Ok(())
-    }
-
-    pub fn set_multisig_members(
-        ctx: Context<AuthoriseMultisigInstruction>,
-        new_members: Vec<Pubkey>,
-    ) -> Result<()> {
-        instructions::set_multisig_members(new_members, &mut ctx.accounts.multisig_group)?;
-        Ok(())
-    }
-
-    pub fn approve_multisig_transaction(ctx: Context<ApproveMultisigTransaction>) -> Result<()> {
-        instructions::approve_multisig_transaction(
-            ctx.accounts.multisig_member.key,
-            &ctx.accounts.multisig_group.members,
-            &mut ctx.accounts.multisig_transaction,
-        )?;
-        Ok(())
-    }
-
-    pub fn execute_multisig_transaction(ctx: Context<ExecuteMultisigTransaction>) -> Result<()> {
-        instructions::execute_multisig_transaction(
-            &mut ctx.accounts.multisig_transaction,
-            &ctx.accounts.multisig_pda_signer.key(),
-            *ctx.bumps.get("multisig_pda_signer").unwrap(),
-            &ctx.accounts.multisig_group,
-            &ctx.accounts.multisig_group.key(),
-            ctx.remaining_accounts,
-        )?;
-        Ok(())
     }
 
     /*

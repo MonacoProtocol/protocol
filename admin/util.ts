@@ -3,7 +3,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { AnchorProvider, getProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, getProvider, Program } from "@coral-xyz/anchor";
 import { getMint } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import process from "process";

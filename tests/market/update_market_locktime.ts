@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
 

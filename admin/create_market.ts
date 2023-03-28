@@ -1,5 +1,5 @@
 import { PublicKey, Keypair } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import {
   createMarketWithOutcomesAndPriceLadder as npmCreateMarket,
   DEFAULT_PRICE_LADDER,

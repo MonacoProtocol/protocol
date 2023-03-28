@@ -1,4 +1,4 @@
-import { BorshAccountsCoder } from "@project-serum/anchor";
+import { BorshAccountsCoder } from "@coral-xyz/anchor";
 import bs58 from "bs58";
 import { PublicKey } from "@solana/web3.js";
 import { getAnchorProvider, getProtocolProgram } from "./util";

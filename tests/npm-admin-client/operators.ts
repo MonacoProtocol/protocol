@@ -3,7 +3,7 @@ import {
   AnchorProvider,
   setProvider,
   workspace,
-} from "@project-serum/anchor";
+} from "@coral-xyz/anchor";
 import { Keypair } from "@solana/web3.js";
 import assert from "assert";
 import {

@@ -22,10 +22,10 @@ import { monaco } from "../util/wrappers";
  * - full payment taken for 1st creation and discounted payment for 2nd creation
  *
  * Difference orderween scenario lies in the amounts being transferred at each step:
- * - Scenario 1 (for against against):  -$10.00, $0.00, $0.00 (offset -$4.40)
- * - Scenario 2 (against for against):  -$26.40, $0.00, $0.00 (offset -$4.40)
- * - Scenario 3 (for against for): -$12.00, $0.00, $0.00 (offset -$2.00)
- * - Scenario 4 (against for for): -$22.00, $0.00, $0.00 (offset -$2.00)
+ * - Scenario 1 (for against against):  -$10.00, $0.00, $0.00
+ * - Scenario 2 (against for against):  -$26.40, $0.00, $0.00
+ * - Scenario 3 (for against for): -$12.00, $0.00, $0.00
+ * - Scenario 4 (against for for): -$22.00, $0.00, $0.00
  *
  */
 describe("Order Settlement Payment 11", () => {
@@ -64,7 +64,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -88,7 +88,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         26.4,
@@ -99,30 +99,10 @@ describe("Order Settlement Payment 11", () => {
     // Settlement
     await market.settle(outcome);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
+
     // Settle For 10
     await market.settleOrder(forOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(forOrderPk),
-        monaco.getOrder(againstOrderPk),
-        market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcome, price),
-        market.getAgainstMatchingPool(outcome, price),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { settledWin: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
-        { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 2, matched: 10 },
-        4.4,
-        195.6,
-      ],
-    );
-
     // Settle Against 12
     await market.settleOrder(againstOrderPk);
 
@@ -139,7 +119,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { settledWin: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { settledLose: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         0,
@@ -182,7 +162,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -206,7 +186,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         26.4,
@@ -217,30 +197,10 @@ describe("Order Settlement Payment 11", () => {
     // Settlement
     await market.settle(outcome);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     // Settle Against 12
     await market.settleOrder(againstOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(forOrderPk),
-        monaco.getOrder(againstOrderPk),
-        market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcome, price),
-        market.getAgainstMatchingPool(outcome, price),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 0, stakeVoided: 2, status: { settledLose: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 5.6 },
-        { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 2, matched: 10 },
-        26.4,
-        173.6,
-      ],
-    );
-
+    // Settle for 10
     await market.settleOrder(forOrderPk);
 
     assert.deepEqual(
@@ -256,7 +216,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { settledWin: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { settledLose: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         0,
@@ -299,7 +259,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -323,7 +283,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         26.4,
@@ -334,30 +294,10 @@ describe("Order Settlement Payment 11", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
+
     // Settle For 10
     await market.settleOrder(forOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(forOrderPk),
-        monaco.getOrder(againstOrderPk),
-        market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcome, price),
-        market.getAgainstMatchingPool(outcome, price),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { settledLose: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
-        { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 2, matched: 10 },
-        26.4,
-        173.6,
-      ],
-    );
-
     // Settle Against 12
     await market.settleOrder(againstOrderPk);
 
@@ -374,7 +314,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { settledLose: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { settledWin: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         0,
@@ -417,7 +357,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -441,7 +381,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         26.4,
@@ -452,30 +392,11 @@ describe("Order Settlement Payment 11", () => {
     // Settlement
     await market.settle(0);
 
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
+
     // Settle Against 12
     await market.settleOrder(againstOrderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(forOrderPk),
-        monaco.getOrder(againstOrderPk),
-        market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcome, price),
-        market.getAgainstMatchingPool(outcome, price),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 0, stakeVoided: 2, status: { settledWin: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
-        { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 2, matched: 10 },
-        0,
-        200,
-      ],
-    );
-
+    // Settle For 10
     await market.settleOrder(forOrderPk);
 
     assert.deepEqual(
@@ -491,7 +412,7 @@ describe("Order Settlement Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { settledLose: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { settledWin: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10], offset: 0 },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         0,

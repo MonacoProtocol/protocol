@@ -1,4 +1,4 @@
-import { Program, BorshAccountsCoder } from "@project-serum/anchor";
+import { Program, BorshAccountsCoder } from "@coral-xyz/anchor";
 import { PublicKey, MemcmpFilter } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
@@ -13,7 +13,7 @@ import {
   MarketOutcomeAccounts,
   MarketOutcomeTitlesResponse,
 } from "../types";
-import { AnchorProvider } from "@project-serum/anchor";
+import { AnchorProvider } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 
 export enum MarketType {

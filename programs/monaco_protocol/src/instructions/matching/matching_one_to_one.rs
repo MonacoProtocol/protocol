@@ -149,5 +149,4 @@ fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
         to.market_outcome_sums[index] = from.market_outcome_sums[index];
         to.outcome_max_exposure[index] = from.outcome_max_exposure[index];
     }
-    to.offset = from.offset;
 }

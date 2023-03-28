@@ -6,6 +6,7 @@ const jestConfig = {
         "tests/util/pdas.ts",
         "tests/util/test_util.ts",
         "tests/util/wrappers.ts",
+        "tests/anchor/*",
         ],
     globalSetup: "<rootDir>/tests/setup.ts",
     setupFilesAfterEnv: ["<rootDir>/tests/util/test_util.ts"],

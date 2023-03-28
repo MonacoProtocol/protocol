@@ -3,7 +3,7 @@ use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
-use crate::instructions::{account, calculate_risk_from_stake, transfer};
+use crate::instructions::account;
 use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
@@ -26,25 +26,11 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         return Ok(());
     }
 
-    // refund unmatched funds first
-    let refund = ctx
-        .accounts
-        .market_position
-        .apply_offset(match ctx.accounts.order.for_outcome {
-            true => ctx.accounts.order.stake_unmatched,
-            false => calculate_risk_from_stake(
-                ctx.accounts.order.stake_unmatched,
-                ctx.accounts.order.expected_price,
-            ),
-        });
-
     if ctx.accounts.order.stake_unmatched > 0_u64 {
         let order = &mut ctx.accounts.order;
         order.voided_stake = order.stake_unmatched;
         order.stake_unmatched = 0_u64;
     }
-
-    transfer::transfer_settlement_funds(&ctx, refund)?;
 
     // if never matched close
     if Open.eq(&ctx.accounts.order.order_status) {
@@ -55,27 +41,10 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         return Ok(());
     }
 
-    // payout second
-    let is_winning_order = is_winning_order(&ctx.accounts.order, market_account);
-
-    match is_winning_order {
+    match is_winning_order(&ctx.accounts.order, market_account) {
         true => ctx.accounts.order.order_status = SettledWin,
         false => ctx.accounts.order.order_status = SettledLose,
     };
-
-    let payout = match is_winning_order {
-        true => {
-            let market_position = &mut ctx.accounts.market_position;
-            if market_position.offset == 0_u64 {
-                ctx.accounts.order.payout
-            } else {
-                market_position.apply_offset(ctx.accounts.order.payout)
-            }
-        }
-        false => 0_u64,
-    };
-
-    transfer::transfer_settlement_funds(&ctx, payout)?;
 
     Ok(())
 }
@@ -118,6 +87,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
+            product: Default::default(),
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -157,6 +127,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
+            product: Default::default(),
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -196,6 +167,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
+            product: Default::default(),
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -235,6 +207,7 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
+            product: Default::default(),
         };
         let market = Market {
             authority: Pubkey::new_unique(),

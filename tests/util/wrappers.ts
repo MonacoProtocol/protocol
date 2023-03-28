@@ -1,4 +1,4 @@
-import { AccountMeta, Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   Mint,
   TOKEN_PROGRAM_ID,
@@ -6,9 +6,9 @@ import {
   getOrCreateAssociatedTokenAccount,
   mintTo,
 } from "@solana/spl-token";
-import * as anchor from "@project-serum/anchor";
-import { BN, Program } from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
@@ -24,25 +24,28 @@ import {
   getMarketMatchingPoolsPks,
   createNewMint,
   OperatorType,
+  getProtocolProductProgram,
 } from "../util/test_util";
-import {
-  findAuthorisedOperatorsPda,
-  findMultisigGroupPda,
-  findMultisigTransactionPda,
-  findProductConfigPda,
-} from "../util/pdas";
+import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
+import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 
 const { SystemProgram } = anchor.web3;
 
 const TOKEN_DECIMALS = 6;
 
 export let monaco: Monaco;
+export let externalPrograms: ExternalPrograms;
 
 beforeAll(async () => {
   // Programs
   monaco = new Monaco(
     anchor.getProvider() as anchor.AnchorProvider,
     anchor.workspace.MonacoProtocol,
+  );
+
+  externalPrograms = new ExternalPrograms(
+    anchor.getProvider() as anchor.AnchorProvider,
+    getProtocolProductProgram(),
   );
 });
 
@@ -137,7 +140,6 @@ export class Monaco {
       maxExposure: marketPosition.outcomeMaxExposure.map(
         (bn) => bn.toNumber() / decimalsMultiplayer,
       ),
-      offset: marketPosition.offset.toNumber() / decimalsMultiplayer,
     };
   }
 
@@ -350,6 +352,7 @@ export class Monaco {
 
     const bmarket = new MonacoMarket(
       this,
+      externalPrograms,
       marketPdaResponse.data.pda,
       marketEscrowPk.data.pda,
       outcomePks,
@@ -361,128 +364,11 @@ export class Monaco {
     );
     return bmarket;
   }
-
-  async createMultisigGroup(
-    groupTitle: string,
-    signers: PublicKey[],
-    approvalThreshold: number,
-  ): Promise<PublicKey> {
-    const multisigGroupPk = await findMultisigGroupPda(
-      groupTitle,
-      this.getRawProgram(),
-    );
-    await this.program.methods
-      .createMultisig(groupTitle, signers, new BN(approvalThreshold))
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        signer: monaco.provider.wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-
-    return multisigGroupPk;
-  }
-
-  async createMultisigTransaction(
-    multisigGroupPk: PublicKey,
-    multisigMemberPk: PublicKey,
-    instructionData: Buffer,
-    instructionAccounts: AccountMeta[],
-  ): Promise<PublicKey> {
-    const distinctSeed = Date.now().toString();
-    const txPk = await findMultisigTransactionPda(
-      distinctSeed,
-      this.getRawProgram(),
-    );
-
-    await monaco.program.methods
-      .createMultisigTransaction(
-        distinctSeed,
-        instructionAccounts,
-        instructionData,
-      )
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        multisigTransaction: txPk,
-        multisigMember: multisigMemberPk,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
-
-    return txPk;
-  }
-
-  async executeMultisigTransaction(
-    multisigGroupPk: PublicKey,
-    multisigTransactionPk: PublicKey,
-    multisigPdaSignerPk: PublicKey,
-    instructionAccounts: AccountMeta[],
-  ) {
-    // Construct remainingAccounts
-    // map isSigner to false for executing transaction (unsure why I have to do this but it's required)
-    const updatedAccounts = instructionAccounts.map((acc) => {
-      return {
-        pubkey: acc.pubkey,
-        isSigner: false,
-        isWritable: acc.isWritable,
-      };
-    });
-    // ensure monaco program account is passed
-    const updatedAccountsWithProgram = updatedAccounts.concat({
-      pubkey: monaco.program.programId,
-      isWritable: false,
-      isSigner: false,
-    });
-
-    // execute transaction
-    await monaco.program.methods
-      .executeMultisigTransaction()
-      .accounts({
-        multisigGroup: multisigGroupPk,
-        multisigTransaction: multisigTransactionPk,
-        multisigPdaSigner: multisigPdaSignerPk,
-      })
-      .remainingAccounts(updatedAccountsWithProgram)
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-  }
-
-  async createProductConfig(
-    productTitle: string,
-    commissionRate: number,
-    multisigGroupPk: PublicKey,
-  ) {
-    const productConfigPk = await findProductConfigPda(
-      productTitle,
-      this.getRawProgram(),
-    );
-    await monaco.program.methods
-      .createProductConfig(productTitle, commissionRate)
-      .accounts({
-        productConfig: productConfigPk,
-        commissionEscrow: Keypair.generate().publicKey,
-        multisigGroup: multisigGroupPk,
-        productOperator: monaco.provider.wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc()
-      .catch((e) => {
-        throw e;
-      });
-
-    return productConfigPk;
-  }
 }
 
 export class MonacoMarket {
   private monaco: Monaco;
+  private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
   readonly outcomePks: PublicKey[];
@@ -498,8 +384,13 @@ export class MonacoMarket {
   private purchaserTokenPks = new Map<string, PublicKey>();
   private marketPositionPkCache = new Map<string, PublicKey>();
 
+  private protocolConfigPk: PublicKey;
+  private protocolCommissionEscrowPk: PublicKey;
+  private productEscrowCache = new Map<PublicKey, PublicKey>();
+
   constructor(
     monaco: Monaco,
+    externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
     outcomePks: PublicKey[],
@@ -513,6 +404,7 @@ export class MonacoMarket {
     marketAuthority?: Keypair,
   ) {
     this.monaco = monaco;
+    this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
     this.outcomePks = outcomePks;
@@ -810,23 +702,73 @@ export class MonacoMarket {
       });
   }
 
+  async cacheProductCommissionEscrowPk(productPk: PublicKey) {
+    if (this.productEscrowCache.get(productPk) == undefined) {
+      const wallet = this.monaco.provider.wallet as NodeWallet;
+      const product =
+        await this.externalPrograms.protocolProduct.account.product.fetch(
+          productPk,
+        );
+      const productCommissionTokenAccount =
+        await getOrCreateAssociatedTokenAccount(
+          this.monaco.provider.connection,
+          wallet.payer,
+          this.mintPk,
+          product.commissionEscrow,
+        );
+      this.productEscrowCache.set(
+        productPk,
+        productCommissionTokenAccount.address,
+      );
+    }
+
+    return this.productEscrowCache.get(productPk);
+  }
+
+  async cacheProtocolCommissionPks() {
+    if (
+      this.protocolConfigPk == undefined ||
+      this.protocolCommissionEscrowPk == undefined
+    ) {
+      const wallet = this.monaco.provider.wallet as NodeWallet;
+      const productPk = await findProductPda(
+        "MONACO_PROTOCOL",
+        this.externalPrograms.protocolProduct as Program,
+      );
+      const protocolConfig =
+        await this.externalPrograms.protocolProduct.account.product.fetch(
+          productPk,
+        );
+      const protocolCommissionTokenAccount =
+        await getOrCreateAssociatedTokenAccount(
+          this.monaco.provider.connection,
+          wallet.payer,
+          this.mintPk,
+          protocolConfig.commissionEscrow,
+        );
+
+      this.protocolConfigPk = productPk;
+      this.protocolCommissionEscrowPk = protocolCommissionTokenAccount.address;
+    }
+
+    return {
+      protocolConfigPk: this.protocolConfigPk,
+      protocolCommissionEscrowPk: this.protocolCommissionEscrowPk,
+    };
+  }
+
   async settleOrder(orderPk: PublicKey) {
     const [order, authorisedOperatorsPk] = await Promise.all([
       this.monaco.fetchOrder(orderPk),
       await this.monaco.findCrankAuthorisedOperatorsPda(),
     ]);
-    const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
-    const marketPositionPk = await this.cacheMarketPositionPk(order.purchaser);
+
     await this.monaco.program.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: orderPk,
         market: this.pk,
-        purchaserTokenAccount: purchaserTokenPk,
         purchaser: order.purchaser,
-        marketPosition: marketPositionPk,
-        marketEscrow: this.escrowPk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
       })
@@ -890,5 +832,78 @@ export class MonacoMarket {
         console.error(e);
         throw e;
       });
+  }
+
+  async settleMarketPositionForPurchaser(purchaser: PublicKey) {
+    const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
+    const authorisedOperatorsPk =
+      await this.monaco.findCrankAuthorisedOperatorsPda();
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
+    const protocolCommissionPks = await this.cacheProtocolCommissionPks();
+
+    await this.monaco.program.methods
+      .settleMarketPosition()
+      .accounts({
+        tokenProgram: TOKEN_PROGRAM_ID,
+        market: this.pk,
+        purchaserTokenAccount: purchaserTokenPk,
+        purchaser: purchaser,
+        marketPosition: marketPositionPk,
+        marketEscrow: this.escrowPk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
+        protocolConfig: protocolCommissionPks.protocolConfigPk,
+        protocolCommissionTokenAccount:
+          protocolCommissionPks.protocolCommissionEscrowPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+}
+
+export class ExternalPrograms {
+  readonly provider: anchor.AnchorProvider;
+
+  readonly protocolProduct: Program<ProtocolProduct>;
+
+  constructor(
+    provider: anchor.AnchorProvider,
+    protocolProduct: Program<ProtocolProduct>,
+  ) {
+    this.provider = provider;
+    this.protocolProduct = protocolProduct;
+  }
+
+  async createProduct(
+    productTitle: string,
+    commissionRate: number,
+    authority?: Keypair,
+  ) {
+    const defaultAuthority = authority == undefined;
+    const productPk = await findProductPda(
+      productTitle,
+      this.protocolProduct as Program,
+    );
+    await this.protocolProduct.methods
+      .createProduct(productTitle, commissionRate)
+      .accounts({
+        product: productPk,
+        commissionEscrow: Keypair.generate().publicKey,
+        authority: defaultAuthority
+          ? monaco.provider.publicKey
+          : authority.publicKey,
+        payer: monaco.provider.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers(defaultAuthority ? [] : [authority])
+      .rpc()
+      .catch((e) => {
+        throw e;
+      });
+
+    return productPk;
   }
 }

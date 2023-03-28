@@ -1,5 +1,5 @@
-import * as anchor from "@project-serum/anchor";
-import { BN } from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 import assert from "assert";
 import { getMarketPosition } from "../../npm-client/src";
 import { createWalletWithBalance } from "../util/test_util";

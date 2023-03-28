@@ -56,6 +56,8 @@ pub enum CoreError {
     SettlementMarketNotReadyForSettlement,
     #[msg("Core Settlement: market escrow is non zero")]
     SettlementMarketEscrowNonZero,
+    #[msg("Core Settlement: error calculating settlement payment.")]
+    SettlementPaymentCalculation,
 
     /*
     Authorised Operator
@@ -151,35 +153,6 @@ pub enum CoreError {
     MarketNotReadyToClose,
     #[msg("Market: market authority does not match operator")]
     MarketAuthorityMismatch,
-
-    /*
-    MultisigGroup
-     */
-    #[msg(MultisigGroup: multisig members must be unique.)]
-    UniqueMembers,
-    #[msg(MultisigGroup: multisig members cannot be empty.)]
-    InvalidMembersLen,
-    #[msg(MultisigGroup: approval threshold should be > 0, and <= number of multisig members.)]
-    InvalidApprovalThreshold,
-    #[msg(MultisigGroup: Signer does not belong to multisig group.)]
-    SignerNotFound,
-    #[msg(MultisigGroup: title length must be between 1 and 50 characters.)]
-    MultisigGroupTitleLen,
-    #[msg(MultisigGroup: multisig group members have changed, multisig transaction is no longer valid.)]
-    MultisigMembersChanged,
-    #[msg(MultisigGroup: multisig transaction has previously been executed.)]
-    TransactionHasExecuted,
-    #[msg(MultisigGroup: multisig transaction has not met the multisig group approval threshold, more approvals are required.)]
-    ApprovalThresholdNotMet,
-    /*
-    Product Config
-     */
-    #[msg(ProductConfig: commission rate must be >= 0 and <= 100.)]
-    InvalidCommissionRate,
-    #[msg(ProductConfig: title length must be between 1 and 50 characters.)]
-    ProductConfigTitleLen,
-    #[msg(ProductConfig: Commission supports up to 3 decimal places.)]
-    CommissionPrecisionTooLarge,
 
     /*
     Close Account

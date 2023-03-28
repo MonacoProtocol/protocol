@@ -1,4 +1,4 @@
-use std::ops::{Mul, Sub};
+use std::ops::{Div, Mul, Sub};
 
 use rust_decimal::prelude::{FromPrimitive, One, ToPrimitive};
 use rust_decimal::Decimal;
@@ -29,6 +29,16 @@ pub fn stake_precision_is_within_range(stake: u64, decimal_limit: u8) -> bool {
     Decimal::new(stake as i64, decimal_limit as u32)
         .fract()
         .is_zero()
+}
+
+pub fn calculate_commission(commission_rate: f64, profit: i128) -> u64 {
+    let commission_rate_decimal = Decimal::from_f64(commission_rate).unwrap();
+    Decimal::from(profit)
+        .max(Decimal::ZERO)
+        .mul(commission_rate_decimal)
+        .div(Decimal::ONE_HUNDRED)
+        .to_u64()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -80,5 +90,18 @@ mod tests {
         assert!(stake_precision_is_within_range(1000, 3));
         assert!(stake_precision_is_within_range(10000, 3));
         assert!(stake_precision_is_within_range(100000, 3));
+    }
+
+    #[test]
+    fn test_calculate_commission() {
+        assert_eq!(calculate_commission(5.00, 100), 5);
+        assert_eq!(calculate_commission(1.5, 100), 1);
+        assert_eq!(calculate_commission(33.33, 100), 33);
+        assert_eq!(calculate_commission(0.00, 100), 0);
+        assert_eq!(calculate_commission(10.00, 1), 0);
+
+        // 1000000 = 1 @ 6 mint decimals
+        assert_eq!(calculate_commission(1.00, 1000000), 10000);
+        assert_eq!(calculate_commission(33.33, 1000000), 333300);
     }
 }

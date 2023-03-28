@@ -1,5 +1,5 @@
 import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
-import { AnchorProvider, BN, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getMarketAccounts, uiStakeToInteger } from "./utils";
 import { getWalletTokenAccount } from "../src/wallet_tokens";
@@ -15,6 +15,7 @@ import { findOrderPda } from "./order";
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
+ * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {CreateOrderResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
  * @example
@@ -24,7 +25,8 @@ import { findOrderPda } from "./order";
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20
- * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20)
+ * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk)
  */
 export async function createOrderUiStake(
   program: Program,
@@ -33,6 +35,7 @@ export async function createOrderUiStake(
   forOutcome: boolean,
   price: number,
   stake: number,
+  productPk?: PublicKey,
 ): Promise<ClientResponse<CreateOrderResponse>> {
   const stakeInteger = await uiStakeToInteger(program, stake, marketPk);
   return await createOrder(
@@ -42,6 +45,7 @@ export async function createOrderUiStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
+    productPk,
   );
 }
 
@@ -54,6 +58,7 @@ export async function createOrderUiStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} raw token value of the order taking into account the decimal amount of the token associated with the market
+ * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {CreateOrderResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
  * @example
@@ -63,7 +68,8 @@ export async function createOrderUiStake(
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20,000,000,000
- * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake)
+ * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
  */
 export async function createOrder(
   program: Program,
@@ -72,6 +78,7 @@ export async function createOrder(
   forOutcome: boolean,
   price: number,
   stake: BN,
+  productPk?: PublicKey,
 ): Promise<ClientResponse<CreateOrderResponse>> {
   const provider = program.provider as AnchorProvider;
   const MarketAccounts = await getMarketAccounts(
@@ -94,7 +101,7 @@ export async function createOrder(
   const distinctSeed = orderPdaResponse.data.distinctSeed;
 
   const tnxID = await program.methods
-    .createOrder(distinctSeed, {
+    .createOrderV2(distinctSeed, {
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: stake,
@@ -111,6 +118,9 @@ export async function createOrder(
       marketOutcome: MarketAccounts.data.marketOutcomePda,
       purchaserToken: purchaserTokenAccount.data.associatedTokenAccount,
       marketEscrow: MarketAccounts.data.escrowPda,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      product: productPk == undefined ? null : productPk,
     })
     .signers(provider.wallet instanceof Keypair ? [provider.wallet] : [])
     .rpc({ commitment: "confirmed" })

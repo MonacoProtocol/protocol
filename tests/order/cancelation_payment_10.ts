@@ -63,7 +63,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 15, 10],
-          offset: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -87,7 +86,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          offset: 0,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -111,7 +109,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -155,7 +152,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 15, 10],
-          offset: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -179,7 +175,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 15, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -203,7 +198,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -247,7 +241,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 15, 10],
-          offset: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -271,7 +264,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          offset: 0,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -295,7 +287,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -339,7 +330,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 15, 10],
-          offset: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -363,7 +353,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 15, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
@@ -387,7 +376,6 @@ describe("Order Cancelation Payment 10", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          offset: 0,
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },

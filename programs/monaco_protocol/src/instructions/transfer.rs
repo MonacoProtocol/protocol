@@ -1,18 +1,22 @@
-use crate::{CancelOrder, Market, MatchOrders};
+use crate::{CancelOrder, Market, MatchOrders, SettleMarketPosition};
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::context::{CreateOrder, SettleOrder};
+use crate::context::CreateOrder;
 
-pub fn order_creation_payment(ctx: Context<CreateOrder>, amount: u64) -> Result<()> {
-    let accounts = &ctx.accounts;
-
+pub fn order_creation_payment<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    purchaser: &Signer<'info>,
+    purchaser_token_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    amount: u64,
+) -> Result<()> {
     transfer_to_market_escrow(
-        &accounts.market_escrow,
-        &accounts.purchaser,
-        &accounts.purchaser_token,
-        &accounts.token_program,
+        market_escrow,
+        purchaser,
+        purchaser_token_account,
+        token_program,
         amount,
     )
 }
@@ -77,7 +81,7 @@ pub fn order_against_matching_refund(ctx: &Context<MatchOrders>, amount: u64) ->
     )
 }
 
-pub fn transfer_settlement_funds(ctx: &Context<SettleOrder>, amount: u64) -> Result<()> {
+pub fn transfer_market_position(ctx: &Context<SettleMarketPosition>, amount: u64) -> Result<()> {
     let accounts = &ctx.accounts;
 
     transfer_from_market_escrow(
@@ -106,6 +110,21 @@ pub fn transfer_market_escrow_surplus<'info>(
     )
 }
 
+pub fn transfer_protocol_commission(
+    ctx: &Context<SettleMarketPosition>,
+    amount: u64,
+) -> Result<()> {
+    let accounts = &ctx.accounts;
+
+    transfer_from_market_escrow(
+        &accounts.market_escrow,
+        &accounts.protocol_commission_token_account,
+        &accounts.token_program,
+        &accounts.market,
+        amount,
+    )
+}
+
 fn transfer_to_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
     purchaser: &Signer<'info>,
@@ -113,10 +132,10 @@ fn transfer_to_market_escrow<'info>(
     token_program: &Program<'info, Token>,
     amount: u64,
 ) -> Result<()> {
-    msg!("Transferring to escrow");
     if amount == 0_u64 {
         return Ok(());
     }
+    msg!("Transferring to escrow");
     token::transfer(
         CpiContext::new(
             token_program.to_account_info(),
@@ -137,10 +156,10 @@ fn transfer_from_market_escrow<'info>(
     market: &Account<Market>,
     amount: u64,
 ) -> Result<()> {
-    msg!("Transferring from escrow");
     if amount == 0_u64 {
         return Ok(());
     }
+    msg!("Transferring from escrow");
     token::transfer(
         CpiContext::new_with_signer(
             token_program.to_account_info(),

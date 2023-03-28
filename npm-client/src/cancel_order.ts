@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getCancellableOrdersByMarketForProviderWallet } from "./order_query";
 import { findEscrowPda } from "./utils";

@@ -1,6 +1,6 @@
-import * as anchor from "@project-serum/anchor";
-import { AnchorProvider, Program } from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   createAssociatedTokenAccountWithBalance,
   createAuthorisedOperatorsPda,
@@ -10,20 +10,24 @@ import {
   createWalletWithBalance,
   matchOrder,
   OperatorType,
+  getProtocolProductProgram,
 } from "../util/test_util";
 import assert from "assert";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { findMarketPositionPda } from "../../npm-client/src";
+import {
+  getOrCreateAssociatedTokenAccount,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { findMarketPositionPda, getMarketPosition } from "../../npm-client/src";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import { findProductPda } from "../util/pdas";
+import console from "console";
+import { monaco } from "../util/wrappers";
 
 describe("Settlement Crank", () => {
-  // Provider
-  const provider = anchor.AnchorProvider.local();
-  anchor.setProvider(provider);
-
   const getTokenBalance = async (tokenPk: PublicKey) =>
-    (await provider.connection.getTokenAccountBalance(tokenPk)).value.uiAmount;
+    (await monaco.provider.connection.getTokenAccountBalance(tokenPk)).value
+      .uiAmount;
 
   // Programs
   const protocolProgram = anchor.workspace
@@ -51,34 +55,19 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
-    );
-
-    const marketPositionFor = await findMarketPositionPda(
-      protocolProgram as Program,
-      market.marketPda,
-      wallet1.publicKey,
-    );
-    const marketPositionAgainst = await findMarketPositionPda(
-      protocolProgram as Program,
-      market.marketPda,
-      wallet2.publicKey,
     );
 
     // Settle for order
     await protocolProgram.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: forOrderPda,
         market: market.marketPda,
-        purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
-        marketPosition: marketPositionFor.data.pda,
-        marketEscrow: market.escrowPda,
         crankOperator: operatorAccountUnauthorised.publicKey,
         authorisedOperators: authorisedOperators,
       })
@@ -100,13 +89,9 @@ describe("Settlement Crank", () => {
     await protocolProgram.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: againstOrderPda,
         market: market.marketPda,
-        purchaserTokenAccount: wallet2Token,
         purchaser: wallet2.publicKey,
-        marketPosition: marketPositionAgainst.data.pda,
-        marketEscrow: market.escrowPda,
         crankOperator: operatorAccountUnauthorised.publicKey,
         authorisedOperators: authorisedOperators,
       })
@@ -139,7 +124,7 @@ describe("Settlement Crank", () => {
 
   it("full match", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -159,7 +144,7 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
@@ -176,17 +161,38 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: forOrderPda,
         market: market.marketPda,
         purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc()
+      .catch((error) => {
+        console.log(error);
+      });
+
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: forOrderPda,
+        market: market.marketPda,
+        purchaser: wallet1.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -197,15 +203,31 @@ describe("Settlement Crank", () => {
 
     // Settle against order
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: againstOrderPda,
         market: market.marketPda,
         purchaserTokenAccount: wallet2Token,
         purchaser: wallet2.publicKey,
         marketPosition: marketPositionAgainst.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc()
+      .catch((error) => {
+        console.log(error);
+      });
+
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: againstOrderPda,
+        market: market.marketPda,
+        purchaser: wallet2.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -216,20 +238,20 @@ describe("Settlement Crank", () => {
     );
     assert.deepEqual(againstOrder.orderStatus, { settledLose: {} });
 
-    // tokens transferred back from market to purchaser after settlement
+    // tokens transferred back from market to purchaser after settlement, protocol commission deducted from winnings
     assert.deepEqual(
       await Promise.all([
         getTokenBalance(market.escrowPda),
         getTokenBalance(wallet1Token),
         getTokenBalance(wallet2Token),
       ]),
-      [0.0, 10.0 + againstStake, 10.0 - againstStake],
+      [0.0, 10.0 + againstStake * 0.9, 10.0 - againstStake],
     );
   });
 
   it("full match: different market", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -249,26 +271,15 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
-    const marketPositionFor = await findMarketPositionPda(
-      protocolProgram as Program,
-      market.marketPda,
-      wallet1.publicKey,
-    );
-    const marketPositionAgainst = await findMarketPositionPda(
-      protocolProgram as Program,
-      market.marketPda,
-      wallet2.publicKey,
-    );
-
     const marketOther = await createMarket(
       protocolProgram,
-      provider,
+      monaco.provider,
       [price],
       null,
       null,
@@ -285,12 +296,8 @@ describe("Settlement Crank", () => {
         .settleOrder()
         .accounts({
           order: forOrderPda,
-          purchaserTokenAccount: wallet1Token,
           purchaser: wallet1.publicKey,
-          marketPosition: marketPositionFor.data.pda,
           market: marketOther.marketPda,
-          marketEscrow: market.escrowPda,
-          tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
         })
@@ -310,12 +317,8 @@ describe("Settlement Crank", () => {
         .settleOrder()
         .accounts({
           order: againstOrderPda,
-          purchaserTokenAccount: wallet2Token,
           purchaser: wallet2.publicKey,
-          marketPosition: marketPositionAgainst.data.pda,
           market: marketOther.marketPda,
-          marketEscrow: market.escrowPda,
-          tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
         })
@@ -344,7 +347,7 @@ describe("Settlement Crank", () => {
 
   it("full match: different market/escrow", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -364,7 +367,7 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
@@ -382,14 +385,20 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
-    const marketOther = await createMarket(protocolProgram, provider, [price]);
+    const marketOther = await createMarket(protocolProgram, monaco.provider, [
+      price,
+    ]);
+
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
 
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaserTokenAccount: wallet1Token,
           purchaser: wallet1.publicKey,
           marketPosition: marketPositionFor.data.pda,
@@ -398,6 +407,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -412,9 +424,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaserTokenAccount: wallet2Token,
           purchaser: wallet2.publicKey,
           marketPosition: marketPositionAgainst.data.pda,
@@ -423,6 +434,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -449,7 +463,7 @@ describe("Settlement Crank", () => {
 
   it("full match: different market/escrow/mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -469,7 +483,7 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
@@ -487,14 +501,20 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
-    const marketOther = await createMarket(protocolProgram, provider, [price]);
+    const marketOther = await createMarket(protocolProgram, monaco.provider, [
+      price,
+    ]);
+
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
 
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaserTokenAccount: wallet1Token,
           purchaser: wallet1.publicKey,
           marketPosition: marketPositionFor.data.pda,
@@ -503,6 +523,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -517,9 +540,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaserTokenAccount: wallet2Token,
           purchaser: wallet2.publicKey,
           marketPosition: marketPositionAgainst.data.pda,
@@ -528,6 +550,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -554,7 +579,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser impostor for the same mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -574,14 +599,14 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -603,12 +628,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -617,6 +646,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -631,9 +663,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -642,6 +673,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -668,7 +702,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser impostor for a different mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -688,19 +722,19 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -722,12 +756,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -736,6 +774,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -750,9 +791,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -761,6 +801,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -787,7 +830,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser impostor for a different mint which is passed in as well", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -807,19 +850,19 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -841,12 +884,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -855,6 +902,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -869,9 +919,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: purchaserImpostor.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -880,6 +929,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -910,7 +962,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser uses different token account for a different mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -930,15 +982,15 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const wallet1InvalidToken = await createAssociatedTokenAccountWithBalance(
@@ -964,12 +1016,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: wallet1.publicKey,
           purchaserTokenAccount: wallet1InvalidToken,
           marketPosition: marketPositionFor.data.pda,
@@ -978,6 +1034,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -992,9 +1051,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: wallet2.publicKey,
           purchaserTokenAccount: wallet2InvalidToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -1003,6 +1061,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1029,7 +1090,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser uses different token account for a different mint which is passed in as well", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -1049,15 +1110,15 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const wallet1InvalidToken = await createAssociatedTokenAccountWithBalance(
@@ -1083,12 +1144,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: wallet1.publicKey,
           purchaserTokenAccount: wallet1InvalidToken,
           marketPosition: marketPositionFor.data.pda,
@@ -1097,6 +1162,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1111,9 +1179,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: wallet2.publicKey,
           purchaserTokenAccount: wallet2InvalidToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -1122,6 +1189,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1148,7 +1218,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser with impostor token account for the same mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -1168,14 +1238,14 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -1197,12 +1267,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: wallet1.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -1211,6 +1285,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1225,9 +1302,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: wallet2.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -1236,6 +1312,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1262,7 +1341,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser with impostor token account for a different mint", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -1282,19 +1361,19 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -1316,12 +1395,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: wallet1.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -1330,6 +1413,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1344,9 +1430,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: wallet2.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -1355,6 +1440,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1381,7 +1469,7 @@ describe("Settlement Crank", () => {
 
   it("full match: purchaser with impostor token account for a different mint which is passed in as well", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -1401,19 +1489,19 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      provider,
+      monaco.provider,
       outcome,
       price,
       forStake,
     );
 
     const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
+      monaco.provider,
+      monaco.provider.wallet as NodeWallet,
       6,
     );
     const purchaserImpostor = await createWalletWithBalance(
-      provider,
+      monaco.provider,
       100000000,
     );
     const purchaserImpostorToken =
@@ -1435,12 +1523,16 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle for order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: forOrderPda,
           purchaser: wallet1.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
@@ -1449,6 +1541,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1463,9 +1558,8 @@ describe("Settlement Crank", () => {
     // Settle against order
     try {
       await protocolProgram.methods
-        .settleOrder()
+        .settleMarketPosition()
         .accounts({
-          order: againstOrderPda,
           purchaser: wallet2.publicKey,
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
@@ -1474,6 +1568,9 @@ describe("Settlement Crank", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
           crankOperator: operatorAccount,
           authorisedOperators: authorisedOperators,
+          protocolConfig: commissionAccounts.protocolProductPk,
+          protocolCommissionTokenAccount:
+            commissionAccounts.protocolCommissionTokenAccountPk,
         })
         .rpc();
 
@@ -1500,23 +1597,25 @@ describe("Settlement Crank", () => {
 
   it("partial match", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
 
     // Create market
     const price = 1.8;
-    const market = await createMarket(protocolProgram, provider, [price]);
+    const market = await createMarket(protocolProgram, monaco.provider, [
+      price,
+    ]);
 
     // Create wallets
-    const wallet1 = await createWalletWithBalance(provider, 100000000);
+    const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
     const wallet1Token = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       wallet1.publicKey,
       100.0,
     );
-    const wallet2 = await createWalletWithBalance(provider, 100000000);
+    const wallet2 = await createWalletWithBalance(monaco.provider, 100000000);
     const wallet2Token = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       wallet2.publicKey,
@@ -1571,7 +1670,7 @@ describe("Settlement Crank", () => {
       market.marketPda,
       market.outcomePdas[outcome],
       market.matchingPools[outcome][price],
-      (provider.wallet as NodeWallet).payer,
+      (monaco.provider.wallet as NodeWallet).payer,
       authorisedOperators,
     );
 
@@ -1632,18 +1731,36 @@ describe("Settlement Crank", () => {
       wallet2.publicKey,
     );
 
-    // Settle for order
-    await protocolProgram.methods
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
 
-      .settleOrder()
+    // Settle for market position
+    await protocolProgram.methods
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: forOrderPK,
         market: market.marketPda,
         purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc();
+
+    // Settle for order
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: forOrderPK,
+        market: market.marketPda,
+        purchaser: wallet1.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1660,22 +1777,32 @@ describe("Settlement Crank", () => {
     assert.equal(forOrderSettled.stakeUnmatched.toNumber(), 0);
     assert.equal(forOrderSettled.voidedStake.toNumber(), 0);
 
+    const marketPosition = await getMarketPosition(
+      protocolProgram as Program,
+      market.marketPda,
+      wallet1.publicKey,
+    );
+    const marketOutcomeSums = marketPosition.data.marketOutcomeSums.map(
+      (sum) => sum.toNumber() / 10 ** 6,
+    );
+    const expectedProfit = (forPayout - forStake) * 0.9;
+
     // Check balances after 1st settlement
     assert.deepEqual(
       await Promise.all([
+        marketOutcomeSums,
         getTokenBalance(market.escrowPda),
         getTokenBalance(wallet1Token),
         getTokenBalance(wallet2Token),
       ]),
-      [1.6, 100.0 - forStake + forPayout, 100.0 - againstLiability],
+      [[-50, 40, -50], 1.6, 100.0 + expectedProfit, 100.0 - againstLiability],
     );
 
-    // Settle against order
+    // Settle against market position
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: againstOrderPK,
         market: market.marketPda,
         purchaserTokenAccount: wallet2Token,
         purchaser: wallet2.publicKey,
@@ -1683,8 +1810,24 @@ describe("Settlement Crank", () => {
         marketEscrow: market.escrowPda,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc();
+
+    // Settle against order
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: againstOrderPK,
+        market: market.marketPda,
+        purchaser: wallet2.publicKey,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
       })
       .rpc()
+
       .catch((e) => {
         console.error(e);
         throw e;
@@ -1704,23 +1847,25 @@ describe("Settlement Crank", () => {
         getTokenBalance(wallet1Token),
         getTokenBalance(wallet2Token),
       ]),
-      [0.0, 100.0 - forStake + forPayout, 100.0 - againstStake + againstRefund],
+      [0.0, 100.0 + expectedProfit, 100.0 - againstStake + againstRefund],
     );
   });
 
   it("open order account closed and refunded", async () => {
     // Default operator
-    const operatorAccount = provider.wallet.publicKey;
+    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
 
     // Create market
     const price = 1.7;
-    const market = await createMarket(protocolProgram, provider, [price]);
+    const market = await createMarket(protocolProgram, monaco.provider, [
+      price,
+    ]);
 
     // Create wallet
-    const wallet1 = await createWalletWithBalance(provider, 100000000);
+    const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
     const wallet1Token = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       wallet1.publicKey,
@@ -1767,17 +1912,36 @@ describe("Settlement Crank", () => {
       wallet1.publicKey,
     );
 
-    // Settle for order
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
+    // Settle for market position
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: forOrderPK,
         market: market.marketPda,
         purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc();
+
+    // Settle for order
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: forOrderPK,
+        market: market.marketPda,
+        purchaser: wallet1.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1797,7 +1961,10 @@ describe("Settlement Crank", () => {
       await protocolProgram.account.order.fetch(forOrderPK);
       assert.fail("Account should not exist");
     } catch (e) {
-      assert.equal(e, "Error: Account does not exist " + forOrderPK);
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + forOrderPK,
+      );
     }
   });
 
@@ -1806,10 +1973,10 @@ describe("Settlement Crank", () => {
 
     // Create market
     const prices = [2.0, 20.0];
-    const market = await createMarket(program, provider, prices);
+    const market = await createMarket(program, monaco.provider, prices);
 
     // Create wallets
-    const wallet1 = await createWalletWithBalance(provider, 100000000);
+    const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
     const wallet1Token = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       wallet1.publicKey,
@@ -1820,7 +1987,7 @@ describe("Settlement Crank", () => {
       market.marketPda,
       wallet1.publicKey,
     );
-    const wallet2 = await createWalletWithBalance(provider, 100000000);
+    const wallet2 = await createWalletWithBalance(monaco.provider, 100000000);
     const wallet2Token = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       wallet2.publicKey,
@@ -1838,7 +2005,7 @@ describe("Settlement Crank", () => {
     let forStake = 10.0;
 
     const { forOrderPda, againstOrderPda } = await setupFullyMatchedOrders(
-      provider,
+      monaco.provider,
       outcomeIndex,
       orderPrice,
       forStake,
@@ -1857,7 +2024,7 @@ describe("Settlement Crank", () => {
       forOrderPda: subsequentForOrderPda,
       againstOrderPda: subsequentAgainstOrderPda,
     } = await setupFullyMatchedOrders(
-      provider,
+      monaco.provider,
       outcomeIndex,
       orderPrice,
       forStake,
@@ -1890,22 +2057,40 @@ describe("Settlement Crank", () => {
       .rpc();
 
     // Settle orders
-    const operatorAccount = (provider.wallet as NodeWallet).payer.publicKey;
+    const operatorAccount = (monaco.provider.wallet as NodeWallet).payer
+      .publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
 
+    const commissionAccounts = await getSettlementCommissionAccounts(
+      monaco.provider,
+      market.mintPk,
+    );
+
     // Settle wallet 1's orders
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: againstOrderPda,
         market: market.marketPda,
         purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
         marketPosition: marketPosition1.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc();
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: againstOrderPda,
+        market: market.marketPda,
+        purchaser: wallet1.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1917,13 +2102,9 @@ describe("Settlement Crank", () => {
     await protocolProgram.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: subsequentForOrderPda,
         market: market.marketPda,
-        purchaserTokenAccount: wallet1Token,
         purchaser: wallet1.publicKey,
-        marketPosition: marketPosition1.data.pda,
-        marketEscrow: market.escrowPda,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1935,15 +2116,27 @@ describe("Settlement Crank", () => {
 
     // Settle wallet 2's orders
     await protocolProgram.methods
-      .settleOrder()
+      .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        order: forOrderPda,
         market: market.marketPda,
         purchaserTokenAccount: wallet2Token,
         purchaser: wallet2.publicKey,
         marketPosition: marketPosition2.data.pda,
         marketEscrow: market.escrowPda,
+        crankOperator: operatorAccount,
+        authorisedOperators: authorisedOperators,
+        protocolConfig: commissionAccounts.protocolProductPk,
+        protocolCommissionTokenAccount:
+          commissionAccounts.protocolCommissionTokenAccountPk,
+      })
+      .rpc();
+    await protocolProgram.methods
+      .settleOrder()
+      .accounts({
+        order: forOrderPda,
+        market: market.marketPda,
+        purchaser: wallet2.publicKey,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1955,13 +2148,9 @@ describe("Settlement Crank", () => {
     await protocolProgram.methods
       .settleOrder()
       .accounts({
-        tokenProgram: TOKEN_PROGRAM_ID,
         order: subsequentAgainstOrderPda,
         market: market.marketPda,
-        purchaserTokenAccount: wallet2Token,
         purchaser: wallet2.publicKey,
-        marketPosition: marketPosition2.data.pda,
-        marketEscrow: market.escrowPda,
         crankOperator: operatorAccount,
         authorisedOperators: authorisedOperators,
       })
@@ -1971,14 +2160,24 @@ describe("Settlement Crank", () => {
         throw e;
       });
 
+    const marketPosition = await getMarketPosition(
+      protocolProgram as Program,
+      market.marketPda,
+      wallet1.publicKey,
+    );
+    const marketOutcomeSums = marketPosition.data.marketOutcomeSums.map(
+      (sum) => sum.toNumber() / 10 ** 6,
+    );
+
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
+        marketOutcomeSums,
         getTokenBalance(market.escrowPda),
         getTokenBalance(wallet1Token),
         getTokenBalance(wallet2Token),
       ]),
-      [0.0, 59.0, 41.0],
+      [[9, 9, 9], 0.0, 58.1, 41.0],
     );
   });
 });
@@ -2026,7 +2225,7 @@ async function setupFullyMatchedOrders(
   //
   // Match
   //
-  const marketOperator = (provider.wallet as NodeWallet).payer;
+  const marketOperator = (monaco.provider.wallet as NodeWallet).payer;
   const authorisedOperators = await createAuthorisedOperatorsPda(
     OperatorType.CRANK,
   );
@@ -2051,12 +2250,12 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
 ) {
   const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
 
-  const market = await createMarket(program, provider, [price]);
+  const market = await createMarket(program, monaco.provider, [price]);
 
   // Create wallets
   const [wallet1, wallet2] = await Promise.all([
-    createWalletWithBalance(provider),
-    createWalletWithBalance(provider),
+    createWalletWithBalance(monaco.provider),
+    createWalletWithBalance(monaco.provider),
   ]);
   const [wallet1Token, wallet2Token] = await Promise.all([
     createAssociatedTokenAccountWithBalance(
@@ -2072,7 +2271,7 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
   ]);
 
   const { forOrderPda, againstOrderPda } = await setupFullyMatchedOrders(
-    provider,
+    monaco.provider,
     outcomeIndex,
     price,
     forStake,
@@ -2102,5 +2301,35 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
     wallet1Token,
     wallet2,
     wallet2Token,
+  };
+}
+
+async function getSettlementCommissionAccounts(
+  provider: AnchorProvider,
+  mintPk: PublicKey,
+) {
+  const protocolProductProgram = await getProtocolProductProgram();
+  const wallet = monaco.provider.wallet as NodeWallet;
+
+  const protocolProductPk = await findProductPda(
+    "MONACO_PROTOCOL",
+    protocolProductProgram as Program,
+  );
+  const protocolConfig = await protocolProductProgram.account.product.fetch(
+    protocolProductPk,
+  );
+  const protocolCommissionTokenAccount =
+    await getOrCreateAssociatedTokenAccount(
+      monaco.provider.connection,
+      wallet.payer,
+      mintPk,
+      protocolConfig.commissionEscrow,
+    );
+  const protocolCommissionTokenAccountPk =
+    protocolCommissionTokenAccount.address;
+
+  return {
+    protocolProductPk,
+    protocolCommissionTokenAccountPk,
   };
 }

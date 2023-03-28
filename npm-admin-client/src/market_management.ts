@@ -1,4 +1,4 @@
-import { Program, AnchorProvider, BN } from "@project-serum/anchor";
+import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
   Operator,
@@ -12,7 +12,7 @@ import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { findEscrowPda } from "./market_helpers";
 
 /**

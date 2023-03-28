@@ -18,9 +18,10 @@ stable = []
 dev = []
 
 [dependencies]
-solana-program = "~1.10.29"
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
-anchor-spl = "0.25.0"
-spl-token = "3.3.0"
+solana-program = "1.14.16"
+anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
+anchor-spl = "0.27.0"
+spl-token = "3.5.0"
 rust_decimal = "1.29.0"
 test-case = "2.0.2"
+protocol_product = { git = "https://github.com/MonacoProtocol/protocol-product", rev = "1a04c11", features = ["no-entrypoint"] }

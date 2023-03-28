@@ -1,13 +1,14 @@
 use crate::error::CoreError;
-use crate::state::multisig::MultisigTransaction;
 use crate::{
-    AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, MultisigGroup,
-    Order, OrderData, ProductConfig, Trade,
+    AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, Order,
+    OrderData, Trade,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
+
+use protocol_product::state::product::Product;
 
 #[derive(Accounts)]
 #[instruction(_distinct_seed: String, data: OrderData)]
@@ -76,6 +77,82 @@ pub struct CreateOrder<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(_distinct_seed: String, data: OrderData)]
+pub struct CreateOrderV2<'info> {
+    #[account(
+        init,
+        seeds = [
+            market.key().as_ref(),
+            purchaser.key().as_ref(),
+            _distinct_seed.as_ref()
+        ],
+        bump,
+        payer = purchaser,
+        space = Order::SIZE,
+    )]
+    pub order: Account<'info, Order>,
+    #[account(
+        init_if_needed,
+        seeds = [
+            purchaser.key().as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+        payer = purchaser,
+        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
+    )]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+    #[account(mut)]
+    pub purchaser: Signer<'info>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    pub market: Box<Account<'info, Market>>,
+    #[account(
+        init_if_needed,
+        seeds = [
+            market.key().as_ref(),
+            market_outcome.index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", data.price).as_ref(),
+            data.for_outcome.to_string().as_ref()
+        ],
+        payer = purchaser,
+        bump,
+        space = MarketMatchingPool::SIZE
+    )]
+    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            data.market_outcome_index.to_string().as_ref(),
+        ],
+        bump,
+    )]
+    pub market_outcome: Account<'info, MarketOutcome>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    pub product: Option<Account<'info, Product>>,
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -288,13 +365,27 @@ pub struct SettleOrder<'info> {
     pub order: Account<'info, Order>,
     #[account(mut, address = order.purchaser @ CoreError::SettlementPurchaserMismatch)]
     pub purchaser: SystemAccount<'info>,
+    #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
+    pub market: Box<Account<'info, Market>>,
+
+    // crank operator --------------------------------------------
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct SettleMarketPosition<'info> {
+    #[account(address = market_position.purchaser @ CoreError::SettlementPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
     #[account(
         mut,
         associated_token::mint = market.mint_account,
         associated_token::authority = purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-    #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
+    #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
@@ -307,10 +398,19 @@ pub struct SettleOrder<'info> {
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
     pub market_position: Box<Account<'info, MarketPosition>>,
 
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = protocol_config.commission_escrow,
+    )]
+    pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(seeds = [b"product".as_ref(), b"MONACO_PROTOCOL".as_ref()], seeds::program=&protocol_product::ID, bump)]
+    pub protocol_config: Box<Account<'info, Product>>,
+
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 
-    // crank operator --------------------------------------------
+    // crank operator -------------------------------------------
     #[account(mut)]
     pub crank_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
@@ -477,132 +577,6 @@ pub struct TransferMarketEscrowSurplus<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-pub struct CloseAccount<'info> {
-    #[account(mut)]
-    pub admin_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"ADMIN".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-    /// CHECK:
-    #[account(mut)]
-    // #[soteria(ignore)] no reasonable way to verify
-    pub to_close: AccountInfo<'info>,
-    /// CHECK:
-    #[account(mut)]
-    // #[soteria(ignore)] no reasonable way to verify
-    pub lamport_destination: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(group_title: String)]
-pub struct CreateMultisigGroup<'info> {
-    #[account(
-        init,
-        seeds = [b"multisig".as_ref(), group_title.as_ref()],
-        bump,
-        payer = signer,
-        space = MultisigGroup::SIZE
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(_distinct_seed: String)]
-pub struct CreateMultisigTransaction<'info> {
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        init,
-        seeds = [_distinct_seed.as_ref()],
-        bump,
-        payer = multisig_member,
-        space = MultisigTransaction::SIZE
-    )]
-    pub multisig_transaction: Account<'info, MultisigTransaction>,
-    #[account(mut)]
-    pub multisig_member: Signer<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct AuthoriseMultisigInstruction<'info> {
-    #[account(mut)]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump
-    )]
-    pub multisig_pda_signer: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ApproveMultisigTransaction<'info> {
-    #[account(
-        constraint = multisig_group.members_version == multisig_transaction.members_version
-            @ CoreError::MultisigMembersChanged
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut, has_one = multisig_group)]
-    pub multisig_transaction: Account<'info, MultisigTransaction>,
-    pub multisig_member: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ExecuteMultisigTransaction<'info> {
-    #[account(
-        constraint = multisig_group.members_version == multisig_transaction.members_version
-            @ CoreError::MultisigMembersChanged
-    )]
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut, has_one = multisig_group)]
-    pub multisig_transaction: Box<Account<'info, MultisigTransaction>>,
-    /// CHECK: multisig_pda_signer is never read/written it is purely used as a pda signer
-    /// It cannot be of Signer type, as the signing is done within the program. If the seeds are
-    /// wrong, the tx will fail.
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump,
-    )]
-    pub multisig_pda_signer: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(product_title: String)]
-pub struct CreateProductConfig<'info> {
-    #[account(
-        init,
-        seeds = [b"product_config".as_ref(), product_title.as_ref()],
-        bump,
-        payer = product_operator,
-        space = ProductConfig::SIZE
-    )]
-    pub product_config: Account<'info, ProductConfig>,
-    pub commission_escrow: SystemAccount<'info>,
-
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(mut)]
-    pub product_operator: Signer<'info>,
-
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct ProductConfigMultisigAuth<'info> {
-    #[account(mut, has_one = multisig_group)]
-    pub product_config: Account<'info, ProductConfig>,
-    pub multisig_group: Account<'info, MultisigGroup>,
-    #[account(
-        seeds = [multisig_group.key().as_ref()],
-        bump
-    )]
-    pub multisig_pda_signer: Signer<'info>,
 }
 
 /*

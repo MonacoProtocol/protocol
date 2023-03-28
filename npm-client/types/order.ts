@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "@project-serum/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
 
 export interface OrderStatus {
@@ -21,6 +21,7 @@ export type Order = {
   marketOutcomeIndex: number;
   forOutcome: boolean;
   orderStatus: OrderStatus;
+  product: PublicKey;
   stake: BN;
   voidedStake: BN;
   expectedPrice: number;

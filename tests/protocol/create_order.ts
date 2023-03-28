@@ -1,5 +1,5 @@
-import * as anchor from "@project-serum/anchor";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import * as anchor from "@coral-xyz/anchor";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   authoriseOperator,
   createAssociatedTokenAccountWithBalance,
@@ -10,17 +10,19 @@ import {
   OperatorType,
 } from "../util/test_util";
 import assert from "assert";
-import { AnchorError, Program, BN } from "@project-serum/anchor";
+import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { SystemProgram } from "@solana/web3.js";
+import { Keypair, SystemProgram } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   findOrderPda,
   findMarketMatchingPoolPda,
   getMarketAccounts,
+  findMarketPositionPda,
 } from "../../npm-client/src";
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
+import { findMarketPdas } from "../util/pdas";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -258,7 +260,7 @@ describe("Protocol - Create Order", () => {
     const distinctSeed = orderPdaResponse.data.distinctSeed;
 
     await protocolProgram.methods
-      .createOrder(distinctSeed, {
+      .createOrderV2(distinctSeed, {
         marketOutcomeIndex: outOfBoundsIndex,
         forOutcome: true,
         stake: stake,
@@ -275,6 +277,7 @@ describe("Protocol - Create Order", () => {
         marketOutcome: MarketAccounts.data.marketOutcomePda,
         purchaserToken: purchaserTokenAccount,
         marketEscrow: MarketAccounts.data.escrowPda,
+        product: null,
       })
       .rpc({ commitment: "confirmed" })
       .catch((e) => {
@@ -429,8 +432,8 @@ describe("Protocol - Create Order", () => {
       );
     } catch (e) {
       assert.equal(
-        e,
-        "Error: Account does not exist " + matchingPoolPda.data.pda,
+        e.message,
+        "Account does not exist or has no data " + matchingPoolPda.data.pda,
       );
     }
 
@@ -721,6 +724,69 @@ describe("Protocol - Create Order", () => {
       function (err: AnchorError) {
         assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
       },
+    );
+  });
+
+  it("Create order using create_order (v1) instruction", async () => {
+    const stake = 10000000;
+    const outcomeIndex = 0;
+    const price = 2.0;
+    const forOutcome = true;
+
+    const market = await monaco.create3WayMarket([price]);
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    const purchaserTokenPk = await market.airdrop(purchaser, 100.0);
+
+    const { marketEscrowPk, marketOutcomePk, marketMatchingPoolPk } =
+      await findMarketPdas(
+        market.pk,
+        forOutcome,
+        outcomeIndex,
+        price,
+        monaco.getRawProgram(),
+      );
+
+    const [order, marketPositionPk] = await Promise.all([
+      findOrderPda(monaco.getRawProgram(), market.pk, purchaser.publicKey),
+      findMarketPositionPda(
+        monaco.getRawProgram(),
+        market.pk,
+        purchaser.publicKey,
+      ),
+    ]);
+
+    await monaco.program.methods
+      .createOrder(order.data.distinctSeed, {
+        marketOutcomeIndex: outcomeIndex,
+        forOutcome: true,
+        stake: new BN(stake),
+        price: price,
+      })
+      .accounts({
+        purchaser: purchaser.publicKey,
+        order: order.data.orderPk,
+        marketPosition: marketPositionPk.data.pda,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        market: market.pk,
+        marketMatchingPool: marketMatchingPoolPk,
+        marketOutcome: marketOutcomePk,
+        purchaserToken: purchaserTokenPk,
+        marketEscrow: marketEscrowPk,
+      })
+      .signers(purchaser instanceof Keypair ? [purchaser] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    const createdOrder = await monaco.program.account.order.fetch(
+      order.data.orderPk,
+    );
+    assert.equal(
+      createdOrder.product.toBase58(),
+      SystemProgram.programId.toBase58(),
     );
   });
 });

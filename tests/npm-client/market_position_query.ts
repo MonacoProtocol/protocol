@@ -88,4 +88,63 @@ describe("Market Position", () => {
       purchaserFor.publicKey.toBase58(),
     );
   });
+
+  it("fetch market positions by paid from chain", async () => {
+    const market = await monaco.create3WayMarket([2.0]);
+    const purchaserFor = await createWalletWithBalance(monaco.provider);
+    const purchaserAgainst = await createWalletWithBalance(monaco.provider);
+
+    await market.airdrop(purchaserFor, 100.0);
+    await market.airdrop(purchaserAgainst, 100.0);
+
+    const forOrder = await market.forOrder(0, 10, 2, purchaserFor);
+    const againstOrder = await market.againstOrder(0, 10, 2, purchaserAgainst);
+
+    await market.match(forOrder, againstOrder);
+    await market.settle(0);
+    await market.settleMarketPositionForPurchaser(purchaserFor.publicKey);
+
+    const marketPositionQueryPaid = await MarketPositions.marketPositionQuery(
+      monaco.getRawProgram(),
+    )
+      .filterByMarket(market.pk)
+      .filterByPaid(true)
+      .fetch();
+    const marketPositionQueryNotPaid =
+      await MarketPositions.marketPositionQuery(monaco.getRawProgram())
+        .filterByMarket(market.pk)
+        .filterByPaid(false)
+        .fetch();
+
+    const paidMarketPositions =
+      marketPositionQueryPaid.data.marketPositionAccounts.map(
+        (mp) => mp.account,
+      );
+    assert.equal(paidMarketPositions.length, 1);
+    const notPaidMarketPositions =
+      marketPositionQueryNotPaid.data.marketPositionAccounts.map(
+        (mp) => mp.account,
+      );
+    assert.equal(notPaidMarketPositions.length, 1);
+
+    const forPosition = paidMarketPositions.filter(
+      (position) =>
+        position.purchaser.toBase58() == purchaserFor.publicKey.toBase58(),
+    )[0];
+    assert.equal(
+      forPosition.purchaser.toBase58(),
+      purchaserFor.publicKey.toBase58(),
+    );
+    assert.equal(forPosition.paid, true);
+
+    const againstPosition = notPaidMarketPositions.filter(
+      (position) =>
+        position.purchaser.toBase58() == purchaserAgainst.publicKey.toBase58(),
+    )[0];
+    assert.equal(
+      againstPosition.purchaser.toBase58(),
+      purchaserAgainst.publicKey.toBase58(),
+    );
+    assert.equal(againstPosition.paid, false);
+  });
 });

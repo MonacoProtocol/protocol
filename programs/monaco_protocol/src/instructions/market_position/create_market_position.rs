@@ -18,6 +18,7 @@ pub fn create_market_position(
     market_position
         .outcome_max_exposure
         .resize(market_outcomes_len, 0_u64);
+    market_position.paid = false;
 
     Ok(())
 }

@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { AnchorProvider, BN, Program } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 import { Big } from "big.js";
 import { getMarket } from "./markets";
@@ -177,4 +177,22 @@ export async function getMintInfo(
   }
 
   return response.body;
+}
+
+/**
+ * For the provided product title, get the pda for the Product account
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param productTitle title of product
+ *
+ * @example
+ *
+ * const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
+ */
+export async function findProductPda(program: Program, productTitle: string) {
+  const [productPk] = await PublicKey.findProgramAddress(
+    [Buffer.from("product"), Buffer.from(productTitle)],
+    program.programId,
+  );
+  return productPk;
 }

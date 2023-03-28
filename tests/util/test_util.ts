@@ -1,35 +1,38 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import {
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-  createMint,
   createAssociatedTokenAccount,
-  mintTo,
+  createMint,
+  getAssociatedTokenAddress,
   getMint,
+  mintTo,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import {
   AnchorProvider,
   BN,
   getProvider,
   Program,
   Provider,
-} from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+} from "@coral-xyz/anchor";
+import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
-  findMarketPda,
   findMarketMatchingPoolPda,
-  findMarketPositionPda,
   findMarketOutcomePda,
+  findMarketPda,
+  findMarketPositionPda,
   findTradePda,
   MarketType,
 } from "../../npm-client/src";
-import { findUserPdas, findMarketPdas } from "../util/pdas";
+import { findMarketPdas, findProductPda, findUserPdas } from "../util/pdas";
 import * as assert from "assert";
 import { AssertionError } from "assert";
+import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
+import console from "console";
+import * as idl from "../anchor/protocol_product/protocol_product.json";
 
 const { SystemProgram } = anchor.web3;
 
@@ -470,6 +473,7 @@ export async function createOrder(
   marketOutcomePrice: number,
   stake: number,
   purchaserTokenAccount: PublicKey,
+  productPk?: PublicKey,
 ) {
   const protocolProgram = anchor.workspace
     .MonacoProtocol as Program<MonacoProtocol>;
@@ -496,7 +500,7 @@ export async function createOrder(
   const stakeInteger = uiAmountToAmount(stake);
 
   await protocolProgram.methods
-    .createOrder(orderDistinctSeed, {
+    .createOrderV2(orderDistinctSeed, {
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: new BN(stakeInteger),
@@ -513,6 +517,7 @@ export async function createOrder(
       marketOutcome: marketOutcomePk,
       purchaserToken: purchaserTokenAccount,
       marketEscrow: marketEscrowPk,
+      product: productPk == undefined ? null : productPk,
     })
     .signers(purchaser instanceof Keypair ? [purchaser] : [])
     .rpc()
@@ -593,4 +598,48 @@ export async function retryOnException(
 
 export function getAnchorProvider(): AnchorProvider {
   return getProvider() as AnchorProvider;
+}
+
+export function getProtocolProductProgram(): Program<ProtocolProduct> {
+  return new Program(
+    JSON.parse(JSON.stringify(idl)),
+    "mppFrYmM6A4Ud3AxRbGXsGisX1HUsbDfp1nrg9FQJEE",
+    anchor.getProvider(),
+  );
+}
+
+export async function createProtocolProduct(provider) {
+  try {
+    const program = getProtocolProductProgram();
+    await createProduct(program as Program, "MONACO_PROTOCOL", 10.0, provider);
+  } catch (e) {
+    assert.equal(
+      e.message,
+      "failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x0",
+    );
+  }
+}
+
+export async function createProduct(
+  program: Program,
+  productTitle: string,
+  commissionRate = 5.0,
+  provider: AnchorProvider,
+) {
+  const productPk = await findProductPda(productTitle, program as Program);
+  await program.methods
+    .createProduct(productTitle, commissionRate)
+    .accounts({
+      product: productPk,
+      commissionEscrow: provider.wallet.publicKey,
+      authority: provider.wallet.publicKey,
+      payer: provider.wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc()
+    .catch((e) => {
+      throw e;
+    });
+
+  return productPk;
 }

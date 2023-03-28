@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
 import { initialiseOutcome } from "../../npm-admin-client/src";

@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { Program } from "@coral-xyz/anchor";
 import {
   findOrderPda,
   findEscrowPda,
@@ -89,31 +89,10 @@ export async function findMarketPdas(
   };
 }
 
-export async function findMultisigGroupPda(title: string, program: Program) {
-  const [multisigGroupPk] = await PublicKey.findProgramAddress(
-    [Buffer.from("multisig"), Buffer.from(title)],
+export async function findProductPda(title: string, program: Program) {
+  const [productPk] = PublicKey.findProgramAddressSync(
+    [Buffer.from("product"), Buffer.from(title)],
     program.programId,
   );
-
-  return multisigGroupPk;
-}
-
-export async function findMultisigTransactionPda(
-  distinctSeed: string,
-  program: Program,
-) {
-  const [txPk] = await PublicKey.findProgramAddress(
-    [Buffer.from(distinctSeed)],
-    program.programId,
-  );
-
-  return txPk;
-}
-
-export async function findProductConfigPda(title: string, program: Program) {
-  const [productConfigPk] = await PublicKey.findProgramAddress(
-    [Buffer.from("product_config"), Buffer.from(title)],
-    program.programId,
-  );
-  return productConfigPk;
+  return productPk;
 }

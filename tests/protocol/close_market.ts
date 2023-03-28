@@ -53,7 +53,10 @@ describe("Close market accounts", () => {
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
 
     await monaco.program.account.market.fetch(market.pk).catch((e) => {
-      assert.equal(e.message, `Account does not exist ${market.pk.toBase58()}`);
+      assert.equal(
+        e.message,
+        `Account does not exist or has no data ${market.pk.toBase58()}`,
+      );
     });
 
     await monaco.provider.connection
@@ -61,7 +64,7 @@ describe("Close market accounts", () => {
       .catch((e) => {
         assert.equal(
           e.message,
-          `Account does not exist ${market.escrowPk.toBase58()}`,
+          `Account does not exist or has no data ${market.escrowPk.toBase58()}`,
         );
       });
   });
