@@ -1471,7 +1471,7 @@ dependencies = [
 [[package]]
 name = "protocol_product"
 version = "0.1.0"
-source = "git+https://github.com/MonacoProtocol/protocol-product?rev=1a04c11#1a04c11033f3ef0d1808ff3601626f37a9cf23a7"
+source = "git+https://github.com/MonacoProtocol/protocol-product?rev=v0.1.0#5ae3e3bd7b12896a0483ef4018d6faaab6823527"
 dependencies = [
  "anchor-lang",
  "rust_decimal",
