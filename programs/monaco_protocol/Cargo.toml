@@ -1,6 +1,6 @@
 [package]
 name = "monaco_protocol"
-version = "0.8.0-rc1"
+version = "0.8.0-rc2"
 description = "Created with Anchor"
 edition = "2018"
 
@@ -24,4 +24,4 @@ anchor-spl = "0.27.0"
 spl-token = "3.5.0"
 rust_decimal = "1.29.0"
 test-case = "2.0.2"
-protocol_product = { git = "https://github.com/MonacoProtocol/protocol-product", rev = "1a04c11", features = ["no-entrypoint"] }
+protocol_product = { git = "https://github.com/MonacoProtocol/protocol-product", rev = "v0.1.0", features = ["no-entrypoint"] }
