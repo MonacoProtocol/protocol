@@ -28,6 +28,7 @@ import {
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
+import { findMarketPaymentsQueuePda } from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -238,6 +239,11 @@ export class Monaco {
       marketPdaResponse.data.pda,
     );
 
+    const paymentsQueuePk = await findMarketPaymentsQueuePda(
+      this.program as Program,
+      marketPdaResponse.data.pda,
+    );
+
     // invoke core program to call operations required for creating an order
     await this.program.methods
       .createMarket(
@@ -250,6 +256,7 @@ export class Monaco {
       .accounts({
         market: marketPdaResponse.data.pda,
         escrow: marketEscrowPk.data.pda,
+        commissionPaymentQueue: paymentsQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -355,6 +362,7 @@ export class Monaco {
       externalPrograms,
       marketPdaResponse.data.pda,
       marketEscrowPk.data.pda,
+      paymentsQueuePk.data.pda,
       outcomePks,
       matchingPools,
       event.publicKey,
@@ -371,6 +379,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly paymentsQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
   readonly matchingPools: {
     against: PublicKey;
@@ -393,6 +402,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    paymentsQueuePk: PublicKey,
     outcomePks: PublicKey[],
     matchingPools: {
       against: PublicKey;
@@ -407,6 +417,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.paymentsQueuePk = paymentsQueuePk;
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;
     this.eventPk = eventPk;
@@ -850,6 +861,7 @@ export class MonacoMarket {
         purchaser: purchaser,
         marketPosition: marketPositionPk,
         marketEscrow: this.escrowPk,
+        commissionPaymentQueue: this.paymentsQueuePk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
         protocolConfig: protocolCommissionPks.protocolConfigPk,

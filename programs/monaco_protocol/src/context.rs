@@ -8,6 +8,7 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
 
+use crate::state::payments_queue::MarketPaymentsQueue;
 use protocol_product::state::product::Product;
 
 #[derive(Accounts)]
@@ -389,6 +390,12 @@ pub struct SettleMarketPosition<'info> {
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
+        seeds = [b"payment_queue".as_ref(), market.key().as_ref()],
+        bump
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+    #[account(
+        mut,
         token::mint = market.mint_account,
         token::authority = market_escrow,
         seeds = [b"escrow".as_ref(), market.key().as_ref()],
@@ -444,6 +451,17 @@ pub struct CreateMarket<'info> {
         token::authority = escrow
     )]
     pub escrow: Account<'info, TokenAccount>,
+    #[account(
+        init,
+        seeds = [
+            b"payment_queue".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketPaymentsQueue::SIZE
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
     pub rent: Sysvar<'info, Rent>,
 
     // #[soteria(ignore)] used to create `escrow`
@@ -712,6 +730,12 @@ pub struct CloseMarket<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,

@@ -33,6 +33,7 @@ import { AssertionError } from "assert";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
+import { findMarketPaymentsQueuePda } from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -212,6 +213,10 @@ export async function createMarket(
   const escrowPda = (await findEscrowPda(protocolProgram as Program, marketPda))
     .data.pda;
 
+  const paymentsQueuePda = (
+    await findMarketPaymentsQueuePda(protocolProgram as Program, marketPda)
+  ).data.pda;
+
   await protocolProgram.methods
     .createMarket(
       eventAccount.publicKey,
@@ -229,6 +234,7 @@ export async function createMarket(
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
+      commissionPaymentQueue: paymentsQueuePda,
     })
     .signers([marketOperator])
     .rpc();
@@ -317,6 +323,7 @@ export async function createMarket(
     outcomes,
     mintPk,
     escrowPda,
+    paymentsQueuePda,
     outcomePdas,
     matchingPools,
     authorisedMarketOperators,

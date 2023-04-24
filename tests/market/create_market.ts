@@ -11,6 +11,7 @@ import {
 } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
+import { findMarketPaymentsQueuePda } from "../../npm-admin-client";
 
 describe("Market: creation", () => {
   it("Success", async () => {
@@ -168,10 +169,16 @@ async function createMarket(
     mintPk,
   );
 
-  const marketEscrowPk = await findEscrowPda(
-    protocol.program as Program,
-    marketPdaResponse.data.pda,
-  );
+  const marketEscrowPk = (
+    await findEscrowPda(protocol.program as Program, marketPdaResponse.data.pda)
+  ).data.pda;
+
+  const marketPaymentQueuePk = (
+    await findMarketPaymentsQueuePda(
+      protocol.program as Program,
+      marketPdaResponse.data.pda,
+    )
+  ).data.pda;
 
   await protocol.program.methods
     .createMarket(
@@ -183,7 +190,8 @@ async function createMarket(
     )
     .accounts({
       market: marketPdaResponse.data.pda,
-      escrow: marketEscrowPk.data.pda,
+      escrow: marketEscrowPk,
+      commissionPaymentQueue: marketPaymentQueuePk,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,
@@ -222,10 +230,13 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
     protocol.getRawProgram().programId,
   );
 
-  const marketEscrowPk = await findEscrowPda(
-    protocol.program as Program,
-    marketPda,
-  );
+  const marketEscrowPk = (
+    await findEscrowPda(protocol.program as Program, marketPda)
+  ).data.pda;
+
+  const paymentsQueuePda = (
+    await findMarketPaymentsQueuePda(protocol.program as Program, marketPda)
+  ).data.pda;
 
   await protocol.program.methods
     .createMarket(
@@ -237,7 +248,8 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
     )
     .accounts({
       market: marketPda,
-      escrow: marketEscrowPk.data.pda,
+      escrow: marketEscrowPk,
+      commissionPaymentQueue: paymentsQueuePda,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,
