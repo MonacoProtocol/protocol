@@ -81,13 +81,14 @@ export async function batchCancelOrders(
   
   const response = new ResponseFactory({} as BatchCancelOrdersResponse);
 
-  const instructions = await Promise.all(
+  const tnxID = await Promise.all(
     orderPks.map((orderPk) => prepareCancelOrderTransactionInstruction(program, orderPk))
-  );
-  const tnx = new Transaction();
-  tnx.add(...instructions);
-
-  const tnxID = await provider.sendAndConfirm(tnx, undefined, {commitment: "confirmed"}).catch((e) => {
+  ).then(
+    async (instructions) => {    
+      const tnx = new Transaction();
+      tnx.add(...instructions);
+      return await provider.sendAndConfirm(tnx, undefined, {commitment: "confirmed"})    }
+  ).catch((e) => {
     response.addError(e);
   });
 

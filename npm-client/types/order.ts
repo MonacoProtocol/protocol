@@ -44,7 +44,7 @@ export type CreateOrderResponse = {
 };
 
 export type BatchCreateOrdersResponse = {
-  orderPks: PublicKey[];
+  orderPks: PublicKey[] | void;
   tnxID: string | void;
 };
 

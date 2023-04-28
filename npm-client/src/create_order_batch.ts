@@ -90,21 +90,29 @@ export async function batchCreateOrders(
   
   const response = new ResponseFactory({} as CreateOrderResponse);
 
-  const instructionsAndOrderKeys = await Promise.all(
+  const result = await Promise.all(
     createOrdersParams.map(
       (createOrderParams) => prepareCreateOrderTransactionInstruction(program, createOrderParams)
     )
-  );
-  const tnx = new Transaction();
-  tnx.add(...instructionsAndOrderKeys.map(([instruction, _]) => instruction));
-  const tnxID = await provider.sendAndConfirm(tnx, undefined, {commitment: "confirmed"}).catch((e) => {
-      response.addError(e);
-    });
-
-  response.addResponseData({
-    orderPks: instructionsAndOrderKeys.map(([_, key]) => key),
-    tnxID: tnxID,
+  ).then(
+    async (instructionsAndOrderKeys) => {
+      const tnx = new Transaction();
+      tnx.add(...instructionsAndOrderKeys.map(([instruction, _]) => instruction));
+      const tnxID = await provider.sendAndConfirm(tnx, undefined, {commitment: "confirmed"})
+      const orderPks = instructionsAndOrderKeys.map(([_, key]) => key)
+      return {
+        tnxID: tnxID,
+        orderPks: orderPks
+      }
+    }
+  )
+  .catch((e) => {
+    response.addError(e);
   });
+
+  if (result !== undefined) {
+    response.addResponseData(result);
+  }
 
   return response.body;
 }
