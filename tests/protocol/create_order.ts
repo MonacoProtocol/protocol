@@ -784,9 +784,6 @@ describe("Protocol - Create Order", () => {
     const createdOrder = await monaco.program.account.order.fetch(
       order.data.orderPk,
     );
-    assert.equal(
-      createdOrder.product.toBase58(),
-      SystemProgram.programId.toBase58(),
-    );
+    assert.equal(createdOrder.product, null);
   });
 });

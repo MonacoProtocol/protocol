@@ -544,6 +544,7 @@ export class MonacoMarket {
     stake: number,
     price: number,
     purchaser: Keypair,
+    productPk?: PublicKey,
   ) {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
@@ -556,6 +557,7 @@ export class MonacoMarket {
       price,
       stake,
       purchaserTokenPk,
+      productPk,
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
@@ -566,6 +568,7 @@ export class MonacoMarket {
     stake: number,
     price: number,
     purchaser: Keypair,
+    productPk?: PublicKey,
   ) {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
@@ -578,6 +581,7 @@ export class MonacoMarket {
       price,
       stake,
       purchaserTokenPk,
+      productPk,
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
@@ -917,5 +921,31 @@ export class ExternalPrograms {
       });
 
     return productPk;
+  }
+
+  async updateProductCommission(
+    productTitle: string,
+    commissionRate: number,
+    authority?: Keypair,
+  ) {
+    const defaultAuthority = authority == undefined;
+    const productPk = await findProductPda(
+      productTitle,
+      this.protocolProduct as Program,
+    );
+
+    await this.protocolProduct.methods
+      .updateProductCommissionRate(productTitle, commissionRate)
+      .accounts({
+        product: productPk,
+        authority: defaultAuthority
+          ? monaco.provider.publicKey
+          : authority.publicKey,
+      })
+      .signers(defaultAuthority ? [] : [authority])
+      .rpc()
+      .catch((e) => {
+        throw e;
+      });
   }
 }

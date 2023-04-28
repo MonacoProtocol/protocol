@@ -1,6 +1,5 @@
 import { externalPrograms, monaco } from "../util/wrappers";
 import assert from "assert";
-import { SystemProgram } from "@solana/web3.js";
 import { createOrderUiStake } from "../../npm-client";
 
 describe("NPM client - create order", () => {
@@ -39,10 +38,10 @@ describe("NPM client - create order", () => {
       10,
     );
 
-    // check that product is set to default value - "11111111111111111111111111111111" (SystemProgram id for convenience)
+    // check that product is set to null (how rust Option<Pubkey> of None is represented)
     const orderAccount = await monaco.program.account.order.fetch(
       orderPk.data.orderPk,
     );
-    assert.equal(orderAccount.product.toBase58(), SystemProgram.programId);
+    assert.equal(orderAccount.product, null);
   });
 });

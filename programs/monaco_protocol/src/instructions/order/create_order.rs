@@ -62,6 +62,7 @@ fn create_order_internal<'info>(
 
     // initialize market position
     market_position::create_market_position(purchaser, market, market_position)?;
+    market_position::initialize_product_matched_stake(market_position, product, order)?;
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {
@@ -137,9 +138,15 @@ fn initialize_order(
     order.stake_unmatched = data.stake;
     order.payout = 0_u64;
 
-    order.product = match product {
-        Some(product_account) => product_account.key(),
-        None => Pubkey::default(),
+    match product {
+        Some(product_account) => {
+            order.product = Some(product_account.key());
+            order.product_commission_rate = product_account.commission_rate;
+        }
+        None => {
+            order.product = None;
+            order.product_commission_rate = 0_f64;
+        }
     };
 
     Ok(())

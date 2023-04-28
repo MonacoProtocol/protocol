@@ -11,16 +11,42 @@ pub struct MarketPosition {
     pub paid: bool,
     pub market_outcome_sums: Vec<i128>,
     pub outcome_max_exposure: Vec<u64>,
+    pub total_matched_risk: u64,
+    pub matched_risk_per_product: Vec<ProductMatchedRisk>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq)]
+pub struct ProductMatchedRisk {
+    pub product: Pubkey,
+    pub matched_risk_per_rate: Vec<MatchedRiskAtRate>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq)]
+pub struct MatchedRiskAtRate {
+    pub rate: f64,
+    pub risk: u64,
 }
 
 impl MarketPosition {
+    pub const MAX_PRODUCTS: usize = 10;
+    pub const MAX_RATES_PER_PRODUCT: usize = 5;
+    const MATCHED_RISK_AT_RATE_SIZE: usize = F64_SIZE + U64_SIZE;
+    const PRODUCT_MATCHED_RISK_SIZE: usize = PUB_KEY_SIZE
+        + vec_size(
+            MarketPosition::MATCHED_RISK_AT_RATE_SIZE,
+            MarketPosition::MAX_RATES_PER_PRODUCT,
+        );
+
     pub fn size_for(number_of_market_outcomes: usize) -> usize {
         DISCRIMINATOR_SIZE
             + PUB_KEY_SIZE // purchaser
             + PUB_KEY_SIZE // market
             + BOOL_SIZE // paid
+            + U64_SIZE // total_matched_stake
             + vec_size(I128_SIZE, number_of_market_outcomes) // market_outcome_sums
             + vec_size(U64_SIZE, number_of_market_outcomes) // outcome_max_exposure
+            + vec_size(MarketPosition::PRODUCT_MATCHED_RISK_SIZE, MarketPosition::MAX_PRODUCTS)
+        // number of products to track matched stake contributions for
     }
 
     pub fn exposure(&self) -> i128 {
@@ -340,6 +366,8 @@ mod tests {
             market_outcome_sums,
             outcome_max_exposure,
             paid: false,
+            matched_risk_per_product: vec![],
+            total_matched_risk: 0,
         }
     }
 }
