@@ -43,9 +43,19 @@ export type CreateOrderResponse = {
   tnxID: string | void;
 };
 
+export type BatchCreateOrdersResponse = {
+  orderPks: PublicKey[];
+  tnxID: string | void;
+};
+
 export type CancelOrderResponse = {
   orderPk: PublicKey;
   tnxID: string;
+};
+
+export type BatchCancelOrdersResponse = {
+  orderPks: PublicKey[];
+  tnxID: string | void;
 };
 
 export type CancelOrdersResponse = {
