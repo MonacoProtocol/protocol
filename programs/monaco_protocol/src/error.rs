@@ -58,6 +58,8 @@ pub enum CoreError {
     SettlementMarketEscrowNonZero,
     #[msg("Core Settlement: error calculating settlement payment.")]
     SettlementPaymentCalculation,
+    #[msg("Core Settlement: failed to enqueue payment - queue full.")]
+    SettlementPaymentQueueFull,
 
     /*
     Authorised Operator

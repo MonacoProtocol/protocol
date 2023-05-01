@@ -547,7 +547,7 @@ describe("Product commissions", () => {
     await market.airdrop(againstPurchaser, 1000);
 
     const productCommission = 10;
-    const productTitle = "MONACO_EXCHANGE_7";
+    const productTitle = "MONACO_EXCHANGE_8";
     const productPk = await externalPrograms.createProduct(
       productTitle,
       productCommission,
