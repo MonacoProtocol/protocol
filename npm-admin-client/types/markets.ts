@@ -103,3 +103,9 @@ export type MarketAccount = {
 };
 
 export type EpochTimeStamp = number;
+
+export type PaymentInfo = {
+  from: PublicKey;
+  to: PublicKey;
+  amount: BN;
+};

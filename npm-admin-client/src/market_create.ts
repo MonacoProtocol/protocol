@@ -16,7 +16,7 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
-  findMarketPaymentsQueuePda,
+  findMarketCommissionQueuePda,
 } from "./market_helpers";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
@@ -155,7 +155,7 @@ export async function createMarket(
       findEscrowPda(program, marketPda),
       findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
       getMintInfo(program, marketTokenPk),
-      findMarketPaymentsQueuePda(program, marketPda),
+      findMarketCommissionQueuePda(program, marketPda),
     ]);
 
   try {

@@ -149,7 +149,7 @@ fn transfer_to_market_escrow<'info>(
     )
 }
 
-fn transfer_from_market_escrow<'info>(
+pub fn transfer_from_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,

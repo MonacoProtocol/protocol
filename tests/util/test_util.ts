@@ -1,9 +1,15 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
   getAssociatedTokenAddress,
   getMint,
+  getOrCreateAssociatedTokenAccount,
   mintTo,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -33,7 +39,10 @@ import { AssertionError } from "assert";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
-import { findMarketPaymentsQueuePda } from "../../npm-admin-client";
+import {
+  findMarketCommissionQueuePda,
+  PaymentInfo,
+} from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -214,7 +223,7 @@ export async function createMarket(
     .data.pda;
 
   const paymentsQueuePda = (
-    await findMarketPaymentsQueuePda(protocolProgram as Program, marketPda)
+    await findMarketCommissionQueuePda(protocolProgram as Program, marketPda)
   ).data.pda;
 
   await protocolProgram.methods
@@ -649,4 +658,82 @@ export async function createProduct(
     });
 
   return productPk;
+}
+
+export async function processCommissionPayments(
+  monaco: Program,
+  productProgram: Program,
+  marketPk: PublicKey,
+) {
+  const commissionQueuePk = (
+    await findMarketCommissionQueuePda(monaco, marketPk)
+  ).data.pda;
+  const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
+
+  const queue = (
+    await monaco.account.marketPaymentsQueue.fetch(commissionQueuePk)
+  ).paymentQueue;
+  if (queue.len == 0) {
+    return;
+  }
+
+  const market = await monaco.account.market.fetch(marketPk);
+  const queuedItems = getPaymentInfoQueueItems(queue);
+
+  const tx = new Transaction();
+  for (const item of queuedItems) {
+    const productPk = item.to;
+    const productEscrowPk = (
+      await productProgram.account.product.fetch(productPk)
+    ).commissionEscrow;
+    const productEscrowTokenPk = await getOrCreateAssociatedTokenAccount(
+      getAnchorProvider().connection,
+      (getAnchorProvider().wallet as NodeWallet).payer,
+      market.mintAccount,
+      productEscrowPk,
+      true,
+    );
+
+    tx.add(
+      await monaco.methods
+        .processCommissionPayment()
+        .accounts({
+          productEscrowToken: productEscrowTokenPk.address,
+          commissionEscrow: productEscrowPk,
+          product: productPk,
+
+          commissionPaymentsQueue: commissionQueuePk,
+          market: marketPk,
+          marketEscrow: marketEscrowPk,
+        })
+        .instruction(),
+    );
+  }
+
+  const signer = await createWalletWithBalance(monaco.provider);
+  try {
+    await sendAndConfirmTransaction(monaco.provider.connection, tx, [signer]);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
+  const frontIndex = queue.front;
+  const allItems = queue.items;
+  const backIndex = frontIndex + (queue.len % queue.items.length);
+
+  let queuedItems: PaymentInfo[] = [];
+  if (queue.len > 0) {
+    if (backIndex <= frontIndex) {
+      // queue bridges array
+      queuedItems = allItems
+        .slice(frontIndex)
+        .concat(allItems.slice(0, backIndex));
+    } else {
+      // queue can be treated as normal array
+      queuedItems = allItems.slice(frontIndex, backIndex);
+    }
+  }
+  return queuedItems;
 }

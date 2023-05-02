@@ -25,10 +25,11 @@ import {
   createNewMint,
   OperatorType,
   getProtocolProductProgram,
+  processCommissionPayments,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
-import { findMarketPaymentsQueuePda } from "../../npm-admin-client";
+import { findMarketCommissionQueuePda } from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -239,7 +240,7 @@ export class Monaco {
       marketPdaResponse.data.pda,
     );
 
-    const paymentsQueuePk = await findMarketPaymentsQueuePda(
+    const commissionQueuePk = await findMarketCommissionQueuePda(
       this.program as Program,
       marketPdaResponse.data.pda,
     );
@@ -256,7 +257,7 @@ export class Monaco {
       .accounts({
         market: marketPdaResponse.data.pda,
         escrow: marketEscrowPk.data.pda,
-        commissionPaymentQueue: paymentsQueuePk.data.pda,
+        commissionPaymentQueue: commissionQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -362,7 +363,7 @@ export class Monaco {
       externalPrograms,
       marketPdaResponse.data.pda,
       marketEscrowPk.data.pda,
-      paymentsQueuePk.data.pda,
+      commissionQueuePk.data.pda,
       outcomePks,
       matchingPools,
       event.publicKey,
@@ -877,6 +878,16 @@ export class MonacoMarket {
         console.error(e);
         throw e;
       });
+
+    await this.processCommissionPayments();
+  }
+
+  async processCommissionPayments() {
+    await processCommissionPayments(
+      this.monaco.getRawProgram(),
+      this.externalPrograms.protocolProduct as Program,
+      this.pk,
+    );
   }
 }
 

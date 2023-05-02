@@ -390,7 +390,7 @@ pub struct SettleMarketPosition<'info> {
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
-        seeds = [b"payment_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
         bump
     )]
     pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
@@ -454,7 +454,7 @@ pub struct CreateMarket<'info> {
     #[account(
         init,
         seeds = [
-            b"payment_queue".as_ref(),
+            b"commission_payments".as_ref(),
             market.key().as_ref(),
         ],
         bump,
@@ -597,6 +597,40 @@ pub struct TransferMarketEscrowSurplus<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+#[derive(Accounts)]
+pub struct ProcessMarketCommissionPayment<'info> {
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = commission_escrow,
+    )]
+    pub product_escrow_token: Account<'info, TokenAccount>,
+    /// CHECK: no data read from / written to, key used for token authority validation. Using
+    /// AccountInfo as owner can be PDA of any account type
+    pub commission_escrow: AccountInfo<'info>,
+    #[account(has_one = commission_escrow @ CoreError::SettlementPaymentEscrowProductMismatch)]
+    pub product: Account<'info, Product>,
+
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
+        bump
+    )]
+    pub commission_payments_queue: Account<'info, MarketPaymentsQueue>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
 /*
 Close accounts
  */
@@ -733,6 +767,8 @@ pub struct CloseMarket<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::CloseAccountMarketMismatch,
+        seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
+        bump,
         close = authority,
     )]
     pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,

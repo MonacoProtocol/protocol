@@ -37,15 +37,17 @@
 *   [MarketAccount][33]
     *   [Properties][34]
 *   [EpochTimeStamp][35]
+*   [PaymentInfo][36]
+    *   [Properties][37]
 
 ## CreateMarketResponse
 
-Type: {marketPk: PublicKey, tnxId: [string][36], market: [MarketAccount][33]}
+Type: {marketPk: PublicKey, tnxId: [string][38], market: [MarketAccount][33]}
 
 ### Properties
 
 *   `marketPk` **PublicKey**&#x20;
-*   `tnxId` **[string][36]**&#x20;
+*   `tnxId` **[string][38]**&#x20;
 *   `market` **[MarketAccount][33]**&#x20;
 
 ## CreateMarketWithOutcomesAndPriceLadderResponse
@@ -54,11 +56,11 @@ Type: any
 
 ## OutcomePdaResponse
 
-Type: {outcomeIndex: [number][37], outcomePda: PublicKey}
+Type: {outcomeIndex: [number][39], outcomePda: PublicKey}
 
 ### Properties
 
-*   `outcomeIndex` **[number][37]**&#x20;
+*   `outcomeIndex` **[number][39]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
 
 ## OutcomeInitialisationResponse
@@ -71,139 +73,149 @@ Type: any
 
 ## OutcomePdasResponse
 
-Type: {outcomePdas: [Array][38]<[OutcomePdaResponse][4]>}
+Type: {outcomePdas: [Array][40]<[OutcomePdaResponse][4]>}
 
 ### Properties
 
-*   `outcomePdas` **[Array][38]<[OutcomePdaResponse][4]>**&#x20;
+*   `outcomePdas` **[Array][40]<[OutcomePdaResponse][4]>**&#x20;
 
 ## OutcomeInitialisationsResponse
 
-Type: {outcomes: [Array][38]<[OutcomeInitialisationResponse][6]>}
+Type: {outcomes: [Array][40]<[OutcomeInitialisationResponse][6]>}
 
 ### Properties
 
-*   `outcomes` **[Array][38]<[OutcomeInitialisationResponse][6]>**&#x20;
+*   `outcomes` **[Array][40]<[OutcomeInitialisationResponse][6]>**&#x20;
 
 ## AddPricesToOutcomeResponse
 
-Type: {priceLadder: [Array][38]<[number][37]>, tnxId: [string][36]}
+Type: {priceLadder: [Array][40]<[number][39]>, tnxId: [string][38]}
 
 ### Properties
 
-*   `priceLadder` **[Array][38]<[number][37]>**&#x20;
-*   `tnxId` **[string][36]**&#x20;
+*   `priceLadder` **[Array][40]<[number][39]>**&#x20;
+*   `tnxId` **[string][38]**&#x20;
 
 ## BatchAddPricesToOutcomeResponse
 
-Type: {batches: [Array][38]<[AddPricesToOutcomeResponse][12]>}
+Type: {batches: [Array][40]<[AddPricesToOutcomeResponse][12]>}
 
 ### Properties
 
-*   `batches` **[Array][38]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][40]<[AddPricesToOutcomeResponse][12]>**&#x20;
 
 ## BatchAddPricesToOutcomes
 
-Type: {outcomeIndex: [number][37], outcomePda: PublicKey, batches: [Array][38]<[AddPricesToOutcomeResponse][12]>}
+Type: {outcomeIndex: [number][39], outcomePda: PublicKey, batches: [Array][40]<[AddPricesToOutcomeResponse][12]>}
 
 ### Properties
 
-*   `outcomeIndex` **[number][37]**&#x20;
+*   `outcomeIndex` **[number][39]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
-*   `batches` **[Array][38]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][40]<[AddPricesToOutcomeResponse][12]>**&#x20;
 
 ## BatchAddPricesToOutcomesResponse
 
-Type: {results: [Array][38]<[BatchAddPricesToOutcomes][16]>}
+Type: {results: [Array][40]<[BatchAddPricesToOutcomes][16]>}
 
 ### Properties
 
-*   `results` **[Array][38]<[BatchAddPricesToOutcomes][16]>**&#x20;
+*   `results` **[Array][40]<[BatchAddPricesToOutcomes][16]>**&#x20;
 
 ## ValidateMarketOutcomeTitles
 
-Type: {outcomesValid: [boolean][39], missingOutcomes: [Array][38]<[string][36]>, additionalOutcomes: [Array][38]<[string][36]>}
+Type: {outcomesValid: [boolean][41], missingOutcomes: [Array][40]<[string][38]>, additionalOutcomes: [Array][40]<[string][38]>}
 
 ### Properties
 
-*   `outcomesValid` **[boolean][39]**&#x20;
-*   `missingOutcomes` **[Array][38]<[string][36]>**&#x20;
-*   `additionalOutcomes` **[Array][38]<[string][36]>**&#x20;
+*   `outcomesValid` **[boolean][41]**&#x20;
+*   `missingOutcomes` **[Array][40]<[string][38]>**&#x20;
+*   `additionalOutcomes` **[Array][40]<[string][38]>**&#x20;
 
 ## ValidateMarketOutcomePriceLadder
 
-Type: {priceLadderValid: [boolean][39], outcomePk: PublicKey, missingPrices: [Array][38]<[number][37]>, additionalPrices: [Array][38]<[number][37]>}
+Type: {priceLadderValid: [boolean][41], outcomePk: PublicKey, missingPrices: [Array][40]<[number][39]>, additionalPrices: [Array][40]<[number][39]>}
 
 ### Properties
 
-*   `priceLadderValid` **[boolean][39]**&#x20;
+*   `priceLadderValid` **[boolean][41]**&#x20;
 *   `outcomePk` **PublicKey**&#x20;
-*   `missingPrices` **[Array][38]<[number][37]>**&#x20;
-*   `additionalPrices` **[Array][38]<[number][37]>**&#x20;
+*   `missingPrices` **[Array][40]<[number][39]>**&#x20;
+*   `additionalPrices` **[Array][40]<[number][39]>**&#x20;
 
 ## ValidateMarketResponse
 
-Type: {outcomesValid: [boolean][39], priceLaddersValid: [boolean][39], marketValid: [boolean][39], missingOutcomes: [Array][38]<[string][36]>, additionalOutcomes: [Array][38]<[string][36]>, priceLadderValidation: [Array][38]<[ValidateMarketOutcomePriceLadder][22]>}
+Type: {outcomesValid: [boolean][41], priceLaddersValid: [boolean][41], marketValid: [boolean][41], missingOutcomes: [Array][40]<[string][38]>, additionalOutcomes: [Array][40]<[string][38]>, priceLadderValidation: [Array][40]<[ValidateMarketOutcomePriceLadder][22]>}
 
 ### Properties
 
-*   `outcomesValid` **[boolean][39]**&#x20;
-*   `priceLaddersValid` **[boolean][39]**&#x20;
-*   `marketValid` **[boolean][39]**&#x20;
-*   `missingOutcomes` **[Array][38]<[string][36]>**&#x20;
-*   `additionalOutcomes` **[Array][38]<[string][36]>**&#x20;
-*   `priceLadderValidation` **[Array][38]<[ValidateMarketOutcomePriceLadder][22]>**&#x20;
+*   `outcomesValid` **[boolean][41]**&#x20;
+*   `priceLaddersValid` **[boolean][41]**&#x20;
+*   `marketValid` **[boolean][41]**&#x20;
+*   `missingOutcomes` **[Array][40]<[string][38]>**&#x20;
+*   `additionalOutcomes` **[Array][40]<[string][38]>**&#x20;
+*   `priceLadderValidation` **[Array][40]<[ValidateMarketOutcomePriceLadder][22]>**&#x20;
 
 ## MarketStatus
 
 ### initializing
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ### open
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ### locked
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ### readyForSettlement
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ### settled
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ### readyToClose
 
-Type: Record<[string][36], never>
+Type: Record<[string][38], never>
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][37], escrowAccountBump: [number][37], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][37], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][26], marketType: [string][36], marketWinningOutcomeIndex: [number][37]?, mintAccount: PublicKey, published: [boolean][39], suspended: [boolean][39], title: [string][36]}
+Type: {authority: BN, decimalLimit: [number][39], escrowAccountBump: [number][39], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][39], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][26], marketType: [string][38], marketWinningOutcomeIndex: [number][39]?, mintAccount: PublicKey, published: [boolean][41], suspended: [boolean][41], title: [string][38]}
 
 ### Properties
 
 *   `authority` **BN**&#x20;
-*   `decimalLimit` **[number][37]**&#x20;
-*   `escrowAccountBump` **[number][37]**&#x20;
+*   `decimalLimit` **[number][39]**&#x20;
+*   `escrowAccountBump` **[number][39]**&#x20;
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
-*   `marketOutcomesCount` **[number][37]**&#x20;
+*   `marketOutcomesCount` **[number][39]**&#x20;
 *   `marketSettleTimestamp` **BN?**&#x20;
 *   `marketStatus` **[MarketStatus][26]**&#x20;
-*   `marketType` **[string][36]**&#x20;
-*   `marketWinningOutcomeIndex` **[number][37]?**&#x20;
+*   `marketType` **[string][38]**&#x20;
+*   `marketWinningOutcomeIndex` **[number][39]?**&#x20;
 *   `mintAccount` **PublicKey**&#x20;
-*   `published` **[boolean][39]**&#x20;
-*   `suspended` **[boolean][39]**&#x20;
-*   `title` **[string][36]**&#x20;
+*   `published` **[boolean][41]**&#x20;
+*   `suspended` **[boolean][41]**&#x20;
+*   `title` **[string][38]**&#x20;
 
 ## EpochTimeStamp
 
-Type: [number][37]
+Type: [number][39]
+
+## PaymentInfo
+
+Type: {from: PublicKey, to: PublicKey, amount: BN}
+
+### Properties
+
+*   `from` **PublicKey**&#x20;
+*   `to` **PublicKey**&#x20;
+*   `amount` **BN**&#x20;
 
 [1]: #createmarketresponse
 
@@ -275,10 +287,14 @@ Type: [number][37]
 
 [35]: #epochtimestamp
 
-[36]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[36]: #paymentinfo
 
-[37]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[37]: #properties-12
 
-[38]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[38]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[39]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[39]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[40]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[41]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

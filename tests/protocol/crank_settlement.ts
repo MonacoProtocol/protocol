@@ -11,6 +11,7 @@ import {
   matchOrder,
   OperatorType,
   getProtocolProductProgram,
+  processCommissionPayments,
 } from "../util/test_util";
 import assert from "assert";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
@@ -239,6 +240,12 @@ describe("Settlement Crank", () => {
       againstOrderPda,
     );
     assert.deepEqual(againstOrder.orderStatus, { settledLose: {} });
+
+    await processCommissionPayments(
+      protocolProgram as Program,
+      getProtocolProductProgram() as Program,
+      market.marketPda,
+    );
 
     // tokens transferred back from market to purchaser after settlement, protocol commission deducted from winnings
     assert.deepEqual(
@@ -1793,6 +1800,12 @@ describe("Settlement Crank", () => {
         throw e;
       });
 
+    await processCommissionPayments(
+      protocolProgram as Program,
+      getProtocolProductProgram() as Program,
+      market.marketPda,
+    );
+
     const forOrderSettled = await protocolProgram.account.order.fetch(
       forOrderPK,
     );
@@ -2186,6 +2199,12 @@ describe("Settlement Crank", () => {
         console.error(e);
         throw e;
       });
+
+    await processCommissionPayments(
+      protocolProgram as Program,
+      getProtocolProductProgram() as Program,
+      market.marketPda,
+    );
 
     const marketPosition = await getMarketPosition(
       protocolProgram as Program,
