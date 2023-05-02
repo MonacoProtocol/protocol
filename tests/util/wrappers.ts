@@ -863,15 +863,12 @@ export class MonacoMarket {
         tokenProgram: TOKEN_PROGRAM_ID,
         market: this.pk,
         purchaserTokenAccount: purchaserTokenPk,
-        purchaser: purchaser,
         marketPosition: marketPositionPk,
         marketEscrow: this.escrowPk,
         commissionPaymentQueue: this.paymentsQueuePk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
         protocolConfig: protocolCommissionPks.protocolConfigPk,
-        protocolCommissionTokenAccount:
-          protocolCommissionPks.protocolCommissionEscrowPk,
       })
       .rpc()
       .catch((e) => {

@@ -378,16 +378,14 @@ pub struct SettleOrder<'info> {
 
 #[derive(Accounts)]
 pub struct SettleMarketPosition<'info> {
-    #[account(address = market_position.purchaser @ CoreError::SettlementPurchaserMismatch)]
-    pub purchaser: SystemAccount<'info>,
     #[account(
         mut,
         associated_token::mint = market.mint_account,
-        associated_token::authority = purchaser,
+        associated_token::authority = market_position.purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
     #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
-    pub market: Box<Account<'info, Market>>,
+    pub market: Account<'info, Market>,
     #[account(
         mut,
         seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
@@ -402,15 +400,9 @@ pub struct SettleMarketPosition<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
-    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
-    pub market_position: Box<Account<'info, MarketPosition>>,
+    #[account(mut, seeds = [market_position.purchaser.as_ref(), market.key().as_ref()], bump)]
+    pub market_position: Account<'info, MarketPosition>,
 
-    #[account(
-        mut,
-        associated_token::mint = market.mint_account,
-        associated_token::authority = protocol_config.commission_escrow,
-    )]
-    pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
     #[account(seeds = [b"product".as_ref(), b"MONACO_PROTOCOL".as_ref()], seeds::program=&protocol_product::ID, bump)]
     pub protocol_config: Box<Account<'info, Product>>,
 

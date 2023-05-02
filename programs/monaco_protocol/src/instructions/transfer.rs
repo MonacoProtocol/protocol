@@ -110,21 +110,6 @@ pub fn transfer_market_escrow_surplus<'info>(
     )
 }
 
-pub fn transfer_protocol_commission(
-    ctx: &Context<SettleMarketPosition>,
-    amount: u64,
-) -> Result<()> {
-    let accounts = &ctx.accounts;
-
-    transfer_from_market_escrow(
-        &accounts.market_escrow,
-        &accounts.protocol_commission_token_account,
-        &accounts.token_program,
-        &accounts.market,
-        amount,
-    )
-}
-
 fn transfer_to_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
     purchaser: &Signer<'info>,
