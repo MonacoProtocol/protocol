@@ -80,6 +80,17 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        instructions::market_position::void_market_position(ctx)?;
+
+        Ok(())
+    }
+
     pub fn authorise_admin_operator(
         ctx: Context<AuthoriseAdminOperator>,
         operator: Pubkey,
@@ -288,6 +299,29 @@ pub mod monaco_protocol {
         )?;
 
         instructions::market::complete_settlement(ctx)
+    }
+
+    pub fn void_market(ctx: Context<UpdateMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let void_time = Clock::get().unwrap().unix_timestamp;
+        instructions::market::void(&mut ctx.accounts.market, void_time)
+    }
+
+    pub fn complete_market_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.crank_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+
+        instructions::market::complete_void(ctx)
     }
 
     pub fn publish_market(ctx: Context<UpdateMarket>) -> Result<()> {

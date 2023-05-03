@@ -60,6 +60,14 @@ pub enum CoreError {
     SettlementPaymentCalculation,
 
     /*
+    Void Markets
+    */
+    #[msg("Core Void: market not ready for void")]
+    VoidMarketNotReadyForVoid,
+    #[msg("Core Void: error calculating void payment.")]
+    VoidPaymentCalculation,
+
+    /*
     Authorised Operator
      */
     #[msg("Authorised operator list is full")]
@@ -147,6 +155,8 @@ pub enum CoreError {
     MarketOutcomeMarketInvalidStatus,
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
+    #[msg("Market: cannot void market, market not open")]
+    VoidMarketNotOpen,
     #[msg("Market: market is not settled")]
     MarketNotSettled,
     #[msg("Market: market is not ready to close")]

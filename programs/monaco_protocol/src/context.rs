@@ -418,6 +418,48 @@ pub struct SettleMarketPosition<'info> {
 }
 
 #[derive(Accounts)]
+pub struct VoidMarketPosition<'info> {
+    #[account(address = market_position.purchaser @ CoreError::SettlementPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
+    #[account(
+    mut,
+    associated_token::mint = market.mint_account,
+    associated_token::authority = purchaser,
+    )]
+    pub purchaser_token_account: Account<'info, TokenAccount>,
+    #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
+    pub market: Box<Account<'info, Market>>,
+    #[account(
+    mut,
+    token::mint = market.mint_account,
+    token::authority = market_escrow,
+    seeds = [b"escrow".as_ref(), market.key().as_ref()],
+    bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+
+    #[account(
+    mut,
+    associated_token::mint = market.mint_account,
+    associated_token::authority = protocol_config.commission_escrow,
+    )]
+    pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(seeds = [b"product".as_ref(), b"MONACO_PROTOCOL".as_ref()], seeds::program=&protocol_product::ID, bump)]
+    pub protocol_config: Box<Account<'info, Product>>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+
+    // crank operator -------------------------------------------
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 #[instruction(event_account: Pubkey, market_type: String)]
 pub struct CreateMarket<'info> {
     #[account(
