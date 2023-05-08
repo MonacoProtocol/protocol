@@ -18,7 +18,10 @@ pub fn open(market: &mut Market) -> Result<()> {
 }
 
 pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
-    require!(Open.eq(&market.market_status), CoreError::VoidMarketNotOpen);
+    require!(
+        Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
+        CoreError::VoidMarketNotInitializingOrOpen
+    );
     market.market_settle_timestamp = Option::from(void_time);
     market.market_status = MarketStatus::ReadyToVoid;
     Ok(())
@@ -247,7 +250,34 @@ mod tests {
     }
 
     #[test]
-    fn void_market_ok_result() {
+    fn void_market_initializing_ok_result() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time);
+
+        assert!(result.is_ok());
+        assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
+    }
+
+    #[test]
+    fn void_market_open_ok_result() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -274,12 +304,12 @@ mod tests {
     }
 
     #[test]
-    fn void_market_not_open() {
+    fn void_market_not_open_or_initializing() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
             mint_account: Default::default(),
-            market_status: MarketStatus::Initializing,
+            market_status: MarketStatus::Settled,
             market_type: "".to_string(),
             decimal_limit: 0,
             published: false,
@@ -297,7 +327,7 @@ mod tests {
         let result = void(&mut market, settle_time);
 
         assert!(result.is_err());
-        let expected_error = Err(error!(CoreError::VoidMarketNotOpen));
+        let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
         assert_eq!(expected_error, result)
     }
 }

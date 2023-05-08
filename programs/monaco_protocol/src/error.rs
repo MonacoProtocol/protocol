@@ -156,7 +156,7 @@ pub enum CoreError {
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
     #[msg("Market: cannot void market, market not open")]
-    VoidMarketNotOpen,
+    VoidMarketNotInitializingOrOpen,
     #[msg("Market: market is not settled or voided")]
     MarketNotSettledOrVoided,
     #[msg("Market: market is not ready to close")]
