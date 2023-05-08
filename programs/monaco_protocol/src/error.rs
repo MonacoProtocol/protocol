@@ -157,8 +157,8 @@ pub enum CoreError {
     OpenMarketNotInitializing,
     #[msg("Market: cannot void market, market not open")]
     VoidMarketNotOpen,
-    #[msg("Market: market is not settled")]
-    MarketNotSettled,
+    #[msg("Market: market is not settled or voided")]
+    MarketNotSettledOrVoided,
     #[msg("Market: market is not ready to close")]
     MarketNotReadyToClose,
     #[msg("Market: market authority does not match operator")]

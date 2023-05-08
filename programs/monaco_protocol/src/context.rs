@@ -440,15 +440,6 @@ pub struct VoidMarketPosition<'info> {
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
     pub market_position: Box<Account<'info, MarketPosition>>,
 
-    #[account(
-    mut,
-    associated_token::mint = market.mint_account,
-    associated_token::authority = protocol_config.commission_escrow,
-    )]
-    pub protocol_commission_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(seeds = [b"product".as_ref(), b"MONACO_PROTOCOL".as_ref()], seeds::program=&protocol_product::ID, bump)]
-    pub protocol_config: Box<Account<'info, Product>>,
-
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 

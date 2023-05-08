@@ -90,9 +90,10 @@ pub fn unsuspend(ctx: Context<UpdateMarket>) -> Result<()> {
 
 pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Result<()> {
     require!(
-        Settled.eq(&market.market_status),
-        CoreError::MarketNotSettled
+        Settled.eq(&market.market_status) || Voided.eq(&market.market_status),
+        CoreError::MarketNotSettledOrVoided
     );
+
     require!(
         market_escrow.amount == 0_u64,
         CoreError::SettlementMarketEscrowNonZero
