@@ -27,7 +27,7 @@ pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
 pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
     let market = &mut ctx.accounts.market;
     require!(
-        ReadyForSettlement.eq(&market.market_status),
+        ReadyToVoid.eq(&market.market_status),
         CoreError::VoidMarketNotReadyForVoid
     );
     market.market_status = MarketStatus::Voided;
