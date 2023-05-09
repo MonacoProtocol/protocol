@@ -62,6 +62,10 @@ pub enum CoreError {
     /*
     Void Markets
     */
+    #[msg("Core Void: purchaser mismatch")]
+    VoidPurchaserMismatch,
+    #[msg("Core Void: market mismatch")]
+    VoidMarketMismatch,
     #[msg("Core Void: market not ready for void")]
     VoidMarketNotReadyForVoid,
     #[msg("Core Void: error calculating void payment.")]
@@ -113,6 +117,9 @@ pub enum CoreError {
     IncorrectOrderDequeueAttempt,
     #[msg("Failed to update market: invalid arguments provided.")]
     LockTimeInvalid,
+
+    #[msg("matching: market is not in a state to match orders")]
+    MarketNotOpen,
     #[msg("matching: market locked")]
     MarketLocked,
     #[msg("matching: status closed")]

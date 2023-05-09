@@ -36,7 +36,7 @@ describe("Void market position accounts", () => {
 
     // VOID ----------------------------------------------------------------------
 
-    await market.void();
+    await market.voidMarket();
     await market.voidMarketPositionForPurchaser(purchaserA.publicKey);
     await market.voidMarketPositionForPurchaser(purchaserB.publicKey);
     await market.voidMarketPositionForPurchaser(purchaserC.publicKey);
@@ -100,7 +100,7 @@ describe("Void market position accounts", () => {
 
     // VOID ----------------------------------------------------------------------
 
-    await market.void();
+    await market.voidMarket();
 
     await Promise.all([
       await market.voidMarketPositionForPurchaser(purchaserA.publicKey),
@@ -169,7 +169,7 @@ describe("Void market position accounts", () => {
 
     // VOID ----------------------------------------------------------------------
 
-    await market.void();
+    await market.voidMarket();
 
     await Promise.all([
       await market.voidMarketPositionForPurchaser(purchaserA.publicKey),

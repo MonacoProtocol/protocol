@@ -419,22 +419,22 @@ pub struct SettleMarketPosition<'info> {
 
 #[derive(Accounts)]
 pub struct VoidMarketPosition<'info> {
-    #[account(address = market_position.purchaser @ CoreError::SettlementPurchaserMismatch)]
+    #[account(address = market_position.purchaser @ CoreError::VoidPurchaserMismatch)]
     pub purchaser: SystemAccount<'info>,
     #[account(
-    mut,
-    associated_token::mint = market.mint_account,
-    associated_token::authority = purchaser,
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = market_position.purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-    #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
+    #[account(address = market_position.market @ CoreError::VoidMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
     #[account(
-    mut,
-    token::mint = market.mint_account,
-    token::authority = market_escrow,
-    seeds = [b"escrow".as_ref(), market.key().as_ref()],
-    bump,
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]

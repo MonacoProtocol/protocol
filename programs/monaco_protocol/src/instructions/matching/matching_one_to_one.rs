@@ -6,6 +6,7 @@ use crate::context::MatchOrders;
 use crate::error::CoreError;
 use crate::instructions::matching::create_trade::initialize_trade;
 use crate::instructions::{matching, order, transfer};
+use crate::state::market_account::MarketStatus::Open;
 use crate::state::market_position_account::MarketPosition;
 
 pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
@@ -13,6 +14,11 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     let order_against = &mut ctx.accounts.order_against;
 
     // validate market
+    require!(
+        Open.eq(&ctx.accounts.market.market_status),
+        CoreError::MarketNotOpen,
+    );
+
     let now = Clock::get().unwrap().unix_timestamp;
     require!(
         ctx.accounts.market.market_lock_timestamp > now,

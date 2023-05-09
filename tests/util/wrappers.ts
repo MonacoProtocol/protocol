@@ -702,7 +702,7 @@ export class MonacoMarket {
       });
   }
 
-  async void() {
+  async voidMarket() {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 

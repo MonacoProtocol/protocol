@@ -23,7 +23,7 @@ describe("Close market accounts (voided)", () => {
     );
 
     await market.open();
-    await market.void();
+    await market.voidMarket();
     await market.completeVoid();
     await market.readyToClose();
 
@@ -83,7 +83,7 @@ describe("Close market accounts (voided)", () => {
     );
 
     await market.open();
-    await market.void();
+    await market.voidMarket();
     await market.completeVoid();
 
     await monaco.program.methods
@@ -115,7 +115,7 @@ describe("Close market accounts (voided)", () => {
     );
 
     await market.open();
-    await market.void();
+    await market.voidMarket();
     await market.completeVoid();
     await market.readyToClose();
 
