@@ -153,12 +153,12 @@ describe("Close market accounts (voided)", () => {
     );
 
     await marketA.open();
-    await marketA.void();
+    await marketA.voidMarket();
     await marketA.completeVoid();
     await marketA.readyToClose();
 
     await marketB.open();
-    await marketB.void();
+    await marketB.voidMarket();
     await marketB.completeVoid();
     await marketB.readyToClose();
 
