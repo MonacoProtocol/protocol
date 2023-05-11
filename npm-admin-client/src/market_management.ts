@@ -454,7 +454,7 @@ export async function voidMarket(
 
   try {
     const tnxId = await program.methods
-      .readyToVoidMarket()
+      .voidMarket()
       .accounts({
         market: marketPk,
         marketEscrow: marketEscrow.data.pda,
