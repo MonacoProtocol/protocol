@@ -5,15 +5,15 @@ use anchor_spl::token::TokenAccount;
 use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
+use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
-use crate::state::market_account::{Market, MarketStatus};
 
 pub fn open(market: &mut Market) -> Result<()> {
     require!(
         Initializing.eq(&market.market_status),
         CoreError::OpenMarketNotInitializing
     );
-    market.market_status = MarketStatus::Open;
+    market.market_status = Open;
     Ok(())
 }
 
@@ -23,7 +23,7 @@ pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
         CoreError::VoidMarketNotInitializingOrOpen
     );
     market.market_settle_timestamp = Option::from(void_time);
-    market.market_status = MarketStatus::ReadyToVoid;
+    market.market_status = ReadyToVoid;
     Ok(())
 }
 
@@ -33,7 +33,7 @@ pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
         ReadyToVoid.eq(&market.market_status),
         CoreError::VoidMarketNotReadyForVoid
     );
-    market.market_status = MarketStatus::Voided;
+    market.market_status = Voided;
     Ok(())
 }
 

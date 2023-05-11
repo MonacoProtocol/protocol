@@ -29,9 +29,12 @@
 *   [setMarketReadyToClose][25]
     *   [Parameters][26]
     *   [Examples][27]
-*   [transferMarketEscrowSurplus][28]
+*   [setMarketReadyToVoid][28]
     *   [Parameters][29]
     *   [Examples][30]
+*   [transferMarketEscrowSurplus][31]
+    *   [Parameters][32]
+    *   [Examples][33]
 
 ## settleMarket
 
@@ -41,7 +44,7 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `winningOutcomeIndex` **[number][31]** {number} index representing the winning outcome of the event associated with the market
+*   `winningOutcomeIndex` **[number][34]** {number} index representing the winning outcome of the event associated with the market
 
 ### Examples
 
@@ -133,7 +136,7 @@ For the given market, update the title
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
-*   `title` **[string][32]** {string} new title to apply to the provided market
+*   `title` **[string][35]** {string} new title to apply to the provided market
 
 ### Examples
 
@@ -199,6 +202,24 @@ Set a Settled market to the Ready to Close status
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const readyToCloseMarket = await setMarketReadyToClose(program, marketPk)
+```
+
+Returns **TransactionResponse** transaction ID of the request
+
+## setMarketReadyToVoid
+
+Set an Open or Intializing market to the Ready to Void status
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const readyToVoidMarket = await setMarketReadyToVoid(program, marketPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -281,12 +302,18 @@ Returns **TransactionResponse** transaction ID of the request
 
 [27]: #examples-8
 
-[28]: #transfermarketescrowsurplus
+[28]: #setmarketreadytovoid
 
 [29]: #parameters-9
 
 [30]: #examples-9
 
-[31]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[31]: #transfermarketescrowsurplus
 
-[32]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[32]: #parameters-10
+
+[33]: #examples-10
+
+[34]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[35]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

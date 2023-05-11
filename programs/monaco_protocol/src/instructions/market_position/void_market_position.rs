@@ -24,7 +24,5 @@ pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
 
     market_position.paid = true;
 
-    transfer::transfer_market_position_void(&ctx, max_exposure)?;
-
-    Ok(())
+    transfer::transfer_market_position_void(&ctx, max_exposure)
 }

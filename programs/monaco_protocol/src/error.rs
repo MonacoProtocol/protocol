@@ -62,13 +62,13 @@ pub enum CoreError {
     /*
     Void Markets
     */
-    #[msg("Core Void: purchaser mismatch")]
+    #[msg("Void: purchaser mismatch")]
     VoidPurchaserMismatch,
-    #[msg("Core Void: market mismatch")]
+    #[msg("Void: market mismatch")]
     VoidMarketMismatch,
-    #[msg("Core Void: market not ready for void")]
+    #[msg("Void: market not ready for void")]
     VoidMarketNotReadyForVoid,
-    #[msg("Core Void: error calculating void payment.")]
+    #[msg("Void: error calculating void payment.")]
     VoidPaymentCalculation,
 
     /*
@@ -162,7 +162,7 @@ pub enum CoreError {
     MarketOutcomeMarketInvalidStatus,
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
-    #[msg("Market: cannot void market, market not open")]
+    #[msg("Market: cannot void market, market not open or initializing")]
     VoidMarketNotInitializingOrOpen,
     #[msg("Market: market is not settled or voided")]
     MarketNotSettledOrVoided,
