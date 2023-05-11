@@ -419,8 +419,6 @@ pub struct SettleMarketPosition<'info> {
 
 #[derive(Accounts)]
 pub struct VoidMarketPosition<'info> {
-    #[account(address = market_position.purchaser @ CoreError::VoidPurchaserMismatch)]
-    pub purchaser: SystemAccount<'info>,
     #[account(
         mut,
         associated_token::mint = market.mint_account,
@@ -437,7 +435,7 @@ pub struct VoidMarketPosition<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
-    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
+    #[account(mut, seeds = [market_position.purchaser.key().as_ref(), market.key().as_ref()], bump)]
     pub market_position: Box<Account<'info, MarketPosition>>,
 
     #[account(address = anchor_spl::token::ID)]
