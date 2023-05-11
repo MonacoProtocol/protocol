@@ -244,7 +244,7 @@ describe("Market ready to void", () => {
     assert.equal(response.success, false);
     assert.equal(response.data, undefined);
     assert(response.errors);
-    assert.deepEqual(updatedMarket.marketStatus, { settled: {} });
+    assert.deepEqual(updatedMarket.marketStatus, { readyForSettlement: {} });
   });
 });
 
