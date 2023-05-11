@@ -5,8 +5,8 @@ import {
   unpublishMarket,
   suspendMarket,
   unsuspendMarket,
+  voidMarket,
   setMarketReadyToClose as setMarketReadyToCloseClient,
-  setMarketReadyToVoid as setMarketReadyToVoidClient,
 } from "../npm-admin-client/src";
 import { checkResponse, getProtocolProgram } from "./util";
 import { PublicKey } from "@solana/web3.js";
@@ -45,6 +45,19 @@ export async function settle_market() {
   );
 }
 
+export async function voidMarket() {
+  if (process.argv.length != 4) {
+    console.log("Usage: yarn run voidMarket <MARKET_ID>");
+    process.exit(1);
+  }
+
+  const marketID = process.argv[3];
+  const marketPk = new PublicKey(marketID);
+
+  const protocolProgram = await getProtocolProgram();
+  checkResponse(await setMarketReadyToVoidClient(protocolProgram, marketPk));
+}
+
 export async function setMarketReadyToClose() {
   if (process.argv.length != 4) {
     console.log("Usage: yarn run setMarketReadyToClose <MARKET_ID>");
@@ -56,19 +69,6 @@ export async function setMarketReadyToClose() {
 
   const protocolProgram = await getProtocolProgram();
   checkResponse(await setMarketReadyToCloseClient(protocolProgram, marketPk));
-}
-
-export async function setMarketReadyToVoid() {
-  if (process.argv.length != 4) {
-    console.log("Usage: yarn run setMarketReadyToVoid <MARKET_ID>");
-    process.exit(1);
-  }
-
-  const marketID = process.argv[3];
-  const marketPk = new PublicKey(marketID);
-
-  const protocolProgram = await getProtocolProgram();
-  checkResponse(await setMarketReadyToVoidClient(protocolProgram, marketPk));
 }
 
 export async function publish_market() {

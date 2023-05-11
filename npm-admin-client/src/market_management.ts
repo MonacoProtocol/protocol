@@ -432,9 +432,9 @@ export async function setMarketReadyToClose(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const readyToVoidMarket = await setMarketReadyToVoid(program, marketPk)
+ * const voidMarket = await voidMarket(program, marketPk)
  */
-export async function setMarketReadyToVoid(
+export async function voidMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
@@ -454,7 +454,7 @@ export async function setMarketReadyToVoid(
 
   try {
     const tnxId = await program.methods
-      .setMarketReadyToVoid()
+      .readyToVoidMarket()
       .accounts({
         market: marketPk,
         marketEscrow: marketEscrow.data.pda,

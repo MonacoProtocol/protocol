@@ -29,7 +29,7 @@
 *   [setMarketReadyToClose][25]
     *   [Parameters][26]
     *   [Examples][27]
-*   [setMarketReadyToVoid][28]
+*   [voidMarket][28]
     *   [Parameters][29]
     *   [Examples][30]
 *   [transferMarketEscrowSurplus][31]
@@ -206,7 +206,7 @@ const readyToCloseMarket = await setMarketReadyToClose(program, marketPk)
 
 Returns **TransactionResponse** transaction ID of the request
 
-## setMarketReadyToVoid
+## voidMarket
 
 Set an Open or Intializing market to the Ready to Void status
 
@@ -219,7 +219,7 @@ Set an Open or Intializing market to the Ready to Void status
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const readyToVoidMarket = await setMarketReadyToVoid(program, marketPk)
+const voidMarket = await voidMarket(program, marketPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -302,7 +302,7 @@ Returns **TransactionResponse** transaction ID of the request
 
 [27]: #examples-8
 
-[28]: #setmarketreadytovoid
+[28]: #voidmarket
 
 [29]: #parameters-9
 

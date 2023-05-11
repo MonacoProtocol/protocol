@@ -15,7 +15,7 @@ import {
   updateMarketTitle,
   updateMarketLocktime,
   setMarketReadyToClose,
-  setMarketReadyToVoid,
+  voidMarket,
   openMarket,
   transferMarketEscrowSurplus,
 } from "../../npm-admin-client/src";
@@ -223,7 +223,7 @@ describe("Market ready to void", () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
     const market = await monaco.create3WayMarket([1.001]);
 
-    const response = await setMarketReadyToVoid(protocolProgram, market.pk);
+    const response = await voidMarket(protocolProgram, market.pk);
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
     assert(response.success);
@@ -238,7 +238,7 @@ describe("Market ready to void", () => {
 
     await market.settle(0);
 
-    const response = await setMarketReadyToVoid(protocolProgram, market.pk);
+    const response = await voidMarket(protocolProgram, market.pk);
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
     assert.equal(response.success, false);
