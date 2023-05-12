@@ -31,7 +31,7 @@ describe("Void order", () => {
     assert.equal(againstOrder.stakeUnmatched, 0);
   });
 
-  it("market not ready to void", async () => {
+  it("cannot void order when market not ready to void", async () => {
     const price = 2.0;
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
