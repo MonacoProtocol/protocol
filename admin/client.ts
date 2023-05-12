@@ -5,6 +5,7 @@ import {
   openMarket,
   publish_market,
   setMarketReadyToClose,
+  voidMarket,
   settle_market,
   suspend_market,
   unpublish_market,
@@ -49,6 +50,9 @@ switch (script) {
     break;
   case "setMarketReadyToClose":
     setMarketReadyToClose();
+    break;
+  case "voidMarket":
+    voidMarket();
     break;
   case "publish_market":
     publish_market();

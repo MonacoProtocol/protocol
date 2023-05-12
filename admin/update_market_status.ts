@@ -5,6 +5,7 @@ import {
   unpublishMarket,
   suspendMarket,
   unsuspendMarket,
+  voidMarket,
   setMarketReadyToClose as setMarketReadyToCloseClient,
 } from "../npm-admin-client/src";
 import { checkResponse, getProtocolProgram } from "./util";
@@ -42,6 +43,19 @@ export async function settle_market() {
   checkResponse(
     await settleMarket(protocolProgram, marketPk, winningOutcomeIndex),
   );
+}
+
+export async function voidMarket() {
+  if (process.argv.length != 4) {
+    console.log("Usage: yarn run voidMarket <MARKET_ID>");
+    process.exit(1);
+  }
+
+  const marketID = process.argv[3];
+  const marketPk = new PublicKey(marketID);
+
+  const protocolProgram = await getProtocolProgram();
+  checkResponse(await setMarketReadyToVoidClient(protocolProgram, marketPk));
 }
 
 export async function setMarketReadyToClose() {

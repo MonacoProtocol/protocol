@@ -5,15 +5,35 @@ use anchor_spl::token::TokenAccount;
 use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
+use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
-use crate::state::market_account::{Market, MarketStatus};
 
 pub fn open(market: &mut Market) -> Result<()> {
     require!(
         Initializing.eq(&market.market_status),
         CoreError::OpenMarketNotInitializing
     );
-    market.market_status = MarketStatus::Open;
+    market.market_status = Open;
+    Ok(())
+}
+
+pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
+    require!(
+        Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
+        CoreError::VoidMarketNotInitializingOrOpen
+    );
+    market.market_settle_timestamp = Option::from(void_time);
+    market.market_status = ReadyToVoid;
+    Ok(())
+}
+
+pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
+    let market = &mut ctx.accounts.market;
+    require!(
+        ReadyToVoid.eq(&market.market_status),
+        CoreError::VoidMarketNotReadyForVoid
+    );
+    market.market_status = Voided;
     Ok(())
 }
 
@@ -73,9 +93,10 @@ pub fn unsuspend(ctx: Context<UpdateMarket>) -> Result<()> {
 
 pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Result<()> {
     require!(
-        Settled.eq(&market.market_status),
-        CoreError::MarketNotSettled
+        Settled.eq(&market.market_status) || Voided.eq(&market.market_status),
+        CoreError::MarketNotSettledOrVoided
     );
+
     require!(
         market_escrow.amount == 0_u64,
         CoreError::SettlementMarketEscrowNonZero
@@ -88,7 +109,7 @@ pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Resu
 #[cfg(test)]
 mod tests {
     use crate::error::CoreError;
-    use crate::instructions::market::{open, settle};
+    use crate::instructions::market::{open, settle, void};
     use crate::state::market_account::MarketStatus;
     use crate::Market;
     use anchor_lang::error;
@@ -225,6 +246,88 @@ mod tests {
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotInitializing));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn void_market_initializing_ok_result() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time);
+
+        assert!(result.is_ok());
+        assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
+    }
+
+    #[test]
+    fn void_market_open_ok_result() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time);
+
+        assert!(result.is_ok());
+        assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
+    }
+
+    #[test]
+    fn void_market_not_open_or_initializing() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Settled,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+        };
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
         assert_eq!(expected_error, result)
     }
 }

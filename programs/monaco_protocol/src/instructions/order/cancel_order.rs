@@ -3,12 +3,18 @@ use anchor_lang::prelude::*;
 use crate::context::CancelOrder;
 use crate::error::CoreError;
 use crate::instructions::{account, calculate_risk_from_stake, matching, transfer};
+use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
 pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     let order = &ctx.accounts.order;
     require!(
         [OrderStatus::Open, OrderStatus::Matched].contains(&order.order_status),
+        CoreError::CancelOrderNotCancellable
+    );
+
+    require!(
+        [MarketStatus::Open].contains(&ctx.accounts.market.market_status),
         CoreError::CancelOrderNotCancellable
     );
 

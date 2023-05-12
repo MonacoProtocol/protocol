@@ -60,6 +60,18 @@ pub enum CoreError {
     SettlementPaymentCalculation,
 
     /*
+    Void Markets
+    */
+    #[msg("Void: purchaser mismatch")]
+    VoidPurchaserMismatch,
+    #[msg("Void: market mismatch")]
+    VoidMarketMismatch,
+    #[msg("Void: market not ready for void")]
+    VoidMarketNotReadyForVoid,
+    #[msg("Void: error calculating void payment.")]
+    VoidPaymentCalculation,
+
+    /*
     Authorised Operator
      */
     #[msg("Authorised operator list is full")]
@@ -105,6 +117,9 @@ pub enum CoreError {
     IncorrectOrderDequeueAttempt,
     #[msg("Failed to update market: invalid arguments provided.")]
     LockTimeInvalid,
+
+    #[msg("matching: market is not in a state to match orders")]
+    MarketNotOpen,
     #[msg("matching: market locked")]
     MarketLocked,
     #[msg("matching: status closed")]
@@ -147,8 +162,10 @@ pub enum CoreError {
     MarketOutcomeMarketInvalidStatus,
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
-    #[msg("Market: market is not settled")]
-    MarketNotSettled,
+    #[msg("Market: cannot void market, market not open or initializing")]
+    VoidMarketNotInitializingOrOpen,
+    #[msg("Market: market is not settled or voided")]
+    MarketNotSettledOrVoided,
     #[msg("Market: market is not ready to close")]
     MarketNotReadyToClose,
     #[msg("Market: market authority does not match operator")]

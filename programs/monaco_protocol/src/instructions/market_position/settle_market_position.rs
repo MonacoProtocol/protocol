@@ -41,7 +41,5 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
     market_position.paid = true;
 
     transfer::transfer_protocol_commission(&ctx, protocol_commission)?;
-    transfer::transfer_market_position(&ctx, total_payout_u64)?;
-
-    Ok(())
+    transfer::transfer_market_position(&ctx, total_payout_u64)
 }

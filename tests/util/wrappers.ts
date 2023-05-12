@@ -702,6 +702,27 @@ export class MonacoMarket {
       });
   }
 
+  async voidMarket() {
+    const authorisedOperatorsPk =
+      await this.monaco.findMarketAuthorisedOperatorsPda();
+
+    await this.monaco.program.methods
+      .voidMarket()
+      .accounts({
+        market: this.pk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async cacheProductCommissionEscrowPk(productPk: PublicKey) {
     if (this.productEscrowCache.get(productPk) == undefined) {
       const wallet = this.monaco.provider.wallet as NodeWallet;
@@ -814,6 +835,22 @@ export class MonacoMarket {
       });
   }
 
+  async completeVoid() {
+    await this.monaco.program.methods
+      .completeMarketVoid()
+      .accounts({
+        market: this.pk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findCrankAuthorisedOperatorsPda(),
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async readyToClose() {
     await this.monaco.program.methods
       .setMarketReadyToClose()
@@ -855,6 +892,30 @@ export class MonacoMarket {
         protocolConfig: protocolCommissionPks.protocolConfigPk,
         protocolCommissionTokenAccount:
           protocolCommissionPks.protocolCommissionEscrowPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async voidMarketPositionForPurchaser(purchaser: PublicKey) {
+    const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
+    const authorisedOperatorsPk =
+      await this.monaco.findCrankAuthorisedOperatorsPda();
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
+
+    await this.monaco.program.methods
+      .voidMarketPosition()
+      .accounts({
+        tokenProgram: TOKEN_PROGRAM_ID,
+        market: this.pk,
+        purchaserTokenAccount: purchaserTokenPk,
+        marketPosition: marketPositionPk,
+        marketEscrow: this.escrowPk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
       })
       .rpc()
       .catch((e) => {

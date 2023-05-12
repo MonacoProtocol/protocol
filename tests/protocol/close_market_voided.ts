@@ -4,7 +4,7 @@ import * as assert from "assert";
 import console from "console";
 import { authoriseMarketOperator } from "../../npm-admin-client/src";
 
-describe("Close market accounts", () => {
+describe("Close market accounts (voided)", () => {
   it("close market: success", async () => {
     const price = 2.0;
     const marketOperator = await createWalletWithBalance(monaco.provider);
@@ -23,8 +23,8 @@ describe("Close market accounts", () => {
     );
 
     await market.open();
-    await market.settle(0);
-    await market.completeSettlement();
+    await market.voidMarket();
+    await market.completeVoid();
     await market.readyToClose();
 
     const marketRent = await monaco.provider.connection.getBalance(market.pk);
@@ -83,8 +83,8 @@ describe("Close market accounts", () => {
     );
 
     await market.open();
-    await market.settle(0);
-    await market.completeSettlement();
+    await market.voidMarket();
+    await market.completeVoid();
 
     await monaco.program.methods
       .closeMarket()
@@ -115,8 +115,8 @@ describe("Close market accounts", () => {
     );
 
     await market.open();
-    await market.settle(0);
-    await market.completeSettlement();
+    await market.voidMarket();
+    await market.completeVoid();
     await market.readyToClose();
 
     await monaco.program.methods
@@ -153,13 +153,13 @@ describe("Close market accounts", () => {
     );
 
     await marketA.open();
-    await marketA.settle(0);
-    await marketA.completeSettlement();
+    await marketA.voidMarket();
+    await marketA.completeVoid();
     await marketA.readyToClose();
 
     await marketB.open();
-    await marketB.settle(0);
-    await marketB.completeSettlement();
+    await marketB.voidMarket();
+    await marketB.completeVoid();
     await marketB.readyToClose();
 
     await monaco.program.methods

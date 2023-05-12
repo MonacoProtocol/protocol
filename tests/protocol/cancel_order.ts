@@ -355,6 +355,42 @@ describe("Security: Cancel Order", () => {
     );
   });
 
+  it("cancel fully unmatched order: invalid market status", async () => {
+    // Set up Market and related accounts
+    const { market, purchaser, orderPk } = await setupUnmatchedOrder(
+      monaco,
+      outcomeIndex,
+      price,
+      stake,
+    );
+
+    try {
+      await market.settle(0);
+      await market.cancel(orderPk, purchaser);
+      assert.fail("expected CancelOrderNotCancellable");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+    }
+
+    // check the order wasn't cancelled
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getForMatchingPool(outcomeIndex, price),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { len: 1, liquidity: 2000, matched: 0 },
+        2000,
+        8000,
+      ],
+    );
+  });
+
   it("cancel fully unmatched order: invalid market", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(

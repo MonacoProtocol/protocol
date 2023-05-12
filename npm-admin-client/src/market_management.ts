@@ -423,6 +423,56 @@ export async function setMarketReadyToClose(
 }
 
 /**
+ * Set an Open or Intializing market to the Ready to Void status
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const voidMarket = await voidMarket(program, marketPk)
+ */
+export async function voidMarket(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  const marketEscrow = await findEscrowPda(program, marketPk);
+  if (!marketEscrow.success) {
+    response.addErrors(marketEscrow.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .voidMarket()
+      .accounts({
+        market: marketPk,
+        marketEscrow: marketEscrow.data.pda,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+  return response.body;
+}
+
+/**
  * Attempts to transfer any surplus token balance in a market's escrow account into an associated token account belonging to the calling client.
  *
  * This will only work if the calling client is the authority for the given market, and if the market has at least the status of Settled, i.e., all orders must be settled before escrow can be transferred from.

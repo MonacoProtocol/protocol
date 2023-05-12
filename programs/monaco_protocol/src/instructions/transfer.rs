@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::context::CreateOrder;
+use crate::context::{CreateOrder, VoidMarketPosition};
 
 pub fn order_creation_payment<'info>(
     market_escrow: &Account<'info, TokenAccount>,
@@ -82,6 +82,18 @@ pub fn order_against_matching_refund(ctx: &Context<MatchOrders>, amount: u64) ->
 }
 
 pub fn transfer_market_position(ctx: &Context<SettleMarketPosition>, amount: u64) -> Result<()> {
+    let accounts = &ctx.accounts;
+
+    transfer_from_market_escrow(
+        &accounts.market_escrow,
+        &accounts.purchaser_token_account,
+        &accounts.token_program,
+        &accounts.market,
+        amount,
+    )
+}
+
+pub fn transfer_market_position_void(ctx: &Context<VoidMarketPosition>, amount: u64) -> Result<()> {
     let accounts = &ctx.accounts;
 
     transfer_from_market_escrow(
