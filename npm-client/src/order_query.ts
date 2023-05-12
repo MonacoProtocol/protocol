@@ -22,6 +22,7 @@ export enum OrderStatusFilter {
   SettledWin = 0x02,
   SettledLose = 0x03,
   Cancelled = 0x04,
+  Voided = 0x05,
 }
 
 /**

@@ -62,4 +62,5 @@ pub enum OrderStatus {
     SettledWin,  // order won and has been paid out
     SettledLose, // order lost, nothing to pay out
     Cancelled,   // order cancelled
+    Voided,      // order voided
 }

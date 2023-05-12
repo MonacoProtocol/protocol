@@ -16,6 +16,8 @@ export enum MarketStatusFilter {
   ReadyForSettlement = 0x03,
   Settled = 0x04,
   ReadyToClose = 0x05,
+  ReadyToVoid = 0x06,
+  Voided = 0x07,
 }
 
 export class Markets {

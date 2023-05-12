@@ -10,6 +10,8 @@ export interface MarketStatus {
   readonly readyForSettlement?: Record<string, never>;
   readonly settled?: Record<string, never>;
   readonly readyToClose?: Record<string, never>;
+  readonly readyToVoid?: Record<string, never>;
+  readonly voided?: Record<string, never>;
 }
 
 export enum MarketType {

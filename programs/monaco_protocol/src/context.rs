@@ -449,6 +449,14 @@ pub struct VoidMarketPosition<'info> {
 }
 
 #[derive(Accounts)]
+pub struct VoidOrder<'info> {
+    #[account(mut)]
+    pub order: Account<'info, Order>,
+    #[account(mut, address = order.market @ CoreError::VoidMarketMismatch)]
+    pub market: Account<'info, Market>,
+}
+
+#[derive(Accounts)]
 #[instruction(event_account: Pubkey, market_type: String)]
 pub struct CreateMarket<'info> {
     #[account(
