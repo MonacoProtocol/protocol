@@ -70,6 +70,8 @@ pub enum CoreError {
     VoidMarketNotReadyForVoid,
     #[msg("Void: error calculating void payment.")]
     VoidPaymentCalculation,
+    #[msg("Void: order is already voided.")]
+    VoidOrderIsVoided,
 
     /*
     Authorised Operator

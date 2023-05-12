@@ -723,6 +723,20 @@ export class MonacoMarket {
       });
   }
 
+  async voidOrder(orderPk: PublicKey) {
+    await this.monaco.program.methods
+      .voidOrder()
+      .accounts({
+        market: this.pk,
+        order: orderPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async cacheProductCommissionEscrowPk(productPk: PublicKey) {
     if (this.productEscrowCache.get(productPk) == undefined) {
       const wallet = this.monaco.provider.wallet as NodeWallet;

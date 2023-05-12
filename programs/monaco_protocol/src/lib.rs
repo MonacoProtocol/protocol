@@ -91,6 +91,10 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn void_order(ctx: Context<VoidOrder>) -> Result<()> {
+        instructions::order::void_order(&mut ctx.accounts.order, &ctx.accounts.market)
+    }
+
     pub fn authorise_admin_operator(
         ctx: Context<AuthoriseAdminOperator>,
         operator: Pubkey,

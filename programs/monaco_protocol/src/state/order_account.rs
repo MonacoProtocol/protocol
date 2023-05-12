@@ -53,6 +53,11 @@ impl Order {
             || self.order_status == OrderStatus::SettledLose
             || self.order_status == OrderStatus::Cancelled
     }
+
+    pub fn void_stake_unmatched(&mut self) {
+        self.voided_stake = self.stake_unmatched;
+        self.stake_unmatched = 0_u64;
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]
