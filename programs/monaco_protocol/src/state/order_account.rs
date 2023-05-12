@@ -53,11 +53,6 @@ impl Order {
             || self.order_status == OrderStatus::SettledLose
             || self.order_status == OrderStatus::Cancelled
     }
-
-    pub fn void_stake_unmatched(&mut self) {
-        self.voided_stake = self.stake_unmatched;
-        self.stake_unmatched = 0_u64;
-    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]
@@ -67,4 +62,5 @@ pub enum OrderStatus {
     SettledWin,  // order won and has been paid out
     SettledLose, // order lost, nothing to pay out
     Cancelled,   // order cancelled
+    Voided,      // order voided
 }

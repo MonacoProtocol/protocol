@@ -8,6 +8,7 @@ export interface OrderStatus {
   readonly settledWin?: Record<string, never>;
   readonly settledLose?: Record<string, never>;
   readonly cancelled?: Record<string, never>;
+  readonly voided?: Record<string, never>;
 }
 
 export type Match = {

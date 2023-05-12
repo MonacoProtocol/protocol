@@ -21,12 +21,14 @@ describe("Void order", () => {
     await market.voidOrder(againstOrderPk);
 
     const forOrder = await monaco.getOrder(forOrderPk);
-    assert.deepEqual(forOrder.status, { cancelled: {} });
-    assert.equal(forOrder.stakeVoided, 0);
+    assert.deepEqual(forOrder.status, { voided: {} });
+    assert.equal(forOrder.stakeVoided, 10);
+    assert.equal(forOrder.stakeUnmatched, 0);
 
     const againstOrder = await monaco.getOrder(againstOrderPk);
-    assert.deepEqual(againstOrder.status, { cancelled: {} });
-    assert.equal(againstOrder.stakeVoided, 10);
+    assert.deepEqual(againstOrder.status, { voided: {} });
+    assert.equal(againstOrder.stakeVoided, 20);
+    assert.equal(againstOrder.stakeUnmatched, 0);
   });
 
   it("market not ready to void", async () => {
