@@ -150,6 +150,8 @@ pub enum CoreError {
     MatchingPayoutAmountError,
     #[msg("Matching: market matching pool is already inplay")]
     MatchingMarketMatchingPoolAlreadyInplay,
+    #[msg("Matching: market does not have inplay enabled")]
+    MatchingMarketInplayNotEnabled,
     #[msg("Matching: market is not yet inplay")]
     MatchingMarketNotYetInplay,
     #[msg("Matching: invalid market status for operation")]
@@ -204,6 +206,8 @@ pub enum CoreError {
     MarketNotReadyToClose,
     #[msg("Market: market authority does not match operator")]
     MarketAuthorityMismatch,
+    #[msg("Market: market inplay not enabled")]
+    MarketInplayNotEnabled,
     #[msg("Market: market is already inplay")]
     MarketAlreadyInplay,
     #[msg("Market: market event not started")]

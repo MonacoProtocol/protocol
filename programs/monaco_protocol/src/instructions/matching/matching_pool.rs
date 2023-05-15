@@ -127,6 +127,10 @@ pub fn move_market_matching_pool_to_inplay(
         market.market_status == MarketStatus::Open,
         CoreError::MatchingMarketInvalidStatus
     );
+    require!(
+        market.inplay_enabled,
+        CoreError::MatchingMarketInplayNotEnabled
+    );
     require!(market.inplay, CoreError::MatchingMarketNotYetInplay);
     require!(
         !market_matching_pool.inplay,
