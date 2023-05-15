@@ -66,6 +66,7 @@ describe("Protocol - Create Order", () => {
     assert.equal(orderAccount.marketOutcomeIndex, outcomeIndex);
     assert.equal(orderAccount.forOutcome, testData.forOutcome);
     assert.deepEqual(orderAccount.purchaser, purchaser.publicKey);
+    assert.deepEqual(orderAccount.payer, purchaser.publicKey);
     assert.deepEqual(orderAccount.orderStatus, { open: {} });
     assert.equal(
       orderAccount.stake.toNumber(),
@@ -83,6 +84,7 @@ describe("Protocol - Create Order", () => {
       await market.cacheMarketPositionPk(purchaser.publicKey),
     );
     assert.deepEqual(marketPositionAccount.purchaser, purchaser.publicKey);
+    assert.deepEqual(marketPositionAccount.payer, purchaser.publicKey);
     assert.deepEqual(marketPositionAccount.market, market.pk);
     assert.equal(
       marketPositionAccount.marketOutcomeSums.length,

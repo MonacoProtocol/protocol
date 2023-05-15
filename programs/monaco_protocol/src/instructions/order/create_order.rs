@@ -94,6 +94,7 @@ fn initialize_order(
     order.for_outcome = data.for_outcome;
 
     order.purchaser = purchaser.key();
+    order.payer = purchaser.key();
 
     order.order_status = OrderStatus::Open;
     order.stake = data.stake;
