@@ -40,6 +40,13 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     require!(!order_for.is_completed(), CoreError::StatusClosed);
     require!(!order_against.is_completed(), CoreError::StatusClosed);
 
+    // validate that both orders are not within their inplay delay
+    require!(
+        order_for.delay_expiration_timestamp < now
+            && order_against.delay_expiration_timestamp < now,
+        CoreError::InplayDelay
+    );
+
     let selected_price = if order_for.creation_timestamp < order_against.creation_timestamp {
         order_for.expected_price
     } else {

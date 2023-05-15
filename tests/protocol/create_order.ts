@@ -105,7 +105,7 @@ describe("Protocol - Create Order", () => {
     );
     assert.equal(marketMatchingPool.matchedAmount.toNumber(), 0);
     assert.equal(
-      marketMatchingPool.orders.items[0].toBase58(),
+      marketMatchingPool.orders.items[0].order.toBase58(),
       orderPk.toBase58(),
     );
 
@@ -384,8 +384,8 @@ describe("Protocol - Create Order", () => {
     );
 
     const thrownError = orderResponse.errors[0] as AnchorError;
-    assert.equal(orderResponse.success, false);
     assert.equal(thrownError.error.errorCode.code, "CreationMarketSuspended");
+    assert.equal(orderResponse.success, false);
   });
 
   it("create order where order initializes matching pool", async () => {
@@ -459,7 +459,7 @@ describe("Protocol - Create Order", () => {
     const matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
       matchingPoolPda.data.pda,
     );
-    assert.equal(matchingPool.orders.items[0].toBase58(), orderPk);
+    assert.equal(matchingPool.orders.items[0].order.toBase58(), orderPk);
     assert.equal(
       matchingPool.liquidityAmount.toNumber(),
       stakeInteger.toNumber(),
@@ -788,5 +788,92 @@ describe("Protocol - Create Order", () => {
       createdOrder.product.toBase58(),
       SystemProgram.programId.toBase58(),
     );
+  });
+
+  it("Create order while market is inplay", async () => {
+    const inplayDelay = 7;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    const market = await monaco.create3WayMarket(
+      [2.0],
+      true,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+
+    await market.moveMarketToInplay();
+
+    const orderPk = await market.forOrder(0, 1, 2.0, purchaser);
+    const order = await monaco.program.account.order.fetch(orderPk);
+    assert.equal(
+      order.delayExpirationTimestamp.toNumber(),
+      order.creationTimestamp.toNumber() + inplayDelay,
+    );
+  });
+
+  it("Create order while market is inplay and liquidity isn't added to matching pool during delay", async () => {
+    const inplayDelay = 100;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    const market = await monaco.create3WayMarket(
+      [2.0],
+      true,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+
+    await market.moveMarketToInplay();
+
+    await market.forOrder(0, 1, 2.0, purchaser);
+
+    let matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 0);
+
+    await market.processDelayExpiredOrders(0, 2.0, true);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 0);
+  });
+
+  it("Create order while market is inplay and add liquidity to matching pool after delay", async () => {
+    const inplayDelay = 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    const market = await monaco.create3WayMarket(
+      [2.0],
+      true,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+
+    await market.moveMarketToInplay();
+
+    await market.forOrder(0, 1, 2.0, purchaser);
+
+    let matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 0);
+
+    await market.processDelayExpiredOrders(0, 2.0, true);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 1);
   });
 });

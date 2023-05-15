@@ -62,12 +62,13 @@ mod tests {
             market_outcome_index: 1,
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
+            payer: Pubkey::new_unique(),
 
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-
+            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
@@ -92,12 +93,13 @@ mod tests {
             market_outcome_index: 1,
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
+            payer: Pubkey::new_unique(),
 
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-
+            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
@@ -122,12 +124,13 @@ mod tests {
             market_outcome_index: 1,
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
+            payer: Pubkey::new_unique(),
 
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-
+            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,

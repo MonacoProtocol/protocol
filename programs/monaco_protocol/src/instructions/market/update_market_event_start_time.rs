@@ -1,0 +1,135 @@
+use anchor_lang::prelude::*;
+
+use crate::error::CoreError;
+use crate::state::market_account::Market;
+
+pub fn update_market_event_start_time(market: &mut Market, event_start_time: i64) -> Result<()> {
+    let now = Clock::get().unwrap().unix_timestamp;
+    update_market_event_start_time_internal(market, event_start_time, now)
+}
+
+pub fn update_market_event_start_time_to_now(market: &mut Market) -> Result<()> {
+    let now = Clock::get().unwrap().unix_timestamp;
+    update_market_event_start_time_internal(market, now, now)
+}
+
+fn update_market_event_start_time_internal(
+    market: &mut Market,
+    event_start_time: i64,
+    now: i64,
+) -> Result<()> {
+    // market event start time cannot be change after market moves to inplay
+    require!(!market.inplay, CoreError::MarketAlreadyInplay);
+
+    if event_start_time < now {
+        msg!(
+            "Update Market: event start time {} must not be in the past.",
+            event_start_time.to_string()
+        );
+        return Err(error!(CoreError::MarketEventStartTimeNotInTheFuture));
+    }
+
+    market.event_start_timestamp = event_start_time;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::instructions::market::update_market_event_start_time::update_market_event_start_time_internal;
+    use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_type::EVENT_RESULT_WINNER;
+
+    #[test]
+    fn test_market_update_success() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(1),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: false,
+            suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+        let time_in_future = 100;
+        let now = 99;
+
+        let result = update_market_event_start_time_internal(&mut market, time_in_future, now);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_market_update_failure_time_before_now() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(1),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: false,
+            suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+        let time_in_future = 100;
+        let now = 101;
+
+        let result = update_market_event_start_time_internal(&mut market, time_in_future, now);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_market_update_failure_inplay() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index: Some(1),
+            market_type: String::from(EVENT_RESULT_WINNER),
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            market_status: MarketStatus::ReadyForSettlement,
+            escrow_account_bump: 0,
+            published: false,
+            suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: true,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+        let time_in_future = 100;
+        let now = 99;
+
+        let result = update_market_event_start_time_internal(&mut market, time_in_future, now);
+        assert!(result.is_err());
+    }
+}

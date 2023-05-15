@@ -35,6 +35,23 @@ abstract class Criterion<T> {
   abstract writeToBuffer(buffer: Buffer): number;
 }
 
+export class BooleanCriterion extends Criterion<boolean> {
+  constructor(offset: number) {
+    super(offset, 1);
+  }
+
+  writeToBuffer(buffer: Buffer): number {
+    const bytes = this.toBytes();
+    Buffer.from(bytes).copy(buffer, this.getOffset(), 0, bytes.byteLength);
+    return bytes.byteLength;
+  }
+
+  private toBytes(): Uint8Array {
+    const value = this.getValue();
+    return value == undefined ? Uint8Array.of() : Uint8Array.of(value ? 1 : 0);
+  }
+}
+
 export class ByteCriterion extends Criterion<number> {
   constructor(offset: number) {
     super(offset, 1);

@@ -3,7 +3,6 @@ use anchor_spl::token::{Token, TokenAccount};
 use protocol_product::state::product::Product;
 use solana_program::clock::UnixTimestamp;
 
-use crate::context::{CreateOrder, CreateOrderV2};
 use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
 use crate::instructions::{calculate_risk_from_stake, market, market_position, matching, transfer};
@@ -11,41 +10,7 @@ use crate::state::market_account::*;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 
-// create order using default product
-pub fn create_order(ctx: Context<CreateOrder>, data: OrderData) -> Result<()> {
-    let product: Option<Account<Product>> = None;
-    create_order_internal(
-        &mut ctx.accounts.order,
-        &ctx.accounts.market,
-        &ctx.accounts.purchaser,
-        &ctx.accounts.purchaser_token,
-        &ctx.accounts.token_program,
-        &product,
-        &mut ctx.accounts.market_matching_pool,
-        &mut ctx.accounts.market_position,
-        &ctx.accounts.market_escrow,
-        &ctx.accounts.market_outcome,
-        data,
-    )
-}
-
-pub fn create_order_v2(ctx: Context<CreateOrderV2>, data: OrderData) -> Result<()> {
-    create_order_internal(
-        &mut ctx.accounts.order,
-        &ctx.accounts.market,
-        &ctx.accounts.purchaser,
-        &ctx.accounts.purchaser_token,
-        &ctx.accounts.token_program,
-        &ctx.accounts.product,
-        &mut ctx.accounts.market_matching_pool,
-        &mut ctx.accounts.market_position,
-        &ctx.accounts.market_escrow,
-        &ctx.accounts.market_outcome,
-        data,
-    )
-}
-
-fn create_order_internal<'info>(
+pub fn create_order<'info>(
     order: &mut Account<Order>,
     market: &Account<Market>,
     purchaser: &Signer<'info>,
@@ -65,9 +30,10 @@ fn create_order_internal<'info>(
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {
-        market::initialize_market_matching_pool(matching_pool, purchaser.key())?;
+        market::initialize_market_matching_pool(matching_pool, market, purchaser.key())?;
     }
-    matching::update_matching_queue_with_new_order(matching_pool, order)?;
+
+    matching::update_matching_queue_with_new_order(market, matching_pool, order)?;
 
     // expected payment
     let order_exposure = match order.for_outcome {
@@ -133,6 +99,12 @@ fn initialize_order(
     order.stake = data.stake;
     order.expected_price = data.price;
     order.creation_timestamp = now;
+    order.delay_expiration_timestamp = match market.inplay {
+        true => now
+            .checked_add(market.inplay_order_delay as i64)
+            .ok_or(CoreError::ArithmeticError),
+        false => Ok(0),
+    }?;
 
     order.stake_unmatched = data.stake;
     order.payout = 0_u64;
@@ -270,6 +242,12 @@ mod tests {
             escrow_account_bump: 0,
             published: true,
             suspended,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         }
     }
 }

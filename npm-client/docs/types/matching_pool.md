@@ -4,38 +4,57 @@
 
 *   [MarketMatchingPool][1]
     *   [Properties][2]
-*   [Cirque][3]
+*   [QueueItem][3]
     *   [Properties][4]
+*   [Cirque][5]
+    *   [Properties][6]
 
 ## MarketMatchingPool
 
-Type: {purchaser: PublicKey, liquidityAmount: BN, matchedAmount: BN, orders: [Cirque][3]}
+Type: {purchaser: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][7], orders: [Cirque][5]}
 
 ### Properties
 
 *   `purchaser` **PublicKey**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
-*   `orders` **[Cirque][3]**&#x20;
+*   `inplay` **[boolean][7]**&#x20;
+*   `orders` **[Cirque][5]**&#x20;
 
-## Cirque
+## QueueItem
 
-Type: {front: [number][5], len: [number][5], items: [Array][6]\<PublicKey>}
+Type: {order: PublicKey, delayExpirationTimestamp: BN, liquidityToAdd: BN}
 
 ### Properties
 
-*   `front` **[number][5]**&#x20;
-*   `len` **[number][5]**&#x20;
-*   `items` **[Array][6]\<PublicKey>**&#x20;
+*   `order` **PublicKey**&#x20;
+*   `delayExpirationTimestamp` **BN**&#x20;
+*   `liquidityToAdd` **BN**&#x20;
+
+## Cirque
+
+Type: {front: [number][8], len: [number][8], items: [Array][9]<[QueueItem][3]>}
+
+### Properties
+
+*   `front` **[number][8]**&#x20;
+*   `len` **[number][8]**&#x20;
+*   `items` **[Array][9]<[QueueItem][3]>**&#x20;
 
 [1]: #marketmatchingpool
 
 [2]: #properties
 
-[3]: #cirque
+[3]: #queueitem
 
 [4]: #properties-1
 
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[5]: #cirque
 
-[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[6]: #properties-2
+
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

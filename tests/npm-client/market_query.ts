@@ -3,6 +3,7 @@ import {
   getMarketAccountsByEvent,
   getMarketAccountsByStatus,
   getMarketAccountsByStatusAndMintAccount,
+  Markets,
   MarketStatusFilter,
 } from "../../npm-client/src/";
 import { monaco } from "../util/wrappers";
@@ -24,6 +25,18 @@ describe("Market Query", () => {
           foundMarket.publicKey.toString() == market.pk.toString(),
       ),
     );
+  });
+
+  it("Get inplay enabled markets only", async () => {
+    const market = await monaco.create3WayMarket([3.0]);
+
+    const response = await Markets.marketQuery(monaco.getRawProgram())
+      .filterByStatus(MarketStatusFilter.Open)
+      .filterByInplayEnabled(true)
+      .fetchPublicKeys();
+
+    assert(response.success);
+    assert(response.data.publicKeys.find((pk) => pk.equals(market.pk)) == null);
   });
 
   it("Get Market by Event", async () => {
