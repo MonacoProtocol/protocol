@@ -135,7 +135,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     // Create market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarketWithInplay([price]), // not inplay
+      monaco.create3WayMarketWithInplay([price]),
     ]);
     await market.airdrop(purchaser, 10_000);
 
