@@ -159,10 +159,10 @@ describe("End to end test of", () => {
     await Orders.orderQuery(monaco.program as Program)
       .filterByMarket(market.pk)
       .fetchPublicKeys()
-      .then((response) => {
-        response.data.publicKeys.forEach(async (order) => {
+      .then(async (response) => {
+        for (const order of response.data.publicKeys) {
           await market.settleOrder(order);
-        });
+        }
       });
     await market.completeSettlement();
 
@@ -172,8 +172,8 @@ describe("End to end test of", () => {
     await Trades.tradeQuery(monaco.program as Program)
       .filterByMarket(market.pk)
       .fetchPublicKeys()
-      .then((response) => {
-        response.data.publicKeys.forEach(async (trade) => {
+      .then(async (response) => {
+        for (const trade of response.data.publicKeys) {
           await monaco.program.methods
             .closeTrade()
             .accounts({
@@ -189,14 +189,14 @@ describe("End to end test of", () => {
               console.error(e);
               throw e;
             });
-        });
+        }
       });
 
     await Orders.orderQuery(monaco.program as Program)
       .filterByMarket(market.pk)
       .fetchPublicKeys()
-      .then((response) => {
-        response.data.publicKeys.forEach(async (order) => {
+      .then(async (response) => {
+        for (const order of response.data.publicKeys) {
           await monaco.program.methods
             .closeOrder()
             .accounts({
@@ -212,14 +212,14 @@ describe("End to end test of", () => {
               console.error(e);
               throw e;
             });
-        });
+        }
       });
 
     await MarketPositions.marketPositionQuery(monaco.program as Program)
       .filterByMarket(market.pk)
       .fetchPublicKeys()
-      .then((response) => {
-        response.data.publicKeys.forEach(async (marketPosition) => {
+      .then(async (response) => {
+        for (const marketPosition of response.data.publicKeys) {
           await monaco.program.methods
             .closeMarketPosition()
             .accounts({
@@ -235,7 +235,7 @@ describe("End to end test of", () => {
               console.error(e);
               throw e;
             });
-        });
+        }
       });
 
     await closeMarketMatchingPool(market, purchaser, 0, 2.0, true);
@@ -248,8 +248,8 @@ describe("End to end test of", () => {
     await MarketOutcomes.marketOutcomeQuery(monaco.program as Program)
       .filterByMarket(market.pk)
       .fetchPublicKeys()
-      .then((response) => {
-        response.data.publicKeys.forEach(async (marketOutcome) => {
+      .then(async (response) => {
+        for (const marketOutcome of response.data.publicKeys) {
           await monaco.program.methods
             .closeMarketOutcome()
             .accounts({
@@ -265,7 +265,7 @@ describe("End to end test of", () => {
               console.error(e);
               throw e;
             });
-        });
+        }
       });
 
     await monaco.program.methods
