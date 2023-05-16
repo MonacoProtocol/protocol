@@ -131,7 +131,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
   // -----------------------------------------------------------------------------------------------------
 
-  it("failure: market not open", async () => {
+  it("failure: market settled", async () => {
     // Create market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
