@@ -60,6 +60,7 @@ pub fn update_matching_queue_with_new_order(
 ) -> Result<()> {
     if market.inplay {
         update_matching_queue_with_new_inplay_order(
+            market,
             market_matching_pool,
             order_account,
             order_account.key(),
@@ -97,14 +98,13 @@ fn update_matching_queue_with_new_preplay_order(
 }
 
 fn update_matching_queue_with_new_inplay_order(
+    market: &Market,
     market_matching_pool: &mut MarketMatchingPool,
     order_account: &Order,
     order_pubkey: Pubkey,
 ) -> Result<()> {
     if !market_matching_pool.inplay {
-        market_matching_pool.orders.set_length_to_zero();
-        market_matching_pool.liquidity_amount = 0_u64;
-        market_matching_pool.inplay = true;
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
     market_matching_pool
@@ -133,9 +133,7 @@ pub fn move_market_matching_pool_to_inplay(
         CoreError::MatchingMarketMatchingPoolAlreadyInplay
     );
 
-    market_matching_pool.orders.set_length_to_zero();
-    market_matching_pool.liquidity_amount = 0_u64;
-    market_matching_pool.inplay = true;
+    market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
 
     Ok(())
 }

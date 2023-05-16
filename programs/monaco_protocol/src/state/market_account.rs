@@ -127,6 +127,15 @@ impl MarketMatchingPool {
         U64_SIZE + // matched_amount
         BOOL_SIZE + // inplay
         Cirque::size_for(MarketMatchingPool::QUEUE_LENGTH); //orders
+
+    pub fn move_to_inplay(&mut self, market_event_start_order_behaviour: &MarketOrderBehaviour) {
+        self.inplay = true;
+
+        if market_event_start_order_behaviour.eq(&MarketOrderBehaviour::CancelUnmatched) {
+            self.orders.set_length_to_zero();
+            self.liquidity_amount = 0_u64;
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]

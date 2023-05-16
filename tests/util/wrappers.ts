@@ -212,6 +212,7 @@ export class Monaco {
     inplayDelay = 0,
     eventStartTimestamp?: number,
     marketLockTimestamp?: number,
+    eventStartOrderBehaviour?: object,
   ) {
     const market = await this.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
@@ -221,6 +222,7 @@ export class Monaco {
       inplayDelay,
       eventStartTimestamp,
       marketLockTimestamp,
+      eventStartOrderBehaviour,
     );
     await market.open();
     return market;
@@ -245,6 +247,7 @@ export class Monaco {
     inplayDelay?: number,
     eventStartTimestamp = 1924254038,
     marketLockTimestamp = 1924254038,
+    eventStartOrderBehaviour: object = { cancelUnmatched: {} },
   ) {
     const event = anchor.web3.Keypair.generate();
     const marketType = MarketType.EventResultWinner;
@@ -285,7 +288,7 @@ export class Monaco {
         new anchor.BN(eventStartTimestamp),
         inplayEnabled,
         inplayDelay,
-        { cancelUnmatched: {} },
+        eventStartOrderBehaviour,
         { none: {} },
       )
       .accounts({

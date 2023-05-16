@@ -878,4 +878,77 @@ describe("Protocol - Create Order", () => {
     matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
   });
+
+  it("Create first order after market goes inplay and liquidity is zerod", async () => {
+    const inplayDelay = 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now + 100;
+    const marketLockTimestamp = now + 1000;
+
+    const market = await monaco.create3WayMarket(
+      [2.0],
+      true,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+    await market.forOrder(0, 10, 2.0, purchaser);
+
+    let matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 10);
+
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await market.moveMarketToInplay();
+
+    await market.forOrder(0, 1, 2.0, purchaser);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 0);
+
+    await market.processDelayExpiredOrders(0, 2.0, true);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 1);
+  });
+
+  it("Create first order after market goes inplay and liquidity is not zerod", async () => {
+    const inplayDelay = 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now + 100;
+    const marketLockTimestamp = now + 1000;
+
+    const market = await monaco.create3WayMarket(
+      [2.0],
+      true,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+      { none: {} },
+    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+    await market.forOrder(0, 10, 2.0, purchaser);
+
+    let matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 10);
+
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await market.moveMarketToInplay();
+
+    await market.forOrder(0, 1, 2.0, purchaser);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 10);
+
+    await market.processDelayExpiredOrders(0, 2.0, true);
+
+    matchingPool = await market.getForMatchingPool(0, 2.0);
+    assert.equal(matchingPool.liquidity, 11);
+  });
 });
