@@ -283,6 +283,27 @@ describe("End to end test of", () => {
         throw e;
       });
   });
+
+  it("market is not enabled for inplay", async () => {
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now + 20;
+    const marketLockTimestamp = eventStartTimestamp;
+
+    const market = await monaco.create3WayMarket(
+      [2.0, 3.0],
+      false,
+      0,
+      eventStartTimestamp,
+      marketLockTimestamp,
+    );
+
+    try {
+      await market.moveMarketToInplay();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "MarketInplayNotEnabled");
+    }
+  });
 });
 
 async function closeMarketMatchingPool(

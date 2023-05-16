@@ -387,6 +387,9 @@ pub mod monaco_protocol {
         let now = Clock::get().unwrap().unix_timestamp;
         let market = &mut ctx.accounts.market;
 
+        // market must have inplay enabled
+        require!(market.inplay_enabled, CoreError::MarketInplayNotEnabled);
+
         // set it `true` only if it's `false`
         require!(!market.inplay, CoreError::MarketAlreadyInplay);
 
