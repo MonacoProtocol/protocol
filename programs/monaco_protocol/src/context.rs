@@ -161,6 +161,13 @@ pub struct CreateOrderV2<'info> {
 }
 
 #[derive(Accounts)]
+pub struct UpdateMarketMatchingPool<'info> {
+    pub market: Account<'info, Market>,
+    #[account(mut, has_one = market)]
+    pub market_matching_pool: Account<'info, MarketMatchingPool>,
+}
+
+#[derive(Accounts)]
 pub struct CancelOrder<'info> {
     #[account(mut)]
     pub order: Account<'info, Order>,
@@ -196,6 +203,53 @@ pub struct CancelOrder<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    // market_position needs to be here so market validation happens first
+    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct CancelPreplayOrderPostEventStart<'info> {
+    #[account(mut)]
+    pub order: Account<'info, Order>,
+
+    #[account(mut, address = order.purchaser @ CoreError::CancelationPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    #[account(mut, address = order.market @ CoreError::CancelationPurchaserMismatch)]
+    pub market: Box<Account<'info, Market>>,
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            order.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", order.expected_price).as_ref(),
+            order.for_outcome.to_string().as_ref(),
+        ],
+        bump,
+    )]
+    pub market_matching_pool: Account<'info, MarketMatchingPool>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    // market_position needs to be here so market validation happens first
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
     pub market_position: Box<Account<'info, MarketPosition>>,
 
@@ -557,6 +611,12 @@ pub struct UpdateMarket<'info> {
     pub market_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateMarketUnauthorized<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
 }
 
 #[derive(Accounts)]

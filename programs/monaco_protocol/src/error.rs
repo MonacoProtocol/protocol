@@ -26,6 +26,8 @@ pub enum CoreError {
     CreationInvalidPrice,
     #[msg("Order Creation: calculating payment/refund amount error")]
     CreationPaymentAmountError,
+    #[msg("Order Creation: market is already inplay")]
+    CreationMarketAlreadyInplay,
 
     /*
     Cancelation
@@ -36,8 +38,16 @@ pub enum CoreError {
     CancelationPurchaserMismatch,
     #[msg("Core Cancelation: market mismatch")]
     CancelationMarketMismatch,
-    #[msg("Order Cancelation: calculating payment/refund amount error")]
-    CancelationPaymentAmountError,
+    #[msg("Order Cancelation: market status invalid")]
+    CancelationMarketStatusInvalid,
+    #[msg("Order Cancelation: market not inplay")]
+    CancelationMarketNotInplay,
+    #[msg("Order Cancelation: market behaviour not valid for cancellation")]
+    CancelationMarketOrderBehaviourInvalid,
+    #[msg("Order Cancelation: order status invalid")]
+    CancelationOrderStatusInvalid,
+    #[msg("Order Cancelation: order created after market event started")]
+    CancelationOrderCreatedAfterMarketEventStarted,
 
     /*
     Settlement
@@ -117,8 +127,12 @@ pub enum CoreError {
     MatchingQueueIsEmpty,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the item at the front of the queue was incorrect.")]
     IncorrectOrderDequeueAttempt,
+    #[msg("The order to be matched is not at the front of the matching pool queue")]
+    OrderNotAtFrontOfQueue,
     #[msg("Failed to update market: invalid arguments provided.")]
     LockTimeInvalid,
+    #[msg("Failed to update market: invalid arguments provided.")]
+    EventStartTimeInvalid,
 
     #[msg("matching: market is not in a state to match orders")]
     MarketNotOpen,
@@ -134,8 +148,22 @@ pub enum CoreError {
     MatchingRefundAmountError,
     #[msg("Order Matching: calculating payout amount error")]
     MatchingPayoutAmountError,
+    #[msg("Matching: market matching pool is already inplay")]
+    MatchingMarketMatchingPoolAlreadyInplay,
+    #[msg("Matching: market does not have inplay enabled")]
+    MatchingMarketInplayNotEnabled,
+    #[msg("Matching: market is not yet inplay")]
+    MatchingMarketNotYetInplay,
+    #[msg("Matching: invalid market status for operation")]
+    MatchingMarketInvalidStatus,
     #[msg("matching: unknown")]
     Unknown,
+
+    /*
+    Inplay
+     */
+    #[msg("The order is currently within the inplay delay period and the operation cannot be completed")]
+    InplayDelay,
 
     /*
     Markets
@@ -146,6 +174,12 @@ pub enum CoreError {
     MarketTypeInvalid,
     #[msg("Market: lock time must be in the future")]
     MarketLockTimeNotInTheFuture,
+    #[msg("Market: event start time must be in the future")]
+    MarketEventStartTimeNotInTheFuture,
+    #[msg(
+        "Market: lock time must not be later than the event start time unless inplay is enabled"
+    )]
+    MarketLockTimeAfterEventStartTime,
     #[msg("Market: invalid market status for operation")]
     MarketInvalidStatus,
     #[msg("Market: price list is full")]
@@ -172,6 +206,12 @@ pub enum CoreError {
     MarketNotReadyToClose,
     #[msg("Market: market authority does not match operator")]
     MarketAuthorityMismatch,
+    #[msg("Market: market inplay not enabled")]
+    MarketInplayNotEnabled,
+    #[msg("Market: market is already inplay")]
+    MarketAlreadyInplay,
+    #[msg("Market: market event not started")]
+    MarketEventNotStarted,
 
     /*
     Close Account

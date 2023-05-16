@@ -33,9 +33,11 @@ pub struct Order {
     pub voided_stake: u64, // stake amount returned to purchaser due to cancelation or settlement for partially matched orders
     pub expected_price: f64, // expected price provided by purchaser
     pub creation_timestamp: i64,
+    pub delay_expiration_timestamp: i64,
     // matching data
     pub stake_unmatched: u64, // stake amount available for matching
     pub payout: u64,          // amount paid to purchaser during settlement for winning orders
+    pub payer: Pubkey,        // solana account fee payer
 }
 
 impl Order {
@@ -46,12 +48,22 @@ impl Order {
         + ENUM_SIZE // order_status
         + (U64_SIZE * 4) // stake, payout, stake_unmatched, voided_stake
         + F64_SIZE // expected_price
-        + I64_SIZE; // creation_timestamp
+        + I64_SIZE // creation_timestamp
+        + I64_SIZE // delay_expiration_timestamp
+        + PUB_KEY_SIZE; // payer
 
     pub fn is_completed(&self) -> bool {
         self.order_status == OrderStatus::SettledWin
             || self.order_status == OrderStatus::SettledLose
             || self.order_status == OrderStatus::Cancelled
+    }
+
+    pub fn void_stake_unmatched(&mut self) {
+        self.voided_stake = self.stake_unmatched;
+        self.stake_unmatched = 0_u64;
+        if self.order_status == OrderStatus::Open {
+            self.order_status = OrderStatus::Cancelled;
+        }
     }
 }
 

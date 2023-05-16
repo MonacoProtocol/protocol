@@ -110,7 +110,7 @@ pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Resu
 mod tests {
     use crate::error::CoreError;
     use crate::instructions::market::{open, settle, void};
-    use crate::state::market_account::MarketStatus;
+    use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
     use crate::Market;
     use anchor_lang::error;
 
@@ -131,6 +131,12 @@ mod tests {
             market_settle_timestamp: None,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let settle_time = 1665483869;
@@ -158,6 +164,12 @@ mod tests {
             market_settle_timestamp: None,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let settle_time = 1665483869;
@@ -185,6 +197,12 @@ mod tests {
             market_settle_timestamp: None,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let settle_time = 1665483869;
@@ -215,6 +233,12 @@ mod tests {
             market_settle_timestamp: None,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let result = open(&mut market);
@@ -240,6 +264,12 @@ mod tests {
             market_settle_timestamp: None,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let result = open(&mut market);
@@ -256,6 +286,7 @@ mod tests {
             event_account: Default::default(),
             mint_account: Default::default(),
             market_status: MarketStatus::Initializing,
+            inplay_enabled: false,
             market_type: "".to_string(),
             decimal_limit: 0,
             published: false,
@@ -264,8 +295,13 @@ mod tests {
             market_winning_outcome_index: None,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
         };
 
         let settle_time = 1665483869;
@@ -283,6 +319,7 @@ mod tests {
             event_account: Default::default(),
             mint_account: Default::default(),
             market_status: MarketStatus::Open,
+            inplay_enabled: false,
             market_type: "".to_string(),
             decimal_limit: 0,
             published: false,
@@ -291,8 +328,13 @@ mod tests {
             market_winning_outcome_index: None,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
         };
 
         let settle_time = 1665483869;
@@ -310,6 +352,7 @@ mod tests {
             event_account: Default::default(),
             mint_account: Default::default(),
             market_status: MarketStatus::Settled,
+            inplay_enabled: false,
             market_type: "".to_string(),
             decimal_limit: 0,
             published: false,
@@ -318,8 +361,13 @@ mod tests {
             market_winning_outcome_index: None,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
             title: "".to_string(),
             escrow_account_bump: 0,
+            event_start_timestamp: 0,
         };
 
         let settle_time = 1665483869;

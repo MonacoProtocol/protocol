@@ -9,13 +9,15 @@ import {
 } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
 
+const moveMarketToInplayDelay = 1500;
+
 // Order parameters
 const outcomeIndex = 1;
 const price = 6.0;
 const stake = 2000;
 
-describe("Security: Cancel Order", () => {
-  it("cancel fully unmatched order: success", async () => {
+describe("Security: Cancel Inplay Order Post Event Start", () => {
+  it("success: unmatched order", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -24,101 +26,247 @@ describe("Security: Cancel Order", () => {
       stake,
     );
 
-    await market.cancel(orderPk, purchaser);
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+    await market.moveMarketToInplay();
+
+    await market.cancelPreplayOrderPostEventStart(orderPk);
 
     assert.deepEqual(
       await Promise.all([
-        market.getForMatchingPool(outcomeIndex, price),
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ len: 0, liquidity: 0, matched: 0 }, 0, 10000],
+      [
+        { stakeUnmatched: 0, stakeVoided: 2000, status: { cancelled: {} } },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
+        0,
+        10000,
+      ],
+    );
+  });
+
+  it("success: partially matched order", async () => {
+    // Set up Market and related accounts
+    const { market, purchaser, orderPk } = await setupUnmatchedOrder(
+      monaco,
+      outcomeIndex,
+      price,
+      stake,
     );
 
-    // check order was deleted
+    const matchingOrderPk = await market.againstOrder(
+      outcomeIndex,
+      stake / 2,
+      price,
+      purchaser,
+    );
+    await market.match(orderPk, matchingOrderPk);
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+    await market.moveMarketToInplay();
+
+    await market.cancelPreplayOrderPostEventStart(orderPk);
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 0, stakeVoided: 1000, status: { matched: {} } },
+        { matched: [0, 0, 0], maxExposure: [1000, 5000, 1000] },
+        5000,
+        5000,
+      ],
+    );
+  });
+
+  it("success: matched order", async () => {
+    // Set up Market and related accounts
+    const { market, purchaser, orderPk } = await setupUnmatchedOrder(
+      monaco,
+      outcomeIndex,
+      price,
+      stake,
+    );
+
+    const matchingOrderPk = await market.againstOrder(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+    await market.match(orderPk, matchingOrderPk);
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+    await market.moveMarketToInplay();
+
+    await market.cancelPreplayOrderPostEventStart(orderPk);
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 10000, 2000] },
+        10000,
+        0,
+      ],
+    );
+  });
+
+  // -----------------------------------------------------------------------------------------------------
+
+  it("failure: market settled", async () => {
+    // Create market, purchaser
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarketWithInplay([price]),
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    const orderPk = await market.forOrder(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        2000,
+        8000,
+      ],
+    );
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+    await market.moveMarketToInplay();
+    await market.settle(outcomeIndex);
+
     try {
-      await monaco.program.account.order.fetch(orderPk);
-      assert.fail("Account should not exist");
+      await market.cancelPreplayOrderPostEventStart(orderPk);
+      assert.fail("expected CancelationMarketStatusInvalid");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelationMarketStatusInvalid");
+    }
+  });
+
+  it("failure: market not inplay yet", async () => {
+    // Create market, purchaser
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]), // not inplay
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    const orderPk = await market.forOrder(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        2000,
+        8000,
+      ],
+    );
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+
+    try {
+      await market.cancelPreplayOrderPostEventStart(orderPk);
+      assert.fail("expected CancelationMarketNotInplay");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelationMarketNotInplay");
+    }
+  });
+
+  it("failure: order created post event start", async () => {
+    // Create market, purchaser
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarketWithInplay([price]),
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
+    await market.moveMarketToInplay();
+
+    // Create Order after event start time
+    const orderPk = await market.forOrder(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        2000,
+        8000,
+      ],
+    );
+
+    try {
+      await market.cancelPreplayOrderPostEventStart(orderPk);
+      assert.fail("expected CancelationOrderCreatedAfterMarketEventStarted");
     } catch (e) {
       assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
+        e.error.errorCode.code,
+        "CancelationOrderCreatedAfterMarketEventStarted",
       );
     }
   });
 
-  it("cannot cancel inplay order during inplay delay", async () => {
-    const inplayDelay = 100;
+  // -----------------------------------------------------------------------------------------------------
 
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    // Set up Market and related accounts
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [price],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    await market.airdrop(purchaser, 10_000);
-
-    await market.moveMarketToInplay();
-
-    const orderPk = await market.forOrder(0, stake, price, purchaser);
-
-    try {
-      await market.cancel(orderPk, purchaser);
-      assert.fail("expected InplayDelay");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "InplayDelay");
-    }
-  });
-
-  it("can cancel inplay order after inplay delay", async () => {
-    const inplayDelay = 0;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    // Set up Market and related accounts
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [price],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    await market.airdrop(purchaser, 10_000);
-
-    await market.moveMarketToInplay();
-
-    const orderPk = await market.forOrder(0, stake, price, purchaser);
-    await market.processDelayExpiredOrders(0, price, true);
-
-    await market.cancel(orderPk, purchaser);
-
-    // check order was deleted
-    try {
-      await monaco.program.account.order.fetch(orderPk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
-      );
-    }
-  });
-
-  it("cancel fully unmatched order: impostor purchaser with token account for the same mint", async () => {
+  it("failure: impostor purchaser with token account for the same mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -132,21 +280,20 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaserImpostor.publicKey, // impostor
-          purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaserImpostor]) // impostor
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
     } catch (e) {
@@ -158,21 +305,19 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: impostor purchaser with token account for a different mint", async () => {
+  it("failure: impostor purchaser with token account for a different mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -196,21 +341,20 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaserImpostor.publicKey, // impostor
-          purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaserImpostor]) // impostor
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
     } catch (e) {
@@ -222,21 +366,19 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: purchaser with impostor token account for the same mint", async () => {
+  it("failure: purchaser with impostor token account for the same mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -255,21 +397,20 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaser.publicKey,
-          purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaser])
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
     } catch (e) {
@@ -281,21 +422,19 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: purchaser with impostor token account for a different mint", async () => {
+  it("failure: purchaser with impostor token account for a different mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -319,21 +458,20 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaser.publicKey,
-          purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaser])
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
     } catch (e) {
@@ -345,25 +483,23 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: purchaser uses different token account for the same mint", async () => {
+  it("failure: purchaser uses different token account for the same mint", async () => {
     // token program does not allow more than one account per mint for a given wallet
   });
 
-  it("cancel fully unmatched order: purchaser uses different token account for a different mint", async () => {
+  it("failure: purchaser uses different token account for a different mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -386,21 +522,20 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaser.publicKey,
-          purchaserTokenAccount: purchaserInvalidTokenPk, // invalid
+          purchaserToken: purchaserInvalidTokenPk, // invalid
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaser])
         .rpc();
       assert.fail("expected ConstraintAssociated");
     } catch (e) {
@@ -412,57 +547,19 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: invalid market status", async () => {
-    // Set up Market and related accounts
-    const { market, purchaser, orderPk } = await setupUnmatchedOrder(
-      monaco,
-      outcomeIndex,
-      price,
-      stake,
-    );
-
-    try {
-      await market.settle(0);
-      await market.cancel(orderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
-    }
-
-    // check the order wasn't cancelled
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(orderPk),
-        market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
-        2000,
-        8000,
-      ],
-    );
-  });
-
-  it("cancel fully unmatched order: invalid market", async () => {
+  it("failure: invalid market", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -486,14 +583,14 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaser.publicKey,
-          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+          purchaserToken: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),
           market: marketOther.marketPda, // invalid
@@ -502,11 +599,10 @@ describe("Security: Cancel Order", () => {
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaser])
         .rpc();
-      assert.fail("expected CancelationMarketMismatch");
+      assert.fail("expected CancelationPurchaserMismatch");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelationMarketMismatch");
+      assert.equal(e.error.errorCode.code, "CancelationPurchaserMismatch");
     }
 
     // check the order wasn't cancelled
@@ -514,21 +610,19 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
   });
 
-  it("cancel fully unmatched order: invalid market escrow", async () => {
+  it("failure: invalid market escrow", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -552,14 +646,14 @@ describe("Security: Cancel Order", () => {
 
     try {
       await monaco.program.methods
-        .cancelOrder()
+        .cancelPreplayOrderPostEventStart()
         .accounts({
           order: orderPk,
           marketPosition: await market.cacheMarketPositionPk(
             purchaser.publicKey,
           ),
           purchaser: purchaser.publicKey,
-          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+          purchaserToken: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),
           market: market.pk,
@@ -568,7 +662,6 @@ describe("Security: Cancel Order", () => {
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .signers([purchaser])
         .rpc();
       assert.fail("expected ConstraintSeeds");
     } catch (e) {
@@ -580,46 +673,16 @@ describe("Security: Cancel Order", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getForMatchingPool(outcomeIndex, price),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
         { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-        { len: 1, liquidity: 2000, matched: 0 },
         2000,
         8000,
       ],
     );
-  });
-
-  it("cancel fully matched order fails", async () => {
-    // Create market, purchaser
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([price]),
-    ]);
-    await market.airdrop(purchaser, 100.0);
-
-    // Create a couple of opposing orders
-    const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
-    const againstOrderPk = await market.againstOrder(0, 10.0, price, purchaser);
-
-    await market.match(forOrderPk, againstOrderPk);
-
-    try {
-      await market.cancel(forOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
-    }
-    try {
-      await market.cancel(againstOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
-    }
   });
 });
 
@@ -632,7 +695,7 @@ async function setupUnmatchedOrder(
   // Create market, purchaser
   const [purchaser, market] = await Promise.all([
     createWalletWithBalance(protocol.provider),
-    protocol.create3WayMarket([price]),
+    protocol.create3WayMarketWithInplay([price]),
   ]);
   await market.airdrop(purchaser, 10_000);
 
@@ -642,14 +705,12 @@ async function setupUnmatchedOrder(
     await Promise.all([
       protocol.getOrder(orderPk),
       market.getMarketPosition(purchaser),
-      market.getForMatchingPool(outcomeIndex, price),
       market.getEscrowBalance(),
       market.getTokenBalance(purchaser),
     ]),
     [
       { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
       { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
-      { len: 1, liquidity: 2000, matched: 0 },
       2000,
       8000,
     ],

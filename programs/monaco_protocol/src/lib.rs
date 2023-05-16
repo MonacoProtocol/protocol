@@ -5,7 +5,7 @@ use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{
-    Market, MarketMatchingPool, MarketOutcome, MarketStatus::ReadyToClose,
+    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus::ReadyToClose,
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
@@ -37,9 +37,19 @@ pub mod monaco_protocol {
         _distinct_seed: String,
         data: OrderData,
     ) -> Result<()> {
-        instructions::order::create_order(ctx, data)?;
-
-        Ok(())
+        instructions::order::create_order(
+            &mut ctx.accounts.order,
+            &ctx.accounts.market,
+            &ctx.accounts.purchaser,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &None,
+            &mut ctx.accounts.market_matching_pool,
+            &mut ctx.accounts.market_position,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.market_outcome,
+            data,
+        )
     }
 
     pub fn create_order_v2(
@@ -47,13 +57,47 @@ pub mod monaco_protocol {
         _distinct_seed: String,
         data: OrderData,
     ) -> Result<()> {
-        instructions::order::create_order_v2(ctx, data)?;
+        instructions::order::create_order(
+            &mut ctx.accounts.order,
+            &ctx.accounts.market,
+            &ctx.accounts.purchaser,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.product,
+            &mut ctx.accounts.market_matching_pool,
+            &mut ctx.accounts.market_position,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.market_outcome,
+            data,
+        )
+    }
 
-        Ok(())
+    pub fn move_market_matching_pool_to_inplay(
+        ctx: Context<UpdateMarketMatchingPool>,
+    ) -> Result<()> {
+        instructions::matching::move_market_matching_pool_to_inplay(
+            &ctx.accounts.market,
+            &mut ctx.accounts.market_matching_pool,
+        )
+    }
+
+    pub fn process_delay_expired_orders(ctx: Context<UpdateMarketMatchingPool>) -> Result<()> {
+        instructions::matching::updated_liquidity_with_delay_expired_orders(
+            &ctx.accounts.market,
+            &mut ctx.accounts.market_matching_pool,
+        )
     }
 
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         instructions::order::cancel_order(ctx)?;
+
+        Ok(())
+    }
+
+    pub fn cancel_preplay_order_post_event_start(
+        ctx: Context<CancelPreplayOrderPostEventStart>,
+    ) -> Result<()> {
+        instructions::order::cancel_preplay_order_post_event_start(ctx)?;
 
         Ok(())
     }
@@ -202,8 +246,47 @@ pub mod monaco_protocol {
             market_lock_timestamp,
             title,
             max_decimals,
+            market_lock_timestamp,
+            false,
+            0,
+            MarketOrderBehaviour::None,
+            MarketOrderBehaviour::None,
         )?;
         Ok(())
+    }
+
+    pub fn create_market_v2(
+        ctx: Context<CreateMarket>,
+        event_account: Pubkey,
+        market_type: String,
+        title: String,
+        market_lock_timestamp: i64,
+        max_decimals: u8,
+        event_start_timestamp: i64,
+        inplay_enabled: bool,
+        inplay_order_delay: u8,
+        event_start_order_behaviour: MarketOrderBehaviour,
+        market_lock_order_behaviour: MarketOrderBehaviour,
+    ) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_type(&market_type)?;
+
+        instructions::market::create(
+            ctx,
+            event_account,
+            market_type,
+            market_lock_timestamp,
+            title,
+            max_decimals,
+            event_start_timestamp,
+            inplay_enabled,
+            inplay_order_delay,
+            event_start_order_behaviour,
+            market_lock_order_behaviour,
+        )
     }
 
     pub fn initialize_market_outcome(
@@ -267,6 +350,58 @@ pub mod monaco_protocol {
         )?;
 
         instructions::market::update_locktime(ctx, lock_time)
+    }
+
+    pub fn update_market_event_start_time(
+        ctx: Context<UpdateMarket>,
+        event_start_time: i64,
+    ) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let market = &mut ctx.accounts.market;
+        instructions::market::update_market_event_start_time(market, event_start_time)
+    }
+
+    pub fn update_market_event_start_time_to_now(ctx: Context<UpdateMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let market = &mut ctx.accounts.market;
+        instructions::market::update_market_event_start_time_to_now(market)
+    }
+
+    pub fn move_market_to_inplay(ctx: Context<UpdateMarketUnauthorized>) -> Result<()> {
+        let now = Clock::get().unwrap().unix_timestamp;
+        let market = &mut ctx.accounts.market;
+
+        // market must have inplay enabled
+        require!(market.inplay_enabled, CoreError::MarketInplayNotEnabled);
+
+        // set it `true` only if it's `false`
+        require!(!market.inplay, CoreError::MarketAlreadyInplay);
+
+        // set it `true` only if now is after event start
+        require!(
+            market.event_start_timestamp < now,
+            CoreError::MarketEventNotStarted,
+        );
+
+        market.inplay = true;
+
+        Ok(())
     }
 
     pub fn open_market(ctx: Context<UpdateMarket>) -> Result<()> {

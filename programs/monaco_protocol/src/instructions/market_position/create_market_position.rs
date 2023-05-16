@@ -11,6 +11,7 @@ pub fn create_market_position(
     let market_outcomes_len = usize::from(market.market_outcomes_count);
 
     market_position.purchaser = purchaser.key();
+    market_position.payer = purchaser.key();
     market_position.market = market.key();
     market_position
         .market_outcome_sums
