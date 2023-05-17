@@ -54,7 +54,8 @@
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
     "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
-    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards"
+    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards",
+    "publishRCClients": "cd npm-client && npm run publishRCClient && cd - && cd npm-admin-client && npm run publishRCClient"
   },
   "lint-staged": {
     "*.{js,ts}": [
