@@ -46,6 +46,7 @@ export type MarketAccount = {
   inplayDelay?: number;
   eventStartUnmatchedOrderBehaviour: UnmatchedOrderBehaviour;
   marketLockUnmatchedOrderBehaviour: UnmatchedOrderBehaviour;
+  eventStartTimestamp: BN;
 };
 
 export type MarketAccounts = {
@@ -59,6 +60,7 @@ export type MatchingQueueItem = {
 };
 
 export type MarketMatchingPoolAccount = {
+  market: PublicKey;
   orders: {
     front: number;
     len: number;
