@@ -12,8 +12,8 @@ import {
   unsuspend_market,
 } from "./update_market_status";
 import { print_market_liquidity } from "./market_liquidity";
-import { get_all_orders, print_order } from "./orders";
-import { get_all_markets } from "./get_all_markets";
+import { print_order } from "./orders";
+import { getAll, getAllMarkets, getAllOrders } from "./get_all";
 import {
   authoriseAdminOperator,
   authoriseOperator,
@@ -33,8 +33,11 @@ anchor.setProvider(provider);
 const script = process.argv[2];
 
 switch (script) {
-  case "get_all_markets":
-    get_all_markets();
+  case "getAll":
+    getAll();
+    break;
+  case "getAllMarkets":
+    getAllMarkets();
     break;
   case "create_market":
     create_market();
@@ -69,8 +72,8 @@ switch (script) {
   case "print_market_liquidity":
     print_market_liquidity();
     break;
-  case "get_all_orders":
-    get_all_orders();
+  case "getAllOrders":
+    getAllOrders();
     break;
   case "print_order":
     print_order();
