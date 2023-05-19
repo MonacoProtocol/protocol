@@ -120,6 +120,7 @@ export class Markets {
             this.mintAccount,
             this.status,
             this.inplayEnabled,
+            this.inplay,
           ),
         },
       );
