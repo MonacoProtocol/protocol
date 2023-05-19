@@ -56,6 +56,7 @@ impl Order {
         self.order_status == OrderStatus::SettledWin
             || self.order_status == OrderStatus::SettledLose
             || self.order_status == OrderStatus::Cancelled
+            || self.order_status == OrderStatus::Voided
     }
 
     pub fn void_stake_unmatched(&mut self) {
