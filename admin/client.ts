@@ -51,7 +51,7 @@ switch (script) {
   case "setMarketReadyToClose":
     setMarketReadyToClose();
     break;
-  case "voidMarket":
+  case "void_market":
     voidMarket();
     break;
   case "publish_market":
