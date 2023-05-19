@@ -169,4 +169,43 @@ describe("Close order accounts", () => {
         assert.equal(e.error.errorCode.code, "CloseAccountMarketMismatch");
       });
   });
+
+  it("close order: voided market", async () => {
+    const price = 2.0;
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(purchaser, 100.0);
+
+    const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
+
+    await market.voidMarket();
+    await market.voidMarketPositionForPurchaser(purchaser.publicKey);
+    await market.voidOrder(forOrderPk);
+    await market.completeVoid();
+    await market.readyToClose();
+
+    await monaco.program.methods
+      .closeOrder()
+      .accounts({
+        market: market.pk,
+        purchaser: purchaser.publicKey,
+        order: forOrderPk,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        crankOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+
+    try {
+      await monaco.program.account.market.fetch(forOrderPk);
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        `Account does not exist or has no data ${forOrderPk.toBase58()}`,
+      );
+    }
+  });
 });
