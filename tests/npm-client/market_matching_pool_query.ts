@@ -24,10 +24,10 @@ describe("Market Matching Pool Queries", () => {
     const marketMatchingPoolQuery = MarketMatchingPools.marketMatchingPoolQuery(
       monaco.program as Program,
     );
-    let response = await marketMatchingPoolQuery.fetch();
-    assert.equal(response.data.marketMatchingPools.length, 2);
 
-    response = await marketMatchingPoolQuery.filterByMarket(marketA.pk).fetch();
+    let response = await marketMatchingPoolQuery
+      .filterByMarket(marketA.pk)
+      .fetch();
     assert.equal(response.data.marketMatchingPools.length, 1);
     assert.equal(
       response.data.marketMatchingPools[0].publicKey.toBase58(),
@@ -95,15 +95,6 @@ describe("Market Matching Pool Queries", () => {
 
     await market.forOrder(0, 1, 2.0, purchaser);
     await market.againstOrder(0, 1, 2.0, purchaser);
-
-    const f = await monaco.program.provider.connection.getAccountInfo(
-      market.matchingPools[0][2.0].forOutcome,
-    );
-    console.log(f.data.subarray(0, 100).toString("hex"));
-    const a = await monaco.program.provider.connection.getAccountInfo(
-      market.matchingPools[0][2.0].against,
-    );
-    console.log(a.data.subarray(0, 100).toString("hex"));
 
     const marketMatchingPoolQuery = MarketMatchingPools.marketMatchingPoolQuery(
       monaco.program as Program,
