@@ -6,7 +6,7 @@ export type MarketMatchingPool = {
   marketOutcomeIndex: number;
   price: number;
   forOutcome: boolean;
-  purchaser: PublicKey;
+  payer: PublicKey;
   liquidityAmount: BN;
   matchedAmount: BN;
   inplay: boolean;

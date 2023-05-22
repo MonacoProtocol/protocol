@@ -11,7 +11,7 @@
 
 ## MarketMatchingPool
 
-Type: {market: PublicKey, marketOutcomeIndex: [number][7], price: [number][7], forOutcome: [boolean][8], purchaser: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][8], orders: [Cirque][5]}
+Type: {market: PublicKey, marketOutcomeIndex: [number][7], price: [number][7], forOutcome: [boolean][8], payer: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][8], orders: [Cirque][5]}
 
 ### Properties
 
@@ -19,7 +19,7 @@ Type: {market: PublicKey, marketOutcomeIndex: [number][7], price: [number][7], f
 *   `marketOutcomeIndex` **[number][7]**&#x20;
 *   `price` **[number][7]**&#x20;
 *   `forOutcome` **[boolean][8]**&#x20;
-*   `purchaser` **PublicKey**&#x20;
+*   `payer` **PublicKey**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
 *   `inplay` **[boolean][8]**&#x20;
