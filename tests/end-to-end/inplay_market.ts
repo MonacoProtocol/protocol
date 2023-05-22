@@ -1,15 +1,14 @@
-import { monaco, MonacoMarket } from "../util/wrappers";
+import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
 import assert from "assert";
 import { Program } from "@coral-xyz/anchor";
 import {
-  findMarketMatchingPoolPda,
+  MarketMatchingPools,
   MarketOutcomes,
   MarketPositions,
   Orders,
   Trades,
 } from "../../npm-client/src/";
-import { Keypair } from "@solana/web3.js";
 
 describe("End to end test of", () => {
   it("basic lifecycle of inplay market", async () => {
@@ -238,12 +237,28 @@ describe("End to end test of", () => {
         }
       });
 
-    await closeMarketMatchingPool(market, purchaser, 0, 2.0, true);
-    await closeMarketMatchingPool(market, purchaser, 0, 2.0, false);
-    await closeMarketMatchingPool(market, purchaser, 1, 2.0, true);
-    await closeMarketMatchingPool(market, purchaser, 2, 2.0, true);
-    await closeMarketMatchingPool(market, purchaser, 2, 2.0, false);
-    await closeMarketMatchingPool(market, purchaser, 2, 3.0, true);
+    await MarketMatchingPools.marketMatchingPoolQuery(monaco.program as Program)
+      .filterByMarket(market.pk)
+      .fetchPublicKeys()
+      .then(async (response) => {
+        for (const marketMatchingPool of response.data.publicKeys) {
+          await monaco.program.methods
+            .closeMarketMatchingPool()
+            .accounts({
+              market: market.pk,
+              marketMatchingPool: marketMatchingPool,
+              purchaser: purchaser.publicKey,
+              crankOperator: monaco.operatorPk,
+              authorisedOperators:
+                await monaco.findCrankAuthorisedOperatorsPda(),
+            })
+            .rpc()
+            .catch((e) => {
+              console.error(e);
+              throw e;
+            });
+        }
+      });
 
     await MarketOutcomes.marketOutcomeQuery(monaco.program as Program)
       .filterByMarket(market.pk)
@@ -305,38 +320,3 @@ describe("End to end test of", () => {
     }
   });
 });
-
-async function closeMarketMatchingPool(
-  market: MonacoMarket,
-  purchaser: Keypair,
-  marketOutcomeIndex: number,
-  price: number,
-  forOutcome: boolean,
-) {
-  const marketMatchingPool = (
-    await findMarketMatchingPoolPda(
-      monaco.program as Program,
-      market.pk,
-      marketOutcomeIndex,
-      price,
-      forOutcome,
-    )
-  ).data.pda;
-  // FIXME we don't need the params here anymore as we can filter queries by market
-  await monaco.program.methods
-    .closeMarketMatchingPool(price, forOutcome)
-    .accounts({
-      market: market.pk,
-      marketOutcome: market.outcomePks[marketOutcomeIndex],
-      marketMatchingPool: marketMatchingPool,
-      purchaser: purchaser.publicKey,
-      crankOperator: monaco.operatorPk,
-      authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-    })
-    .rpc()
-    .catch((e) => {
-      console.error(e);
-      throw e;
-    });
-  return marketMatchingPool;
-}

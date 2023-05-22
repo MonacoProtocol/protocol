@@ -30,17 +30,15 @@ describe("Close market matching pool accounts", () => {
     await market.readyToClose();
 
     const matchingPoolPk = market.matchingPools[0][2.0].forOutcome;
-    const marketOutcomePk = market.outcomePks[0];
 
     const matchingPoolRent = await monaco.provider.connection.getBalance(
       matchingPoolPk,
     );
 
     await monaco.program.methods
-      .closeMarketMatchingPool(price, true)
+      .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        marketOutcome: marketOutcomePk,
         purchaser: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
@@ -82,13 +80,11 @@ describe("Close market matching pool accounts", () => {
     await market.completeSettlement();
 
     const matchingPoolPk = market.matchingPools[0][2.0].forOutcome;
-    const marketOutcomePk = market.outcomePks[0];
 
     await monaco.program.methods
-      .closeMarketMatchingPool(price, true)
+      .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        marketOutcome: marketOutcomePk,
         purchaser: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
@@ -123,13 +119,11 @@ describe("Close market matching pool accounts", () => {
     await market.readyToClose();
 
     const matchingPoolPk = market.matchingPools[0][2.0].forOutcome;
-    const marketOutcomePk = market.outcomePks[0];
 
     await monaco.program.methods
-      .closeMarketMatchingPool(price, true)
+      .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        marketOutcome: marketOutcomePk,
         purchaser: purchaserB.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
@@ -169,13 +163,11 @@ describe("Close market matching pool accounts", () => {
     await marketB.readyToClose();
 
     const matchingPoolPk = marketA.matchingPools[0][2.0].forOutcome;
-    const marketOutcomePk = marketA.outcomePks[0];
 
     await monaco.program.methods
-      .closeMarketMatchingPool(price, true)
+      .closeMarketMatchingPool()
       .accounts({
         market: marketB.pk,
-        marketOutcome: marketOutcomePk,
         purchaser: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
@@ -215,13 +207,11 @@ describe("Close market matching pool accounts", () => {
     await marketB.readyToClose();
 
     const matchingPoolPk = marketA.matchingPools[0][2.0].forOutcome;
-    const marketOutcomePk = marketA.outcomePks[1];
 
     await monaco.program.methods
-      .closeMarketMatchingPool(price, true)
+      .closeMarketMatchingPool()
       .accounts({
         market: marketA.pk,
-        marketOutcome: marketOutcomePk,
         purchaser: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
