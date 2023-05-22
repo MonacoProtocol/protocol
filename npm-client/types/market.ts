@@ -68,6 +68,10 @@ export type MarketMatchingPoolAccount = {
   liquidityAmount: BN;
   matchedAmount: BN;
   purchaser: PublicKey;
+  market: PublicKey;
+  marketOutcomeIndex: number;
+  price: number;
+  forOutcome: boolean;
 };
 
 export type MarketMatchingPoolAccounts = {

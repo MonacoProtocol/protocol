@@ -746,15 +746,15 @@ pub struct CloseMarketPosition<'info> {
 pub struct CloseMarketMatchingPool<'info> {
     #[account(
     mut,
-    has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+    has_one = payer @ CoreError::CloseAccountPayerMismatch,
     has_one = market @ CoreError::CloseAccountMarketMismatch,
-    close = purchaser,
+    close = payer,
     )]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
     #[account()]
     pub market: Account<'info, Market>,
     #[account(mut)]
-    pub purchaser: SystemAccount<'info>,
+    pub payer: SystemAccount<'info>,
 
     #[account(mut)]
     pub crank_operator: Signer<'info>,

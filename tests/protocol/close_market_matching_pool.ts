@@ -39,7 +39,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -85,7 +85,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -124,14 +124,14 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        purchaser: purchaserB.publicKey,
+        payer: purchaserB.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
+        assert.equal(e.error.errorCode.code, "CloseAccountPayerMismatch");
       });
   });
 
@@ -168,7 +168,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: marketB.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -212,7 +212,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: marketA.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
