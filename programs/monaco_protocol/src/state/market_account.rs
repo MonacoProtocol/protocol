@@ -12,8 +12,8 @@ pub struct Market {
     pub market_status: MarketStatus,
     pub inplay_enabled: bool,
     pub inplay: bool,
-    pub market_type: String,
     // this section cannot be moved or on-chain search will stop working
+    pub market_type: String,
     pub decimal_limit: u8,
 
     pub published: bool,
