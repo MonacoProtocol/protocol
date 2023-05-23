@@ -57,6 +57,7 @@ pub fn create(
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
     ctx.accounts.market.event_start_timestamp = event_start_timestamp;
+    ctx.accounts.market.inplay = false;
     ctx.accounts.market.inplay_enabled = inplay_enabled;
     ctx.accounts.market.event_start_order_behaviour = event_start_order_behaviour;
     ctx.accounts.market.market_lock_order_behaviour = market_lock_order_behaviour;
