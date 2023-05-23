@@ -65,13 +65,11 @@ pub fn create(
     } else {
         0
     };
-
-    if inplay_enabled {
-        let now = Clock::get().unwrap().unix_timestamp;
-        ctx.accounts.market.inplay = event_start_timestamp <= now;
+    ctx.accounts.market.inplay = if inplay_enabled {
+        event_start_timestamp <= Clock::get().unwrap().unix_timestamp
     } else {
-        ctx.accounts.market.inplay = false;
-    }
+        false
+    };
 
     Ok(())
 }
