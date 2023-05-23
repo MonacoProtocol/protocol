@@ -65,6 +65,11 @@ pub fn create(
     } else {
         0
     };
+    ctx.accounts.market.inplay = if inplay_enabled {
+        event_start_timestamp <= Clock::get().unwrap().unix_timestamp
+    } else {
+        false
+    };
 
     Ok(())
 }

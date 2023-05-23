@@ -809,8 +809,6 @@ describe("Protocol - Create Order", () => {
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
 
-    await market.moveMarketToInplay();
-
     const orderPk = await market.forOrder(0, 1, 2.0, purchaser);
     const order = await monaco.program.account.order.fetch(orderPk);
     assert.equal(
@@ -835,8 +833,6 @@ describe("Protocol - Create Order", () => {
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
-
-    await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
 
@@ -865,8 +861,6 @@ describe("Protocol - Create Order", () => {
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
-
-    await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
 
