@@ -67,8 +67,6 @@ describe("Security: Cancel Order", () => {
     ]);
     await market.airdrop(purchaser, 10_000);
 
-    await market.moveMarketToInplay();
-
     const orderPk = await market.forOrder(0, stake, price, purchaser);
 
     try {
@@ -98,8 +96,6 @@ describe("Security: Cancel Order", () => {
       ),
     ]);
     await market.airdrop(purchaser, 10_000);
-
-    await market.moveMarketToInplay();
 
     const orderPk = await market.forOrder(0, stake, price, purchaser);
     await market.processDelayExpiredOrders(0, price, true);

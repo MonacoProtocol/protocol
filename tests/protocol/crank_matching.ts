@@ -1688,8 +1688,6 @@ describe("Matching Crank", () => {
     ]);
     const purchaserToken = await market.airdrop(purchaser, 100_000);
 
-    await market.moveMarketToInplay();
-
     const forOrderPk = await market.forOrder(0, 1, 2.0, purchaser);
     const againstOrderPk = await market.againstOrder(0, 1, 2.0, purchaser);
 
