@@ -77,7 +77,7 @@ export class MarketMatchingPools {
         })
         .filter((o) => o.account);
 
-      response.addResponseData({ marketMatchingPoolAccounts: result });
+      response.addResponseData({ marketMatchingPools: result });
     } catch (e) {
       response.addError(e);
     }

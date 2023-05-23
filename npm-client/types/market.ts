@@ -21,7 +21,7 @@ export enum MarketType {
   EventResultWinner = "EventResultWinner",
 }
 
-export interface UnmatchedOrderBehaviour {
+export interface MarketOrderBehaviour {
   none?: Record<string, never>;
   cancelUnmatched?: Record<string, never>;
 }
@@ -44,8 +44,9 @@ export type MarketAccount = {
   inplay: boolean;
   inplayEnabled: boolean;
   inplayDelay?: number;
-  eventStartUnmatchedOrderBehaviour: UnmatchedOrderBehaviour;
-  marketLockUnmatchedOrderBehaviour: UnmatchedOrderBehaviour;
+  eventStartOrderBehaviour: MarketOrderBehaviour;
+  marketLockOrderBehaviour: MarketOrderBehaviour;
+  eventStartTimestamp: BN;
 };
 
 export type MarketAccounts = {
@@ -59,6 +60,7 @@ export type MatchingQueueItem = {
 };
 
 export type MarketMatchingPoolAccount = {
+  market: PublicKey;
   orders: {
     front: number;
     len: number;
