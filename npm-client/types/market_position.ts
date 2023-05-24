@@ -9,6 +9,7 @@ export type MarketPosition = {
   marketOutcomeSums: BN[];
   outcomeMaxExposure: BN[];
   outcomePositions: Map<string, BN>;
+  payer: PublicKey;
 };
 
 export type MarketPositionAccounts = {
