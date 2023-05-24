@@ -18,7 +18,7 @@ import {
   voidMarket,
   openMarket,
   transferMarketEscrowSurplus,
-  updateMarketEventStarttime,
+  updateMarketEventStartTime,
   setMarketEventStartToNow,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
@@ -163,7 +163,7 @@ describe("Set new event start", () => {
   it("Sets provided event start time", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
     const market = await monaco.create3WayMarket([1.001]);
-    const response = await updateMarketEventStarttime(
+    const response = await updateMarketEventStartTime(
       protocolProgram,
       market.pk,
       newEventStartTime,

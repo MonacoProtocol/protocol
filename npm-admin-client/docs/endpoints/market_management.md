@@ -20,7 +20,7 @@
 *   [updateMarketTitle][16]
     *   [Parameters][17]
     *   [Examples][18]
-*   [updateMarketEventStarttime][19]
+*   [updateMarketEventStartTime][19]
     *   [Parameters][20]
     *   [Examples][21]
 *   [setMarketEventStartToNow][22]
@@ -154,7 +154,7 @@ const update = await updateMarketTitle(program, marketPk, newTitle)
 
 Returns **TransactionResponse** transaction ID of the request
 
-## updateMarketEventStarttime
+## updateMarketEventStartTime
 
 For the given market, update the event start time
 
@@ -169,7 +169,7 @@ For the given market, update the event start time
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const eventStart = 1633042800
-const update = await updateMarketEventStarttime(program, marketPk, eventStart)
+const update = await updateMarketEventStartTime(program, marketPk, eventStart)
 ```
 
 Returns **TransactionResponse** transaction ID of the request

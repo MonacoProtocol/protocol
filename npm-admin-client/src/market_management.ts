@@ -290,9 +290,9 @@ export async function updateMarketTitle(
  * @example
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const eventStart = 1633042800
- * const update = await updateMarketEventStarttime(program, marketPk, eventStart)
+ * const update = await updateMarketEventStartTime(program, marketPk, eventStart)
  */
-export async function updateMarketEventStarttime(
+export async function updateMarketEventStartTime(
   program: Program,
   marketPk: PublicKey,
   eventStartTimeTimestamp: EpochTimeStamp,
