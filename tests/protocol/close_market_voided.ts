@@ -31,6 +31,9 @@ describe("Close market accounts (voided)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const paymentsQueueRent = await monaco.provider.connection.getBalance(
+      market.paymentsQueuePk,
+    );
 
     await monaco.program.methods
       .closeMarket()
@@ -40,6 +43,7 @@ describe("Close market accounts (voided)", () => {
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -49,7 +53,7 @@ describe("Close market accounts (voided)", () => {
 
     // ensure rent has been returned
     const expectedBalanceAfterMarketClosed =
-      balanceMarketCreated + marketRent + escrowRent;
+      balanceMarketCreated + marketRent + escrowRent + paymentsQueueRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
 
     await monaco.program.account.market.fetch(market.pk).catch((e) => {
@@ -94,6 +98,7 @@ describe("Close market accounts (voided)", () => {
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -127,6 +132,7 @@ describe("Close market accounts (voided)", () => {
         authority: monaco.operatorPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -170,6 +176,7 @@ describe("Close market accounts (voided)", () => {
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
+        commissionPaymentQueue: marketB.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
