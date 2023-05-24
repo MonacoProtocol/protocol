@@ -6,7 +6,7 @@ describe("Market: update", () => {
   it("Success", async () => {
     // create a new market
     const market = await monaco.create3WayMarket([4.2]);
-    const newLocktime = 43041841910;
+    const newLocktime = 1000 + Math.floor(new Date().getTime() / 1000);
 
     await monaco.program.methods
       .updateMarketLocktime(new anchor.BN(newLocktime))
@@ -21,7 +21,7 @@ describe("Market: update", () => {
         throw e;
       });
 
-    const marketAccount = await monaco.fetchMarket(market.pk).then((o) => {
+    const marketAccount = await market.getAccount().then((o) => {
       return {
         title: o.title,
         lockTimestamp: o.marketLockTimestamp.toNumber(),

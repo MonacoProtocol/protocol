@@ -9,8 +9,13 @@ use crate::state::market_account::Market;
 
 pub fn update_locktime(ctx: Context<UpdateMarket>, lock_time: i64) -> Result<()> {
     let market = &mut ctx.accounts.market;
-    let now = Clock::get().unwrap().unix_timestamp;
 
+    require!(
+        market.inplay_enabled || lock_time <= market.event_start_timestamp,
+        CoreError::MarketLockTimeAfterEventStartTime
+    );
+
+    let now = Clock::get().unwrap().unix_timestamp;
     update_market_locktime(market, lock_time, now)
 }
 
@@ -33,7 +38,7 @@ fn update_market_locktime(market: &mut Market, lock_time: i64, now: i64) -> Resu
 #[cfg(test)]
 mod tests {
     use crate::instructions::market::update_market_locktime::update_market_locktime;
-    use crate::state::market_account::{Market, MarketStatus};
+    use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
     use crate::state::market_type::EVENT_RESULT_WINNER;
 
     #[test]
@@ -53,6 +58,12 @@ mod tests {
             escrow_account_bump: 0,
             published: false,
             suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
         let now = 1575975177;
         let time_in_future = 43041841910;
@@ -78,6 +89,12 @@ mod tests {
             escrow_account_bump: 0,
             published: false,
             suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
         let now = 1575975177;
         let time_in_past = 1418209910;

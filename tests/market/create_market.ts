@@ -13,6 +13,34 @@ import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
 import { findMarketCommissionQueuePda } from "../../npm-admin-client";
 
+describe("Create markets with inplay features", () => {
+  it("successfully", async () => {
+    const now = Math.floor(new Date().getTime() / 1000);
+    const lockTime = now + 1000;
+    const eventTime = now + 100;
+    const marketPk = await createMarket(
+      monaco,
+      6,
+      3,
+      lockTime,
+      eventTime,
+      true,
+      10,
+      { none: {} },
+      { cancelUnmatched: {} },
+    );
+
+    const market = await monaco.fetchMarket(marketPk);
+
+    assert.equal(market.inplayEnabled, true);
+    assert.equal(market.inplayOrderDelay, 10);
+    assert.equal(market.marketLockTimestamp.toNumber(), lockTime);
+    assert.equal(market.eventStartTimestamp.toNumber(), eventTime);
+    assert.deepEqual(market.marketLockOrderBehaviour, { none: {} });
+    assert.deepEqual(market.eventStartOrderBehaviour, { cancelUnmatched: {} });
+  });
+});
+
 describe("Market: creation", () => {
   it("Success", async () => {
     const priceLadder = [1.001, 1.01, 1.1];
@@ -75,6 +103,22 @@ describe("Market: creation", () => {
       assert(false, "an exception should have been thrown");
     } catch (err) {
       assert.equal(err.error.errorCode.code, "MarketTypeInvalid");
+    }
+  });
+
+  it("failure when lock time is after event start time", async () => {
+    const now = Math.floor(new Date().getTime() / 1000);
+    const lockTime = now + 1000;
+    const eventTime = now + 100;
+
+    try {
+      await createMarket(monaco, 6, 3, lockTime, eventTime);
+      assert(false, "an exception should have been thrown");
+    } catch (err) {
+      assert.equal(
+        err.error.errorCode.code,
+        "MarketLockTimeAfterEventStartTime",
+      );
     }
   });
 
@@ -148,6 +192,12 @@ async function createMarket(
   protocol: Monaco,
   mintDecimals: number,
   marketDecimals: number,
+  marketLockTimestamp = 1924254038,
+  eventStartTimestamp = 1924254038,
+  inplayEnabled = false,
+  inplayDelay = 0,
+  marketLockOrderBehaviour: object = { none: {} },
+  eventStartOrderBehaviour: object = { none: {} },
 ) {
   const event = Keypair.generate();
   const marketType = MarketType.EventResultWinner;
@@ -181,12 +231,17 @@ async function createMarket(
   ).data.pda;
 
   await protocol.program.methods
-    .createMarket(
+    .createMarketV2(
       event.publicKey,
       marketType,
       marketTitle,
-      new anchor.BN(1924254038),
+      new anchor.BN(marketLockTimestamp),
       marketDecimals,
+      new anchor.BN(eventStartTimestamp),
+      inplayEnabled,
+      inplayDelay,
+      eventStartOrderBehaviour,
+      marketLockOrderBehaviour,
     )
     .accounts({
       market: marketPdaResponse.data.pda,
@@ -204,6 +259,8 @@ async function createMarket(
       console.error(e);
       throw e;
     });
+
+  return marketPdaResponse.data.pda;
 }
 
 async function createMarketWithIncorrectType(protocol: Monaco) {
@@ -239,12 +296,17 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
   ).data.pda;
 
   await protocol.program.methods
-    .createMarket(
+    .createMarketV2(
       event.publicKey,
       marketType,
       marketTitle,
       new anchor.BN(1924254038),
       marketDecimals,
+      new anchor.BN(1924254038),
+      false,
+      0,
+      { none: {} },
+      { none: {} },
     )
     .accounts({
       market: marketPda,

@@ -6,6 +6,7 @@ use crate::context::MatchOrders;
 use crate::error::CoreError;
 use crate::instructions::matching::create_trade::initialize_trade;
 use crate::instructions::{calculate_risk_from_stake, matching, order, transfer};
+use crate::state::market_account::MarketStatus::Open;
 use crate::state::market_position_account::{MarketPosition, MatchedRiskAtRate};
 use crate::state::order_account::Order;
 
@@ -14,6 +15,11 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     let order_against = &mut ctx.accounts.order_against;
 
     // validate market
+    require!(
+        Open.eq(&ctx.accounts.market.market_status),
+        CoreError::MarketNotOpen,
+    );
+
     let now = Clock::get().unwrap().unix_timestamp;
     require!(
         ctx.accounts.market.market_lock_timestamp > now,
@@ -34,6 +40,13 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     // validate that status is open or matched (for partial matches)
     require!(!order_for.is_completed(), CoreError::StatusClosed);
     require!(!order_against.is_completed(), CoreError::StatusClosed);
+
+    // validate that both orders are not within their inplay delay
+    require!(
+        order_for.delay_expiration_timestamp < now
+            && order_against.delay_expiration_timestamp < now,
+        CoreError::InplayDelay
+    );
 
     let selected_price = if order_for.creation_timestamp < order_against.creation_timestamp {
         order_for.expected_price
@@ -219,12 +232,13 @@ fn update_product_commission_contributions(
 
 #[cfg(test)]
 mod tests {
+    use solana_program::pubkey::Pubkey;
+
     use crate::instructions::matching::matching_one_to_one::update_product_commission_contributions;
     use crate::state::market_position_account::{
         MarketPosition, MatchedRiskAtRate, ProductMatchedRisk,
     };
     use crate::state::order_account::{Order, OrderStatus};
-    use solana_program::pubkey::Pubkey;
 
     #[test]
     fn update_product_commissions_empty_vec() {
@@ -245,8 +259,10 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
+            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
+            payer: Default::default(),
         };
 
         let mut market_position = MarketPosition {
@@ -255,6 +271,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 0,
             matched_risk_per_product: vec![ProductMatchedRisk {
                 product: product.unwrap(),
@@ -297,8 +314,10 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
+            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
+            payer: Default::default(),
         };
 
         let matched_stake_per_rate = vec![
@@ -315,6 +334,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 0,
             matched_risk_per_product: vec![ProductMatchedRisk {
                 product: product.unwrap(),
@@ -368,8 +388,10 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
+            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
+            payer: Default::default(),
         };
 
         let mut market_position = MarketPosition {
@@ -379,6 +401,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 0,
         };
 
@@ -440,8 +463,10 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
+            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
+            payer: Default::default(),
         };
 
         let mut market_position = MarketPosition {
@@ -452,6 +477,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 0,
         };
 
@@ -518,8 +544,10 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
+            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
+            payer: Default::default(),
         };
 
         let mut market_position = MarketPosition {
@@ -530,6 +558,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 0,
         };
 

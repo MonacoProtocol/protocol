@@ -47,6 +47,77 @@ describe("Security: Cancel Order", () => {
     }
   });
 
+  it("cannot cancel inplay order during inplay delay", async () => {
+    const inplayDelay = 100;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    // Set up Market and related accounts
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket(
+        [price],
+        true,
+        inplayDelay,
+        eventStartTimestamp,
+        marketLockTimestamp,
+      ),
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    await market.moveMarketToInplay();
+
+    const orderPk = await market.forOrder(0, stake, price, purchaser);
+
+    try {
+      await market.cancel(orderPk, purchaser);
+      assert.fail("expected InplayDelay");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "InplayDelay");
+    }
+  });
+
+  it("can cancel inplay order after inplay delay", async () => {
+    const inplayDelay = 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    // Set up Market and related accounts
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket(
+        [price],
+        true,
+        inplayDelay,
+        eventStartTimestamp,
+        marketLockTimestamp,
+      ),
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    await market.moveMarketToInplay();
+
+    const orderPk = await market.forOrder(0, stake, price, purchaser);
+    await market.processDelayExpiredOrders(0, price, true);
+
+    await market.cancel(orderPk, purchaser);
+
+    // check order was deleted
+    try {
+      await monaco.program.account.order.fetch(orderPk);
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + orderPk,
+      );
+    }
+  });
+
   it("cancel fully unmatched order: impostor purchaser with token account for the same mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
@@ -334,6 +405,42 @@ describe("Security: Cancel Order", () => {
       assert.fail("expected ConstraintAssociated");
     } catch (e) {
       assert.equal(e.error.errorCode.code, "ConstraintAssociated");
+    }
+
+    // check the order wasn't cancelled
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(orderPk),
+        market.getMarketPosition(purchaser),
+        market.getForMatchingPool(outcomeIndex, price),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaser),
+      ]),
+      [
+        { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
+        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { len: 1, liquidity: 2000, matched: 0 },
+        2000,
+        8000,
+      ],
+    );
+  });
+
+  it("cancel fully unmatched order: invalid market status", async () => {
+    // Set up Market and related accounts
+    const { market, purchaser, orderPk } = await setupUnmatchedOrder(
+      monaco,
+      outcomeIndex,
+      price,
+      stake,
+    );
+
+    try {
+      await market.settle(0);
+      await market.cancel(orderPk, purchaser);
+      assert.fail("expected CancelOrderNotCancellable");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
     }
 
     // check the order wasn't cancelled

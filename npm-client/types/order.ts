@@ -8,6 +8,7 @@ export interface OrderStatus {
   readonly settledWin?: Record<string, never>;
   readonly settledLose?: Record<string, never>;
   readonly cancelled?: Record<string, never>;
+  readonly voided?: Record<string, never>;
 }
 
 export type Match = {
@@ -26,8 +27,10 @@ export type Order = {
   voidedStake: BN;
   expectedPrice: number;
   creationTimestamp: BN;
+  delayExpirationTimestamp: BN;
   stakeUnmatched: BN;
   payout: BN;
+  payer: PublicKey;
 };
 
 export type PendingOrders = {

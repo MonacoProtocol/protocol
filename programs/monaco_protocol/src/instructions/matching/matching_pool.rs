@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
+use solana_program::clock::UnixTimestamp;
 
-use crate::state::market_account::Cirque;
+use crate::state::market_account::{Market, MarketStatus, QueueItem};
 use crate::{CoreError, MarketMatchingPool, MarketOutcome, Order};
 
 pub fn update_on_match(
@@ -53,9 +54,36 @@ pub fn update_on_match(
 }
 
 pub fn update_matching_queue_with_new_order(
-    market_matching_pool: &mut Account<MarketMatchingPool>,
+    market: &Market,
+    market_matching_pool: &mut MarketMatchingPool,
     order_account: &Account<Order>,
 ) -> Result<()> {
+    if market.inplay {
+        update_matching_queue_with_new_inplay_order(
+            market,
+            market_matching_pool,
+            order_account,
+            order_account.key(),
+        )
+    } else {
+        update_matching_queue_with_new_preplay_order(
+            market_matching_pool,
+            order_account,
+            order_account.key(),
+        )
+    }
+}
+
+fn update_matching_queue_with_new_preplay_order(
+    market_matching_pool: &mut MarketMatchingPool,
+    order_account: &Order,
+    order_pubkey: Pubkey,
+) -> Result<()> {
+    require!(
+        !market_matching_pool.inplay,
+        CoreError::CreationMarketAlreadyInplay
+    );
+
     market_matching_pool.liquidity_amount = market_matching_pool
         .liquidity_amount
         .checked_add(order_account.stake)
@@ -63,9 +91,84 @@ pub fn update_matching_queue_with_new_order(
 
     market_matching_pool
         .orders
-        .enqueue(order_account.key())
+        .enqueue_pubkey(order_pubkey)
         .ok_or(CoreError::MatchingQueueIsFull)?;
 
+    Ok(())
+}
+
+fn update_matching_queue_with_new_inplay_order(
+    market: &Market,
+    market_matching_pool: &mut MarketMatchingPool,
+    order_account: &Order,
+    order_pubkey: Pubkey,
+) -> Result<()> {
+    if !market_matching_pool.inplay {
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    }
+
+    market_matching_pool
+        .orders
+        .enqueue(QueueItem::new_inplay(
+            order_pubkey,
+            order_account.delay_expiration_timestamp,
+            order_account.stake,
+        ))
+        .ok_or(CoreError::MatchingQueueIsFull)?;
+
+    Ok(())
+}
+
+pub fn move_market_matching_pool_to_inplay(
+    market: &Market,
+    market_matching_pool: &mut MarketMatchingPool,
+) -> Result<()> {
+    require!(
+        market.market_status == MarketStatus::Open,
+        CoreError::MatchingMarketInvalidStatus
+    );
+    require!(
+        market.inplay_enabled,
+        CoreError::MatchingMarketInplayNotEnabled
+    );
+    require!(market.inplay, CoreError::MatchingMarketNotYetInplay);
+    require!(
+        !market_matching_pool.inplay,
+        CoreError::MatchingMarketMatchingPoolAlreadyInplay
+    );
+
+    market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+
+    Ok(())
+}
+
+pub fn updated_liquidity_with_delay_expired_orders(
+    market: &Market,
+    market_matching_pool: &mut MarketMatchingPool,
+) -> Result<()> {
+    require!(
+        market.market_status == MarketStatus::Open,
+        CoreError::MatchingMarketInvalidStatus
+    );
+    require!(
+        market.inplay && market_matching_pool.inplay,
+        CoreError::MatchingMarketNotYetInplay
+    );
+
+    let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
+    for i in 0..market_matching_pool.orders.len() {
+        if let Some(order) = market_matching_pool.orders.peek(i) {
+            if order.delay_expiration_timestamp > now {
+                break;
+            } else if order.liquidity_to_add > 0 {
+                market_matching_pool.liquidity_amount = market_matching_pool
+                    .liquidity_amount
+                    .checked_add(order.liquidity_to_add)
+                    .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+                order.liquidity_to_add = 0;
+            }
+        }
+    }
     Ok(())
 }
 
@@ -75,6 +178,31 @@ fn update_matching_queue_with_matched_order(
     matched_order: Pubkey,
     fully_matched: bool,
 ) -> Result<()> {
+    let front_of_queue = match fully_matched {
+        true => matching_pool.orders.dequeue(),
+        false => matching_pool.orders.peek(0),
+    };
+
+    match front_of_queue {
+        Some(queue_item) => {
+            require!(
+                matched_order == queue_item.order,
+                CoreError::OrderNotAtFrontOfQueue
+            );
+            if queue_item.liquidity_to_add > 0 {
+                let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
+                if queue_item.delay_expiration_timestamp <= now {
+                    matching_pool.liquidity_amount = matching_pool
+                        .liquidity_amount
+                        .checked_add(queue_item.liquidity_to_add)
+                        .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+                    queue_item.liquidity_to_add = 0;
+                }
+            }
+        }
+        None => return Err(anchor_lang::error!(CoreError::MatchingQueueIsEmpty)),
+    }
+
     matching_pool.liquidity_amount = matching_pool
         .liquidity_amount
         .checked_sub(amount_matched)
@@ -84,20 +212,6 @@ fn update_matching_queue_with_matched_order(
         .checked_add(amount_matched)
         .ok_or(CoreError::MatchingMatchedAmountUpdateError)?;
 
-    if fully_matched {
-        remove_order_from_matching_queue(&mut matching_pool.orders, matched_order)?;
-    }
-
-    Ok(())
-}
-
-pub fn remove_order_from_matching_queue(order_queue: &mut Cirque, order: Pubkey) -> Result<()> {
-    let removed_item = order_queue.dequeue();
-    require!(removed_item.is_some(), CoreError::MatchingQueueIsEmpty);
-    require!(
-        order == removed_item.unwrap(),
-        CoreError::IncorrectOrderDequeueAttempt
-    );
     Ok(())
 }
 
@@ -110,7 +224,7 @@ pub fn update_on_cancel(
         .liquidity_amount
         .checked_sub(order.voided_stake)
         .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-    matching_pool.orders.remove_item(&order.key());
+    matching_pool.orders.remove_pubkey(&order.key());
 
     Ok(())
 }

@@ -145,6 +145,16 @@ export class Monaco {
     };
   }
 
+  async getMarket(marketPk: PublicKey) {
+    const market = await this.fetchMarket(marketPk);
+    return {
+      marketStatus: market.marketStatus,
+      inplayEnabled: market.inplayEnabled,
+      inplayOrderDelay: market.inplayOrderDelay,
+      eventStartTimestamp: market.eventStartTimestamp.toNumber(),
+    };
+  }
+
   async getMarketOutcome(marketOutcomePk: PublicKey) {
     const marketOutcome = await this.fetchMarketOutcome(marketOutcomePk);
     return {
@@ -198,10 +208,34 @@ export class Monaco {
     );
   }
 
-  async create3WayMarket(priceLadder: number[]) {
+  async create3WayMarket(
+    priceLadder: number[],
+    inplayEnabled = false,
+    inplayDelay = 0,
+    eventStartTimestamp?: number,
+    marketLockTimestamp?: number,
+    eventStartOrderBehaviour?: object,
+  ) {
     const market = await this.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
       priceLadder,
+      null,
+      inplayEnabled,
+      inplayDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+      eventStartOrderBehaviour,
+    );
+    await market.open();
+    return market;
+  }
+
+  async create3WayMarketWithInplay(priceLadder: number[]) {
+    const market = await this.createMarket(
+      ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
+      priceLadder,
+      null,
+      true,
     );
     await market.open();
     return market;
@@ -211,6 +245,11 @@ export class Monaco {
     outcomes: string[],
     priceLadder: number[],
     marketOperatorKeypair?: Keypair,
+    inplayEnabled?: boolean,
+    inplayDelay?: number,
+    eventStartTimestamp = 1924254038,
+    marketLockTimestamp = 1924254038,
+    eventStartOrderBehaviour: object = { cancelUnmatched: {} },
   ) {
     const event = anchor.web3.Keypair.generate();
     const marketType = MarketType.EventResultWinner;
@@ -247,12 +286,17 @@ export class Monaco {
 
     // invoke core program to call operations required for creating an order
     await this.program.methods
-      .createMarket(
+      .createMarketV2(
         event.publicKey,
         marketType,
         marketTitle,
-        new anchor.BN(1924254038),
+        new anchor.BN(marketLockTimestamp),
         decimals,
+        new anchor.BN(eventStartTimestamp),
+        inplayEnabled,
+        inplayDelay,
+        eventStartOrderBehaviour,
+        { none: {} },
       )
       .accounts({
         market: marketPdaResponse.data.pda,
@@ -425,6 +469,10 @@ export class MonacoMarket {
     this.mintPk = mintPk;
     this.mintInfo = mintInfo;
     this.marketAuthority = marketAuthority;
+  }
+
+  async getAccount() {
+    return this.monaco.fetchMarket(this.pk);
   }
 
   toAmountInteger(amount: number): number {
@@ -618,6 +666,33 @@ export class MonacoMarket {
       });
   }
 
+  async cancelPreplayOrderPostEventStart(orderPk: PublicKey) {
+    const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
+    const matchingPoolPk = order.forOutcome
+      ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .forOutcome
+      : this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .against;
+    await this.monaco.program.methods
+      .cancelPreplayOrderPostEventStart()
+      .accounts({
+        order: orderPk,
+        marketPosition: await this.cacheMarketPositionPk(order.purchaser),
+        purchaser: order.purchaser,
+        purchaserToken: purchaserTokenPk,
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketMatchingPool: matchingPoolPk,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async match(
     forOrderPk: PublicKey,
     againstOrderPk: PublicKey,
@@ -711,6 +786,41 @@ export class MonacoMarket {
         authorisedOperators: authorisedOperatorsPk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async voidMarket() {
+    const authorisedOperatorsPk =
+      await this.monaco.findMarketAuthorisedOperatorsPda();
+
+    await this.monaco.program.methods
+      .voidMarket()
+      .accounts({
+        market: this.pk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async voidOrder(orderPk: PublicKey) {
+    await this.monaco.program.methods
+      .voidOrder()
+      .accounts({
+        market: this.pk,
+        order: orderPk,
+      })
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -814,9 +924,78 @@ export class MonacoMarket {
       });
   }
 
+  async updateMarketEventStartTimeToNow() {
+    await this.monaco.program.methods
+      .updateMarketEventStartTimeToNow()
+      .accounts({
+        market: this.pk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async moveMarketToInplay() {
+    await this.monaco.program.methods
+      .moveMarketToInplay()
+      .accounts({
+        market: this.pk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async moveMarketMatchingPoolToInplay(
+    outcomeIndex: number,
+    price: number,
+    forOutcome: boolean,
+  ) {
+    const marketMatchingPool = forOutcome
+      ? this.matchingPools[outcomeIndex][price].forOutcome
+      : this.matchingPools[outcomeIndex][price].against;
+    await this.monaco.program.methods
+      .moveMarketMatchingPoolToInplay()
+      .accounts({
+        market: this.pk,
+        marketMatchingPool,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async completeSettlement() {
     await this.monaco.program.methods
       .completeMarketSettlement()
+      .accounts({
+        market: this.pk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findCrankAuthorisedOperatorsPda(),
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async completeVoid() {
+    await this.monaco.program.methods
+      .completeMarketVoid()
       .accounts({
         market: this.pk,
         crankOperator: this.monaco.operatorPk,
@@ -885,6 +1064,53 @@ export class MonacoMarket {
       this.externalPrograms.protocolProduct as Program,
       this.pk,
     );
+  }
+
+  async processDelayExpiredOrders(
+    outcomeIndex: number,
+    price: number,
+    forOutcome: boolean,
+  ) {
+    const matchingPools = this.matchingPools[outcomeIndex][price];
+    const marketMatchingPool = forOutcome
+      ? matchingPools.forOutcome
+      : matchingPools.against;
+    try {
+      await this.monaco.program.methods
+        .processDelayExpiredOrders()
+        .accounts({
+          market: this.pk,
+          marketMatchingPool,
+        })
+        .rpc();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }
+
+  async voidMarketPositionForPurchaser(purchaser: PublicKey) {
+    const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
+    const authorisedOperatorsPk =
+      await this.monaco.findCrankAuthorisedOperatorsPda();
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
+
+    await this.monaco.program.methods
+      .voidMarketPosition()
+      .accounts({
+        tokenProgram: TOKEN_PROGRAM_ID,
+        market: this.pk,
+        purchaserTokenAccount: purchaserTokenPk,
+        marketPosition: marketPositionPk,
+        marketEscrow: this.escrowPk,
+        crankOperator: this.monaco.operatorPk,
+        authorisedOperators: authorisedOperatorsPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
   }
 }
 

@@ -27,6 +27,11 @@ For the given parameters:
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
 *   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
 *   `priceLadder` **[Array][8]<[number][9]>** {number\[]} array of price points to add to the outcome
+*   `eventStartTimestamp` **EpochTimeStamp?** {EpochTimeStamp} timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)
+*   `inplayEnabled` **[boolean][10]?** {boolean} whether the market can accept orders after the event starts (defaults to false)
+*   `inplayOrderDelay` **[number][9]?** {number} number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)
+*   `eventStartOrderBehaviour` **MarketOrderBehaviour?** {MarketOrderBehaviour} protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)
+*   `marketLockOrderBehaviour` **MarketOrderBehaviour?** {MarketOrderBehaviour} protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)
 *   `batchSize` **[number][9]?** {number} number of prices to add in a single request
 
 ### Examples
@@ -57,6 +62,11 @@ For the given parameters, create a wagering market that accepts orders in the pr
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
+*   `eventStartTimestamp` **EpochTimeStamp?** {EpochTimeStamp} timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)
+*   `inplayEnabled` **[boolean][10]?** {boolean} whether the market can accept orders after the event starts (defaults to false)
+*   `inplayOrderDelay` **[number][9]?** {number} number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)
+*   `eventStartOrderBehaviour` **MarketOrderBehaviour?** {MarketOrderBehaviour} protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)
+*   `marketLockOrderBehaviour` **MarketOrderBehaviour?** {MarketOrderBehaviour} protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)
 
 ### Examples
 
@@ -88,3 +98,5 @@ Returns **CreateMarketResponse** containing the newly-created market account pub
 [8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
 [9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

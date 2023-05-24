@@ -1668,6 +1668,85 @@ describe("Matching Crank", () => {
       ],
     );
   });
+
+  it("Matching order within delay should error", async () => {
+    const inplayDelay = 100;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket(
+        [2.0],
+        true,
+        inplayDelay,
+        eventStartTimestamp,
+        marketLockTimestamp,
+      ),
+    ]);
+    const purchaserToken = await market.airdrop(purchaser, 100_000);
+
+    await market.moveMarketToInplay();
+
+    const forOrderPk = await market.forOrder(0, 1, 2.0, purchaser);
+    const againstOrderPk = await market.againstOrder(0, 1, 2.0, purchaser);
+
+    const marketMatchingPools = market.matchingPools[0][2.0];
+    const marketPositionPda = await market.cacheMarketPositionPk(
+      purchaser.publicKey,
+    );
+
+    const [forTradePk, againstTradePk] = (
+      await Promise.all([
+        findTradePda(monaco.getRawProgram(), againstOrderPk, forOrderPk, true),
+        findTradePda(monaco.getRawProgram(), againstOrderPk, forOrderPk, false),
+      ])
+    ).map((result) => result.data.tradePk);
+
+    //
+    // CRANK
+    //
+    try {
+      await monaco.program.methods
+        .matchOrders()
+        .accounts({
+          orderFor: forOrderPk,
+          orderAgainst: againstOrderPk,
+          tradeFor: forTradePk,
+          tradeAgainst: againstTradePk,
+          marketPositionFor: marketPositionPda,
+          marketPositionAgainst: marketPositionPda,
+          purchaserTokenAccountFor: purchaserToken,
+          purchaserTokenAccountAgainst: purchaserToken,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          marketOutcome: market.outcomePks[0],
+          marketMatchingPoolFor: marketMatchingPools.forOutcome,
+          marketMatchingPoolAgainst: marketMatchingPools.against,
+          crankOperator: monaco.operatorPk,
+          authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      assert.fail("This test should have thrown an error");
+    } catch (err) {
+      assert.equal(err.error.errorCode.code, "InplayDelay");
+    }
+
+    // Check that the orders have not been matched.
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(forOrderPk),
+        monaco.getOrder(againstOrderPk),
+      ]),
+      [
+        { stakeUnmatched: 1, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 1, stakeVoided: 0, status: { open: {} } },
+      ],
+    );
+  });
 });
 
 async function setupMatchedOrders(

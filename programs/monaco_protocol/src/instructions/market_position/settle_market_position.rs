@@ -67,9 +67,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
 
     market_position.paid = true;
 
-    transfer::transfer_market_position(&ctx, total_payout_u64)?;
-
-    Ok(())
+    transfer::transfer_market_position(&ctx, total_payout_u64)
 }
 
 fn enqueue_payment(payment_queue: &mut PaymentQueue, payment: &PaymentInfo) -> Result<()> {
@@ -377,6 +375,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 10,
             matched_risk_per_product: vec![product_matched_risk],
         };
@@ -432,6 +431,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 10,
             matched_risk_per_product: vec![product_matched_risk],
         };
@@ -507,6 +507,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payer: Default::default(),
             total_matched_risk: 20,
             matched_risk_per_product: vec![product_matched_risk, product2_matched_risk],
         };

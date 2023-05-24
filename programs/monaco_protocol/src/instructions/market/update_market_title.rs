@@ -24,7 +24,7 @@ fn update_market_title(market: &mut Market, title: String) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use crate::instructions::market::update_market_title::update_market_title;
-    use crate::state::market_account::{Market, MarketStatus};
+    use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
     use crate::state::market_type::EVENT_RESULT_WINNER;
 
     #[test]
@@ -44,6 +44,12 @@ mod tests {
             escrow_account_bump: 0,
             published: false,
             suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let result = update_market_title(&mut market, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string());
@@ -67,6 +73,12 @@ mod tests {
             escrow_account_bump: 0,
             published: false,
             suspended: false,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
 
         let result = update_market_title(&mut market, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string());

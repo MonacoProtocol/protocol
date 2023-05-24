@@ -85,11 +85,22 @@ export class MarketStatus {
   readyToClose?: Record<string, never>;
 }
 
+export class MarketOrderBehaviour {
+  none?: Record<string, never>;
+  cancelUnmatched?: Record<string, never>;
+}
+
+export const MarketOrderBehaviourValue = {
+  none: { none: {} } as MarketOrderBehaviour,
+  cancelUnmatched: { cancelUnmatched: {} } as MarketOrderBehaviour,
+};
+
 export type MarketAccount = {
   authority: BN;
   decimalLimit: number;
   escrowAccountBump: number;
   eventAccount: PublicKey;
+  eventStartTimestamp: BN;
   marketLockTimestamp: BN;
   marketOutcomesCount: number;
   marketSettleTimestamp?: BN;
@@ -100,6 +111,11 @@ export type MarketAccount = {
   published: boolean;
   suspended: boolean;
   title: string;
+  inplay: boolean;
+  inplayEnabled: boolean;
+  inplayDelay: number;
+  eventStartOrderBehaviour: MarketOrderBehaviour;
+  marketLockedOrderBehaviour: MarketOrderBehaviour;
 };
 
 export type EpochTimeStamp = number;

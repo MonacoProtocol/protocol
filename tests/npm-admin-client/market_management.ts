@@ -15,6 +15,7 @@ import {
   updateMarketTitle,
   updateMarketLocktime,
   setMarketReadyToClose,
+  voidMarket,
   openMarket,
   transferMarketEscrowSurplus,
 } from "../../npm-admin-client/src";
@@ -116,16 +117,16 @@ describe("Set new title", () => {
   it("Sets provided title", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
     const market = await monaco.create3WayMarket([1.001]);
-    const suspend = await updateMarketTitle(
+    const response = await updateMarketTitle(
       protocolProgram,
       market.pk,
       newTitle,
     );
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert(suspend.success);
-    assert(suspend.data.tnxId);
-    assert.deepEqual(suspend.errors, []);
+    assert(response.success);
+    assert(response.data.tnxId);
+    assert.deepEqual(response.errors, []);
     assert.equal(updatedMarket.title, "Brand New Title");
   });
 });
@@ -133,21 +134,21 @@ describe("Set new title", () => {
 describe("Set new locktime", () => {
   const provider = AnchorProvider.local();
   setProvider(provider);
-  const newLocktime = 64060588800;
+  const newLocktime = 1000 + Math.floor(new Date().getTime() / 1000);
 
   it("Sets provided locktime", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
     const market = await monaco.create3WayMarket([1.001]);
-    const suspend = await updateMarketLocktime(
+    const response = await updateMarketLocktime(
       protocolProgram,
       market.pk,
       newLocktime,
     );
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert(suspend.success);
-    assert(suspend.data.tnxId);
-    assert.deepEqual(suspend.errors, []);
+    assert.deepEqual(response.errors, []);
+    assert(response.success);
+    assert(response.data.tnxId);
     assert.deepEqual(updatedMarket.marketLockTimestamp, new BN(newLocktime));
   });
 });
@@ -211,6 +212,39 @@ describe("Market ready to close", () => {
     assert.equal(response.data, undefined);
     assert(response.errors);
     assert.deepEqual(updatedMarket.marketStatus, { open: {} });
+  });
+});
+
+describe("Market ready to void", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+
+  it("Set market as ready to void", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+
+    const response = await voidMarket(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert(response.success);
+    assert(response.data.tnxId);
+    assert.deepEqual(response.errors, []);
+    assert.deepEqual(updatedMarket.marketStatus, { readyToVoid: {} });
+  });
+
+  it("Fails if market not initializing or open", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+
+    await market.settle(0);
+
+    const response = await voidMarket(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert.equal(response.success, false);
+    assert.equal(response.data, undefined);
+    assert(response.errors);
+    assert.deepEqual(updatedMarket.marketStatus, { readyForSettlement: {} });
   });
 });
 

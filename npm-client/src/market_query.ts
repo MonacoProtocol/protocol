@@ -7,7 +7,12 @@ import {
   MarketAccount,
   GetPublicKeys,
 } from "../types";
-import { PublicKeyCriterion, ByteCriterion, toFilters } from "./queries";
+import {
+  BooleanCriterion,
+  PublicKeyCriterion,
+  ByteCriterion,
+  toFilters,
+} from "./queries";
 
 export enum MarketStatusFilter {
   Initializing = 0x00,
@@ -16,6 +21,8 @@ export enum MarketStatusFilter {
   ReadyForSettlement = 0x03,
   Settled = 0x04,
   ReadyToClose = 0x05,
+  ReadyToVoid = 0x06,
+  Voided = 0x07,
 }
 
 export class Markets {
@@ -52,6 +59,12 @@ export class Markets {
   private event: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
   private mintAccount: PublicKeyCriterion = new PublicKeyCriterion(8 + 32 + 32);
   private status: ByteCriterion = new ByteCriterion(8 + 32 + 32 + 32);
+  private inplayEnabled: BooleanCriterion = new BooleanCriterion(
+    8 + 32 + 32 + 32 + 1,
+  );
+  private inplay: BooleanCriterion = new BooleanCriterion(
+    8 + 32 + 32 + 32 + 1 + 1,
+  );
 
   constructor(program: Program) {
     this.program = program;
@@ -77,6 +90,16 @@ export class Markets {
     return this;
   }
 
+  filterByInplayEnabled(inplayEnabled: boolean): Markets {
+    this.inplayEnabled.setValue(inplayEnabled);
+    return this;
+  }
+
+  filterByInplay(inplay: boolean): Markets {
+    this.inplay.setValue(inplay);
+    return this;
+  }
+
   /**
    *
    * @returns {GetPublicKeys} list of all fetched market publicKeys
@@ -96,6 +119,8 @@ export class Markets {
             this.event,
             this.mintAccount,
             this.status,
+            this.inplayEnabled,
+            this.inplay,
           ),
         },
       );

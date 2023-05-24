@@ -5,7 +5,7 @@ use rust_decimal::Decimal;
 use crate::context::{CreateMarket, InitializeMarketOutcome};
 use crate::monaco_protocol::PRICE_SCALE;
 use crate::state::market_account::{
-    Cirque, Market, MarketMatchingPool, MarketOutcome, MarketStatus,
+    Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
 };
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
@@ -17,6 +17,11 @@ pub fn create(
     market_lock_timestamp: i64,
     title: String,
     max_decimals: u8,
+    event_start_timestamp: i64,
+    inplay_enabled: bool,
+    inplay_order_delay: u8,
+    event_start_order_behaviour: MarketOrderBehaviour,
+    market_lock_order_behaviour: MarketOrderBehaviour,
 ) -> Result<()> {
     require!(
         title.len() <= Market::TITLE_MAX_LENGTH,
@@ -25,6 +30,10 @@ pub fn create(
     require!(
         market_lock_timestamp > Clock::get().unwrap().unix_timestamp,
         CoreError::MarketLockTimeNotInTheFuture
+    );
+    require!(
+        inplay_enabled || market_lock_timestamp <= event_start_timestamp,
+        CoreError::MarketLockTimeAfterEventStartTime
     );
     require!(
         ctx.accounts.mint.decimals >= PRICE_SCALE,
@@ -48,6 +57,15 @@ pub fn create(
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
+    ctx.accounts.market.event_start_timestamp = event_start_timestamp;
+    ctx.accounts.market.inplay_enabled = inplay_enabled;
+    ctx.accounts.market.event_start_order_behaviour = event_start_order_behaviour;
+    ctx.accounts.market.market_lock_order_behaviour = market_lock_order_behaviour;
+    ctx.accounts.market.inplay_order_delay = if inplay_enabled {
+        inplay_order_delay
+    } else {
+        0
+    };
 
     intialize_commission_payments_queue(
         &mut ctx.accounts.commission_payment_queue,
@@ -95,12 +113,15 @@ fn validate_prices(prices: &[f64]) -> Result<()> {
 
 pub fn initialize_market_matching_pool(
     matching_pool: &mut Account<MarketMatchingPool>,
+    market: &Account<Market>,
     purchaser: Pubkey,
 ) -> Result<()> {
+    matching_pool.market = market.key();
     matching_pool.purchaser = purchaser;
     matching_pool.liquidity_amount = 0_u64;
     matching_pool.matched_amount = 0_u64;
     matching_pool.orders = Cirque::new(MarketMatchingPool::QUEUE_LENGTH);
+    matching_pool.inplay = market.inplay;
     Ok(())
 }
 

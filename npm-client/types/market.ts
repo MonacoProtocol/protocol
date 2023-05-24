@@ -10,6 +10,8 @@ export interface MarketStatus {
   readonly readyForSettlement?: Record<string, never>;
   readonly settled?: Record<string, never>;
   readonly readyToClose?: Record<string, never>;
+  readonly readyToVoid?: Record<string, never>;
+  readonly voided?: Record<string, never>;
 }
 
 export enum MarketType {
@@ -17,6 +19,11 @@ export enum MarketType {
   EventResultHalfTime = "EventResultHalfTime",
   EventResultBothSidesScore = "EventResultBothSidesScore",
   EventResultWinner = "EventResultWinner",
+}
+
+export interface MarketOrderBehaviour {
+  none?: Record<string, never>;
+  cancelUnmatched?: Record<string, never>;
 }
 
 export type MarketAccount = {
@@ -34,18 +41,32 @@ export type MarketAccount = {
   published: boolean;
   suspended: boolean;
   title: string;
+  inplay: boolean;
+  inplayEnabled: boolean;
+  inplayDelay?: number;
+  eventStartOrderBehaviour: MarketOrderBehaviour;
+  marketLockOrderBehaviour: MarketOrderBehaviour;
+  eventStartTimestamp: BN;
 };
 
 export type MarketAccounts = {
   markets: GetAccount<MarketAccount>[];
 };
 
+export type MatchingQueueItem = {
+  order: PublicKey;
+  delayExpirationTimestamp: BN;
+  liquidityToAdd: BN;
+};
+
 export type MarketMatchingPoolAccount = {
+  market: PublicKey;
   orders: {
     front: number;
     len: number;
-    items: PublicKey[];
+    items: MatchingQueueItem[];
   };
+  inplay: boolean;
   liquidityAmount: BN;
   matchedAmount: BN;
   purchaser: PublicKey;

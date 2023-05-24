@@ -4,18 +4,21 @@ cd $(dirname $0)
 PATH=$(npm bin):$PATH
 
 declare -a endpoints=(
-    "order_query"
     "order"
+    "order_query"
     "cancel_order"
     "create_order"
     "market_matching_pools"
+    "market_matching_pool_query"
     "market_outcomes"
     "market_outcome_query"
     "market_position"
+    "market_position_query"
     "market_prices"
-    "market_query"
     "markets"
+    "market_query"
     "product"
+    "product_query"
     "trade"
     "trade_query"
     "utils"

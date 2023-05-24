@@ -3,12 +3,19 @@ use anchor_lang::prelude::*;
 use crate::context::CancelOrder;
 use crate::error::CoreError;
 use crate::instructions::{account, calculate_risk_from_stake, matching, transfer};
+use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
 pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     let order = &ctx.accounts.order;
+
     require!(
         [OrderStatus::Open, OrderStatus::Matched].contains(&order.order_status),
+        CoreError::CancelOrderNotCancellable
+    );
+
+    require!(
+        [MarketStatus::Open].contains(&ctx.accounts.market.market_status),
         CoreError::CancelOrderNotCancellable
     );
 
@@ -17,19 +24,24 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         CoreError::CancelOrderNotCancellable
     );
 
-    update_order(&mut ctx.accounts.order)?;
+    let now = Clock::get().unwrap().unix_timestamp;
+    require!(
+        !ctx.accounts.market.inplay || order.delay_expiration_timestamp <= now,
+        CoreError::InplayDelay
+    );
+
+    ctx.accounts.order.void_stake_unmatched();
 
     let order = &ctx.accounts.order;
 
+    // remove from matching queue
     matching::matching_pool::update_on_cancel(order, &mut ctx.accounts.market_matching_pool)?;
 
-    // expected refund based on voided stake
+    // calculate refund
     let expected_refund = match order.for_outcome {
         true => order.voided_stake,
         false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
     };
-
-    // calculate refund
     let refund = ctx.accounts.market_position.update_on_cancelation(
         order.market_outcome_index as usize,
         order.for_outcome,
@@ -37,20 +49,13 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     )?;
     transfer::order_cancelation_refund(&ctx, refund)?;
 
-    // close account if order was fully unmatched
+    // if never matched close
     if order.stake == order.voided_stake {
         account::close_account(
             &mut ctx.accounts.order.to_account_info(),
             &mut ctx.accounts.purchaser.to_account_info(),
         )?;
     }
-
-    Ok(())
-}
-
-fn update_order(order: &mut Account<Order>) -> Result<()> {
-    order.voided_stake = order.stake_unmatched;
-    order.stake_unmatched = 0_u64;
 
     Ok(())
 }
