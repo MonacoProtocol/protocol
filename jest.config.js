@@ -1,6 +1,6 @@
 const jestConfig = {
     verbose: true,
-    testMatch: ["**/tests/protocol/cancel_order.ts?(x)"],
+    testMatch: ["**/tests/**/*.ts?(x)"],
     testPathIgnorePatterns: [
         "tests/setup.ts",
         "tests/util/pdas.ts",
