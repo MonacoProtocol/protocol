@@ -1,6 +1,6 @@
 {
   "name": "@monaco-protocol/client",
-  "version": "6.0.0-rc4",
+  "version": "6.0.0",
   "description": "Interface package for the Monaco Protocol on Solana",
   "author": "Monaco Protocol",
   "license": "MIT",
