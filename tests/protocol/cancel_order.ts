@@ -182,7 +182,7 @@ describe("Security: Cancel Order", () => {
     await market.processDelayExpiredOrders(0, price, true);
 
     let matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, 0);
+    assert.equal(matchingPool.liquidity, stake);
 
     const orderPk = await market.forOrder(0, stake, price, purchaser);
 
