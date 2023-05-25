@@ -9,7 +9,7 @@
 
 ## MarketPosition
 
-Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][5], marketOutcomeSums: [Array][6]\<BN>, outcomeMaxExposure: [Array][6]\<BN>, outcomePositions: [Map][7]<[string][8], BN>}
+Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][5], marketOutcomeSums: [Array][6]\<BN>, outcomeMaxExposure: [Array][6]\<BN>, outcomePositions: [Map][7]<[string][8], BN>, payer: PublicKey}
 
 ### Properties
 
@@ -19,6 +19,7 @@ Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][5], marketOutcom
 *   `marketOutcomeSums` **[Array][6]\<BN>**&#x20;
 *   `outcomeMaxExposure` **[Array][6]\<BN>**&#x20;
 *   `outcomePositions` **[Map][7]<[string][8], BN>**&#x20;
+*   `payer` **PublicKey**&#x20;
 
 ## MarketPositionAccounts
 

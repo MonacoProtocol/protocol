@@ -43,7 +43,7 @@ export type MarketAccount = {
   title: string;
   inplay: boolean;
   inplayEnabled: boolean;
-  inplayDelay?: number;
+  inplayOrderDelay: number;
   eventStartOrderBehaviour: MarketOrderBehaviour;
   marketLockOrderBehaviour: MarketOrderBehaviour;
   eventStartTimestamp: BN;
