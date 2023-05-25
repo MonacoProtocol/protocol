@@ -114,6 +114,42 @@ describe("Security: Cancel Order", () => {
     }
   });
 
+  it("can cancel inplay order after inplay delay but before liquidity is added", async () => {
+    const inplayDelay = 0;
+
+    const now = Math.floor(new Date().getTime() / 1000);
+    const eventStartTimestamp = now - 1000;
+    const marketLockTimestamp = now + 1000;
+
+    // Set up Market and related accounts
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket(
+        [price],
+        true,
+        inplayDelay,
+        eventStartTimestamp,
+        marketLockTimestamp,
+      ),
+    ]);
+    await market.airdrop(purchaser, 10_000);
+
+    const orderPk = await market.forOrder(0, stake, price, purchaser);
+
+    await market.cancel(orderPk, purchaser);
+
+    // check order was deleted
+    try {
+      await monaco.program.account.order.fetch(orderPk);
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + orderPk,
+      );
+    }
+  });
+
   it("cancel fully unmatched order: impostor purchaser with token account for the same mint", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(

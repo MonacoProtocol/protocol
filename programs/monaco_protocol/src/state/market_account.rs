@@ -266,13 +266,13 @@ impl Cirque {
         }
     }
 
-    pub fn remove_pubkey(&mut self, to_remove: &Pubkey) {
+    pub fn remove_pubkey(&mut self, to_remove: &Pubkey) -> Option<QueueItem> {
         self.remove(&QueueItem::new(*to_remove))
     }
 
-    pub fn remove(&mut self, to_remove: &QueueItem) {
+    pub fn remove(&mut self, to_remove: &QueueItem) -> Option<QueueItem> {
         if self.len == 0 {
-            return;
+            return None;
         }
 
         let front_index = self.front as usize;
@@ -285,6 +285,7 @@ impl Cirque {
                 .position(|x: &QueueItem| x.eq(to_remove))
             {
                 let index = front_index + relative_index;
+                let item = self.items[index];
                 if index == front_index {
                     self.front = (front_index + 1) as u32 % self.size();
                 } else if index < last_index {
@@ -292,24 +293,27 @@ impl Cirque {
                 }
                 // #[soteria(ignore)] no underflows due to "if" check
                 self.len -= 1;
+                return Some(item);
             }
         }
         // queue bridges end of array, item to remove is orderween start of array and end of queue
         else {
             let idx_0_to_last = &mut self.items[..=last_index].to_vec();
             if let Some(index) = idx_0_to_last.iter().position(|x| x.eq(to_remove)) {
+                let item = self.items[index];
                 if index < last_index {
                     self.items.copy_within((index + 1)..=last_index, index);
                 }
                 // #[soteria(ignore)] no underflows due to "if" check
                 self.len -= 1;
-                return;
+                return Some(item);
             }
 
             // queue bridges end of array, item to remove is orderween front of queue and end of array
             let front_to_end = &mut self.items[front_index..].to_vec();
             if let Some(relative_index) = front_to_end.iter().position(|x| x.eq(to_remove)) {
                 let index = front_index + relative_index;
+                let item = self.items[index];
 
                 // No need to move any data around, just move front one to the right and decrement len
                 if index == front_index {
@@ -324,8 +328,10 @@ impl Cirque {
                 }
                 // #[soteria(ignore)] no underflows due to "if" check
                 self.len -= 1;
+                return Some(item);
             }
         }
+        None
     }
 }
 
@@ -341,8 +347,9 @@ mod tests {
         let queue = &mut generate_populated_queue(5, 3);
         let to_remove = queue.items[0];
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(2, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(1, queue.front);
@@ -355,8 +362,9 @@ mod tests {
         queue.dequeue();
 
         let to_remove = queue.items[1];
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(1, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(2, queue.front);
@@ -368,8 +376,9 @@ mod tests {
         let queue = &mut generate_populated_queue(5, 3);
         let to_remove = queue.items[2];
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(2, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(0, queue.front);
@@ -381,8 +390,9 @@ mod tests {
         let queue = &mut generate_populated_queue(5, 3);
         let to_remove = queue.items[1];
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(2, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(0, queue.front);
@@ -408,8 +418,9 @@ mod tests {
             let item_to_remove = *(queue.dequeue().unwrap());
             queue.enqueue(item_to_remove);
 
-            queue.remove(&item_to_remove);
+            let result = queue.remove(&item_to_remove);
 
+            assert_eq!(item_to_remove.order, result.unwrap().order);
             assert_eq!(4, queue.len());
             assert_eq!(i, queue.back() as usize);
             assert_eq!((i + 1) % queue_size, queue.front as usize);
@@ -433,8 +444,9 @@ mod tests {
         let key5 = queue.items[4];
 
         queue.dequeue();
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(3, queue.len());
         assert_eq!(0, queue.back());
         assert_eq!(2, queue.front);
@@ -452,8 +464,9 @@ mod tests {
         let key_5_to_remove = queue.items[4];
 
         queue.dequeue();
-        queue.remove(&key_2_to_remove);
+        let result = queue.remove(&key_2_to_remove);
 
+        assert_eq!(key_2_to_remove.order, result.unwrap().order);
         assert_eq!(3, queue.len());
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
@@ -483,8 +496,9 @@ mod tests {
         let key5 = queue.items[4];
 
         queue.dequeue();
-        queue.remove(&key2_to_remove);
+        let result2 = queue.remove(&key2_to_remove);
 
+        assert_eq!(key2_to_remove.order, result2.unwrap().order);
         assert_eq!(3, queue.len());
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
@@ -493,7 +507,8 @@ mod tests {
             queue.items
         );
 
-        queue.remove(&key3_to_remove);
+        let result3 = queue.remove(&key3_to_remove);
+        assert_eq!(key3_to_remove.order, result3.unwrap().order);
         assert_eq!(2, queue.len());
         assert_eq!(3, queue.front);
         assert_eq!(0, queue.back());
@@ -513,31 +528,36 @@ mod tests {
         let key4 = queue.items[3];
         let key5 = queue.items[4];
 
-        queue.remove(&key1);
+        let result1 = queue.remove(&key1);
+        assert_eq!(key1.order, result1.unwrap().order);
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(4, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key2);
+        let result2 = queue.remove(&key2);
+        assert_eq!(key2.order, result2.unwrap().order);
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(3, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key3);
+        let result3 = queue.remove(&key3);
+        assert_eq!(key3.order, result3.unwrap().order);
         assert_eq!(3, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(2, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key4);
+        let result4 = queue.remove(&key4);
+        assert_eq!(key4.order, result4.unwrap().order);
         assert_eq!(4, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(1, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key5);
+        let result5 = queue.remove(&key5);
+        assert_eq!(key5.order, result5.unwrap().order);
         assert_eq!(0, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(0, queue.len());
@@ -552,13 +572,15 @@ mod tests {
         let key2 = queue.items[1];
         let key3 = queue.items[2];
 
-        queue.remove(&key1);
+        let result1 = queue.remove(&key1);
+        assert_eq!(key1.order, result1.unwrap().order);
         assert_eq!(vec![key1, key2, key3], queue.items);
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(2, queue.len());
 
-        queue.remove(&key1);
+        let result2 = queue.remove(&key1);
+        assert!(result2.is_none());
         assert_eq!(vec![key1, key2, key3], queue.items);
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
@@ -573,13 +595,17 @@ mod tests {
         let key2 = queue.items[1];
         let key3 = queue.items[2];
 
-        queue.remove(&key3);
+        let first_remove = queue.remove(&key3);
+
+        assert!(first_remove.is_some());
         assert_eq!(vec![key1, key2, key3], queue.items);
         assert_eq!(0, queue.front);
         assert_eq!(2, queue.back());
         assert_eq!(2, queue.len());
 
-        queue.remove(&key3);
+        let second_remove = queue.remove(&key3);
+
+        assert!(second_remove.is_none());
         assert_eq!(vec![key1, key2, key3], queue.items);
         assert_eq!(0, queue.front);
         assert_eq!(2, queue.back());
@@ -596,31 +622,36 @@ mod tests {
         let key4 = queue.items[3];
         let key5 = queue.items[4];
 
-        queue.remove(&key5);
+        let result = queue.remove(&key5);
+        assert_eq!(key5.order, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(4, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key4);
+        let result4 = queue.remove(&key4);
+        assert_eq!(key4.order, result4.unwrap().order);
         assert_eq!(3, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(3, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key3);
+        let result3 = queue.remove(&key3);
+        assert_eq!(key3.order, result3.unwrap().order);
         assert_eq!(2, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(2, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key2);
+        let result2 = queue.remove(&key2);
+        assert_eq!(key2.order, result2.unwrap().order);
         assert_eq!(1, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
-        queue.remove(&key1);
+        let result1 = queue.remove(&key1);
+        assert_eq!(key1.order, result1.unwrap().order);
         assert_eq!(0, queue.len());
         assert_eq!(1, queue.front);
         assert_eq!(1, queue.back());
@@ -651,27 +682,32 @@ mod tests {
         assert_eq!(1, queue.back());
         assert_eq!(5, queue.len());
 
-        queue.remove(&key2);
+        let result2 = queue.remove(&key2);
+        assert_eq!(key2.order, result2.unwrap().order);
         assert_eq!(2, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(4, queue.len());
 
-        queue.remove(&key3);
+        let result3 = queue.remove(&key3);
+        assert_eq!(key3.order, result3.unwrap().order);
         assert_eq!(3, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(3, queue.len());
 
-        queue.remove(&key4);
+        let result4 = queue.remove(&key4);
+        assert_eq!(key4.order, result4.unwrap().order);
         assert_eq!(4, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(2, queue.len());
 
-        queue.remove(&key5);
+        let result5 = queue.remove(&key5);
+        assert_eq!(key5.order, result5.unwrap().order);
         assert_eq!(0, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(1, queue.len());
 
-        queue.remove(&key6);
+        let result6 = queue.remove(&key6);
+        assert_eq!(key6.order, result6.unwrap().order);
         assert_eq!(1, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(0, queue.len());
@@ -695,8 +731,9 @@ mod tests {
         let key4 = queue.items[3];
         let to_remove = queue.items[4];
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(0, queue.front);
         assert_eq!(0, queue.len());
         assert_eq!(0, queue.back());
@@ -719,8 +756,9 @@ mod tests {
 
         assert!(queue.items.eq(&vec![key6, key2, key3, key4, to_remove]));
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
@@ -741,8 +779,9 @@ mod tests {
         let to_remove = QueueItem::new_unique();
         queue.enqueue(to_remove);
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(0, queue.back());
         assert_eq!(1, queue.front);
@@ -765,8 +804,9 @@ mod tests {
         queue.enqueue(to_remove);
         queue.enqueue(key7);
 
-        queue.remove(&to_remove);
+        let result = queue.remove(&to_remove);
 
+        assert_eq!(to_remove.order, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(1, queue.back());
         assert_eq!(2, queue.front);
@@ -792,8 +832,11 @@ mod tests {
         queue.enqueue(to_remove);
         queue.enqueue(key9);
 
-        queue.remove(&to_remove);
+        let expected_removed_pubkey = to_remove.order;
 
+        let result = queue.remove(&to_remove);
+
+        assert_eq!(expected_removed_pubkey, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(4, queue.front);
@@ -819,8 +862,11 @@ mod tests {
         queue.enqueue(to_remove);
         queue.enqueue(key8);
 
-        queue.remove(&to_remove);
+        let expected_removed_pubkey = to_remove.order;
 
+        let result = queue.remove(&to_remove);
+
+        assert_eq!(expected_removed_pubkey, result.unwrap().order);
         assert_eq!(4, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(3, queue.front);
@@ -843,6 +889,7 @@ mod tests {
         let key9 = queue.items[8];
         let key10 = queue.items[9];
 
+        let expected_removed_pubkey = key8.order;
         let expected_items = vec![key2, key3, key4, key5, key5, key6, key7, key9, key10, key1];
 
         queue.dequeue();
@@ -861,8 +908,9 @@ mod tests {
         assert_eq!(5, queue.back());
         assert_eq!(10, queue.len);
 
-        queue.remove(&key8);
+        let result = queue.remove(&key8);
 
+        assert_eq!(expected_removed_pubkey, result.unwrap().order);
         assert_eq!(5, queue.front);
         assert_eq!(4, queue.back());
         assert_eq!(9, queue.len);
