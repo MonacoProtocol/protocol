@@ -7,7 +7,7 @@ use crate::error::CoreError;
 use crate::instructions::matching::create_trade::initialize_trade;
 use crate::instructions::{calculate_risk_from_stake, matching, order, transfer};
 use crate::state::market_account::MarketStatus::Open;
-use crate::state::market_position_account::{MarketPosition, MatchedRiskAtRate};
+use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
 use crate::state::order_account::Order;
 
 pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
@@ -178,8 +178,8 @@ fn update_product_commission_contributions(
     market_position: &mut MarketPosition,
     risk_matched: u64,
 ) -> Result<()> {
-    market_position.total_matched_risk = market_position
-        .total_matched_risk
+    market_position.matched_risk = market_position
+        .matched_risk
         .checked_add(risk_matched)
         .unwrap();
 
@@ -188,41 +188,27 @@ fn update_product_commission_contributions(
         return Ok(());
     }
 
-    let matched_risk_per_product = &mut market_position.matched_risk_per_product;
-    let product_matched_risk = matched_risk_per_product
-        .iter_mut()
-        .find(|p| p.product == order_product.unwrap());
-
-    // may not exist if product limit has been reached on market position
-    if product_matched_risk.is_none() {
-        return Ok(());
-    }
-
     let order_product_commission_rate = order.product_commission_rate;
-    let product_matched_risk = product_matched_risk.unwrap();
+    let matched_risk_per_product = &mut market_position.matched_risk_per_product;
 
     // if rate has already been recorded for this product, increment matched risk, else push new value
-    match product_matched_risk
-        .matched_risk_per_rate
+    match matched_risk_per_product
         .iter_mut()
-        .find(|risk_at_rate| risk_at_rate.rate == order_product_commission_rate)
+        .find(|p| p.product == order_product.unwrap() && p.rate == order_product_commission_rate)
     {
-        Some(existing_commission_rate) => {
-            existing_commission_rate.risk = existing_commission_rate
+        Some(product_matched_risk_and_rate) => {
+            product_matched_risk_and_rate.risk = product_matched_risk_and_rate
                 .risk
                 .checked_add(risk_matched)
                 .unwrap();
         }
         None => {
-            if product_matched_risk.matched_risk_per_rate.len()
-                < MarketPosition::MAX_RATES_PER_PRODUCT
-            {
-                product_matched_risk
-                    .matched_risk_per_rate
-                    .push(MatchedRiskAtRate {
-                        rate: order_product_commission_rate,
-                        risk: risk_matched,
-                    });
+            if matched_risk_per_product.len() < MarketPosition::MAX_PRODUCT_MATCHED_RISK_AND_STAKE {
+                matched_risk_per_product.push(ProductMatchedRiskAndRate {
+                    product: order_product.unwrap(),
+                    rate: order_product_commission_rate,
+                    risk: risk_matched,
+                });
             }
         }
     }
@@ -235,9 +221,7 @@ mod tests {
     use solana_program::pubkey::Pubkey;
 
     use crate::instructions::matching::matching_one_to_one::update_product_commission_contributions;
-    use crate::state::market_position_account::{
-        MarketPosition, MatchedRiskAtRate, ProductMatchedRisk,
-    };
+    use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
     use crate::state::order_account::{Order, OrderStatus};
 
     #[test]
@@ -272,11 +256,8 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 0,
-            matched_risk_per_product: vec![ProductMatchedRisk {
-                product: product.unwrap(),
-                matched_risk_per_rate: vec![],
-            }],
+            matched_risk: 0,
+            matched_risk_per_product: vec![],
         };
 
         update_product_commission_contributions(&order, &mut market_position, stake_matched)
@@ -284,15 +265,13 @@ mod tests {
 
         assert_eq!(
             market_position.matched_risk_per_product,
-            vec![ProductMatchedRisk {
+            vec![ProductMatchedRiskAndRate {
                 product: product.unwrap(),
-                matched_risk_per_rate: vec![MatchedRiskAtRate {
-                    rate: product_commission_rate,
-                    risk: stake_matched,
-                }],
+                rate: product_commission_rate,
+                risk: stake_matched,
             }]
         );
-        assert_eq!(market_position.total_matched_risk, stake_matched);
+        assert_eq!(market_position.matched_risk, stake_matched);
     }
 
     #[test]
@@ -321,11 +300,131 @@ mod tests {
         };
 
         let matched_stake_per_rate = vec![
-            MatchedRiskAtRate { rate: 1.0, risk: 1 },
-            MatchedRiskAtRate { rate: 2.0, risk: 1 },
-            MatchedRiskAtRate { rate: 3.0, risk: 1 },
-            MatchedRiskAtRate { rate: 4.0, risk: 1 },
-            MatchedRiskAtRate { rate: 5.0, risk: 1 },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 1.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 3.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 4.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 5.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 1.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 3.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 4.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 5.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 1.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 3.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 4.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 5.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 1.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 3.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 4.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 5.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 1.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 3.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 4.0,
+                risk: 1,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 5.0,
+                risk: 1,
+            },
         ];
 
         let mut market_position = MarketPosition {
@@ -335,11 +434,8 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 0,
-            matched_risk_per_product: vec![ProductMatchedRisk {
-                product: product.unwrap(),
-                matched_risk_per_rate: matched_stake_per_rate,
-            }],
+            matched_risk: 0,
+            matched_risk_per_product: matched_stake_per_rate.clone(),
         };
 
         update_product_commission_contributions(&order, &mut market_position, stake_matched)
@@ -347,18 +443,9 @@ mod tests {
 
         assert_eq!(
             market_position.matched_risk_per_product,
-            vec![ProductMatchedRisk {
-                product: product.unwrap(),
-                matched_risk_per_rate: vec![
-                    MatchedRiskAtRate { rate: 1.0, risk: 1 },
-                    MatchedRiskAtRate { rate: 2.0, risk: 1 },
-                    MatchedRiskAtRate { rate: 3.0, risk: 1 },
-                    MatchedRiskAtRate { rate: 4.0, risk: 1 },
-                    MatchedRiskAtRate { rate: 5.0, risk: 1 },
-                ],
-            }]
+            matched_stake_per_rate.clone()
         );
-        assert_eq!(market_position.total_matched_risk, stake_matched);
+        assert_eq!(market_position.matched_risk, stake_matched);
     }
 
     #[test]
@@ -366,12 +453,10 @@ mod tests {
         let product = Some(Pubkey::new_unique());
         let stake_matched = 10;
         let old_product_commission_rate = 1.0;
-        let product_stake_rates = vec![ProductMatchedRisk {
+        let product_stake_rates = vec![ProductMatchedRiskAndRate {
             product: product.unwrap(),
-            matched_risk_per_rate: vec![MatchedRiskAtRate {
-                rate: old_product_commission_rate,
-                risk: stake_matched,
-            }],
+            rate: old_product_commission_rate,
+            risk: stake_matched,
         }];
         let new_product_commission_rate = 2.0;
 
@@ -402,7 +487,7 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 0,
+            matched_risk: 0,
         };
 
         update_product_commission_contributions(&order, &mut market_position, stake_matched)
@@ -410,21 +495,20 @@ mod tests {
 
         assert_eq!(
             market_position.matched_risk_per_product,
-            vec![ProductMatchedRisk {
-                product: product.unwrap(),
-                matched_risk_per_rate: vec![
-                    MatchedRiskAtRate {
-                        rate: old_product_commission_rate,
-                        risk: stake_matched,
-                    },
-                    MatchedRiskAtRate {
-                        rate: new_product_commission_rate,
-                        risk: stake_matched,
-                    },
-                ],
-            }]
+            vec![
+                ProductMatchedRiskAndRate {
+                    product: product.unwrap(),
+                    rate: old_product_commission_rate,
+                    risk: stake_matched,
+                },
+                ProductMatchedRiskAndRate {
+                    product: product.unwrap(),
+                    rate: new_product_commission_rate,
+                    risk: stake_matched,
+                }
+            ]
         );
-        assert_eq!(market_position.total_matched_risk, stake_matched);
+        assert_eq!(market_position.matched_risk, stake_matched);
     }
 
     #[test]
@@ -433,19 +517,18 @@ mod tests {
         let existing_stake_matched = 10;
         let product_commission_rate_1 = 1.0;
         let product_commission_rate_2 = 2.0;
-        let product_stake_rates = vec![ProductMatchedRisk {
-            product: product.unwrap(),
-            matched_risk_per_rate: vec![
-                MatchedRiskAtRate {
-                    rate: product_commission_rate_1,
-                    risk: existing_stake_matched,
-                },
-                MatchedRiskAtRate {
-                    rate: product_commission_rate_2,
-                    risk: existing_stake_matched,
-                },
-            ],
-        }];
+        let product_stake_rates = vec![
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: product_commission_rate_1,
+                risk: existing_stake_matched,
+            },
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: product_commission_rate_2,
+                risk: existing_stake_matched,
+            },
+        ];
         let new_stake_matched = 15;
 
         let expected_stake_matched_at_rate_2 = existing_stake_matched + new_stake_matched;
@@ -471,14 +554,13 @@ mod tests {
 
         let mut market_position = MarketPosition {
             matched_risk_per_product: product_stake_rates,
-
             purchaser: Default::default(),
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 0,
+            matched_risk: 0,
         };
 
         update_product_commission_contributions(&order, &mut market_position, new_stake_matched)
@@ -486,22 +568,20 @@ mod tests {
 
         assert_eq!(
             market_position.matched_risk_per_product,
-            vec![ProductMatchedRisk {
-                product: product.unwrap(),
-
-                matched_risk_per_rate: vec![
-                    MatchedRiskAtRate {
-                        rate: product_commission_rate_1,
-                        risk: existing_stake_matched,
-                    },
-                    MatchedRiskAtRate {
-                        rate: product_commission_rate_2,
-                        risk: expected_stake_matched_at_rate_2,
-                    },
-                ],
-            }]
+            vec![
+                ProductMatchedRiskAndRate {
+                    product: product.unwrap(),
+                    rate: product_commission_rate_1,
+                    risk: existing_stake_matched,
+                },
+                ProductMatchedRiskAndRate {
+                    product: product.unwrap(),
+                    rate: product_commission_rate_2,
+                    risk: expected_stake_matched_at_rate_2,
+                }
+            ]
         );
-        assert_eq!(market_position.total_matched_risk, new_stake_matched);
+        assert_eq!(market_position.matched_risk, new_stake_matched);
     }
 
     #[test]
@@ -512,22 +592,15 @@ mod tests {
         let product_2_stake_matched = 42;
 
         let product_stake_rates = vec![
-            ProductMatchedRisk {
+            ProductMatchedRiskAndRate {
                 product: product.unwrap(),
-                matched_risk_per_rate: vec![
-                    MatchedRiskAtRate {
-                        rate: 1.0,
-                        risk: 10,
-                    },
-                    MatchedRiskAtRate {
-                        rate: 2.0,
-                        risk: 10,
-                    },
-                ],
+                rate: 1.0,
+                risk: 10,
             },
-            ProductMatchedRisk {
-                product: product_2.unwrap(),
-                matched_risk_per_rate: vec![],
+            ProductMatchedRiskAndRate {
+                product: product.unwrap(),
+                rate: 2.0,
+                risk: 10,
             },
         ];
 
@@ -559,7 +632,7 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 0,
+            matched_risk: 0,
         };
 
         update_product_commission_contributions(
@@ -572,28 +645,24 @@ mod tests {
         assert_eq!(
             market_position.matched_risk_per_product,
             vec![
-                ProductMatchedRisk {
+                ProductMatchedRiskAndRate {
                     product: product.unwrap(),
-                    matched_risk_per_rate: vec![
-                        MatchedRiskAtRate {
-                            rate: 1.0,
-                            risk: 10,
-                        },
-                        MatchedRiskAtRate {
-                            rate: 2.0,
-                            risk: 10,
-                        },
-                    ],
+                    rate: 1.0,
+                    risk: 10,
                 },
-                ProductMatchedRisk {
+                ProductMatchedRiskAndRate {
+                    product: product.unwrap(),
+
+                    rate: 2.0,
+                    risk: 10,
+                },
+                ProductMatchedRiskAndRate {
                     product: product_2.unwrap(),
-                    matched_risk_per_rate: vec![MatchedRiskAtRate {
-                        rate: product_commission_rate_2,
-                        risk: product_2_stake_matched,
-                    }],
+                    rate: product_commission_rate_2,
+                    risk: product_2_stake_matched,
                 },
             ]
         );
-        assert_eq!(market_position.total_matched_risk, product_2_stake_matched);
+        assert_eq!(market_position.matched_risk, product_2_stake_matched);
     }
 }

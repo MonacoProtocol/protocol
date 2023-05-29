@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::ops::{Div, Mul};
 
 use crate::error::CoreError;
-use crate::state::market_position_account::{MarketPosition, MatchedRiskAtRate};
+use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
 use crate::state::payments_queue::{PaymentInfo, PaymentQueue};
 
 pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> {
@@ -92,28 +92,22 @@ fn calculate_product_commission_payments(
     let mut payments = vec![];
     let mut total_product_commissions = 0_u64;
 
-    for risk_per_product in &market_position.matched_risk_per_product {
-        let mut product_commission = 0_u64;
-        for risk_per_rate in &risk_per_product.matched_risk_per_rate {
-            let product_commission_at_rate = calculate_commission_for_risk_at_rate(
-                protocol_commission_rate,
-                market_position.total_matched_risk,
-                position_profit,
-                risk_per_rate,
-            );
-            product_commission = product_commission
-                .checked_add(product_commission_at_rate)
-                .unwrap();
-        }
+    for product_risk_and_rate in &market_position.matched_risk_per_product {
+        let product_commission_at_rate = calculate_commission_for_risk_at_rate(
+            protocol_commission_rate,
+            market_position.matched_risk,
+            position_profit,
+            product_risk_and_rate,
+        );
 
         payments.push(PaymentInfo {
-            to: risk_per_product.product,
+            to: product_risk_and_rate.product,
             from: market_escrow,
-            amount: product_commission,
+            amount: product_commission_at_rate,
         });
 
         total_product_commissions = total_product_commissions
-            .checked_add(product_commission)
+            .checked_add(product_commission_at_rate)
             .unwrap();
     }
 
@@ -122,24 +116,29 @@ fn calculate_product_commission_payments(
 
 fn calculate_commission_for_risk_at_rate(
     protocol_commission_rate: f64,
-    total_risked: u64,
+    position_matched_risk: u64,
     position_profit: i128,
-    risk_per_rate: &MatchedRiskAtRate,
+    product_risk_and_rate: &ProductMatchedRiskAndRate,
 ) -> u64 {
-    if risk_per_rate.risk == 0 || total_risked == 0 {
+    if product_risk_and_rate.risk == 0 || position_matched_risk == 0 {
         return 0;
     }
 
-    let profit = available_profit_for_commission(total_risked, position_profit, risk_per_rate.risk);
+    let product_profit = available_profit_for_commission(
+        position_matched_risk,
+        position_profit,
+        product_risk_and_rate.risk,
+    );
 
-    if (protocol_commission_rate + risk_per_rate.rate) <= 100.0 {
-        return calculate_commission(risk_per_rate.rate, profit as i128);
+    if (protocol_commission_rate + product_risk_and_rate.rate) <= 100.0 {
+        return calculate_commission(product_risk_and_rate.rate, product_profit as i128);
     }
 
     // where product + protocol commission rates > 100%, protocol commission will be deducted before
     // returning remaining profit as product commission
-    let protocol_commission = calculate_commission(protocol_commission_rate, profit as i128);
-    profit.saturating_sub(protocol_commission)
+    let protocol_commission =
+        calculate_commission(protocol_commission_rate, product_profit as i128);
+    product_profit.saturating_sub(protocol_commission)
 }
 
 fn available_profit_for_commission(
@@ -159,9 +158,7 @@ mod tests {
     use crate::instructions::market_position::settle_market_position::{
         calculate_commission_for_risk_at_rate, calculate_product_commission_payments,
     };
-    use crate::state::market_position_account::{
-        MarketPosition, MatchedRiskAtRate, ProductMatchedRisk,
-    };
+    use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
     use crate::state::payments_queue::PaymentInfo;
     use protocol_product::state::product::Product;
     use solana_program::pubkey::Pubkey;
@@ -173,7 +170,8 @@ mod tests {
         let protocol_commission_rate = 10.0;
         let total_matched = 10;
         let position_profit = 100;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 1.0,
         };
@@ -193,7 +191,8 @@ mod tests {
         let protocol_commission_rate = 10.0;
         let total_matched = 10;
         let position_profit = 100;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 100.0,
         };
@@ -216,7 +215,8 @@ mod tests {
         let protocol_commission_rate = 10.0;
         let total_matched = 10;
         let position_profit = 100;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 0.0,
         };
@@ -236,7 +236,8 @@ mod tests {
         let protocol_commission_rate = 00.0;
         let total_matched = 10;
         let position_profit = 100;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 0.0,
         };
@@ -256,7 +257,8 @@ mod tests {
         let protocol_commission_rate = 0.0;
         let total_matched = 10;
         let position_profit = 100;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 100.0,
         };
@@ -276,7 +278,8 @@ mod tests {
         let protocol_commission_rate = 33.99;
         let total_matched = 10;
         let position_profit = 10;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 33.99,
         };
@@ -296,7 +299,8 @@ mod tests {
         let protocol_commission_rate = 33.99;
         let total_matched = 10;
         let position_profit = 1000;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 33.99,
         };
@@ -316,7 +320,8 @@ mod tests {
         let protocol_commission_rate = 1.0;
         let total_matched = 0;
         let position_profit = 0;
-        let risk_per_rate = MatchedRiskAtRate {
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
             risk: 10,
             rate: 1.0,
         };
@@ -336,7 +341,11 @@ mod tests {
         let protocol_commission_rate = 1.0;
         let total_matched = 10;
         let position_profit = 0;
-        let risk_per_rate = MatchedRiskAtRate { risk: 0, rate: 1.0 };
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
+            risk: 0,
+            rate: 1.0,
+        };
 
         let product_commission = calculate_commission_for_risk_at_rate(
             protocol_commission_rate,
@@ -362,13 +371,11 @@ mod tests {
         let market_escrow = Pubkey::new_unique();
 
         let product_pk = Pubkey::new_unique();
-        let product_matched_risk = ProductMatchedRisk {
+        let product_matched_risk = vec![ProductMatchedRiskAndRate {
             product: product_pk,
-            matched_risk_per_rate: vec![MatchedRiskAtRate {
-                risk: 10,
-                rate: 5.0,
-            }],
-        };
+            risk: 10,
+            rate: 5.0,
+        }];
         let market_position = MarketPosition {
             purchaser: Default::default(),
             market: Default::default(),
@@ -376,8 +383,8 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 10,
-            matched_risk_per_product: vec![product_matched_risk],
+            matched_risk: 10,
+            matched_risk_per_product: product_matched_risk,
         };
         let position_profit = 100;
 
@@ -411,19 +418,17 @@ mod tests {
 
         let product_pk = Pubkey::new_unique();
         let matched_risk_for_product = vec![
-            MatchedRiskAtRate {
+            ProductMatchedRiskAndRate {
+                product: product_pk,
                 risk: 5,
                 rate: 10.0,
             },
-            MatchedRiskAtRate {
+            ProductMatchedRiskAndRate {
+                product: product_pk,
                 risk: 5,
                 rate: 20.0,
             },
         ];
-        let product_matched_risk = ProductMatchedRisk {
-            product: product_pk,
-            matched_risk_per_rate: matched_risk_for_product,
-        };
 
         let market_position = MarketPosition {
             purchaser: Default::default(),
@@ -432,8 +437,8 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 10,
-            matched_risk_per_product: vec![product_matched_risk],
+            matched_risk: 10,
+            matched_risk_per_product: matched_risk_for_product,
         };
         let position_profit = 100;
 
@@ -445,16 +450,25 @@ mod tests {
         );
 
         // 10 % of (50% of $100) + 20% of (50% of $100)
-        let expected_product_commissions = 15;
+        let expected_payment_1 = 5;
+        let expected_payment_2 = 10;
+        let expected_product_commissions = expected_payment_1 + expected_payment_2;
 
         assert_eq!(product_commissions, expected_product_commissions);
         assert_eq!(
             payments,
-            vec![PaymentInfo {
-                to: product_pk,
-                from: market_escrow,
-                amount: expected_product_commissions,
-            }]
+            vec![
+                PaymentInfo {
+                    to: product_pk,
+                    from: market_escrow,
+                    amount: expected_payment_1,
+                },
+                PaymentInfo {
+                    to: product_pk,
+                    from: market_escrow,
+                    amount: expected_payment_2,
+                },
+            ]
         )
     }
 
@@ -470,36 +484,30 @@ mod tests {
         let market_escrow = Pubkey::new_unique();
 
         let product_pk = Pubkey::new_unique();
-        let matched_risk_product = vec![
-            MatchedRiskAtRate {
+        let product2_pk = Pubkey::new_unique();
+
+        let product_matched_risks = vec![
+            ProductMatchedRiskAndRate {
+                product: product_pk,
                 risk: 5,
                 rate: 10.0,
             },
-            MatchedRiskAtRate {
+            ProductMatchedRiskAndRate {
+                product: product_pk,
                 risk: 5,
                 rate: 20.0,
             },
-        ];
-        let product_matched_risk = ProductMatchedRisk {
-            product: product_pk,
-            matched_risk_per_rate: matched_risk_product,
-        };
-
-        let matched_risk_product2 = vec![
-            MatchedRiskAtRate {
+            ProductMatchedRiskAndRate {
+                product: product2_pk,
                 risk: 5,
                 rate: 30.0,
             },
-            MatchedRiskAtRate {
+            ProductMatchedRiskAndRate {
+                product: product2_pk,
                 risk: 5,
                 rate: 40.0,
             },
         ];
-        let product2_pk = Pubkey::new_unique();
-        let product2_matched_risk = ProductMatchedRisk {
-            product: product2_pk,
-            matched_risk_per_rate: matched_risk_product2,
-        };
 
         let market_position = MarketPosition {
             purchaser: Default::default(),
@@ -508,8 +516,8 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
-            total_matched_risk: 20,
-            matched_risk_per_product: vec![product_matched_risk, product2_matched_risk],
+            matched_risk: 20,
+            matched_risk_per_product: product_matched_risks,
         };
         let position_profit = 400;
 
@@ -523,8 +531,16 @@ mod tests {
         // each portion of matched risk represents 25% of the total matched risk
         // 25% of 400 = 100
         // commissions = (10%  of 100) + (20% of 100) + (30% of 100) + (40% of 100)
-        let product1_expected_commissions = 30;
-        let product2_expected_commissions = 70;
+        let product1_expected_payment_1 = 10;
+        let product1_expected_payment_2 = 20;
+        let product1_expected_commissions =
+            product1_expected_payment_1 + product1_expected_payment_2;
+
+        let product2_expected_payment_1 = 30;
+        let product2_expected_payment_2 = 40;
+        let product2_expected_commissions =
+            product2_expected_payment_1 + product2_expected_payment_2;
+
         let expected_total_product_commissions =
             product1_expected_commissions + product2_expected_commissions;
 
@@ -535,12 +551,22 @@ mod tests {
                 PaymentInfo {
                     to: product_pk,
                     from: market_escrow,
-                    amount: product1_expected_commissions,
+                    amount: product1_expected_payment_1,
+                },
+                PaymentInfo {
+                    to: product_pk,
+                    from: market_escrow,
+                    amount: product1_expected_payment_2,
                 },
                 PaymentInfo {
                     to: product2_pk,
                     from: market_escrow,
-                    amount: product2_expected_commissions,
+                    amount: product2_expected_payment_1,
+                },
+                PaymentInfo {
+                    to: product2_pk,
+                    from: market_escrow,
+                    amount: product2_expected_payment_2,
                 }
             ]
         )

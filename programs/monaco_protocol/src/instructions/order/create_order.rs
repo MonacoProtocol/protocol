@@ -27,7 +27,6 @@ pub fn create_order<'info>(
 
     // initialize market position
     market_position::create_market_position(purchaser, market, market_position)?;
-    market_position::initialize_product_matched_stake(market_position, product, order)?;
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {

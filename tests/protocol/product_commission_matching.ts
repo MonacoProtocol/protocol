@@ -30,15 +30,7 @@ describe("Product commissions", () => {
 
     assert.equal(order.product.toBase58(), productPk.toBase58());
     assert.equal(order.productCommissionRate, productCommission);
-
-    assert.ok(marketPosition.matchedRiskPerProduct.length == 1);
-    assert.equal(
-      marketPosition.matchedRiskPerProduct[0].product.toBase58(),
-      productPk.toBase58(),
-    );
-    assert.ok(
-      marketPosition.matchedRiskPerProduct[0].matchedRiskPerRate.length == 0,
-    );
+    assert.ok(marketPosition.matchedRiskPerProduct.length == 0);
   });
 
   it("matched order - one product stored on market position", async () => {
@@ -108,28 +100,20 @@ describe("Product commissions", () => {
       productPk.toBase58(),
     );
 
-    assert.ok(
-      forMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate.length == 1,
-    );
-    assert.ok(
-      againstMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate
-        .length == 1,
-    );
-
     assert.equal(
-      forMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      forMarketPosition.matchedRiskPerProduct[0].risk.toNumber(),
       expectedMatchedStake,
     );
     assert.equal(
-      forMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].rate,
+      forMarketPosition.matchedRiskPerProduct[0].rate,
       productCommission,
     );
     assert.equal(
-      againstMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      againstMarketPosition.matchedRiskPerProduct[0].risk.toNumber(),
       expectedMatchedStake,
     );
     assert.equal(
-      againstMarketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].rate,
+      againstMarketPosition.matchedRiskPerProduct[0].rate,
       productCommission,
     );
   });
@@ -235,17 +219,13 @@ describe("Product commissions", () => {
       forMarketPositionMatch1.matchedRiskPerProduct[0].product.toBase58(),
       productPk.toBase58(),
     );
-    assert.ok(
-      forMarketPositionMatch1.matchedRiskPerProduct[0].matchedRiskPerRate
-        .length == 1,
-    );
+
     assert.equal(
-      forMarketPositionMatch1.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      forMarketPositionMatch1.matchedRiskPerProduct[0].risk.toNumber(),
       expectedMatchedStake,
     );
     assert.equal(
-      forMarketPositionMatch1.matchedRiskPerProduct[0].matchedRiskPerRate[0]
-        .rate,
+      forMarketPositionMatch1.matchedRiskPerProduct[0].rate,
       productCommission,
     );
 
@@ -262,17 +242,13 @@ describe("Product commissions", () => {
       forMarketPositionMatch2.matchedRiskPerProduct[0].product.toBase58(),
       productPk.toBase58(),
     );
-    assert.ok(
-      forMarketPositionMatch2.matchedRiskPerProduct[0].matchedRiskPerRate
-        .length == 1,
-    );
+
     assert.equal(
-      forMarketPositionMatch2.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      forMarketPositionMatch2.matchedRiskPerProduct[0].risk.toNumber(),
       expectedMatchedStakeMatch2,
     );
     assert.equal(
-      forMarketPositionMatch2.matchedRiskPerProduct[0].matchedRiskPerRate[0]
-        .rate,
+      forMarketPositionMatch2.matchedRiskPerProduct[0].rate,
       productCommission,
     );
   });
@@ -342,14 +318,8 @@ describe("Product commissions", () => {
       matchedStakeForProduct.product.toBase58(),
       productPk.toBase58(),
     );
-
-    const productMatchedRiskPerRate = matchedStakeForProduct.matchedRiskPerRate;
-    assert.ok(productMatchedRiskPerRate.length == 1);
-    assert.equal(
-      productMatchedRiskPerRate[0].risk.toNumber(),
-      expectedMatchedStake,
-    );
-    assert.equal(productMatchedRiskPerRate[0].rate, productCommission);
+    assert.equal(matchedStakeForProduct.risk.toNumber(), expectedMatchedStake);
+    assert.equal(matchedStakeForProduct.rate, productCommission);
   });
 
   it("matched orders - multiple matches on same product, different commission rates", async () => {
@@ -416,29 +386,28 @@ describe("Product commissions", () => {
     );
     const expectedMatchedStake = stake * 10 ** market.mintInfo.decimals;
 
-    assert.ok(forMarketPosition.matchedRiskPerProduct.length == 1);
+    assert.ok(forMarketPosition.matchedRiskPerProduct.length == 2);
 
-    const matchedStakeForProduct = forMarketPosition.matchedRiskPerProduct[0];
+    const product1MatchedStakeRate1 =
+      forMarketPosition.matchedRiskPerProduct[0];
     assert.equal(
-      matchedStakeForProduct.product.toBase58(),
+      product1MatchedStakeRate1.product.toBase58(),
       productPk.toBase58(),
     );
 
-    // expected 2 matches on the same product at different commission rates
-    const productMatchedRiskPerRate = matchedStakeForProduct.matchedRiskPerRate;
-    assert.ok(productMatchedRiskPerRate.length == 2);
-
     assert.equal(
-      productMatchedRiskPerRate[0].risk.toNumber(),
+      product1MatchedStakeRate1.risk.toNumber(),
       expectedMatchedStake,
     );
-    assert.equal(productMatchedRiskPerRate[0].rate, productCommission);
+    assert.equal(product1MatchedStakeRate1.rate, productCommission);
 
+    const product1MatchedStakeRate2 =
+      forMarketPosition.matchedRiskPerProduct[1];
     assert.equal(
-      productMatchedRiskPerRate[1].risk.toNumber(),
+      product1MatchedStakeRate2.risk.toNumber(),
       expectedMatchedStake,
     );
-    assert.equal(productMatchedRiskPerRate[1].rate, productCommission2);
+    assert.equal(product1MatchedStakeRate2.rate, productCommission2);
   });
 
   it("matched orders - multiple matches on different products", async () => {
@@ -511,30 +480,16 @@ describe("Product commissions", () => {
       matchedStakeForProduct.product.toBase58(),
       productPk.toBase58(),
     );
-    assert.equal(matchedStakeForProduct.matchedRiskPerRate.length, 1);
-    assert.equal(
-      matchedStakeForProduct.matchedRiskPerRate[0].risk.toNumber(),
-      expectedMatchedStake,
-    );
-    assert.equal(
-      matchedStakeForProduct.matchedRiskPerRate[0].rate,
-      productCommission,
-    );
+    assert.equal(matchedStakeForProduct.risk.toNumber(), expectedMatchedStake);
+    assert.equal(matchedStakeForProduct.rate, productCommission);
 
     const matchedStakeForProduct2 = forMarketPosition.matchedRiskPerProduct[1];
     assert.equal(
       matchedStakeForProduct2.product.toBase58(),
       productPk2.toBase58(),
     );
-    assert.equal(matchedStakeForProduct2.matchedRiskPerRate.length, 1);
-    assert.equal(
-      matchedStakeForProduct2.matchedRiskPerRate[0].risk.toNumber(),
-      expectedMatchedStake,
-    );
-    assert.equal(
-      matchedStakeForProduct2.matchedRiskPerRate[0].rate,
-      productCommission2,
-    );
+    assert.equal(matchedStakeForProduct2.risk.toNumber(), expectedMatchedStake);
+    assert.equal(matchedStakeForProduct2.rate, productCommission2);
   });
 
   it("matched order - against order liability tracked correctly", async () => {
@@ -585,7 +540,7 @@ describe("Product commissions", () => {
     const match1ExpectedRisk =
       layStake * (price - 1) * 10 ** market.mintInfo.decimals;
     assert.equal(
-      marketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      marketPosition.matchedRiskPerProduct[0].risk.toNumber(),
       match1ExpectedRisk,
     );
 
@@ -607,7 +562,7 @@ describe("Product commissions", () => {
       match1ExpectedRisk +
       layStake2 * (price - 1) * 10 ** market.mintInfo.decimals;
     assert.equal(
-      marketPosition.matchedRiskPerProduct[0].matchedRiskPerRate[0].risk.toNumber(),
+      marketPosition.matchedRiskPerProduct[0].risk.toNumber(),
       match2ExpectedRisk,
     );
   });

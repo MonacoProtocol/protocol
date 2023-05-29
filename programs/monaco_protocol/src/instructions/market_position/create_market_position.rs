@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
-use protocol_product::state::product::Product;
 
 use crate::state::market_account::*;
 use crate::state::market_position_account::*;
-use crate::state::order_account::Order;
 
 pub fn create_market_position(
     purchaser: &Signer,
@@ -22,36 +20,6 @@ pub fn create_market_position(
         .outcome_max_exposure
         .resize(market_outcomes_len, 0_u64);
     market_position.paid = false;
-
-    Ok(())
-}
-
-pub fn initialize_product_matched_stake(
-    market_position: &mut MarketPosition,
-    product: &Option<Account<Product>>,
-    order: &Order,
-) -> Result<()> {
-    if order.product.is_none() {
-        return Ok(());
-    }
-
-    // if this product has already been recorded on the market position return early
-    if market_position
-        .matched_risk_per_product
-        .iter()
-        .any(|product_matched_stake| product_matched_stake.product == order.product.unwrap())
-    {
-        return Ok(());
-    }
-
-    if market_position.matched_risk_per_product.len() < MarketPosition::MAX_PRODUCTS {
-        market_position
-            .matched_risk_per_product
-            .push(ProductMatchedRisk {
-                product: product.as_ref().unwrap().key(),
-                matched_risk_per_rate: Vec::new(),
-            });
-    }
 
     Ok(())
 }

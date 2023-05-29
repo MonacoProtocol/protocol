@@ -28,16 +28,16 @@ pub struct Order {
     pub market_outcome_index: u16, // market outcome on which order was made
     pub for_outcome: bool, // is order for or against the outcome
     pub order_status: OrderStatus, // status
-    pub product: Option<Pubkey>,   // product this order was placed on
+    pub product: Option<Pubkey>, // product this order was placed on
     pub stake: u64,        // total stake amount provided by purchaser
     pub voided_stake: u64, // stake amount returned to purchaser due to cancelation or settlement for partially matched orders
     pub expected_price: f64, // expected price provided by purchaser
     pub creation_timestamp: i64,
     pub delay_expiration_timestamp: i64,
     // matching data
-    pub stake_unmatched: u64, // stake amount available for matching
-    pub payout: u64,          // amount paid to purchaser during settlement for winning orders
-    pub payer: Pubkey,        // solana account fee payer
+    pub stake_unmatched: u64,         // stake amount available for matching
+    pub payout: u64, // amount paid to purchaser during settlement for winning orders
+    pub payer: Pubkey, // solana account fee payer
     pub product_commission_rate: f64, // product commission rate at time of order creation
 }
 
