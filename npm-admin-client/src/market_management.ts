@@ -280,6 +280,97 @@ export async function updateMarketTitle(
 }
 
 /**
+ * For the given market, update the event start time
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @param eventStartTimeTimestamp {EpochTimeStamp} timestamp in seconds representing the new time when the market event will start (moving in-play markets to in-play)
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const eventStart = 1633042800
+ * const update = await updateMarketEventStartTime(program, marketPk, eventStart)
+ */
+export async function updateMarketEventStartTime(
+  program: Program,
+  marketPk: PublicKey,
+  eventStartTimeTimestamp: EpochTimeStamp,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .updateMarketEventStartTime(new BN(eventStartTimeTimestamp))
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+
+  return response.body;
+}
+
+/**
+ * For the given market, update the event start time to now
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const update = await setMarketEventStartToNow(program, marketPk)
+ */
+export async function setMarketEventStartToNow(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .updateMarketEventStartTimeToNow()
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+
+  return response.body;
+}
+
+/**
  * For the given market, update the lock time
  *
  * @param program {program} anchor program initialized by the consuming client
@@ -530,7 +621,7 @@ export async function transferMarketEscrowSurplus(
       .rpc();
     response.addResponseData({ tnxId });
   } catch (e) {
-    response.addErrors(e);
+    response.addError(e);
     return response.body;
   }
   return response.body;
