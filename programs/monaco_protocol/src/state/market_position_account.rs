@@ -23,10 +23,12 @@ pub struct ProductMatchedRiskAndRate {
     pub rate: f64,
 }
 
-impl MarketPosition {
-    pub const MAX_PRODUCT_MATCHED_RISK_AND_STAKE: usize = 25;
-    const PRODUCT_MATCHED_RISK_AND_STAKE_SIZE: usize = PUB_KEY_SIZE + F64_SIZE + U64_SIZE;
+impl ProductMatchedRiskAndRate {
+    pub const MAX_LENGTH: usize = 20;
+    pub const SIZE: usize = PUB_KEY_SIZE + F64_SIZE + U64_SIZE;
+}
 
+impl MarketPosition {
     pub fn size_for(number_of_market_outcomes: usize) -> usize {
         DISCRIMINATOR_SIZE
             + PUB_KEY_SIZE // purchaser
@@ -36,7 +38,7 @@ impl MarketPosition {
             + vec_size(I128_SIZE, number_of_market_outcomes) // market_outcome_sums
             + vec_size(U64_SIZE, number_of_market_outcomes) // outcome_max_exposure
             + PUB_KEY_SIZE // payer
-            + vec_size(MarketPosition::PRODUCT_MATCHED_RISK_AND_STAKE_SIZE, MarketPosition::MAX_PRODUCT_MATCHED_RISK_AND_STAKE)
+            + vec_size(ProductMatchedRiskAndRate::SIZE, ProductMatchedRiskAndRate::MAX_LENGTH)
         // number of products to track matched stake contributions for
     }
 

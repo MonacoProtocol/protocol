@@ -203,7 +203,7 @@ fn update_product_commission_contributions(
                 .unwrap();
         }
         None => {
-            if matched_risk_per_product.len() < MarketPosition::MAX_PRODUCT_MATCHED_RISK_AND_STAKE {
+            if matched_risk_per_product.len() < ProductMatchedRiskAndRate::MAX_LENGTH {
                 matched_risk_per_product.push(ProductMatchedRiskAndRate {
                     product: order_product.unwrap(),
                     rate: order_product_commission_rate,
