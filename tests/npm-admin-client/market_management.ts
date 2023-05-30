@@ -18,6 +18,8 @@ import {
   voidMarket,
   openMarket,
   transferMarketEscrowSurplus,
+  updateMarketEventStartTime,
+  setMarketEventStartToNow,
 } from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
@@ -150,6 +152,49 @@ describe("Set new locktime", () => {
     assert(response.success);
     assert(response.data.tnxId);
     assert.deepEqual(updatedMarket.marketLockTimestamp, new BN(newLocktime));
+  });
+});
+
+describe("Set new event start", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+  const newEventStartTime = 1000 + Math.floor(new Date().getTime() / 1000);
+
+  it("Sets provided event start time", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const response = await updateMarketEventStartTime(
+      protocolProgram,
+      market.pk,
+      newEventStartTime,
+    );
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert.deepEqual(response.errors, []);
+    assert(response.success);
+    assert(response.data.tnxId);
+    assert.deepEqual(
+      updatedMarket.eventStartTimestamp,
+      new BN(newEventStartTime),
+    );
+  });
+});
+
+describe("Set new event start to now", () => {
+  const provider = AnchorProvider.local();
+  setProvider(provider);
+
+  it("Sets provided event start time", async () => {
+    const protocolProgram = workspace.MonacoProtocol as Program;
+    const market = await monaco.create3WayMarket([1.001]);
+    const response = await setMarketEventStartToNow(protocolProgram, market.pk);
+    const updatedMarket = await monaco.fetchMarket(market.pk);
+
+    assert.deepEqual(response.errors, []);
+    assert(response.success);
+    assert(response.data.tnxId);
+    // Asserting the eventStart time changed need to add in assert for more accurate time check
+    assert(updatedMarket.eventStartTimestamp != new BN(1924254038));
   });
 });
 

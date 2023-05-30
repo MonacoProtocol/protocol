@@ -219,12 +219,14 @@ pub fn update_on_cancel(
     order: &Account<Order>,
     matching_pool: &mut MarketMatchingPool,
 ) -> Result<()> {
-    // TODO update market_outcome stake sums for partially matched orders
-    matching_pool.liquidity_amount = matching_pool
-        .liquidity_amount
-        .checked_sub(order.voided_stake)
-        .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-    matching_pool.orders.remove_pubkey(&order.key());
-
+    if let Some(removed_item) = matching_pool.orders.remove_pubkey(&order.key()) {
+        if removed_item.liquidity_to_add == 0 {
+            // TODO update market_outcome stake sums for partially matched orders
+            matching_pool.liquidity_amount = matching_pool
+                .liquidity_amount
+                .checked_sub(order.voided_stake)
+                .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+        }
+    }
     Ok(())
 }

@@ -395,7 +395,7 @@ pub mod monaco_protocol {
 
         // set it `true` only if now is after event start
         require!(
-            market.event_start_timestamp < now,
+            market.event_start_timestamp <= now,
             CoreError::MarketEventNotStarted,
         );
 
