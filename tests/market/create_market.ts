@@ -11,6 +11,7 @@ import {
 } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
+import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
 
 describe("Create markets with inplay features", () => {
   it("successfully", async () => {
@@ -218,10 +219,16 @@ async function createMarket(
     mintPk,
   );
 
-  const marketEscrowPk = await findEscrowPda(
-    protocol.program as Program,
-    marketPdaResponse.data.pda,
-  );
+  const marketEscrowPk = (
+    await findEscrowPda(protocol.program as Program, marketPdaResponse.data.pda)
+  ).data.pda;
+
+  const marketPaymentQueuePk = (
+    await findCommissionPaymentsQueuePda(
+      protocol.program as Program,
+      marketPdaResponse.data.pda,
+    )
+  ).data.pda;
 
   await protocol.program.methods
     .createMarketV2(
@@ -238,7 +245,8 @@ async function createMarket(
     )
     .accounts({
       market: marketPdaResponse.data.pda,
-      escrow: marketEscrowPk.data.pda,
+      escrow: marketEscrowPk,
+      commissionPaymentQueue: marketPaymentQueuePk,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,
@@ -279,10 +287,13 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
     protocol.getRawProgram().programId,
   );
 
-  const marketEscrowPk = await findEscrowPda(
-    protocol.program as Program,
-    marketPda,
-  );
+  const marketEscrowPk = (
+    await findEscrowPda(protocol.program as Program, marketPda)
+  ).data.pda;
+
+  const paymentsQueuePda = (
+    await findCommissionPaymentsQueuePda(protocol.program as Program, marketPda)
+  ).data.pda;
 
   await protocol.program.methods
     .createMarketV2(
@@ -299,7 +310,8 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
     )
     .accounts({
       market: marketPda,
-      escrow: marketEscrowPk.data.pda,
+      escrow: marketEscrowPk,
+      commissionPaymentQueue: paymentsQueuePda,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,

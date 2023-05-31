@@ -25,9 +25,11 @@ import {
   createNewMint,
   OperatorType,
   getProtocolProductProgram,
+  processCommissionPayments,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
+import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -277,6 +279,11 @@ export class Monaco {
       marketPdaResponse.data.pda,
     );
 
+    const commissionQueuePk = await findCommissionPaymentsQueuePda(
+      this.program as Program,
+      marketPdaResponse.data.pda,
+    );
+
     // invoke core program to call operations required for creating an order
     await this.program.methods
       .createMarketV2(
@@ -294,6 +301,7 @@ export class Monaco {
       .accounts({
         market: marketPdaResponse.data.pda,
         escrow: marketEscrowPk.data.pda,
+        commissionPaymentQueue: commissionQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -399,6 +407,7 @@ export class Monaco {
       externalPrograms,
       marketPdaResponse.data.pda,
       marketEscrowPk.data.pda,
+      commissionQueuePk.data.pda,
       outcomePks,
       matchingPools,
       event.publicKey,
@@ -415,6 +424,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly paymentsQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
   readonly matchingPools: {
     against: PublicKey;
@@ -437,6 +447,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    paymentsQueuePk: PublicKey,
     outcomePks: PublicKey[],
     matchingPools: {
       against: PublicKey;
@@ -451,6 +462,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.paymentsQueuePk = paymentsQueuePk;
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;
     this.eventPk = eventPk;
@@ -581,6 +593,7 @@ export class MonacoMarket {
     stake: number,
     price: number,
     purchaser: Keypair,
+    productPk?: PublicKey,
   ) {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
@@ -593,6 +606,7 @@ export class MonacoMarket {
       price,
       stake,
       purchaserTokenPk,
+      productPk,
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
@@ -603,6 +617,7 @@ export class MonacoMarket {
     stake: number,
     price: number,
     purchaser: Keypair,
+    productPk?: PublicKey,
   ) {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
@@ -615,6 +630,7 @@ export class MonacoMarket {
       price,
       stake,
       purchaserTokenPk,
+      productPk,
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
@@ -1026,20 +1042,28 @@ export class MonacoMarket {
         tokenProgram: TOKEN_PROGRAM_ID,
         market: this.pk,
         purchaserTokenAccount: purchaserTokenPk,
-        purchaser: purchaser,
         marketPosition: marketPositionPk,
         marketEscrow: this.escrowPk,
+        commissionPaymentQueue: this.paymentsQueuePk,
         crankOperator: this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
         protocolConfig: protocolCommissionPks.protocolConfigPk,
-        protocolCommissionTokenAccount:
-          protocolCommissionPks.protocolCommissionEscrowPk,
       })
       .rpc()
       .catch((e) => {
         console.error(e);
         throw e;
       });
+
+    await this.processCommissionPayments();
+  }
+
+  async processCommissionPayments() {
+    await processCommissionPayments(
+      this.monaco.getRawProgram(),
+      this.externalPrograms.protocolProduct as Program,
+      this.pk,
+    );
   }
 
   async processDelayExpiredOrders(
@@ -1131,5 +1155,31 @@ export class ExternalPrograms {
       });
 
     return productPk;
+  }
+
+  async updateProductCommission(
+    productTitle: string,
+    commissionRate: number,
+    authority?: Keypair,
+  ) {
+    const defaultAuthority = authority == undefined;
+    const productPk = await findProductPda(
+      productTitle,
+      this.protocolProduct as Program,
+    );
+
+    await this.protocolProduct.methods
+      .updateProductCommissionRate(productTitle, commissionRate)
+      .accounts({
+        product: productPk,
+        authority: defaultAuthority
+          ? monaco.provider.publicKey
+          : authority.publicKey,
+      })
+      .signers(defaultAuthority ? [] : [authority])
+      .rpc()
+      .catch((e) => {
+        throw e;
+      });
   }
 }

@@ -7,6 +7,7 @@ use crate::monaco_protocol::PRICE_SCALE;
 use crate::state::market_account::{
     Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
 };
+use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
 
 pub fn create(
@@ -70,6 +71,11 @@ pub fn create(
     } else {
         false
     };
+
+    intialize_commission_payments_queue(
+        &mut ctx.accounts.commission_payment_queue,
+        &ctx.accounts.market.key(),
+    )?;
 
     Ok(())
 }
@@ -143,6 +149,15 @@ pub fn add_prices_to_market_outcome(
         CoreError::MarketPriceListIsFull
     );
 
+    Ok(())
+}
+
+fn intialize_commission_payments_queue(
+    payments_queue: &mut MarketPaymentsQueue,
+    market: &Pubkey,
+) -> Result<()> {
+    payments_queue.market = *market;
+    payments_queue.payment_queue = PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH);
     Ok(())
 }
 

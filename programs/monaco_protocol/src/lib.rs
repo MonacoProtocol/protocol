@@ -546,6 +546,17 @@ pub mod monaco_protocol {
         )
     }
 
+    pub fn process_commission_payment(ctx: Context<ProcessMarketCommissionPayment>) -> Result<()> {
+        instructions::process_commission_payment(
+            &mut ctx.accounts.commission_payments_queue.payment_queue,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.product_escrow_token,
+            &ctx.accounts.product,
+            &ctx.accounts.market,
+            &ctx.accounts.token_program,
+        )
+    }
+
     /*
     Close accounts
      */
@@ -638,6 +649,11 @@ pub mod monaco_protocol {
         require!(
             ReadyToClose.eq(&ctx.accounts.market.market_status),
             CoreError::MarketNotReadyToClose
+        );
+
+        require!(
+            ctx.accounts.commission_payment_queue.payment_queue.len() == 0,
+            CoreError::CloseAccountMarketPaymentQueueNotEmpty
         );
 
         instructions::market::close_escrow_token_account(&ctx)?;

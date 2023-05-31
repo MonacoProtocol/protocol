@@ -6,28 +6,42 @@
     *   [Properties][2]
 *   [MarketPositionAccounts][3]
     *   [Properties][4]
+*   [ProductMatchedRiskAndRate][5]
+    *   [Properties][6]
 
 ## MarketPosition
 
-Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][5], marketOutcomeSums: [Array][6]\<BN>, outcomeMaxExposure: [Array][6]\<BN>, outcomePositions: [Map][7]<[string][8], BN>, payer: PublicKey}
+Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][7], marketOutcomeSums: [Array][8]\<BN>, outcomeMaxExposure: [Array][8]\<BN>, outcomePositions: [Map][9]<[string][10], BN>, payer: PublicKey, matchedRisk: BN, matchedRiskPerProduct: [Array][8]<[ProductMatchedRiskAndRate][5]>}
 
 ### Properties
 
 *   `purchaser` **PublicKey**&#x20;
 *   `market` **PublicKey**&#x20;
-*   `paid` **[boolean][5]**&#x20;
-*   `marketOutcomeSums` **[Array][6]\<BN>**&#x20;
-*   `outcomeMaxExposure` **[Array][6]\<BN>**&#x20;
-*   `outcomePositions` **[Map][7]<[string][8], BN>**&#x20;
+*   `paid` **[boolean][7]**&#x20;
+*   `marketOutcomeSums` **[Array][8]\<BN>**&#x20;
+*   `outcomeMaxExposure` **[Array][8]\<BN>**&#x20;
+*   `outcomePositions` **[Map][9]<[string][10], BN>**&#x20;
 *   `payer` **PublicKey**&#x20;
+*   `matchedRisk` **BN**&#x20;
+*   `matchedRiskPerProduct` **[Array][8]<[ProductMatchedRiskAndRate][5]>**&#x20;
 
 ## MarketPositionAccounts
 
-Type: {marketPositionAccounts: [Array][6]\<GetAccount<[MarketPosition][1]>>}
+Type: {marketPositionAccounts: [Array][8]\<GetAccount<[MarketPosition][1]>>}
 
 ### Properties
 
-*   `marketPositionAccounts` **[Array][6]\<GetAccount<[MarketPosition][1]>>**&#x20;
+*   `marketPositionAccounts` **[Array][8]\<GetAccount<[MarketPosition][1]>>**&#x20;
+
+## ProductMatchedRiskAndRate
+
+Type: {product: PublicKey, risk: BN, rate: [number][11]}
+
+### Properties
+
+*   `product` **PublicKey**&#x20;
+*   `risk` **BN**&#x20;
+*   `rate` **[number][11]**&#x20;
 
 [1]: #marketposition
 
@@ -37,10 +51,16 @@ Type: {marketPositionAccounts: [Array][6]\<GetAccount<[MarketPosition][1]>>}
 
 [4]: #properties-1
 
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[5]: #productmatchedriskandrate
 
-[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[6]: #properties-2
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map
+
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

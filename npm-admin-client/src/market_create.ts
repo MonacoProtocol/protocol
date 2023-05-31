@@ -18,6 +18,7 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
+  findCommissionPaymentsQueuePda,
 } from "./market_helpers";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
@@ -176,11 +177,13 @@ export async function createMarket(
     await findMarketPda(program, eventAccountPk, marketType, marketTokenPk)
   ).data.pda;
 
-  const [escrowPda, authorisedOperators, mintInfo] = await Promise.all([
-    findEscrowPda(program, marketPda),
-    findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
-    getMintInfo(program, marketTokenPk),
-  ]);
+  const [escrowPda, authorisedOperators, mintInfo, paymentsQueuePda] =
+    await Promise.all([
+      findEscrowPda(program, marketPda),
+      findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
+      getMintInfo(program, marketTokenPk),
+      findCommissionPaymentsQueuePda(program, marketPda),
+    ]);
 
   try {
     const tnxId = await program.methods
@@ -205,6 +208,7 @@ export async function createMarket(
         rent: web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
+        commissionPaymentQueue: paymentsQueuePda.data.pda,
       })
       .rpc();
 

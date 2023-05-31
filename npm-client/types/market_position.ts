@@ -10,8 +10,16 @@ export type MarketPosition = {
   outcomeMaxExposure: BN[];
   outcomePositions: Map<string, BN>;
   payer: PublicKey;
+  matchedRisk: BN;
+  matchedRiskPerProduct: ProductMatchedRiskAndRate[];
 };
 
 export type MarketPositionAccounts = {
   marketPositionAccounts: GetAccount<MarketPosition>[];
+};
+
+export type ProductMatchedRiskAndRate = {
+  product: PublicKey;
+  risk: BN;
+  rate: number;
 };

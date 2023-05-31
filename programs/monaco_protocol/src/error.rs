@@ -68,6 +68,14 @@ pub enum CoreError {
     SettlementMarketEscrowNonZero,
     #[msg("Core Settlement: error calculating settlement payment.")]
     SettlementPaymentCalculation,
+    #[msg("Core Settlement: failed to enqueue payment - queue full.")]
+    SettlementPaymentQueueFull,
+    #[msg("Core Settlement: from/to address incorrect when processing payment.")]
+    SettlementPaymentAddressMismatch,
+    #[msg("Core Settlement: failed to dequeue payment as queue was empty.")]
+    SettlementPaymentDequeueEmptyQueue,
+    #[msg("Core Settlement: failed to process payment, escrow product mismatch")]
+    SettlementPaymentEscrowProductMismatch,
 
     /*
     Void Markets
@@ -222,4 +230,6 @@ pub enum CoreError {
     CloseAccountPurchaserMismatch,
     #[msg("CloseAccount: Market does not match")]
     CloseAccountMarketMismatch,
+    #[msg("CloseAccount: Market payment queue is not empty.")]
+    CloseAccountMarketPaymentQueueNotEmpty,
 }

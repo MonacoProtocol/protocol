@@ -110,9 +110,15 @@ fn initialize_order(
     order.stake_unmatched = data.stake;
     order.payout = 0_u64;
 
-    order.product = match product {
-        Some(product_account) => product_account.key(),
-        None => Pubkey::default(),
+    match product {
+        Some(product_account) => {
+            order.product = Some(product_account.key());
+            order.product_commission_rate = product_account.commission_rate;
+        }
+        None => {
+            order.product = None;
+            order.product_commission_rate = 0_f64;
+        }
     };
 
     Ok(())
