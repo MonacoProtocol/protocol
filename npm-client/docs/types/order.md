@@ -35,7 +35,7 @@ Type: {price: [number][20], stake: [number][20]}
 
 ## Order
 
-Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20], forOutcome: [boolean][21], orderStatus: [OrderStatus][1], product: PublicKey, stake: BN, voidedStake: BN, expectedPrice: [number][20], creationTimestamp: BN, delayExpirationTimestamp: BN, stakeUnmatched: BN, payout: BN, payer: PublicKey}
+Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20], forOutcome: [boolean][21], orderStatus: [OrderStatus][1], product: (PublicKey | null), stake: BN, voidedStake: BN, expectedPrice: [number][20], creationTimestamp: BN, delayExpirationTimestamp: BN, stakeUnmatched: BN, payout: BN, payer: PublicKey, productCommissionRate: [number][20]}
 
 ### Properties
 
@@ -44,7 +44,7 @@ Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20]
 *   `marketOutcomeIndex` **[number][20]**&#x20;
 *   `forOutcome` **[boolean][21]**&#x20;
 *   `orderStatus` **[OrderStatus][1]**&#x20;
-*   `product` **PublicKey**&#x20;
+*   `product` **(PublicKey | null)**&#x20;
 *   `stake` **BN**&#x20;
 *   `voidedStake` **BN**&#x20;
 *   `expectedPrice` **[number][20]**&#x20;
@@ -53,6 +53,7 @@ Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][20]
 *   `stakeUnmatched` **BN**&#x20;
 *   `payout` **BN**&#x20;
 *   `payer` **PublicKey**&#x20;
+*   `productCommissionRate` **[number][20]**&#x20;
 
 ## PendingOrders
 

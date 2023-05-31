@@ -1,18 +1,23 @@
-import { monaco } from "../util/wrappers";
+import { externalPrograms, monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
 import { MarketPositions } from "../../npm-client/src/market_position_query";
 import * as assert from "assert";
+import { ProductMatchedRiskAndRate } from "../../npm-client";
 
 describe("Market Position", () => {
   it("fetch market positions from chain", async () => {
     const market = await monaco.create3WayMarket([2.0]);
+    const productPk = await externalPrograms.createProduct(
+      "SOME_EXCHANGE2",
+      99,
+    );
     const purchaserFor = await createWalletWithBalance(monaco.provider);
     const purchaserAgainst = await createWalletWithBalance(monaco.provider);
 
     await market.airdrop(purchaserFor, 100.0);
     await market.airdrop(purchaserAgainst, 100.0);
 
-    const forOrder = await market.forOrder(0, 10, 2, purchaserFor);
+    const forOrder = await market.forOrder(0, 10, 2, purchaserFor, productPk);
     const againstOrder = await market.againstOrder(0, 10, 2, purchaserAgainst);
 
     await market.match(forOrder, againstOrder);
@@ -39,6 +44,13 @@ describe("Market Position", () => {
       forPosition.marketOutcomeSums.map((sum) => sum.toNumber()),
       [10000000, -10000000, -10000000],
     );
+    assert.equal(forPosition.matchedRisk.toNumber(), 10000000);
+    assert.equal(forPosition.matchedRiskPerProduct.length, 1);
+    assert.deepEqual(forPosition.matchedRiskPerProduct[0], {
+      product: productPk,
+      rate: 99,
+      risk: forPosition.matchedRisk,
+    } as ProductMatchedRiskAndRate);
 
     const againstPosition = marketPositions.filter(
       (position) =>

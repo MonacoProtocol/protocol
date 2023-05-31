@@ -29,7 +29,7 @@ import {
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
-import { findMarketCommissionQueuePda } from "../../npm-admin-client";
+import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -279,7 +279,7 @@ export class Monaco {
       marketPdaResponse.data.pda,
     );
 
-    const commissionQueuePk = await findMarketCommissionQueuePda(
+    const commissionQueuePk = await findCommissionPaymentsQueuePda(
       this.program as Program,
       marketPdaResponse.data.pda,
     );

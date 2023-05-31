@@ -11,7 +11,7 @@ import {
 } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
-import { findMarketCommissionQueuePda } from "../../npm-admin-client";
+import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
 
 describe("Create markets with inplay features", () => {
   it("successfully", async () => {
@@ -224,7 +224,7 @@ async function createMarket(
   ).data.pda;
 
   const marketPaymentQueuePk = (
-    await findMarketCommissionQueuePda(
+    await findCommissionPaymentsQueuePda(
       protocol.program as Program,
       marketPdaResponse.data.pda,
     )
@@ -292,7 +292,7 @@ async function createMarketWithIncorrectType(protocol: Monaco) {
   ).data.pda;
 
   const paymentsQueuePda = (
-    await findMarketCommissionQueuePda(protocol.program as Program, marketPda)
+    await findCommissionPaymentsQueuePda(protocol.program as Program, marketPda)
   ).data.pda;
 
   await protocol.program.methods

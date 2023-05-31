@@ -1,6 +1,6 @@
 import { externalPrograms, monaco } from "../util/wrappers";
 import assert from "assert";
-import { createOrderUiStake } from "../../npm-client";
+import { createOrderUiStake, Order } from "../../npm-client";
 
 describe("NPM client - create order", () => {
   it("Create order with a custom product", async () => {
@@ -19,9 +19,9 @@ describe("NPM client - create order", () => {
     );
 
     // check that product is set to our custom product
-    const orderAccount = await monaco.program.account.order.fetch(
+    const orderAccount = (await monaco.program.account.order.fetch(
       orderPk.data.orderPk,
-    );
+    )) as Order;
     assert.equal(orderAccount.product.toBase58(), productPk.toBase58());
   });
 
@@ -39,9 +39,9 @@ describe("NPM client - create order", () => {
     );
 
     // check that product is set to null (how rust Option<Pubkey> of None is represented)
-    const orderAccount = await monaco.program.account.order.fetch(
+    const orderAccount = (await monaco.program.account.order.fetch(
       orderPk.data.orderPk,
-    );
+    )) as Order;
     assert.equal(orderAccount.product, null);
   });
 });

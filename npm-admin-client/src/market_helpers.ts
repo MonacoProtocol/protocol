@@ -159,7 +159,7 @@ export async function findEscrowPda(
 }
 
 /**
- * For the provided market publicKey, return the commission queue account PDA (publicKey) for that market.
+ * For the provided market publicKey, return the commission payments queue account PDA (publicKey) for that market.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
@@ -168,9 +168,9 @@ export async function findEscrowPda(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const commissionQueuePda = await findEscrowPda(program, marketPK)
+ * const commissionPaymentsQueuePda = await findCommissionPaymentsQueuePda(program, marketPK)
  */
-export async function findMarketCommissionQueuePda(
+export async function findCommissionPaymentsQueuePda(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<FindPdaResponse>> {

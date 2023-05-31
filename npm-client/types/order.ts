@@ -22,7 +22,7 @@ export type Order = {
   marketOutcomeIndex: number;
   forOutcome: boolean;
   orderStatus: OrderStatus;
-  product: PublicKey;
+  product: PublicKey | null;
   stake: BN;
   voidedStake: BN;
   expectedPrice: number;
@@ -31,6 +31,7 @@ export type Order = {
   stakeUnmatched: BN;
   payout: BN;
   payer: PublicKey;
+  productCommissionRate: number;
 };
 
 export type PendingOrders = {

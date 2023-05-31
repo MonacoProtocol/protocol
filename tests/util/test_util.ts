@@ -40,7 +40,7 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
-  findMarketCommissionQueuePda,
+  findCommissionPaymentsQueuePda,
   PaymentInfo,
 } from "../../npm-admin-client";
 
@@ -223,7 +223,7 @@ export async function createMarket(
     .data.pda;
 
   const paymentsQueuePda = (
-    await findMarketCommissionQueuePda(protocolProgram as Program, marketPda)
+    await findCommissionPaymentsQueuePda(protocolProgram as Program, marketPda)
   ).data.pda;
 
   await protocolProgram.methods
@@ -666,7 +666,7 @@ export async function processCommissionPayments(
   marketPk: PublicKey,
 ) {
   const commissionQueuePk = (
-    await findMarketCommissionQueuePda(monaco, marketPk)
+    await findCommissionPaymentsQueuePda(monaco, marketPk)
   ).data.pda;
   const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
 
