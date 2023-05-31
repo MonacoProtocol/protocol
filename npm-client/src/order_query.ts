@@ -140,7 +140,6 @@ export class Orders {
     try {
       const accountsWithData = (await this.program.account.order.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-        "confirmed",
       )) as Order[];
 
       const result = accountPublicKeys.data.publicKeys

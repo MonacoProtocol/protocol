@@ -89,7 +89,6 @@ export class Products {
       const accountsWithData =
         (await this.program.account.product.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-          "confirmed",
         )) as Product[];
 
       const result = accountPublicKeys.data.publicKeys

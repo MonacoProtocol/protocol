@@ -44,7 +44,7 @@ export async function createProduct(
       systemProgram: SystemProgram.programId,
     })
     .signers(defaultAuthority ? [] : [authority])
-    .rpc({ commitment: "confirmed" })
+    .rpc()
     .catch((e) => {
       response.addError(e);
     });
@@ -87,7 +87,7 @@ export async function updateProductCommissionRate(
       product: productPk,
       authority: authorityPk,
     })
-    .rpc({ commitment: "confirmed" })
+    .rpc()
     .catch((e) => {
       response.addError(e);
     });
@@ -130,7 +130,7 @@ export async function updateProductCommissionEscrow(
       product: productPk,
       authority: authorityPk,
     })
-    .rpc({ commitment: "confirmed" })
+    .rpc()
     .catch((e) => {
       response.addError(e);
     });
@@ -175,7 +175,7 @@ export async function updateProductAuthority(
       updatedAuthority: updatedAuthoritySigner.publicKey,
     })
     .signers([updatedAuthoritySigner])
-    .rpc({ commitment: "confirmed" })
+    .rpc()
     .catch((e) => {
       response.addError(e);
     });
