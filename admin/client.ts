@@ -22,6 +22,7 @@ import {
 import { addPricesToLadder } from "./add_prices_to_ladder";
 import { getTokenLeaderboard } from "./leaderboard/token_leaderboard";
 import { getLeaderboardPerMarket } from "./leaderboard/market_leaderboard";
+import { create_product } from "./product";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -98,6 +99,9 @@ switch (script) {
     break;
   case "printAuthorisedOperatorAccounts":
     printAuthorisedOperatorAccounts();
+    break;
+  case "createProduct":
+    create_product();
     break;
   default:
     printUsageAndExit();
