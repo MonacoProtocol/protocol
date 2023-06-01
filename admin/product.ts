@@ -1,7 +1,7 @@
 import { createProduct } from "../npm-client/src/product";
 import { PublicKey } from "@solana/web3.js";
-import { getProtocolProductProgram } from "../tests/util/test_util";
 import { Program } from "@coral-xyz/anchor";
+import * as anchor from "@coral-xyz/anchor";
 
 export async function create_product() {
   if (process.argv.length != 6) {
@@ -23,4 +23,11 @@ export async function create_product() {
     commissionEscrow,
   );
   console.log(JSON.stringify(result, null, 2));
+}
+
+function getProtocolProductProgram() {
+  return Program.at(
+    "mppFrYmM6A4Ud3AxRbGXsGisX1HUsbDfp1nrg9FQJEE",
+    anchor.getProvider(),
+  );
 }
