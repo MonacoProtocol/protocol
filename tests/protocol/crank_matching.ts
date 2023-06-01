@@ -70,7 +70,11 @@ describe("Matching Crank", () => {
       .signers([operatorAccountUnauthorised])
       .instruction();
 
-    await assertTransactionThrowsErrorCode(ix, "UnauthorisedOperator");
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "UnauthorisedOperator",
+      operatorAccountUnauthorised,
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(

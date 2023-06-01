@@ -767,8 +767,9 @@ export async function executeTransactionMaxCompute(
 export async function assertTransactionThrowsErrorCode(
   ix: TransactionInstruction,
   errorCode: string,
+  signer?: Keypair,
 ) {
-  await executeTransactionMaxCompute([ix]).then(
+  await executeTransactionMaxCompute([ix], signer).then(
     function (_) {
       assert.fail("This test should have thrown an error");
     },
