@@ -26,6 +26,7 @@ import {
   OperatorType,
   getProtocolProductProgram,
   processCommissionPayments,
+  executeTransactionMaxCompute,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
@@ -736,7 +737,7 @@ export class MonacoMarket {
       ])
     ).map((result) => result.data.tradePk);
 
-    await this.monaco.program.methods
+    const ix = await this.monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -765,11 +766,17 @@ export class MonacoMarket {
       .signers(
         crankOperatorKeypair instanceof Keypair ? [crankOperatorKeypair] : [],
       )
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
+      .instruction();
+
+    try {
+      await executeTransactionMaxCompute(
+        [ix],
+        crankOperatorKeypair instanceof Keypair ? crankOperatorKeypair : null,
+      );
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 
   async settle(outcome: number) {

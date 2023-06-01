@@ -1,8 +1,10 @@
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   sendAndConfirmTransaction,
   Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
@@ -106,7 +108,7 @@ export async function matchOrder(
     orderAgainst.purchaser,
   );
 
-  await protocolProgram.methods
+  const ix = await protocolProgram.methods
     .matchOrders()
     .accounts({
       orderFor: forPk,
@@ -127,11 +129,14 @@ export async function matchOrder(
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers([crankOperator])
-    .rpc()
-    .catch((e) => {
-      console.error(e);
-      throw e;
-    });
+    .instruction();
+
+  try {
+    await executeTransactionMaxCompute([ix]);
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
 }
 
 export async function getMarketMatchingPoolsPks(
@@ -736,4 +741,40 @@ export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
     }
   }
   return queuedItems;
+}
+
+export async function executeTransactionMaxCompute(
+  instructions: TransactionInstruction[],
+  signer?: Keypair,
+) {
+  const provider = getAnchorProvider();
+  if (!signer) {
+    const wallet = provider.wallet as NodeWallet;
+    signer = wallet.payer;
+  }
+
+  const tx = new Transaction();
+  tx.add(
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: 1400000,
+    }),
+  );
+  instructions.forEach((instruction) => tx.add(instruction));
+
+  return await sendAndConfirmTransaction(provider.connection, tx, [signer]);
+}
+
+export async function assertTransactionThrowsErrorCode(
+  ix: TransactionInstruction,
+  errorCode: string,
+  signer?: Keypair,
+) {
+  await executeTransactionMaxCompute([ix], signer).then(
+    function (_) {
+      assert.fail("This test should have thrown an error");
+    },
+    function (err) {
+      assert.ok(err.logs.toString().includes(errorCode));
+    },
+  );
 }
