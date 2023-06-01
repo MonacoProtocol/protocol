@@ -89,7 +89,7 @@ describe("Order Matching Market State", () => {
       await market.match(AforPk, BAgainstPk);
       assert(false, "an exception should have been thrown");
     } catch (err) {
-      assert.equal(err.error.errorCode.code, "MarketNotOpen");
+      assert.ok(err.logs.toString().includes("MarketNotOpen"));
     }
   });
 });
