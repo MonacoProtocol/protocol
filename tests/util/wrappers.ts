@@ -143,6 +143,7 @@ export class Monaco {
       maxExposure: marketPosition.outcomeMaxExposure.map(
         (bn) => bn.toNumber() / decimalsMultiplayer,
       ),
+      payment: marketPosition.payment.toNumber() / decimalsMultiplayer,
     };
   }
 

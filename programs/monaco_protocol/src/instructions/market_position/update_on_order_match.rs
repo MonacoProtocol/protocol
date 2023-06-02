@@ -14,12 +14,9 @@ pub fn update_on_order_match(
     let for_outcome = order.for_outcome;
     let unmatched_price = order.expected_price;
 
-    let max_exposure = market_position.max_exposure();
-
     // update chosen outcome position
     let matched_risk = calculate_risk_from_stake(stake_matched, price_matched);
-    let risk_change =
-        calculate_risk_from_stake(stake_matched, unmatched_price).saturating_sub(matched_risk);
+    let risk_unmatched = calculate_risk_from_stake(stake_matched, unmatched_price);
 
     match for_outcome {
         true => {
@@ -32,11 +29,6 @@ pub fn update_on_order_match(
             market_position.market_outcome_sums[outcome_index] = market_position
                 .market_outcome_sums[outcome_index]
                 .checked_sub(matched_risk as i128)
-                .ok_or(CoreError::ArithmeticError)?;
-
-            market_position.outcome_max_exposure[outcome_index] = market_position
-                .outcome_max_exposure[outcome_index]
-                .checked_sub(risk_change)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
@@ -64,17 +56,48 @@ pub fn update_on_order_match(
         }
     }
 
-    // max_exposure change
-    let max_exposure_change = max_exposure
-        .checked_sub(market_position.max_exposure())
+    // update max exposure
+    match for_outcome {
+        true => {
+            let market_outcomes_len = market_position.outcome_max_exposure.len();
+            for index in 0..market_outcomes_len {
+                if outcome_index == index {
+                    continue;
+                }
+                market_position.outcome_max_exposure[index] = market_position.outcome_max_exposure
+                    [index]
+                    .checked_sub(stake_matched)
+                    .ok_or(CoreError::ArithmeticError)?;
+            }
+        }
+        false => {
+            market_position.outcome_max_exposure[outcome_index] = market_position
+                .outcome_max_exposure[outcome_index]
+                .checked_sub(risk_unmatched)
+                .ok_or(CoreError::ArithmeticError)?;
+        }
+    }
+
+    // total exposure change
+    let total_exposure = market_position.total_exposure();
+    let total_exposure_change = market_position
+        .payment
+        .checked_sub(total_exposure)
         .ok_or(CoreError::ArithmeticError)?;
 
-    Ok(max_exposure_change)
+    // payment reduced by the removed match
+    market_position.payment = market_position
+        .payment
+        .checked_sub(total_exposure_change)
+        .ok_or(CoreError::ArithmeticError)?;
+
+    Ok(total_exposure_change)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::instructions::market_position;
     use test_case::test_case;
 
     struct OrderData {
@@ -207,7 +230,7 @@ mod tests {
     OrderData{outcome_index: 2, price: 2.0, stake: 1000000, for_outcome: false}
     ]), vec![0,0,0] ; "Same price, same stake, 3 different outcomes, for and against them in order to end up neutral")]
     fn test_update_on_match(orders: Box<[OrderData]>, expected_position: Vec<i128>) {
-        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3]);
+        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3], 0u64);
 
         for order_data in orders.into_vec() {
             let order = order(
@@ -216,6 +239,9 @@ mod tests {
                 order_data.stake,
                 order_data.price,
             );
+
+            market_position::update_on_order_creation(&mut market_position, &order)
+                .expect("not expecting failure");
 
             update_on_order_match(
                 &mut market_position,
@@ -258,6 +284,7 @@ mod tests {
     fn market_position(
         market_outcome_sums: Vec<i128>,
         outcome_max_exposure: Vec<u64>,
+        payment: u64,
     ) -> MarketPosition {
         MarketPosition {
             purchaser: Default::default(),
@@ -265,6 +292,7 @@ mod tests {
             paid: false,
             market_outcome_sums,
             outcome_max_exposure,
+            payment,
             payer: Pubkey::new_unique(),
             matched_risk_per_product: vec![],
             matched_risk: 0,

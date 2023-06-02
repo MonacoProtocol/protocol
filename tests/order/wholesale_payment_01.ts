@@ -54,22 +54,43 @@ describe("Order Wholesale Payment 01", () => {
 
     assert.deepEqual(
       await Promise.all([
+        market.getMarketPosition(purchaserA),
+        market.getMarketPosition(purchaserB),
+        market.getMarketPosition(purchaserC),
         market.getEscrowBalance(),
         market.getTokenBalance(purchaserA),
         market.getTokenBalance(purchaserB),
         market.getTokenBalance(purchaserC),
       ]),
-      [40, 80, 90, 90],
+      [
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        40,
+        80,
+        90,
+        90,
+      ],
     );
 
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeA);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserC.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -87,9 +108,21 @@ describe("Order Wholesale Payment 01", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
-        { matched: [-10, 20, -10], maxExposure: [10, 0, 10] },
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
         0,
         90,
         118,
@@ -155,9 +188,21 @@ describe("Order Wholesale Payment 01", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
-        { matched: [-10, 20, -10], maxExposure: [10, 0, 10] },
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
         40,
         80,
         90,
@@ -168,11 +213,9 @@ describe("Order Wholesale Payment 01", () => {
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeB);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserC.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -190,9 +233,21 @@ describe("Order Wholesale Payment 01", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
-        { matched: [-10, 20, -10], maxExposure: [10, 0, 10] },
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
         0,
         90,
         90,
@@ -258,9 +313,21 @@ describe("Order Wholesale Payment 01", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
-        { matched: [-10, 20, -10], maxExposure: [10, 0, 10] },
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
         40,
         80,
         90,
@@ -271,11 +338,9 @@ describe("Order Wholesale Payment 01", () => {
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeC);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserC.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -293,9 +358,21 @@ describe("Order Wholesale Payment 01", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [-10, -10, 20], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
-        { matched: [-10, 20, -10], maxExposure: [10, 0, 10] },
+        {
+          matched: [-10, -10, 20],
+          maxExposure: [0, 0, 20],
+          payment: 20,
+        },
+        {
+          matched: [20, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [-10, 20, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
         0,
         118,
         90,

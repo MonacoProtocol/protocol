@@ -1,0 +1,321 @@
+import assert from "assert";
+import { createWalletWithBalance } from "../util/test_util";
+import { monaco } from "../util/wrappers";
+
+/*
+ * Order Payments: Settlement Set 05
+ */
+describe("Order Payments: Settlement Set 05", () => {
+  it("Scenario 1: for all outcomes 10.00 @ 2.00", async () => {
+    // Given
+    const outcomeA = 0;
+    const outcomeB = 1;
+    const outcomeC = 2;
+    const price = 2.0;
+
+    // Create market, purchaser
+    const [userA, userB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(userA, 200.0);
+    await market.airdrop(userB, 200.0);
+
+    // Create orders
+    const orderAA = await market.forOrder(outcomeA, 10.0, price, userA);
+    const orderAB = await market.forOrder(outcomeB, 10.0, price, userA);
+    const orderAC = await market.forOrder(outcomeC, 10.0, price, userA);
+    const orderBA = await market.againstOrder(outcomeA, 10.0, price, userB);
+    const orderBB = await market.againstOrder(outcomeB, 10.0, price, userB);
+    const orderBC = await market.againstOrder(outcomeC, 10.0, price, userB);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        {
+          matched: [0, 0, 0],
+          maxExposure: [20, 20, 20],
+          payment: 20,
+        },
+        {
+          matched: [0, 0, 0],
+          maxExposure: [10, 10, 10],
+          payment: 10,
+        },
+        30,
+        180,
+        190,
+      ],
+    );
+
+    await market.match(orderAA, orderBA);
+    await market.match(orderAB, orderBB);
+    await market.match(orderAC, orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        {
+          matched: [-10, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        {
+          matched: [10, 10, 10],
+          maxExposure: [0, 0, 0],
+          payment: 0,
+        },
+        10,
+        190,
+        200,
+      ],
+    );
+
+    // Settlement
+    await market.settle(outcomeA);
+    await market.settleMarketPositionForPurchaser(userA.publicKey);
+    await market.settleMarketPositionForPurchaser(userB.publicKey);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAB);
+    await market.settleOrder(orderBA);
+    await market.settleOrder(orderBB);
+    await market.settleOrder(orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0], payment: 10 },
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0], payment: 0 },
+        0,
+        190,
+        209,
+      ],
+    );
+  });
+
+  it("Scenario 2: for all outcomes 10.00 @ 3.00", async () => {
+    // Given
+    const outcomeA = 0;
+    const outcomeB = 1;
+    const outcomeC = 2;
+    const price = 3.0;
+
+    // Create market, purchaser
+    const [userA, userB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(userA, 200.0);
+    await market.airdrop(userB, 200.0);
+
+    // Create orders
+    const orderAA = await market.forOrder(outcomeA, 10.0, price, userA);
+    const orderAB = await market.forOrder(outcomeB, 10.0, price, userA);
+    const orderAC = await market.forOrder(outcomeC, 10.0, price, userA);
+    const orderBA = await market.againstOrder(outcomeA, 10.0, price, userB);
+    const orderBB = await market.againstOrder(outcomeB, 10.0, price, userB);
+    const orderBC = await market.againstOrder(outcomeC, 10.0, price, userB);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        {
+          matched: [0, 0, 0],
+          maxExposure: [20, 20, 20],
+          payment: 20,
+        },
+        {
+          matched: [0, 0, 0],
+          maxExposure: [20, 20, 20],
+          payment: 20,
+        },
+        40,
+        180,
+        180,
+      ],
+    );
+
+    await market.match(orderAA, orderBA);
+    await market.match(orderAB, orderBB);
+    await market.match(orderAC, orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        0,
+        200,
+        200,
+      ],
+    );
+
+    // Settlement
+    await market.settle(outcomeA);
+    await market.settleMarketPositionForPurchaser(userA.publicKey);
+    await market.settleMarketPositionForPurchaser(userB.publicKey);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAB);
+    await market.settleOrder(orderBA);
+    await market.settleOrder(orderBB);
+    await market.settleOrder(orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        0,
+        200,
+        200,
+      ],
+    );
+  });
+
+  it("Scenario 3: for all outcomes 10.00 @ 4.00", async () => {
+    // Given
+    const outcomeA = 0;
+    const outcomeB = 1;
+    const outcomeC = 2;
+    const price = 4.0;
+
+    // Create market, purchaser
+    const [userA, userB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(userA, 200.0);
+    await market.airdrop(userB, 200.0);
+
+    // Create orders
+    const orderAA = await market.forOrder(outcomeA, 10.0, price, userA);
+    const orderAB = await market.forOrder(outcomeB, 10.0, price, userA);
+    const orderAC = await market.forOrder(outcomeC, 10.0, price, userA);
+    const orderBA = await market.againstOrder(outcomeA, 10.0, price, userB);
+    const orderBB = await market.againstOrder(outcomeB, 10.0, price, userB);
+    const orderBC = await market.againstOrder(outcomeC, 10.0, price, userB);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        {
+          matched: [0, 0, 0],
+          maxExposure: [20, 20, 20],
+          payment: 20,
+        },
+        {
+          matched: [0, 0, 0],
+          maxExposure: [30, 30, 30],
+          payment: 30,
+        },
+        50,
+        180,
+        170,
+      ],
+    );
+
+    await market.match(orderAA, orderBA);
+    await market.match(orderAB, orderBB);
+    await market.match(orderAC, orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        {
+          matched: [10, 10, 10],
+          maxExposure: [0, 0, 0],
+          payment: 0,
+        },
+        {
+          matched: [-10, -10, -10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
+        },
+        10,
+        200,
+        190,
+      ],
+    );
+
+    // Settlement
+    await market.settle(outcomeA);
+    await market.settleMarketPositionForPurchaser(userA.publicKey);
+    await market.settleMarketPositionForPurchaser(userB.publicKey);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAA);
+    await market.settleOrder(orderAB);
+    await market.settleOrder(orderBA);
+    await market.settleOrder(orderBB);
+    await market.settleOrder(orderBC);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketPosition(userA),
+        market.getMarketPosition(userB),
+        market.getEscrowBalance(),
+        market.getTokenBalance(userA),
+        market.getTokenBalance(userB),
+      ]),
+      [
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0], payment: 10 },
+        0,
+        209,
+        190,
+      ],
+    );
+  });
+});

@@ -2006,7 +2006,7 @@ describe("Settlement Crank", () => {
         getTokenBalance(wallet1Token),
         getTokenBalance(wallet2Token),
       ]),
-      [29, 40, 31],
+      [9, 50, 41],
     );
 
     // Settle market

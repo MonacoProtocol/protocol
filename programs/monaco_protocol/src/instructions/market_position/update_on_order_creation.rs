@@ -44,5 +44,11 @@ pub fn update_on_order_creation(
         .checked_sub(max_exposure)
         .ok_or(CoreError::ArithmeticError)?;
 
+    // payment change
+    market_position.payment = market_position
+        .payment
+        .checked_add(max_exposure_change)
+        .ok_or(CoreError::ArithmeticError)?;
+
     Ok(max_exposure_change)
 }

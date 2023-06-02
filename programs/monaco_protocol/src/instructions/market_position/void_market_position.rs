@@ -20,7 +20,7 @@ pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
         CoreError::VoidMarketNotReadyForVoid
     );
 
-    let max_exposure = market_position.max_exposure();
+    let max_exposure = market_position.total_exposure();
 
     market_position.paid = true;
 

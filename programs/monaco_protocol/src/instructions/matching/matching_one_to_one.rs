@@ -171,6 +171,7 @@ fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
         to.market_outcome_sums[index] = from.market_outcome_sums[index];
         to.outcome_max_exposure[index] = from.outcome_max_exposure[index];
     }
+    to.payment = from.payment;
 }
 
 fn update_product_commission_contributions(
@@ -255,6 +256,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payment: 0,
             payer: Default::default(),
             matched_risk: 0,
             matched_risk_per_product: vec![],
@@ -433,6 +435,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payment: 0,
             payer: Default::default(),
             matched_risk: 0,
             matched_risk_per_product: matched_stake_per_rate.clone(),
@@ -486,6 +489,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payment: 0,
             payer: Default::default(),
             matched_risk: 0,
         };
@@ -559,6 +563,7 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
+            payment: 0,
             payer: Default::default(),
             matched_risk: 0,
         };
@@ -632,6 +637,7 @@ mod tests {
             market_outcome_sums: vec![],
             outcome_max_exposure: vec![],
             payer: Default::default(),
+            payment: 0,
             matched_risk: 0,
         };
 

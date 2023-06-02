@@ -70,14 +70,17 @@ describe("Order Wholesale Payment 04", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 90, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
+          payment: 10,
         },
         110,
         10,
@@ -103,15 +106,18 @@ describe("Order Wholesale Payment 04", () => {
       [
         {
           matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
+          maxExposure: [20, 0, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
         },
         110,
         10,
@@ -144,18 +150,9 @@ describe("Order Wholesale Payment 04", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        {
-          matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
-        },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 10, 10],
-        },
-        {
-          matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
-        },
+        { matched: [10, -90, 10], maxExposure: [20, 0, 6.8], payment: 90 },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10], payment: 10 },
+        { matched: [-10, 90, -10], maxExposure: [0, 0, 0], payment: 10 },
         0,
         109,
         100,
@@ -228,14 +225,17 @@ describe("Order Wholesale Payment 04", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 90, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
+          payment: 10,
         },
         110,
         10,
@@ -261,15 +261,18 @@ describe("Order Wholesale Payment 04", () => {
       [
         {
           matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
+          maxExposure: [20, 0, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
         },
         110,
         10,
@@ -305,15 +308,18 @@ describe("Order Wholesale Payment 04", () => {
       [
         {
           matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
+          maxExposure: [20, 0, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
         },
         0,
         10,
@@ -387,14 +393,17 @@ describe("Order Wholesale Payment 04", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 90, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
+          payment: 10,
         },
         110,
         10,
@@ -420,15 +429,18 @@ describe("Order Wholesale Payment 04", () => {
       [
         {
           matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
+          maxExposure: [20, 0, 6.8],
+          payment: 90,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
+          payment: 10,
         },
         {
           matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
+          maxExposure: [0, 0, 0],
+          payment: 10,
         },
         110,
         10,
@@ -461,18 +473,9 @@ describe("Order Wholesale Payment 04", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        {
-          matched: [10, -90, 10],
-          maxExposure: [20, 90, 6.8],
-        },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 10, 10],
-        },
-        {
-          matched: [-10, 90, -10],
-          maxExposure: [10, 0, 10],
-        },
+        { matched: [10, -90, 10], maxExposure: [20, 0, 6.8], payment: 90 },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10], payment: 10 },
+        { matched: [-10, 90, -10], maxExposure: [0, 0, 0], payment: 10 },
         0,
         109,
         100,
