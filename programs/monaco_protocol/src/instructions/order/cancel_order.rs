@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::CancelOrder;
 use crate::error::CoreError;
-use crate::instructions::{account, calculate_risk_from_stake, matching, transfer};
+use crate::instructions::{account, market_position, matching, transfer};
 use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
@@ -38,15 +38,8 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     matching::matching_pool::update_on_cancel(order, &mut ctx.accounts.market_matching_pool)?;
 
     // calculate refund
-    let expected_refund = match order.for_outcome {
-        true => order.voided_stake,
-        false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
-    };
-    let refund = ctx.accounts.market_position.update_on_cancelation(
-        order.market_outcome_index as usize,
-        order.for_outcome,
-        expected_refund,
-    )?;
+    let refund =
+        market_position::update_on_order_cancellation(&mut ctx.accounts.market_position, order)?;
     transfer::order_cancelation_refund(&ctx, refund)?;
 
     // if never matched close

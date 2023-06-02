@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::CancelPreplayOrderPostEventStart;
 use crate::error::CoreError;
-use crate::instructions::{calculate_risk_from_stake, transfer};
+use crate::instructions::{market_position, transfer};
 use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
 use crate::state::order_account::OrderStatus::{Matched, Open};
 
@@ -38,15 +38,8 @@ pub fn cancel_preplay_order_post_event_start(
     let order = &ctx.accounts.order;
 
     // calculate refund
-    let expected_refund = match order.for_outcome {
-        true => order.voided_stake,
-        false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
-    };
-    let refund = ctx.accounts.market_position.update_on_cancelation(
-        order.market_outcome_index as usize,
-        order.for_outcome,
-        expected_refund,
-    )?;
+    let refund =
+        market_position::update_on_order_cancellation(&mut ctx.accounts.market_position, order)?;
     transfer::order_cancelation_post_event_start_refund(&ctx, refund)?;
 
     Ok(())

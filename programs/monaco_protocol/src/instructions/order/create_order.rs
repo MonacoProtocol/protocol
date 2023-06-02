@@ -5,7 +5,7 @@ use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
-use crate::instructions::{calculate_risk_from_stake, market, market_position, matching, transfer};
+use crate::instructions::{market, market_position, matching, transfer};
 use crate::state::market_account::*;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
@@ -35,18 +35,8 @@ pub fn create_order<'info>(
 
     matching::update_matching_queue_with_new_order(market, matching_pool, order)?;
 
-    // expected payment
-    let order_exposure = match order.for_outcome {
-        true => order.stake,
-        false => calculate_risk_from_stake(order.stake, order.expected_price),
-    };
-
     // calculate payment
-    let payment = market_position.update_on_creation(
-        order.market_outcome_index as usize,
-        order.for_outcome,
-        order_exposure,
-    )?;
+    let payment = market_position::update_on_order_creation(market_position, order)?;
     transfer::order_creation_payment(
         market_escrow,
         purchaser,

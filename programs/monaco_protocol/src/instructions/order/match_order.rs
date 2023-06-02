@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
-use crate::instructions::calculate_for_payout;
+use crate::instructions::{calculate_for_payout, market_position};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::{Order, OrderStatus};
 
@@ -25,12 +25,11 @@ pub fn match_order(
 
     match_order_internal(order, stake_matched, price_matched)?;
 
-    let refund = market_position.update_on_match(
-        order.market_outcome_index as usize,
-        order.for_outcome,
+    let refund = market_position::update_on_order_match(
+        market_position,
+        order,
         stake_matched,
         price_matched,
-        order.expected_price,
     )?;
 
     Ok(refund)
