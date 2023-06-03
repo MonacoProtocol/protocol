@@ -63,9 +63,10 @@ impl MarketPosition {
         self.prematch_exposures
             .iter()
             .zip(&self.market_outcome_sums)
-            .map(|(a, b)| {
-                a.checked_add((*b).min(0_i128).checked_abs().unwrap() as u64)
-                    .unwrap()
+            .map(|(prematch_exposure, market_outcome_sum)| {
+                let postmatch_exposure =
+                    market_outcome_sum.min(&0_i128).checked_neg().unwrap() as u64;
+                prematch_exposure.checked_add(postmatch_exposure).unwrap()
             })
             .max_by(|x, y| x.cmp(y))
             .unwrap()
