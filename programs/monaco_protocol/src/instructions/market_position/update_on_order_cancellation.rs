@@ -15,7 +15,7 @@ pub fn update_on_order_cancellation(
         false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
     };
 
-    let max_exposure = market_position.max_exposure();
+    let prematch_exposure = market_position.prematch_exposure();
 
     match for_outcome {
         true => {
@@ -38,16 +38,16 @@ pub fn update_on_order_cancellation(
         }
     }
 
-    // max_exposure change
-    let max_exposure_change = max_exposure
-        .checked_sub(market_position.max_exposure())
+    // prematch_exposure change
+    let prematch_exposure_change = prematch_exposure
+        .checked_sub(market_position.prematch_exposure())
         .ok_or(CoreError::ArithmeticError)?;
 
     // payment change
     market_position.payment = market_position
         .payment
-        .checked_sub(max_exposure_change)
+        .checked_sub(prematch_exposure_change)
         .ok_or(CoreError::ArithmeticError)?;
 
-    Ok(max_exposure_change)
+    Ok(prematch_exposure_change)
 }

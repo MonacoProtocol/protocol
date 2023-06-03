@@ -51,7 +51,7 @@ impl MarketPosition {
         .min(0_i128)
     }
 
-    pub fn max_exposure(&self) -> u64 {
+    pub fn prematch_exposure(&self) -> u64 {
         *self
             .prematch_exposures
             .iter()

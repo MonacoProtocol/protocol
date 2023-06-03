@@ -15,7 +15,7 @@ pub fn update_on_order_creation(
         false => calculate_risk_from_stake(order.stake, order.expected_price),
     };
 
-    let max_exposure = market_position.max_exposure();
+    let prematch_exposure = market_position.prematch_exposure();
 
     match for_outcome {
         true => {
@@ -38,17 +38,17 @@ pub fn update_on_order_creation(
         }
     }
 
-    // max_exposure change
-    let max_exposure_change = market_position
-        .max_exposure()
-        .checked_sub(max_exposure)
+    // prematch_exposure change
+    let prematch_exposure_change = market_position
+        .prematch_exposure()
+        .checked_sub(prematch_exposure)
         .ok_or(CoreError::ArithmeticError)?;
 
     // payment change
     market_position.payment = market_position
         .payment
-        .checked_add(max_exposure_change)
+        .checked_add(prematch_exposure_change)
         .ok_or(CoreError::ArithmeticError)?;
 
-    Ok(max_exposure_change)
+    Ok(prematch_exposure_change)
 }
