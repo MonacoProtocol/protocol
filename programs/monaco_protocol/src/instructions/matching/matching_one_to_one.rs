@@ -169,7 +169,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
 fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
     for index in 0..from.market_outcome_sums.len() {
         to.market_outcome_sums[index] = from.market_outcome_sums[index];
-        to.outcome_max_exposure[index] = from.outcome_max_exposure[index];
+        to.prematch_exposures[index] = from.prematch_exposures[index];
     }
     to.payment = from.payment;
 }
@@ -255,7 +255,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            prematch_exposures: vec![],
             payment: 0,
             payer: Default::default(),
             matched_risk: 0,
@@ -434,7 +434,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            prematch_exposures: vec![],
             payment: 0,
             payer: Default::default(),
             matched_risk: 0,
@@ -488,7 +488,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            prematch_exposures: vec![],
             payment: 0,
             payer: Default::default(),
             matched_risk: 0,
@@ -562,7 +562,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            prematch_exposures: vec![],
             payment: 0,
             payer: Default::default(),
             matched_risk: 0,
@@ -635,7 +635,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            prematch_exposures: vec![],
             payer: Default::default(),
             payment: 0,
             matched_risk: 0,

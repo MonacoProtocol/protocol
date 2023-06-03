@@ -19,20 +19,20 @@ pub fn update_on_order_cancellation(
 
     match for_outcome {
         true => {
-            let market_outcomes_len = market_position.outcome_max_exposure.len();
+            let market_outcomes_len = market_position.prematch_exposures.len();
             for index in 0..market_outcomes_len {
                 if outcome_index == index {
                     continue;
                 }
-                market_position.outcome_max_exposure[index] = market_position.outcome_max_exposure
+                market_position.prematch_exposures[index] = market_position.prematch_exposures
                     [index]
                     .checked_sub(order_exposure)
                     .ok_or(CoreError::ArithmeticError)?;
             }
         }
         false => {
-            market_position.outcome_max_exposure[outcome_index] = market_position
-                .outcome_max_exposure[outcome_index]
+            market_position.prematch_exposures[outcome_index] = market_position.prematch_exposures
+                [outcome_index]
                 .checked_sub(order_exposure)
                 .ok_or(CoreError::ArithmeticError)?;
         }

@@ -17,7 +17,7 @@ pub fn create_market_position(
         .market_outcome_sums
         .resize(market_outcomes_len, 0_i128);
     market_position
-        .outcome_max_exposure
+        .prematch_exposures
         .resize(market_outcomes_len, 0_u64);
     market_position.paid = false;
 
