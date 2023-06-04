@@ -2,10 +2,90 @@ import assert from "assert";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
+async function mapOrder(orderPromise: Promise<any>) {
+  const order = await orderPromise;
+  return {
+    stake: order.stake.toNumber(),
+    stakeUnmatched: order.stakeUnmatched.toNumber(),
+    voidedStake: order.voidedStake.toNumber(),
+  };
+}
+
 /*
  * Testing security of the endpoint
  */
 describe("Security: Settle Order", () => {
+  it("partially canceled order", async () => {
+    // Given
+    const outcomeA = 0;
+    const price = 3.0;
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+
+    // CREATE --------------------------------------------------------------------
+
+    const orderForA = await market.forOrder(outcomeA, 5, price, purchaserA);
+    const orderAgainstA = await market.againstOrder(
+      outcomeA,
+      10,
+      price,
+      purchaserB,
+    );
+
+    await market.match(orderForA, orderAgainstA);
+    await market.cancel(orderAgainstA, purchaserB);
+
+    assert.deepEqual(
+      await Promise.all([
+        mapOrder(monaco.fetchOrder(orderForA)),
+        mapOrder(monaco.fetchOrder(orderAgainstA)),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+      ]),
+      [
+        { stake: 5000000, stakeUnmatched: 0, voidedStake: 0 },
+        { stake: 10000000, stakeUnmatched: 0, voidedStake: 5000000 },
+        15,
+        95,
+        90,
+      ],
+    );
+
+    // SETTLE ---------------------------------------------------------------------
+
+    await market.settle(outcomeA);
+
+    await market.settleOrder(orderForA);
+    await market.settleOrder(orderAgainstA);
+    await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
+
+    assert.deepEqual(
+      await Promise.all([
+        mapOrder(monaco.fetchOrder(orderForA)),
+        mapOrder(monaco.fetchOrder(orderAgainstA)),
+        market.getEscrowBalance(),
+        market.getTokenBalance(purchaserA),
+        market.getTokenBalance(purchaserB),
+      ]),
+      [
+        { stake: 5000000, stakeUnmatched: 0, voidedStake: 0 },
+        { stake: 10000000, stakeUnmatched: 0, voidedStake: 5000000 },
+        0,
+        109,
+        90,
+      ],
+    );
+  });
+
   it("Settling Order twice does not payout twice", async () => {
     // Given
     const outcomeA = 0;
