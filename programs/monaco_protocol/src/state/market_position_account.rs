@@ -42,15 +42,6 @@ impl MarketPosition {
         // number of products to track matched stake contributions for
     }
 
-    pub fn exposure(&self) -> i128 {
-        (*self
-            .market_outcome_sums
-            .iter()
-            .min_by(|x, y| x.cmp(y))
-            .unwrap())
-        .min(0_i128)
-    }
-
     pub fn prematch_exposure(&self) -> u64 {
         *self
             .prematch_exposures
