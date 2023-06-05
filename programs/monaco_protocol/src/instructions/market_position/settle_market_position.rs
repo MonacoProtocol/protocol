@@ -28,7 +28,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
     let payment_queue = &mut ctx.accounts.commission_payment_queue.payment_queue;
     let position_profit = market_position.market_outcome_sums
         [market_account.market_winning_outcome_index.unwrap() as usize];
-    let position_cost = market_position.payment;
+    let position_cost = market_position.total_exposure();
 
     let protocol_commission = calculate_commission(
         ctx.accounts.protocol_config.commission_rate,
@@ -382,7 +382,6 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             prematch_exposures: vec![],
-            payment: 0u64,
             payer: Default::default(),
             matched_risk: 10,
             matched_risk_per_product: product_matched_risk,
@@ -437,7 +436,6 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             prematch_exposures: vec![],
-            payment: 0u64,
             payer: Default::default(),
             matched_risk: 10,
             matched_risk_per_product: matched_risk_for_product,
@@ -517,7 +515,6 @@ mod tests {
             paid: false,
             market_outcome_sums: vec![],
             prematch_exposures: vec![],
-            payment: 0u64,
             payer: Default::default(),
             matched_risk: 20,
             matched_risk_per_product: product_matched_risks,

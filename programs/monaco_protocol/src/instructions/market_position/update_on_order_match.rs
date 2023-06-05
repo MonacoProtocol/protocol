@@ -10,6 +10,8 @@ pub fn update_on_order_match(
     stake_matched: u64,
     price_matched: f64,
 ) -> Result<u64> {
+    let total_exposure_before = market_position.total_exposure();
+
     let outcome_index = order.market_outcome_index as usize;
     let for_outcome = order.for_outcome;
     let unmatched_price = order.expected_price;
@@ -80,15 +82,8 @@ pub fn update_on_order_match(
 
     // total exposure change
     let total_exposure = market_position.total_exposure();
-    let total_exposure_change = market_position
-        .payment
+    let total_exposure_change = total_exposure_before
         .checked_sub(total_exposure)
-        .ok_or(CoreError::ArithmeticError)?;
-
-    // payment reduced by the removed match
-    market_position.payment = market_position
-        .payment
-        .checked_sub(total_exposure_change)
         .ok_or(CoreError::ArithmeticError)?;
 
     Ok(total_exposure_change)
@@ -230,7 +225,7 @@ mod tests {
     OrderData{outcome_index: 2, price: 2.0, stake: 1000000, for_outcome: false}
     ]), vec![0,0,0] ; "Same price, same stake, 3 different outcomes, for and against them in order to end up neutral")]
     fn test_update_on_match(orders: Box<[OrderData]>, expected_position: Vec<i128>) {
-        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3], 0u64);
+        let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3]);
 
         for order_data in orders.into_vec() {
             let order = order(
@@ -284,7 +279,6 @@ mod tests {
     fn market_position(
         market_outcome_sums: Vec<i128>,
         prematch_exposures: Vec<u64>,
-        payment: u64,
     ) -> MarketPosition {
         MarketPosition {
             purchaser: Default::default(),
@@ -292,7 +286,6 @@ mod tests {
             paid: false,
             market_outcome_sums,
             prematch_exposures,
-            payment,
             payer: Pubkey::new_unique(),
             matched_risk_per_product: vec![],
             matched_risk: 0,

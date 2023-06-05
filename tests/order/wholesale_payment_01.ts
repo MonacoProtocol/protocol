@@ -66,17 +66,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -111,17 +108,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         0,
         90,
@@ -191,17 +185,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -236,17 +227,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         0,
         90,
@@ -316,17 +304,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -361,17 +346,14 @@ describe("Order Wholesale Payment 01", () => {
         {
           matched: [-10, -10, 20],
           maxExposure: [0, 0, 20],
-          payment: 20,
         },
         {
           matched: [20, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [-10, 20, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         0,
         118,
