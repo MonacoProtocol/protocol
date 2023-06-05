@@ -11,7 +11,7 @@
 
 ## MarketPosition
 
-Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][7], marketOutcomeSums: [Array][8]\<BN>, outcomeMaxExposure: [Array][8]\<BN>, outcomePositions: [Map][9]<[string][10], BN>, payer: PublicKey, matchedRisk: BN, matchedRiskPerProduct: [Array][8]<[ProductMatchedRiskAndRate][5]>}
+Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][7], marketOutcomeSums: [Array][8]\<BN>, prematchExposures: [Array][8]\<BN>, outcomePositions: [Map][9]<[string][10], BN>, payer: PublicKey, matchedRisk: BN, matchedRiskPerProduct: [Array][8]<[ProductMatchedRiskAndRate][5]>}
 
 ### Properties
 
@@ -19,7 +19,7 @@ Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][7], marketOutcom
 *   `market` **PublicKey**&#x20;
 *   `paid` **[boolean][7]**&#x20;
 *   `marketOutcomeSums` **[Array][8]\<BN>**&#x20;
-*   `outcomeMaxExposure` **[Array][8]\<BN>**&#x20;
+*   `prematchExposures` **[Array][8]\<BN>**&#x20;
 *   `outcomePositions` **[Map][9]<[string][10], BN>**&#x20;
 *   `payer` **PublicKey**&#x20;
 *   `matchedRisk` **BN**&#x20;

@@ -140,7 +140,7 @@ export class Monaco {
       matched: marketPosition.marketOutcomeSums.map(
         (bn) => bn.toNumber() / decimalsMultiplayer,
       ),
-      maxExposure: marketPosition.outcomeMaxExposure.map(
+      maxExposure: marketPosition.prematchExposures.map(
         (bn) => bn.toNumber() / decimalsMultiplayer,
       ),
       payment: marketPosition.payment.toNumber() / decimalsMultiplayer,
