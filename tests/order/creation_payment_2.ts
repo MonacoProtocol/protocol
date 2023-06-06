@@ -52,10 +52,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 10, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         10,
         90,
@@ -73,10 +70,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 10, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [10, 10, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -94,10 +88,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -130,10 +121,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 10, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         10,
         90,
@@ -151,10 +139,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 10, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [10, 10, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -172,10 +157,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -208,10 +190,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 10, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         10,
         90,
@@ -229,10 +208,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 10, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [10, 10, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -250,10 +226,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
