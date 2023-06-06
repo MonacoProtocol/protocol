@@ -64,10 +64,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 26.4, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -91,10 +88,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 4.4, 0],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 4.4, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         4.4,
@@ -118,10 +112,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { matched: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         0,
@@ -165,10 +156,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 26.4, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [10, 26.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
@@ -192,10 +180,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 4.4, 0],
-        },
+        { matched: [0, 0, 0], maxExposure: [0, 4.4, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
         4.4,
@@ -263,10 +248,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [12, 22, 12],
-        },
+        { matched: [0, 0, 0], maxExposure: [12, 22, 12] },
         { len: 1, liquidity: 12, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
         22,
@@ -358,10 +340,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [12, 22, 12],
-        },
+        { matched: [0, 0, 0], maxExposure: [12, 22, 12] },
         { len: 1, liquidity: 12, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
         22,
