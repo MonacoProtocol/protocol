@@ -70,17 +70,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 5, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          payment: 10,
         },
         40,
         80,
@@ -107,17 +104,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [10, -5, 10],
           maxExposure: [20, 0, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [-10, 5, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -153,17 +147,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [10, -5, 10],
           maxExposure: [20, 0, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [-10, 5, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         0,
         109,
@@ -237,17 +228,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 5, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          payment: 10,
         },
         40,
         80,
@@ -274,17 +262,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [10, -5, 10],
           maxExposure: [20, 0, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [-10, 5, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -318,9 +303,9 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], maxExposure: [20, 0, 6.8], payment: 20 },
-        { matched: [0, 0, 0], maxExposure: [0, 10, 10], payment: 10 },
-        { matched: [-10, 5, -10], maxExposure: [0, 0, 0], payment: 10 },
+        { matched: [10, -5, 10], maxExposure: [20, 0, 6.8] },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 10] },
+        { matched: [-10, 5, -10], maxExposure: [0, 0, 0] },
         0,
         95,
         100,
@@ -393,17 +378,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 5, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          payment: 10,
         },
         40,
         80,
@@ -430,17 +412,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [10, -5, 10],
           maxExposure: [20, 0, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [-10, 5, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         40,
         80,
@@ -476,17 +455,14 @@ describe("Order Wholesale Payment 03", () => {
         {
           matched: [10, -5, 10],
           maxExposure: [20, 0, 6.8],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         {
           matched: [-10, 5, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         0,
         109,

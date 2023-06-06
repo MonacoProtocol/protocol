@@ -55,7 +55,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -77,7 +76,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -99,7 +97,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -136,7 +133,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -158,7 +154,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -180,7 +175,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -217,7 +211,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -239,7 +232,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -261,7 +253,6 @@ describe("Order Creation Payment 2", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,

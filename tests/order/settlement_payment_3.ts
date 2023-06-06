@@ -75,7 +75,6 @@ describe("Order Settlement Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 250, 250],
-          payment: 250,
         },
         { len: 0, liquidity: 0, matched: 400 },
         { len: 1, liquidity: 150, matched: 200 },
@@ -108,7 +107,6 @@ describe("Order Settlement Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 250, 250],
-          payment: 250,
         },
         0,
         1000,
@@ -171,7 +169,6 @@ describe("Order Settlement Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [600, 850, 850],
-          payment: 850,
         },
         { len: 3, liquidity: 400, matched: 0 },
         { len: 2, liquidity: 350, matched: 0 },
@@ -221,7 +218,6 @@ describe("Order Settlement Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 250, 250],
-          payment: 250,
         },
         { len: 0, liquidity: 0, matched: 400 },
         { len: 1, liquidity: 150, matched: 200 },
@@ -254,7 +250,6 @@ describe("Order Settlement Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 250, 250],
-          payment: 250,
         },
         0,
         1000,

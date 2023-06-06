@@ -49,7 +49,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 11.11, 10],
-          payment: 11.11,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 11, matched: 0 },
@@ -76,7 +75,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 1.01, 0],
-          payment: 1.01,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 1, matched: 10 },
@@ -122,7 +120,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [11, 13.01, 11],
-          payment: 13.01,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 11, matched: 0 },
@@ -158,7 +155,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          payment: 0,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 11 },
@@ -210,7 +206,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 13.2, 10],
-          payment: 13.2,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 10, matched: 11 },
@@ -249,7 +244,6 @@ describe("Order Matching Refunds 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 1.2, 0],
-          payment: 1.2,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 21 },

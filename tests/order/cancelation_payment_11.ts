@@ -67,7 +67,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 26.4, 10],
-          payment: 26.4,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
@@ -95,7 +94,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 4.4, 0],
-          payment: 4.4,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
@@ -123,7 +121,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 0, 0],
-          payment: 0,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
@@ -171,7 +168,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 26.4, 10],
-          payment: 26.4,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 12, matched: 0 },
@@ -199,7 +195,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 4.4, 0],
-          payment: 4.4,
         },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 2, matched: 10 },
@@ -224,7 +219,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 2, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         0,
@@ -271,7 +266,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [12, 22, 12],
-          payment: 22,
         },
         { len: 1, liquidity: 12, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -296,7 +290,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 0, 2], payment: 2 },
+        { matched: [0, 0, 0], maxExposure: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         2,
@@ -320,7 +314,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 2, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         0,
@@ -367,7 +361,6 @@ describe("Order Cancelation Payment 11", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [12, 22, 12],
-          payment: 22,
         },
         { len: 1, liquidity: 12, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -392,7 +385,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 0, 2], payment: 2 },
+        { matched: [0, 0, 0], maxExposure: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         2,
@@ -416,7 +409,7 @@ describe("Order Cancelation Payment 11", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 2, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 10 },
         0,

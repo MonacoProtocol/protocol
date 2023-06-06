@@ -52,7 +52,7 @@ describe("Order Creation Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [10, 0, 0], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [10, 0, 0] },
         { len: 1, liquidity: 10, matched: 0 },
         10,
         90,
@@ -73,7 +73,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 0],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -95,7 +94,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 10],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -129,7 +127,7 @@ describe("Order Creation Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [20, 0, 0], payment: 20 },
+        { matched: [0, 0, 0], maxExposure: [20, 0, 0] },
         { len: 1, liquidity: 10, matched: 0 },
         20,
         80,
@@ -150,7 +148,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 0],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -172,7 +169,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         { len: 1, liquidity: 10, matched: 0 },
         20,
@@ -206,7 +202,7 @@ describe("Order Creation Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [30, 0, 0], payment: 30 },
+        { matched: [0, 0, 0], maxExposure: [30, 0, 0] },
         { len: 1, liquidity: 10, matched: 0 },
         30,
         70,
@@ -227,7 +223,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [30, 30, 0],
-          payment: 30,
         },
         { len: 1, liquidity: 10, matched: 0 },
         30,
@@ -249,7 +244,6 @@ describe("Order Creation Payment 3", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [30, 30, 30],
-          payment: 30,
         },
         { len: 1, liquidity: 10, matched: 0 },
         30,

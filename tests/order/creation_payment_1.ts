@@ -44,7 +44,6 @@ describe("Order Creation Payment 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 10, 10],
-          payment: 10,
         },
         { len: 1, liquidity: 10, matched: 0 },
         10,
@@ -67,7 +66,6 @@ describe("Order Creation Payment 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [39, 10, 10],
-          payment: 39,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -91,7 +89,6 @@ describe("Order Creation Payment 1", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [78, 10, 10],
-          payment: 78,
         },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 2, liquidity: 20, matched: 0 },

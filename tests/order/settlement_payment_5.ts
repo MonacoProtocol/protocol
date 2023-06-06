@@ -42,12 +42,10 @@ describe("Order Payments: Settlement Set 05", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [10, 10, 10],
-          payment: 10,
         },
         30,
         180,
@@ -71,12 +69,10 @@ describe("Order Payments: Settlement Set 05", () => {
         {
           matched: [-10, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [10, 10, 10],
           maxExposure: [0, 0, 0],
-          payment: 0,
         },
         10,
         190,
@@ -104,8 +100,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        { matched: [-10, -10, -10], maxExposure: [0, 0, 0], payment: 10 },
-        { matched: [10, 10, 10], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0] },
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0] },
         0,
         190,
         209,
@@ -149,12 +145,10 @@ describe("Order Payments: Settlement Set 05", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         40,
         180,
@@ -175,8 +169,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         0,
         200,
         200,
@@ -203,8 +197,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         0,
         200,
         200,
@@ -248,12 +242,10 @@ describe("Order Payments: Settlement Set 05", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [20, 20, 20],
-          payment: 20,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [30, 30, 30],
-          payment: 30,
         },
         50,
         180,
@@ -277,12 +269,10 @@ describe("Order Payments: Settlement Set 05", () => {
         {
           matched: [10, 10, 10],
           maxExposure: [0, 0, 0],
-          payment: 0,
         },
         {
           matched: [-10, -10, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         10,
         200,
@@ -310,8 +300,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        { matched: [10, 10, 10], maxExposure: [0, 0, 0], payment: 0 },
-        { matched: [-10, -10, -10], maxExposure: [0, 0, 0], payment: 10 },
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0] },
         0,
         209,
         190,
