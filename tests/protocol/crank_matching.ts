@@ -113,7 +113,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0], payment: 0 },
+        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 2 },
         { len: 0, liquidity: 0, matched: 2 },
         0,
@@ -219,8 +219,8 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 0, 2], payment: 2 },
-        { matched: [0, 0, 0], maxExposure: [0, 10, 0], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 0, 2] },
+        { matched: [0, 0, 0], maxExposure: [0, 10, 0] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         12,
@@ -247,12 +247,10 @@ describe("Matching Crank", () => {
         {
           matched: [-2, 10, -2],
           maxExposure: [0, 0, 0],
-          payment: 2,
         },
         {
           matched: [2, -10, 2],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         { len: 0, liquidity: 0, matched: 2 },
         { len: 0, liquidity: 0, matched: 2 },
@@ -405,7 +403,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -494,7 +492,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -577,7 +575,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [4, 10, 4], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [4, 10, 4] },
         { len: 2, liquidity: 4, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -670,7 +668,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 20, 2], payment: 20 },
+        { matched: [0, 0, 0], maxExposure: [2, 20, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 2, liquidity: 4, matched: 0 },
         20,
@@ -763,7 +761,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 2, liquidity: 4, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         12,
@@ -858,7 +856,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 2, liquidity: 4, matched: 0 },
         20,
@@ -935,7 +933,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -1013,7 +1011,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -1091,7 +1089,7 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2, 10, 2], payment: 10 },
+        { matched: [0, 0, 0], maxExposure: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
         { len: 1, liquidity: 2, matched: 0 },
         10,
@@ -1168,12 +1166,10 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [140, 0, 140],
-          payment: 140,
         },
         {
           matched: [0, 0, 0],
           maxExposure: [0, 339, 0],
-          payment: 339,
         },
         479,
         860,
@@ -1206,12 +1202,10 @@ describe("Matching Crank", () => {
         {
           matched: [-60, 120, -60],
           maxExposure: [80, 0, 80],
-          payment: 140,
         },
         {
           matched: [60, -120, 60],
           maxExposure: [0, 213, 0],
-          payment: 333,
         },
         473,
         860,
@@ -1244,12 +1238,10 @@ describe("Matching Crank", () => {
         {
           matched: [-100, 200, -100],
           maxExposure: [40, 0, 40],
-          payment: 140,
         },
         {
           matched: [100, -200, 100],
           maxExposure: [0, 129, 0],
-          payment: 329,
         },
         469,
         860,
@@ -1282,12 +1274,10 @@ describe("Matching Crank", () => {
         {
           matched: [-130, 263, -130],
           maxExposure: [10, 0, 10],
-          payment: 140,
         },
         {
           matched: [130, -263, 130],
           maxExposure: [0, 66, 0],
-          payment: 329,
         },
         469,
         860,
@@ -1320,12 +1310,10 @@ describe("Matching Crank", () => {
         {
           matched: [-140, 284, -140],
           maxExposure: [0, 0, 0],
-          payment: 140,
         },
         {
           matched: [140, -284, 140],
           maxExposure: [0, 44, 0],
-          payment: 328,
         },
         468,
         860,
@@ -1380,9 +1368,8 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [100, 0, 100],
-          payment: 100,
         },
-        { matched: [0, 0, 0], maxExposure: [0, 70, 0], payment: 70 },
+        { matched: [0, 0, 0], maxExposure: [0, 70, 0] },
         170,
         0,
         30,
@@ -1408,12 +1395,10 @@ describe("Matching Crank", () => {
         {
           matched: [-100, 60, -100],
           maxExposure: [0, 0, 0],
-          payment: 100,
         },
         {
           matched: [100, -60, 100],
           maxExposure: [0, 0, 0],
-          payment: 60,
         },
         160,
         0,
@@ -1474,9 +1459,8 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 0, 10],
-          payment: 10,
         },
-        { matched: [0, 0, 0], maxExposure: [0, 45, 0], payment: 45 },
+        { matched: [0, 0, 0], maxExposure: [0, 45, 0] },
         55,
         90,
         55,
@@ -1506,12 +1490,10 @@ describe("Matching Crank", () => {
         {
           matched: [-10, 30, -10],
           maxExposure: [0, 0, 0],
-          payment: 10,
         },
         {
           matched: [10, -30, 10],
           maxExposure: [0, 15, 0],
-          payment: 45,
         },
         55,
         90,
@@ -1571,9 +1553,8 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 30, 10],
-          payment: 30,
         },
-        { matched: [0, 0, 0], maxExposure: [0, 15, 0], payment: 15 },
+        { matched: [0, 0, 0], maxExposure: [0, 15, 0] },
         45,
         70,
         85,
@@ -1602,12 +1583,10 @@ describe("Matching Crank", () => {
         {
           matched: [-5, 15, -5],
           maxExposure: [0, 15, 0],
-          payment: 15,
         },
         {
           matched: [5, -15, 5],
           maxExposure: [0, 0, 0],
-          payment: 15,
         },
         30,
         85,
@@ -1666,7 +1645,6 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [10, 45, 10],
-          payment: 45,
         },
         45,
         55,
@@ -1696,7 +1674,6 @@ describe("Matching Crank", () => {
         {
           matched: [0, 0, 0],
           maxExposure: [0, 15, 0],
-          payment: 15,
         },
         15,
         85,
@@ -1821,7 +1798,6 @@ async function setupMatchedOrders(
       {
         matched: [0, 0, 0],
         maxExposure: [stake, stake * (price - 1), stake],
-        payment: stake * (price - 1),
       },
       { len: 1, liquidity: stake, matched: 0 },
       { len: 1, liquidity: stake, matched: 0 },
