@@ -39,14 +39,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 10, 10],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], maxExposure: [10, 10, 10] },
         30,
         180,
         190,
@@ -66,14 +60,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        {
-          matched: [-10, -10, -10],
-          maxExposure: [0, 0, 0],
-        },
-        {
-          matched: [10, 10, 10],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0] },
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0] },
         10,
         190,
         200,
@@ -142,14 +130,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
         40,
         180,
         180,
@@ -239,14 +221,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [20, 20, 20],
-        },
-        {
-          matched: [0, 0, 0],
-          maxExposure: [30, 30, 30],
-        },
+        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], maxExposure: [30, 30, 30] },
         50,
         180,
         170,
@@ -266,14 +242,8 @@ describe("Order Payments: Settlement Set 05", () => {
         market.getTokenBalance(userB),
       ]),
       [
-        {
-          matched: [10, 10, 10],
-          maxExposure: [0, 0, 0],
-        },
-        {
-          matched: [-10, -10, -10],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [10, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [-10, -10, -10], maxExposure: [0, 0, 0] },
         10,
         200,
         190,
