@@ -17,7 +17,7 @@ pub fn cancel_preplay_order_post_event_start(
         [MarketStatus::Open].contains(&market.market_status),
         CoreError::CancelationMarketStatusInvalid
     );
-    require!(market.inplay, CoreError::CancelationMarketNotInplay);
+    require!(market.is_inplay(), CoreError::CancelationMarketNotInplay);
     require!(
         MarketOrderBehaviour::CancelUnmatched.eq(&market.event_start_order_behaviour),
         CoreError::CancelationMarketOrderBehaviourInvalid

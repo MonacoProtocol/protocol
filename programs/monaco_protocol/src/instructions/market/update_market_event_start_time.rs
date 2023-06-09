@@ -19,7 +19,7 @@ fn update_market_event_start_time_internal(
     now: i64,
 ) -> Result<()> {
     // market event start time cannot be change after market moves to inplay
-    require!(!market.inplay, CoreError::MarketAlreadyInplay);
+    require!(!market.is_inplay(), CoreError::MarketAlreadyInplay);
 
     if event_start_time < now {
         msg!(

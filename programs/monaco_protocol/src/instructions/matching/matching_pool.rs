@@ -58,7 +58,7 @@ pub fn update_matching_queue_with_new_order(
     market_matching_pool: &mut MarketMatchingPool,
     order_account: &Account<Order>,
 ) -> Result<()> {
-    if market.inplay {
+    if market.is_inplay() {
         update_matching_queue_with_new_inplay_order(
             market,
             market_matching_pool,
@@ -131,7 +131,7 @@ pub fn move_market_matching_pool_to_inplay(
         market.inplay_enabled,
         CoreError::MatchingMarketInplayNotEnabled
     );
-    require!(market.inplay, CoreError::MatchingMarketNotYetInplay);
+    require!(market.is_inplay(), CoreError::MatchingMarketNotYetInplay);
     require!(
         !market_matching_pool.inplay,
         CoreError::MatchingMarketMatchingPoolAlreadyInplay
@@ -151,7 +151,7 @@ pub fn updated_liquidity_with_delay_expired_orders(
         CoreError::MatchingMarketInvalidStatus
     );
     require!(
-        market.inplay && market_matching_pool.inplay,
+        market.is_inplay() && market_matching_pool.inplay,
         CoreError::MatchingMarketNotYetInplay
     );
 

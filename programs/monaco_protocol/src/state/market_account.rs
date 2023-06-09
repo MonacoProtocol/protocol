@@ -64,6 +64,12 @@ impl Market {
             .ok_or(CoreError::ArithmeticError)?;
         Ok(self.market_outcomes_count)
     }
+
+    pub fn is_inplay(&self) -> bool {
+        self.inplay
+            || (self.inplay_enabled
+                && self.event_start_timestamp <= Clock::get().unwrap().unix_timestamp)
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]
