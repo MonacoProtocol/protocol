@@ -1,6 +1,7 @@
 use crate::error::CoreError;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
+use solana_program::clock::UnixTimestamp;
 use std::string::ToString;
 
 #[account]
@@ -66,9 +67,11 @@ impl Market {
     }
 
     pub fn is_inplay(&self) -> bool {
-        self.inplay
-            || (self.inplay_enabled
-                && self.event_start_timestamp <= Clock::get().unwrap().unix_timestamp)
+        Market::market_is_inplay(self, Clock::get().unwrap().unix_timestamp)
+    }
+
+    pub fn market_is_inplay(market: &Market, now: UnixTimestamp) -> bool {
+        market.inplay || (market.inplay_enabled && market.event_start_timestamp <= now)
     }
 }
 
@@ -344,6 +347,141 @@ impl Cirque {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    // Market account tests
+
+    #[test]
+    fn test_is_inplay_inplay_true() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let market: Market = Market {
+            authority: Pubkey::default(),
+            event_account: Pubkey::default(),
+            mint_account: Pubkey::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: true,
+            inplay: true,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+            event_start_timestamp: now + 1000,
+        };
+
+        assert!(Market::market_is_inplay(&market, now));
+    }
+
+    #[test]
+    fn test_is_inplay_inplay_false_event_not_started() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let market: Market = Market {
+            authority: Pubkey::default(),
+            event_account: Pubkey::default(),
+            mint_account: Pubkey::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: true,
+            inplay: false,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+            event_start_timestamp: now + 1000,
+        };
+
+        assert!(!Market::market_is_inplay(&market, now));
+    }
+
+    #[test]
+    fn test_is_inplay_inplay_false_event_started() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let market: Market = Market {
+            authority: Pubkey::default(),
+            event_account: Pubkey::default(),
+            mint_account: Pubkey::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: true,
+            inplay: false,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+            event_start_timestamp: now,
+        };
+
+        assert!(Market::market_is_inplay(&market, now));
+    }
+
+    #[test]
+    fn test_is_inplay_inplay_false_event_started_not_inplay_market() {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let market: Market = Market {
+            authority: Pubkey::default(),
+            event_account: Pubkey::default(),
+            mint_account: Pubkey::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: false,
+            inplay: false,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+            event_start_timestamp: now,
+        };
+
+        assert!(!Market::market_is_inplay(&market, now))
+    }
+
+    //
+    // Cirque tests
+    //
 
     // front < back (queue can be compared with normal array)
 
