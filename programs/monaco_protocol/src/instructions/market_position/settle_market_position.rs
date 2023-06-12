@@ -28,7 +28,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
     let payment_queue = &mut ctx.accounts.commission_payment_queue.payment_queue;
     let position_profit = market_position.market_outcome_sums
         [market_account.market_winning_outcome_index.unwrap() as usize];
-    let position_cost = market_position.total_exposure();
+    let total_exposure = market_position.total_exposure();
 
     let protocol_commission = calculate_commission(
         ctx.accounts.protocol_config.commission_rate,
@@ -56,7 +56,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
 
     let total_payout = position_profit
         // protocol_commission > 0 only if position_profit > 0
-        .checked_add(i128::from(position_cost))
+        .checked_add(i128::from(total_exposure))
         .ok_or(CoreError::SettlementPaymentCalculation)?
         .checked_sub(i128::from(protocol_commission))
         .ok_or(CoreError::SettlementPaymentCalculation)?
