@@ -10,7 +10,7 @@ pub fn update_on_order_cancellation(
 ) -> Result<u64> {
     let outcome_index = order.market_outcome_index as usize;
     let for_outcome = order.for_outcome;
-    let order_exposure = match order.for_outcome {
+    let order_exposure = match for_outcome {
         true => order.voided_stake,
         false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
     };
