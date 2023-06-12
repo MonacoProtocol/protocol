@@ -15,8 +15,9 @@ pub fn update_on_order_creation(
         false => calculate_risk_from_stake(order.stake, order.expected_price),
     };
 
-    let total_exposure = market_position.total_exposure();
+    let total_exposure_before = market_position.total_exposure();
 
+    // update unmatched_exposures
     match for_outcome {
         true => {
             let market_outcomes_len = market_position.unmatched_exposures.len();
@@ -41,7 +42,7 @@ pub fn update_on_order_creation(
     // total_exposure_change change
     let total_exposure_change = market_position
         .total_exposure()
-        .checked_sub(total_exposure)
+        .checked_sub(total_exposure_before)
         .ok_or(CoreError::ArithmeticError)?;
 
     Ok(total_exposure_change)
