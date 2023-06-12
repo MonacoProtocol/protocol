@@ -56,7 +56,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], unmatched: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -78,7 +78,7 @@ describe("Order Creation Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [20, 20, 20] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [20, 20, 20] }, 0, 100],
     );
   });
 
@@ -111,7 +111,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], unmatched: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -134,7 +134,7 @@ describe("Order Creation Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [20, 20, 20] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [20, 20, 20] }, 0, 100],
     );
   });
 
@@ -167,7 +167,7 @@ describe("Order Creation Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [20, 20, 20] },
+        { matched: [0, 0, 0], unmatched: [20, 20, 20] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 10, matched: 0 },
@@ -191,7 +191,7 @@ describe("Order Creation Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [20, 20, 20] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [20, 20, 20] }, 0, 100],
     );
   });
 });

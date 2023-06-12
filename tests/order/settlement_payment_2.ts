@@ -56,7 +56,7 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [13.01, 10, 10] },
+        { matched: [0, 0, 0], unmatched: [13.01, 10, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 10, matched: 11 },
         { len: 1, liquidity: 1, matched: 10 },
@@ -80,7 +80,7 @@ describe("Order Settlement Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [13.01, 10, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [13.01, 10, 10] }, 0, 100],
     );
   });
 
@@ -126,7 +126,7 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [36.31, 31, 31] },
+        { matched: [0, 0, 0], unmatched: [36.31, 31, 31] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 2, liquidity: 21, matched: 0 },
         { len: 1, liquidity: 11, matched: 0 },
@@ -160,7 +160,7 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [13.01, 10, 10] },
+        { matched: [0, 0, 0], unmatched: [13.01, 10, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 10, matched: 11 },
         { len: 1, liquidity: 1, matched: 10 },
@@ -184,7 +184,7 @@ describe("Order Settlement Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [13.01, 10, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [13.01, 10, 10] }, 0, 100],
     );
   });
 });

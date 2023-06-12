@@ -47,9 +47,9 @@ describe("Security: Settle Order", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [2, -1, -1], maxExposure: [0, 0, 0] },
-        { matched: [20, -10, -10], maxExposure: [0, 0, 0] },
-        { matched: [-22, 11, 11], maxExposure: [0, 0, 0] },
+        { matched: [2, -1, -1], unmatched: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-22, 11, 11], unmatched: [0, 0, 0] },
         33,
         99,
         90,
@@ -75,9 +75,9 @@ describe("Security: Settle Order", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [2, -1, -1], maxExposure: [0, 0, 0] },
-        { matched: [20, -10, -10], maxExposure: [0, 0, 0] },
-        { matched: [-22, 11, 11], maxExposure: [0, 0, 0] },
+        { matched: [2, -1, -1], unmatched: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-22, 11, 11], unmatched: [0, 0, 0] },
         30,
         101.8, // <- paid out: 102 - 99 = 3 ! (minus 10% commission on 2 profit)
         90,
@@ -99,9 +99,9 @@ describe("Security: Settle Order", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [2, -1, -1], maxExposure: [0, 0, 0] },
-        { matched: [20, -10, -10], maxExposure: [0, 0, 0] },
-        { matched: [-22, 11, 11], maxExposure: [0, 0, 0] },
+        { matched: [2, -1, -1], unmatched: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-22, 11, 11], unmatched: [0, 0, 0] },
         30,
         101.8, // <- no change !
         90,
@@ -123,9 +123,9 @@ describe("Security: Settle Order", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [2, -1, -1], maxExposure: [0, 0, 0] },
-        { matched: [20, -10, -10], maxExposure: [0, 0, 0] },
-        { matched: [-22, 11, 11], maxExposure: [0, 0, 0] },
+        { matched: [2, -1, -1], unmatched: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-22, 11, 11], unmatched: [0, 0, 0] },
         0,
         101.8,
         118,

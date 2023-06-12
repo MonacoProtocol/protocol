@@ -36,8 +36,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [0, 40, 40] },
-        { matched: [0, 0, 0], maxExposure: [20, 0, 0] },
+        { matched: [0, 0, 0], unmatched: [0, 40, 40] },
+        { matched: [0, 0, 0], unmatched: [20, 0, 0] },
         60,
         80,
         60,
@@ -57,8 +57,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [20, -10, -10], maxExposure: [0, 30, 30] },
-        { matched: [-20, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 30, 30] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         60,
         80,
         60,
@@ -82,8 +82,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [20, -10, -10], maxExposure: [0, 30, 30] },
-        { matched: [-20, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 30, 30] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         118, // winnings (30) + unmatched risk (30)
         80,
         0,
@@ -115,8 +115,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [0, 40, 40] },
-        { matched: [0, 0, 0], maxExposure: [20, 0, 0] },
+        { matched: [0, 0, 0], unmatched: [0, 40, 40] },
+        { matched: [0, 0, 0], unmatched: [20, 0, 0] },
         60,
         80,
         60,
@@ -136,8 +136,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [20, -10, -10], maxExposure: [0, 30, 30] },
-        { matched: [-20, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 30, 30] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         60,
         80,
         60,
@@ -161,8 +161,8 @@ describe("Order Wholesale Payment 05", () => {
         market.getEscrowBalance(),
       ]),
       [
-        { matched: [20, -10, -10], maxExposure: [0, 30, 30] },
-        { matched: [-20, 10, 10], maxExposure: [0, 0, 0] },
+        { matched: [20, -10, -10], unmatched: [0, 30, 30] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         90, // unmatched risk (30)
         109, // winnings (30)
         0,
