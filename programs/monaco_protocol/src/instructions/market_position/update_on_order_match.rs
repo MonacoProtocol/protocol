@@ -18,7 +18,7 @@ pub fn update_on_order_match(
 
     // update chosen outcome position
     let matched_risk = calculate_risk_from_stake(stake_matched, price_matched);
-    let risk_unmatched = calculate_risk_from_stake(stake_matched, unmatched_price);
+    let unmatched_risk = calculate_risk_from_stake(stake_matched, unmatched_price);
 
     match for_outcome {
         true => {
@@ -75,7 +75,7 @@ pub fn update_on_order_match(
         false => {
             market_position.unmatched_exposures[outcome_index] = market_position
                 .unmatched_exposures[outcome_index]
-                .checked_sub(risk_unmatched)
+                .checked_sub(unmatched_risk)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
