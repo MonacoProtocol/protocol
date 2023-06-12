@@ -7,7 +7,7 @@ export type MarketPosition = {
   market: PublicKey;
   paid: boolean;
   marketOutcomeSums: BN[];
-  prematchExposures: BN[];
+  unmatchedExposures: BN[];
   outcomePositions: Map<string, BN>;
   payer: PublicKey;
   matchedRisk: BN;
