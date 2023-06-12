@@ -169,7 +169,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
 fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
     for index in 0..from.market_outcome_sums.len() {
         to.market_outcome_sums[index] = from.market_outcome_sums[index];
-        to.prematch_exposures[index] = from.prematch_exposures[index];
+        to.unmatched_exposures[index] = from.unmatched_exposures[index];
     }
 }
 
@@ -254,7 +254,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            prematch_exposures: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 0,
             matched_risk_per_product: vec![],
@@ -432,7 +432,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            prematch_exposures: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 0,
             matched_risk_per_product: matched_stake_per_rate.clone(),
@@ -485,7 +485,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            prematch_exposures: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 0,
         };
@@ -558,7 +558,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            prematch_exposures: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 0,
         };
@@ -630,7 +630,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            prematch_exposures: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 0,
         };

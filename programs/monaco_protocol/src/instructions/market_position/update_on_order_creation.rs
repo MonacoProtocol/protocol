@@ -19,20 +19,20 @@ pub fn update_on_order_creation(
 
     match for_outcome {
         true => {
-            let market_outcomes_len = market_position.prematch_exposures.len();
+            let market_outcomes_len = market_position.unmatched_exposures.len();
             for index in 0..market_outcomes_len {
                 if outcome_index == index {
                     continue;
                 }
-                market_position.prematch_exposures[index] = market_position.prematch_exposures
+                market_position.unmatched_exposures[index] = market_position.unmatched_exposures
                     [index]
                     .checked_add(order_exposure)
                     .ok_or(CoreError::ArithmeticError)?;
             }
         }
         false => {
-            market_position.prematch_exposures[outcome_index] = market_position.prematch_exposures
-                [outcome_index]
+            market_position.unmatched_exposures[outcome_index] = market_position
+                .unmatched_exposures[outcome_index]
                 .checked_add(order_exposure)
                 .ok_or(CoreError::ArithmeticError)?;
         }

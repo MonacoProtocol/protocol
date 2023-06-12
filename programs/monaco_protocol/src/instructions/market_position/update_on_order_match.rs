@@ -61,20 +61,20 @@ pub fn update_on_order_match(
     // update max exposure
     match for_outcome {
         true => {
-            let market_outcomes_len = market_position.prematch_exposures.len();
+            let market_outcomes_len = market_position.unmatched_exposures.len();
             for index in 0..market_outcomes_len {
                 if outcome_index == index {
                     continue;
                 }
-                market_position.prematch_exposures[index] = market_position.prematch_exposures
+                market_position.unmatched_exposures[index] = market_position.unmatched_exposures
                     [index]
                     .checked_sub(stake_matched)
                     .ok_or(CoreError::ArithmeticError)?;
             }
         }
         false => {
-            market_position.prematch_exposures[outcome_index] = market_position.prematch_exposures
-                [outcome_index]
+            market_position.unmatched_exposures[outcome_index] = market_position
+                .unmatched_exposures[outcome_index]
                 .checked_sub(risk_unmatched)
                 .ok_or(CoreError::ArithmeticError)?;
         }
@@ -278,14 +278,14 @@ mod tests {
 
     fn market_position(
         market_outcome_sums: Vec<i128>,
-        prematch_exposures: Vec<u64>,
+        unmatched_exposures: Vec<u64>,
     ) -> MarketPosition {
         MarketPosition {
             purchaser: Default::default(),
             market: Default::default(),
             paid: false,
             market_outcome_sums,
-            prematch_exposures,
+            unmatched_exposures,
             payer: Pubkey::new_unique(),
             matched_risk_per_product: vec![],
             matched_risk: 0,
