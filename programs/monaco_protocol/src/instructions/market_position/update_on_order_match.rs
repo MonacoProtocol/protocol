@@ -16,10 +16,10 @@ pub fn update_on_order_match(
     let for_outcome = order.for_outcome;
     let price_unmatched = order.expected_price;
 
-    // update chosen outcome position
     let risk_pre_match = calculate_risk_from_stake(stake_matched, price_unmatched);
     let risk_post_match = calculate_risk_from_stake(stake_matched, price_matched);
 
+    // update chosen outcome position
     match for_outcome {
         true => {
             market_position.market_outcome_sums[outcome_index] = market_position
