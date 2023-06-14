@@ -16,21 +16,21 @@ pub fn update_on_order_match(
     let for_outcome = order.for_outcome;
     let price_unmatched = order.expected_price;
 
-    let risk_pre_match = calculate_risk_from_stake(stake_matched, price_unmatched);
-    let risk_post_match = calculate_risk_from_stake(stake_matched, price_matched);
+    let unmatched_risk = calculate_risk_from_stake(stake_matched, price_unmatched);
+    let matched_risk = calculate_risk_from_stake(stake_matched, price_matched);
 
     // update chosen outcome position
     match for_outcome {
         true => {
             market_position.market_outcome_sums[outcome_index] = market_position
                 .market_outcome_sums[outcome_index]
-                .checked_add(risk_post_match as i128)
+                .checked_add(matched_risk as i128)
                 .ok_or(CoreError::ArithmeticError)?;
         }
         false => {
             market_position.market_outcome_sums[outcome_index] = market_position
                 .market_outcome_sums[outcome_index]
-                .checked_sub(risk_post_match as i128)
+                .checked_sub(matched_risk as i128)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
@@ -75,7 +75,7 @@ pub fn update_on_order_match(
         false => {
             market_position.unmatched_exposures[outcome_index] = market_position
                 .unmatched_exposures[outcome_index]
-                .checked_sub(risk_pre_match)
+                .checked_sub(unmatched_risk)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
