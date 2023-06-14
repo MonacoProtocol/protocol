@@ -50,7 +50,6 @@ describe("End to end test of", () => {
 
     // Move start time up to now
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // Create an inplay order before the market inplay flag has been updated
     let matchingPool;
