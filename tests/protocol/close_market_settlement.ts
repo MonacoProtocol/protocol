@@ -31,12 +31,16 @@ describe("Close market accounts (settled)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const paymentsQueueRent = await monaco.provider.connection.getBalance(
+      market.paymentsQueuePk,
+    );
 
     await monaco.program.methods
       .closeMarket()
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -49,7 +53,7 @@ describe("Close market accounts (settled)", () => {
 
     // ensure rent has been returned
     const expectedBalanceAfterMarketClosed =
-      balanceMarketCreated + marketRent + escrowRent;
+      balanceMarketCreated + marketRent + escrowRent + paymentsQueueRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
 
     await monaco.program.account.market.fetch(market.pk).catch((e) => {
@@ -91,6 +95,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -124,6 +129,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         authority: monaco.operatorPk,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,
@@ -167,6 +173,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
+        commissionPaymentQueue: marketB.paymentsQueuePk,
         authority: marketOperator.publicKey,
         authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         crankOperator: monaco.operatorPk,

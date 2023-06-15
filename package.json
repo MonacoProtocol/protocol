@@ -35,7 +35,8 @@
     "lint": "eslint --fix .",
     "format": "prettier --write \"**/*.{ts,js}\"",
     "prepare": "husky install",
-    "getAllMarkets": "ts-node admin/client.ts get_all_markets",
+    "getAll": "ts-node admin/client.ts getAll",
+    "getAllMarkets": "ts-node admin/client.ts getAllMarkets",
     "createMarket": "ts-node admin/client.ts create_market",
     "printMarket": "ts-node admin/client.ts print_market",
     "openMarket": "ts-node admin/client.ts openMarket",
@@ -45,8 +46,9 @@
     "unpublishMarket": "ts-node admin/client.ts unpublish_market",
     "suspendMarket": "ts-node admin/client.ts suspend_market",
     "unsuspendMarket": "ts-node admin/client.ts unsuspend_market",
+    "voidMarket": "ts-node admin/client.ts void_market",
     "printMarketLiquidity": "ts-node admin/client.ts print_market_liquidity",
-    "getAllOrders": "ts-node admin/client.ts get_all_orders",
+    "getAllOrders": "ts-node admin/client.ts getAllOrders",
     "printOrder": "ts-node admin/client.ts print_order",
     "createOrder": "ts-node admin/client.ts create_order",
     "authoriseOperator": "ts-node admin/client.ts authorise_operator",
@@ -54,7 +56,8 @@
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
     "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
-    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards"
+    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards",
+    "createProduct": "ts-node admin/client.ts createProduct"
   },
   "lint-staged": {
     "*.{js,ts}": [

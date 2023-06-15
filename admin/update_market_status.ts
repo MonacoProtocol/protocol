@@ -5,7 +5,7 @@ import {
   unpublishMarket,
   suspendMarket,
   unsuspendMarket,
-  voidMarket,
+  voidMarket as setMarketReadyToVoidClient,
   setMarketReadyToClose as setMarketReadyToCloseClient,
 } from "../npm-admin-client/src";
 import { checkResponse, getProtocolProgram } from "./util";

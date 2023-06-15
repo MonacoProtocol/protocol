@@ -15,15 +15,18 @@
 *   [findEscrowPda][11]
     *   [Parameters][12]
     *   [Examples][13]
-*   [MarketOutcomes][14]
+*   [findCommissionPaymentsQueuePda][14]
     *   [Parameters][15]
     *   [Examples][16]
-*   [getMarketOutcomesByMarket][17]
+*   [MarketOutcomes][17]
     *   [Parameters][18]
     *   [Examples][19]
-*   [getMarketOutcomeTitlesByMarket][20]
+*   [getMarketOutcomesByMarket][20]
     *   [Parameters][21]
     *   [Examples][22]
+*   [getMarketOutcomeTitlesByMarket][23]
+    *   [Parameters][24]
+    *   [Examples][25]
 
 ## MarketType
 
@@ -102,6 +105,24 @@ const escrowPda = await findEscrowPda(program, marketPK)
 ```
 
 Returns **FindPdaResponse** PDA of the escrow account
+
+## findCommissionPaymentsQueuePda
+
+For the provided market publicKey, return the commission payments queue account PDA (publicKey) for that market.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const commissionPaymentsQueuePda = await findCommissionPaymentsQueuePda(program, marketPK)
+```
+
+Returns **FindPdaResponse** PDA of the payment queue
 
 ## MarketOutcomes
 
@@ -189,20 +210,26 @@ Returns **MarketOutcomeTitlesResponse** fetched market outcome titles - ordered 
 
 [13]: #examples-3
 
-[14]: #marketoutcomes
+[14]: #findcommissionpaymentsqueuepda
 
 [15]: #parameters-4
 
 [16]: #examples-4
 
-[17]: #getmarketoutcomesbymarket
+[17]: #marketoutcomes
 
 [18]: #parameters-5
 
 [19]: #examples-5
 
-[20]: #getmarketoutcometitlesbymarket
+[20]: #getmarketoutcomesbymarket
 
 [21]: #parameters-6
 
 [22]: #examples-6
+
+[23]: #getmarketoutcometitlesbymarket
+
+[24]: #parameters-7
+
+[25]: #examples-7

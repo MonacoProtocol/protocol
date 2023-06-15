@@ -8,6 +8,7 @@ use crate::state::market_account::{
     Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
 };
 use crate::state::order_account::Order;
+use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
 
 pub fn create(
@@ -66,6 +67,16 @@ pub fn create(
     } else {
         0
     };
+    ctx.accounts.market.inplay = if inplay_enabled {
+        event_start_timestamp <= Clock::get().unwrap().unix_timestamp
+    } else {
+        false
+    };
+
+    intialize_commission_payments_queue(
+        &mut ctx.accounts.commission_payment_queue,
+        &ctx.accounts.market.key(),
+    )?;
 
     Ok(())
 }
@@ -142,6 +153,15 @@ pub fn add_prices_to_market_outcome(
         CoreError::MarketPriceListIsFull
     );
 
+    Ok(())
+}
+
+fn intialize_commission_payments_queue(
+    payments_queue: &mut MarketPaymentsQueue,
+    market: &Pubkey,
+) -> Result<()> {
+    payments_queue.market = *market;
+    payments_queue.payment_queue = PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH);
     Ok(())
 }
 

@@ -21,5 +21,10 @@ pub fn create_market_position(
         .resize(market_outcomes_len, 0_u64);
     market_position.paid = false;
 
+    if market_position.matched_risk == 0 {
+        market_position.matched_risk_per_product =
+            Vec::with_capacity(ProductMatchedRiskAndRate::MAX_LENGTH);
+    }
+
     Ok(())
 }

@@ -12,8 +12,8 @@ import {
   unsuspend_market,
 } from "./update_market_status";
 import { print_market_liquidity } from "./market_liquidity";
-import { get_all_orders, print_order } from "./orders";
-import { get_all_markets } from "./get_all_markets";
+import { print_order } from "./orders";
+import { getAll, getAllMarkets, getAllOrders } from "./get_all";
 import {
   authoriseAdminOperator,
   authoriseOperator,
@@ -22,6 +22,7 @@ import {
 import { addPricesToLadder } from "./add_prices_to_ladder";
 import { getTokenLeaderboard } from "./leaderboard/token_leaderboard";
 import { getLeaderboardPerMarket } from "./leaderboard/market_leaderboard";
+import { create_product } from "./product";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -33,8 +34,11 @@ anchor.setProvider(provider);
 const script = process.argv[2];
 
 switch (script) {
-  case "get_all_markets":
-    get_all_markets();
+  case "getAll":
+    getAll();
+    break;
+  case "getAllMarkets":
+    getAllMarkets();
     break;
   case "create_market":
     create_market();
@@ -51,7 +55,7 @@ switch (script) {
   case "setMarketReadyToClose":
     setMarketReadyToClose();
     break;
-  case "voidMarket":
+  case "void_market":
     voidMarket();
     break;
   case "publish_market":
@@ -69,8 +73,8 @@ switch (script) {
   case "print_market_liquidity":
     print_market_liquidity();
     break;
-  case "get_all_orders":
-    get_all_orders();
+  case "getAllOrders":
+    getAllOrders();
     break;
   case "print_order":
     print_order();
@@ -95,6 +99,9 @@ switch (script) {
     break;
   case "printAuthorisedOperatorAccounts":
     printAuthorisedOperatorAccounts();
+    break;
+  case "createProduct":
+    create_product();
     break;
   default:
     printUsageAndExit();

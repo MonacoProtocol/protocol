@@ -83,7 +83,8 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
-            product: Default::default(),
+            product: None,
+            product_commission_rate: 0.0,
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -130,7 +131,8 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
-            product: Default::default(),
+            product: None,
+            product_commission_rate: 0.0,
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -177,7 +179,8 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
-            product: Default::default(),
+            product: None,
+            product_commission_rate: 0.0,
         };
         let market = Market {
             authority: Pubkey::new_unique(),
@@ -224,7 +227,8 @@ mod tests {
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
-            product: Default::default(),
+            product: None,
+            product_commission_rate: 0.0,
         };
         let market = Market {
             authority: Pubkey::new_unique(),

@@ -1,7 +1,7 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { AnchorError } from "@coral-xyz/anchor";
 import assert from "assert";
 import {
+  assertTransactionThrowsErrorCode,
   createAuthorisedOperatorsPda,
   createWalletWithBalance,
   getAnchorProvider,
@@ -47,7 +47,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -68,15 +68,13 @@ describe("Matching Crank", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .signers([operatorAccountUnauthorised])
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "UnauthorisedOperator");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "UnauthorisedOperator",
+      operatorAccountUnauthorised,
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -358,7 +356,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: againstOrderPk,
@@ -378,18 +376,12 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(
-            err.error.errorCode.code,
-            "MatchingOrdersForAndAgainstAreIdentical",
-          );
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "MatchingOrdersForAndAgainstAreIdentical",
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -453,7 +445,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -473,18 +465,12 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(
-            err.error.errorCode.code,
-            "MatchingOrdersForAndAgainstAreIdentical",
-          );
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "MatchingOrdersForAndAgainstAreIdentical",
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -541,7 +527,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -562,18 +548,12 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(
-            err.error.errorCode.code,
-            "MatchingExpectedAnAgainstOrder",
-          );
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "MatchingExpectedAnAgainstOrder",
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -645,7 +625,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: againstOrder2Pk,
@@ -665,15 +645,9 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "MatchingExpectedAForOrder");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "MatchingExpectedAForOrder");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -740,7 +714,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -760,18 +734,12 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(
-            err.error.errorCode.code,
-            "MatchingExpectedAnAgainstOrder",
-          );
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(
+      ix,
+      "MatchingExpectedAnAgainstOrder",
+    );
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -845,7 +813,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: againstOrder2Pk,
@@ -865,15 +833,9 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "MatchingExpectedAForOrder");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "MatchingExpectedAForOrder");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -928,7 +890,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -948,15 +910,9 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "MatchingMarketMismatch");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "MatchingMarketMismatch");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -1012,7 +968,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -1032,15 +988,9 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "ConstraintSeeds");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "ConstraintSeeds");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -1096,7 +1046,7 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    await monaco.program.methods
+    const ix = await monaco.program.methods
       .matchOrders()
       .accounts({
         orderFor: forOrderPk,
@@ -1116,15 +1066,9 @@ describe("Matching Crank", () => {
         authorisedOperators: authorisedOperators,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: AnchorError) {
-          assert.equal(err.error.errorCode.code, "MatchingMarketMismatch");
-        },
-      );
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "MatchingMarketMismatch");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
@@ -1688,8 +1632,6 @@ describe("Matching Crank", () => {
     ]);
     const purchaserToken = await market.airdrop(purchaser, 100_000);
 
-    await market.moveMarketToInplay();
-
     const forOrderPk = await market.forOrder(0, 1, 2.0, purchaser);
     const againstOrderPk = await market.againstOrder(0, 1, 2.0, purchaser);
 
@@ -1708,32 +1650,29 @@ describe("Matching Crank", () => {
     //
     // CRANK
     //
-    try {
-      await monaco.program.methods
-        .matchOrders()
-        .accounts({
-          orderFor: forOrderPk,
-          orderAgainst: againstOrderPk,
-          tradeFor: forTradePk,
-          tradeAgainst: againstTradePk,
-          marketPositionFor: marketPositionPda,
-          marketPositionAgainst: marketPositionPda,
-          purchaserTokenAccountFor: purchaserToken,
-          purchaserTokenAccountAgainst: purchaserToken,
-          market: market.pk,
-          marketEscrow: market.escrowPk,
-          marketOutcome: market.outcomePks[0],
-          marketMatchingPoolFor: marketMatchingPools.forOutcome,
-          marketMatchingPoolAgainst: marketMatchingPools.against,
-          crankOperator: monaco.operatorPk,
-          authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .rpc();
-      assert.fail("This test should have thrown an error");
-    } catch (err) {
-      assert.equal(err.error.errorCode.code, "InplayDelay");
-    }
+    const ix = await monaco.program.methods
+      .matchOrders()
+      .accounts({
+        orderFor: forOrderPk,
+        orderAgainst: againstOrderPk,
+        tradeFor: forTradePk,
+        tradeAgainst: againstTradePk,
+        marketPositionFor: marketPositionPda,
+        marketPositionAgainst: marketPositionPda,
+        purchaserTokenAccountFor: purchaserToken,
+        purchaserTokenAccountAgainst: purchaserToken,
+        market: market.pk,
+        marketEscrow: market.escrowPk,
+        marketOutcome: market.outcomePks[0],
+        marketMatchingPoolFor: marketMatchingPools.forOutcome,
+        marketMatchingPoolAgainst: marketMatchingPools.against,
+        crankOperator: monaco.operatorPk,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .instruction();
+
+    await assertTransactionThrowsErrorCode(ix, "InplayDelay");
 
     // Check that the orders have not been matched.
     assert.deepEqual(

@@ -4,7 +4,7 @@
 
 *   [MarketStatus][1]
 *   [MarketType][2]
-*   [UnmatchedOrderBehaviour][3]
+*   [MarketOrderBehaviour][3]
 *   [MarketAccount][4]
     *   [Properties][5]
 *   [MarketAccounts][6]
@@ -43,11 +43,11 @@
 
 ## MarketType
 
-## UnmatchedOrderBehaviour
+## MarketOrderBehaviour
 
 ## MarketAccount
 
-Type: {authority: PublicKey, decimalLimit: [number][37], escrowAccountBump: [number][37], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][37], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: [string][38], marketWinningOutcomeIndex: [number][37]?, mintAccount: PublicKey, published: [boolean][39], suspended: [boolean][39], title: [string][38], inplay: [boolean][39], inplayEnabled: [boolean][39], inplayDelay: [number][37]?, eventStartUnmatchedOrderBehaviour: [UnmatchedOrderBehaviour][3], marketLockUnmatchedOrderBehaviour: [UnmatchedOrderBehaviour][3]}
+Type: {authority: PublicKey, decimalLimit: [number][37], escrowAccountBump: [number][37], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][37], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: [string][38], marketWinningOutcomeIndex: [number][37]?, mintAccount: PublicKey, published: [boolean][39], suspended: [boolean][39], title: [string][38], inplay: [boolean][39], inplayEnabled: [boolean][39], inplayOrderDelay: [number][37], eventStartOrderBehaviour: [MarketOrderBehaviour][3], marketLockOrderBehaviour: [MarketOrderBehaviour][3], eventStartTimestamp: BN}
 
 ### Properties
 
@@ -67,9 +67,10 @@ Type: {authority: PublicKey, decimalLimit: [number][37], escrowAccountBump: [num
 *   `title` **[string][38]**&#x20;
 *   `inplay` **[boolean][39]**&#x20;
 *   `inplayEnabled` **[boolean][39]**&#x20;
-*   `inplayDelay` **[number][37]?**&#x20;
-*   `eventStartUnmatchedOrderBehaviour` **[UnmatchedOrderBehaviour][3]**&#x20;
-*   `marketLockUnmatchedOrderBehaviour` **[UnmatchedOrderBehaviour][3]**&#x20;
+*   `inplayOrderDelay` **[number][37]**&#x20;
+*   `eventStartOrderBehaviour` **[MarketOrderBehaviour][3]**&#x20;
+*   `marketLockOrderBehaviour` **[MarketOrderBehaviour][3]**&#x20;
+*   `eventStartTimestamp` **BN**&#x20;
 
 ## MarketAccounts
 
@@ -91,16 +92,16 @@ Type: {order: PublicKey, delayExpirationTimestamp: BN, liquidityToAdd: BN}
 
 ## MarketMatchingPoolAccount
 
-Type: {orders: {front: [number][37], len: [number][37], items: [Array][40]<[MatchingQueueItem][8]>}, inplay: [boolean][39], liquidityAmount: BN, matchedAmount: BN, payer: PublicKey, market: PublicKey, marketOutcomeIndex: [number][37], price: [number][37], forOutcome: [boolean][39]}
+Type: {market: PublicKey, orders: {front: [number][37], len: [number][37], items: [Array][40]<[MatchingQueueItem][8]>}, inplay: [boolean][39], liquidityAmount: BN, matchedAmount: BN, payer: PublicKey, marketOutcomeIndex: [number][37], price: [number][37], forOutcome: [boolean][39]}
 
 ### Properties
 
+*   `market` **PublicKey**&#x20;
 *   `orders` **{front: [number][37], len: [number][37], items: [Array][40]<[MatchingQueueItem][8]>}**&#x20;
 *   `inplay` **[boolean][39]**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
 *   `payer` **PublicKey**&#x20;
-*   `market` **PublicKey**&#x20;
 *   `marketOutcomeIndex` **[number][37]**&#x20;
 *   `price` **[number][37]**&#x20;
 *   `forOutcome` **[boolean][39]**&#x20;
@@ -229,7 +230,7 @@ Type: any
 
 [2]: #markettype
 
-[3]: #unmatchedorderbehaviour
+[3]: #marketorderbehaviour
 
 [4]: #marketaccount
 

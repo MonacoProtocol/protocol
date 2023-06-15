@@ -786,10 +786,7 @@ describe("Protocol - Create Order", () => {
     const createdOrder = await monaco.program.account.order.fetch(
       order.data.orderPk,
     );
-    assert.equal(
-      createdOrder.product.toBase58(),
-      SystemProgram.programId.toBase58(),
-    );
+    assert.equal(createdOrder.product, null);
   });
 
   it("Create order while market is inplay", async () => {
@@ -808,8 +805,6 @@ describe("Protocol - Create Order", () => {
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
-
-    await market.moveMarketToInplay();
 
     const orderPk = await market.forOrder(0, 1, 2.0, purchaser);
     const order = await monaco.program.account.order.fetch(orderPk);
@@ -835,8 +830,6 @@ describe("Protocol - Create Order", () => {
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
-
-    await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
 
@@ -865,8 +858,6 @@ describe("Protocol - Create Order", () => {
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
-
-    await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
 
