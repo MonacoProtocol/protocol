@@ -2,7 +2,11 @@ import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
 export type MarketMatchingPool = {
-  purchaser: PublicKey;
+  market: PublicKey;
+  marketOutcomeIndex: number;
+  price: number;
+  forOutcome: boolean;
+  payer: PublicKey;
   liquidityAmount: BN;
   matchedAmount: BN;
   inplay: boolean;

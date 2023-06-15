@@ -7,6 +7,7 @@ use crate::monaco_protocol::PRICE_SCALE;
 use crate::state::market_account::{
     Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
 };
+use crate::state::order_account::Order;
 use crate::CoreError;
 
 pub fn create(
@@ -108,10 +109,13 @@ fn validate_prices(prices: &[f64]) -> Result<()> {
 pub fn initialize_market_matching_pool(
     matching_pool: &mut Account<MarketMatchingPool>,
     market: &Account<Market>,
-    purchaser: Pubkey,
+    order: &Order,
 ) -> Result<()> {
     matching_pool.market = market.key();
-    matching_pool.purchaser = purchaser;
+    matching_pool.market_outcome_index = order.market_outcome_index;
+    matching_pool.price = order.expected_price;
+    matching_pool.for_outcome = order.for_outcome;
+    matching_pool.payer = order.payer;
     matching_pool.liquidity_amount = 0_u64;
     matching_pool.matched_amount = 0_u64;
     matching_pool.orders = Cirque::new(MarketMatchingPool::QUEUE_LENGTH);

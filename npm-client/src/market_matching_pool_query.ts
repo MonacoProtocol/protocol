@@ -5,7 +5,12 @@ import {
   MarketMatchingPoolAccounts,
   ResponseFactory,
 } from "../types";
-import { PublicKeyCriterion, toFilters } from "./queries";
+import {
+  BooleanCriterion,
+  PublicKeyCriterion,
+  toFilters,
+  U16Criterion,
+} from "./queries";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
@@ -16,6 +21,8 @@ export class MarketMatchingPools {
 
   private program: Program;
   private market: PublicKeyCriterion = new PublicKeyCriterion(8);
+  private marketOutcomeIndex: U16Criterion = new U16Criterion(8 + 32);
+  private forOutcome: BooleanCriterion = new BooleanCriterion(8 + 32 + 2 + 8);
 
   constructor(program: Program) {
     this.program = program;
@@ -23,6 +30,16 @@ export class MarketMatchingPools {
 
   filterByMarket(market: PublicKey): MarketMatchingPools {
     this.market.setValue(market);
+    return this;
+  }
+
+  filterByMarketOutcomeIndex(marketOutcomeIndex: number): MarketMatchingPools {
+    this.marketOutcomeIndex.setValue(marketOutcomeIndex);
+    return this;
+  }
+
+  filterByForOutcome(forOutcome: boolean): MarketMatchingPools {
+    this.forOutcome.setValue(forOutcome);
     return this;
   }
 
@@ -39,7 +56,12 @@ export class MarketMatchingPools {
         this.program.programId,
         {
           dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: toFilters("market_matching_pool", this.market),
+          filters: toFilters(
+            "market_matching_pool",
+            this.market,
+            this.marketOutcomeIndex,
+            this.forOutcome,
+          ),
         },
       );
       const publicKeys = accounts.map((account) => account.pubkey);
@@ -77,7 +99,7 @@ export class MarketMatchingPools {
         })
         .filter((o) => o.account);
 
-      response.addResponseData({ marketMatchingPoolAccounts: result });
+      response.addResponseData({ marketMatchingPools: result });
     } catch (e) {
       response.addError(e);
     }

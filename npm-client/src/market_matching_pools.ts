@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { FindPdaResponse } from "../types";
 import { getMarketOutcomesByMarket } from "./market_outcome_query";
+import { MarketMatchingPools } from "./market_matching_pool_query";
 
 /**
  * For the provided market publicKey, outcome, price and forOutcome, return the PDA (publicKey) of the matching account.
@@ -117,43 +118,42 @@ export async function getAllMarketMatchingPools(
   const response = new ResponseFactory({} as MarketMatchingPoolsWithSeeds);
 
   try {
-    let marketMatchingPoolsWithSeeds: GetAccount<MarketMatchingPoolWithSeeds>[] =
-      [];
-    const matchingPoolPksResponse = await findAllMarketMatchingPoolPks(
-      program,
-      marketPk,
-    );
-    const matchingPoolPks =
-      matchingPoolPksResponse.data.marketMatchingPoolPksWithSeeds;
-    if (matchingPoolPks.length == 0) {
-      response.addResponseData({
-        marketMatchingPoolsWithSeeds: [],
-      });
-      return response.body;
-    }
-    const batchSize = 50;
+    let marketMatchingPoolsWithSeeds =
+      [] as GetAccount<MarketMatchingPoolWithSeeds>[];
 
-    for (let i = 0; i < matchingPoolPks.length; i += batchSize) {
-      const batch = matchingPoolPks.slice(i, i + batchSize);
-      const matchingPools = await getMarketMatchingPoolAccounts(
-        program,
-        batch.map((i) => i.publicKey),
+    const query =
+      MarketMatchingPools.marketMatchingPoolQuery(program).filterByMarket(
+        marketPk,
       );
 
-      const poolsWithSeeds = matchingPools.data.marketMatchingPools.map(
-        (pool) => {
-          const seeds = batch.find((a) => a.publicKey == pool.publicKey)?.seeds;
+    const market = await program.account.market.fetch(marketPk);
+
+    for (let i = 0; i < market.marketOutcomesCount; i++) {
+      const perOutcomeResponse = await query
+        .filterByMarketOutcomeIndex(i)
+        .fetch();
+
+      if (!perOutcomeResponse.success) {
+        console.log(`fail`);
+        response.addErrors(perOutcomeResponse.errors);
+        return response.body;
+      }
+
+      marketMatchingPoolsWithSeeds = marketMatchingPoolsWithSeeds.concat(
+        perOutcomeResponse.data.marketMatchingPools.map((pool) => {
           return {
             publicKey: pool.publicKey,
             account: {
               marketMatchingPool: pool.account,
-              seeds: seeds,
+              seeds: {
+                outcomeIndex: pool.account.marketOutcomeIndex.toString(),
+                price: pool.account.price.toFixed(3).toString(),
+                forOutcome: pool.account.forOutcome.toString(),
+              },
             },
-          } as GetAccount<MarketMatchingPoolWithSeeds>;
-        },
+          };
+        }),
       );
-      marketMatchingPoolsWithSeeds =
-        marketMatchingPoolsWithSeeds.concat(poolsWithSeeds);
     }
 
     response.addResponseData({

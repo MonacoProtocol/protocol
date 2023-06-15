@@ -247,7 +247,7 @@ describe("End to end test of", () => {
             .accounts({
               market: market.pk,
               marketMatchingPool: marketMatchingPool,
-              purchaser: purchaser.publicKey,
+              payer: purchaser.publicKey,
               crankOperator: monaco.operatorPk,
               authorisedOperators:
                 await monaco.findCrankAuthorisedOperatorsPda(),
