@@ -41,6 +41,16 @@ pub fn calculate_commission(commission_rate: f64, profit: i128) -> u64 {
         .unwrap()
 }
 
+pub fn calculate_post_commission_remainder(commission_rate: f64, profit: i128) -> u64 {
+    let commission_rate_decimal = Decimal::from_f64(commission_rate).unwrap();
+    let profit_decimal = Decimal::from(profit);
+    let commission_decimal = profit_decimal
+        .max(Decimal::ZERO)
+        .mul(commission_rate_decimal)
+        .div(Decimal::ONE_HUNDRED);
+    profit_decimal.sub(commission_decimal).to_u64().unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
