@@ -45,7 +45,7 @@ pub fn calculate_commission(commission_rate: f64, profit: i128) -> u64 {
 }
 
 pub fn calculate_post_commission_remainder(commission_rate: f64, profit: i128) -> u64 {
-    if profit <= 0 || commission_rate == 0.0 {
+    if profit <= 0 {
         return 0;
     }
 
@@ -119,5 +119,16 @@ mod tests {
         // 1000000 = 1 @ 6 mint decimals
         assert_eq!(calculate_commission(1.00, 1000000), 10000);
         assert_eq!(calculate_commission(33.33, 1000000), 333300);
+    }
+
+    #[test]
+    fn calculate_post_commission_remainder_zero_protocol_commission() {
+        let profit = 100;
+        let commission_rate = 0.0;
+
+        assert_eq!(
+            profit as u64,
+            calculate_post_commission_remainder(commission_rate, profit)
+        );
     }
 }
