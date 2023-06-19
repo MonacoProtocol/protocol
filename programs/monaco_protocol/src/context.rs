@@ -227,7 +227,7 @@ pub struct CancelPreplayOrderPostEventStart<'info> {
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
-    #[account(mut, address = order.market @ CoreError::CancelationPurchaserMismatch)]
+    #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
