@@ -47,6 +47,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
         10000,
       ],
     );
+
+    const marketMatchingPool =
+      await monaco.program.account.marketMatchingPool.fetch(
+        market.matchingPools[outcomeIndex][price].forOutcome,
+      );
+    assert.ok(marketMatchingPool.inplay);
   });
 
   it("success: partially matched order", async () => {
