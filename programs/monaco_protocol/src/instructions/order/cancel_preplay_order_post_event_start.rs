@@ -11,6 +11,7 @@ pub fn cancel_preplay_order_post_event_start(
 ) -> Result<()> {
     let order = &ctx.accounts.order;
     let market = &ctx.accounts.market;
+    let market_matching_pool = &mut ctx.accounts.market_matching_pool;
 
     // market is open + in inplay mode + and cancellation is the intended behaviour
     require!(
@@ -32,6 +33,10 @@ pub fn cancel_preplay_order_post_event_start(
         order.creation_timestamp < market.event_start_timestamp,
         CoreError::CancelationOrderCreatedAfterMarketEventStarted
     );
+
+    if !market_matching_pool.inplay {
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    }
 
     ctx.accounts.order.void_stake_unmatched();
 
