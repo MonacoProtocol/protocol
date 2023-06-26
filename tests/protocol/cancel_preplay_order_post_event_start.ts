@@ -606,9 +606,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
-      assert.fail("expected CancelationPurchaserMismatch");
+      assert.fail("expected CancelationMarketMismatch");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelationPurchaserMismatch");
+      assert.equal(e.error.errorCode.code, "CancelationMarketMismatch");
     }
 
     // check the order wasn't cancelled
