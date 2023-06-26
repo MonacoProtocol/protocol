@@ -1,4 +1,4 @@
-use crate::instructions::{calculate_commission, transfer};
+use crate::instructions::{calculate_commission, calculate_post_commission_remainder, transfer};
 use crate::SettleMarketPosition;
 use anchor_lang::prelude::*;
 use rust_decimal::prelude::ToPrimitive;
@@ -136,9 +136,7 @@ fn calculate_commission_for_risk_at_rate(
 
     // where product + protocol commission rates > 100%, protocol commission will be deducted before
     // returning remaining profit as product commission
-    let protocol_commission =
-        calculate_commission(protocol_commission_rate, product_profit as i128);
-    product_profit.saturating_sub(protocol_commission)
+    calculate_post_commission_remainder(protocol_commission_rate, product_profit as i128)
 }
 
 fn available_profit_for_commission(
@@ -357,6 +355,27 @@ mod tests {
         assert_eq!(product_commission, 0);
     }
 
+    #[test]
+    fn total_commission_over_100_product_commission_reduced() {
+        let protocol_commission_rate = 45.0;
+        let total_matched = 10;
+        let position_profit = 100;
+        let risk_per_rate = ProductMatchedRiskAndRate {
+            product: Pubkey::new_unique(),
+            risk: 5,
+            rate: 62.0,
+        };
+
+        let product_commission = calculate_commission_for_risk_at_rate(
+            protocol_commission_rate,
+            total_matched,
+            position_profit,
+            &risk_per_rate,
+        );
+
+        assert_eq!(product_commission, 27);
+    }
+
     // calculate_commission_payments
 
     #[test]
@@ -568,6 +587,67 @@ mod tests {
                     from: market_escrow,
                     amount: product2_expected_payment_2,
                 }
+            ]
+        )
+    }
+
+    #[test]
+    fn calculate_commission_payments_multiple_rates_commission_over_100() {
+        let protocol_product = Product {
+            authority: Default::default(),
+            payer: Default::default(),
+            commission_escrow: Pubkey::new_unique(),
+            product_title: "".to_string(),
+            commission_rate: 45.0,
+        };
+        let market_escrow = Pubkey::new_unique();
+        let product_pk = Pubkey::new_unique();
+        let product_pk2 = Pubkey::new_unique();
+        let matched_risk_for_product = vec![
+            ProductMatchedRiskAndRate {
+                product: product_pk,
+                risk: 5,
+                rate: 62.0,
+            },
+            ProductMatchedRiskAndRate {
+                product: product_pk2,
+                risk: 5,
+                rate: 62.0,
+            },
+        ];
+        let market_position = MarketPosition {
+            purchaser: Default::default(),
+            market: Default::default(),
+            paid: false,
+            market_outcome_sums: vec![],
+            outcome_max_exposure: vec![],
+            payer: Default::default(),
+            matched_risk: 10,
+            matched_risk_per_product: matched_risk_for_product,
+        };
+        let position_profit = 100;
+        let (total_product_commission, payments) = calculate_product_commission_payments(
+            protocol_product.commission_rate,
+            market_escrow,
+            &market_position,
+            position_profit,
+        );
+        let expected_product_commission = 54;
+
+        assert_eq!(total_product_commission, expected_product_commission);
+        assert_eq!(
+            payments,
+            vec![
+                PaymentInfo {
+                    to: product_pk,
+                    from: market_escrow,
+                    amount: 27,
+                },
+                PaymentInfo {
+                    to: product_pk2,
+                    from: market_escrow,
+                    amount: 27,
+                },
             ]
         )
     }
