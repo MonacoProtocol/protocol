@@ -28,7 +28,6 @@ describe("Protocol - Move market matching pool to inplay", () => {
     assert.equal(matchingPool.inplay, false);
 
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     await market.moveMarketToInplay();
     await market.moveMarketMatchingPoolToInplay(0, 2.0, true);
 
@@ -61,7 +60,6 @@ describe("Protocol - Move market matching pool to inplay", () => {
     assert.equal(matchingPool.matched, 0);
 
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     await market.moveMarketToInplay();
     await market.moveMarketMatchingPoolToInplay(0, 2.0, true);
 
@@ -96,7 +94,6 @@ describe("Protocol - Move market matching pool to inplay", () => {
     assert.equal(matchingPool.matched, 0);
 
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     await market.moveMarketToInplay();
     await market.moveMarketMatchingPoolToInplay(0, 2.0, true);
 

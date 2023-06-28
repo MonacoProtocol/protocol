@@ -36,7 +36,10 @@ describe("End to end test of", () => {
     const prePlayOrder03 = await market.forOrder(0, 1, 2.0, purchaser);
 
     // No liquidity, no matches
-    const prePlayOrder11 = await market.forOrder(1, 1, 2.0, purchaser);
+    const prePlayOrder10 = await market.forOrder(1, 1, 2.0, purchaser);
+
+    // Additional order to be placed after event start time but before market is moved to inplay
+    const prePlayOrder11 = await market.forOrder(1, 1, 3.0, purchaser);
 
     try {
       await market.moveMarketToInplay();
@@ -45,16 +48,27 @@ describe("End to end test of", () => {
       assert.equal(e.error.errorCode.code, "MarketEventNotStarted");
     }
 
-    // FIXME could be replaced with a call to market.setEventStartTimestampToNow()
-    while (Math.floor(new Date().getTime() / 1000) <= eventStartTimestamp + 5) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Move start time up to now
+    await market.updateMarketEventStartTimeToNow();
+
+    // Create an inplay order before the market inplay flag has been updated
+    let matchingPool;
+    try {
+      matchingPool = await market.getForMatchingPool(1, 3.0);
+      assert.deepEqual(matchingPool, { len: 1, liquidity: 1, matched: 0 });
+      await market.forOrder(1, 4.2, 3.0, purchaser);
+      matchingPool = await market.getForMatchingPool(1, 3.0);
+      assert.deepEqual(matchingPool, { len: 1, liquidity: 0, matched: 0 });
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
 
     await market.moveMarketToInplay();
 
     // 1. Inplay order into existing non-zero'd preplay matching pool
     // With existing liquidity
-    let matchingPool = await market.getForMatchingPool(0, 2.0);
+    matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
 
     await market.forOrder(0, 1, 2.0, purchaser);
@@ -108,6 +122,7 @@ describe("End to end test of", () => {
     await market.processDelayExpiredOrders(0, 2.0, true);
     await market.processDelayExpiredOrders(0, 2.0, false);
     await market.processDelayExpiredOrders(1, 2.0, true);
+    await market.processDelayExpiredOrders(1, 3.0, true);
     await market.processDelayExpiredOrders(2, 2.0, true);
     // Skip processing this matching pool and allow matching to use the delay expired order
     // await market.processDelayExpiredOrders(2, 2.0, false);
@@ -120,6 +135,9 @@ describe("End to end test of", () => {
 
     matchingPool = await market.getForMatchingPool(1, 2.0);
     assert.equal(matchingPool.liquidity, 1);
+
+    matchingPool = await market.getForMatchingPool(1, 3.0);
+    assert.equal(matchingPool.liquidity, 4.2);
 
     matchingPool = await market.getForMatchingPool(2, 2.0);
     assert.equal(matchingPool.liquidity, 1);
@@ -142,6 +160,7 @@ describe("End to end test of", () => {
     await market.cancelPreplayOrderPostEventStart(prePlayOrder01);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder02);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder03);
+    await market.cancelPreplayOrderPostEventStart(prePlayOrder10);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder11);
 
     order = await monaco.getOrder(prePlayOrder01);
@@ -150,7 +169,7 @@ describe("End to end test of", () => {
     assert.equal(order.stakeUnmatched, 0);
     order = await monaco.getOrder(prePlayOrder03);
     assert.equal(order.stakeUnmatched, 0);
-    order = await monaco.getOrder(prePlayOrder11);
+    order = await monaco.getOrder(prePlayOrder10);
     assert.equal(order.stakeUnmatched, 0);
 
     // Settle market and market positions and orders
