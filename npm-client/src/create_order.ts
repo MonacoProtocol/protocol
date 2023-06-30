@@ -16,6 +16,7 @@ import { findOrderPda } from "./order";
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
+ * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {CreateOrderResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
  * @example
@@ -26,7 +27,8 @@ import { findOrderPda } from "./order";
  * const price = 1.5
  * const stake = 20
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk)
+ * const mintDecimal = 6
+ * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
  */
 export async function createOrderUiStake(
   program: Program,
@@ -36,8 +38,14 @@ export async function createOrderUiStake(
   price: number,
   stake: number,
   productPk?: PublicKey,
+  mintDecimal?: number,
 ): Promise<ClientResponse<CreateOrderResponse>> {
-  const stakeInteger = await uiStakeToInteger(program, stake, marketPk);
+  const stakeInteger = await uiStakeToInteger(
+    program,
+    stake,
+    marketPk,
+    mintDecimal,
+  );
   return await createOrder(
     program,
     marketPk,

@@ -93,25 +93,30 @@ export async function uiStakeToInteger(
   program: Program,
   stake: number,
   marketPk: PublicKey,
+  mintDecimals?: number,
 ): Promise<ClientResponse<StakeInteger>> {
   const response = new ResponseFactory({});
-  const market = await getMarket(program, marketPk);
 
-  if (!market.success) {
-    response.addErrors(market.errors);
-    return response.body;
-  }
+  if (!mintDecimals) {
+    const market = await getMarket(program, marketPk);
 
-  const marketTokenPk = new PublicKey(market.data.account.mintAccount);
-  const mintInfo = await getMintInfo(program, marketTokenPk);
+    if (!market.success) {
+      response.addErrors(market.errors);
+      return response.body;
+    }
 
-  if (!mintInfo.success) {
-    response.addErrors(mintInfo.errors);
-    return response.body;
+    const marketTokenPk = new PublicKey(market.data.account.mintAccount);
+    const mintInfo = await getMintInfo(program, marketTokenPk);
+
+    if (!mintInfo.success) {
+      response.addErrors(mintInfo.errors);
+      return response.body;
+    }
+    mintDecimals = mintInfo.data.decimals;
   }
 
   const stakeInteger = new BN(
-    new Big(stake).times(10 ** mintInfo.data.decimals).toNumber(),
+    new Big(stake).times(10 ** mintDecimals).toNumber(),
   );
   response.addResponseData({
     stakeInteger: stakeInteger,

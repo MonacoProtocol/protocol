@@ -51,6 +51,7 @@ For the provided stake and market, get a BN representation of the stake adjusted
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `stake` **[number][17]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+*   `mintDecimals` **[number][17]?**&#x20;
 
 ### Examples
 
