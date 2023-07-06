@@ -9,8 +9,6 @@ import {
 } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
 
-const moveMarketToInplayDelay = 1500;
-
 // Order parameters
 const outcomeIndex = 1;
 const price = 6.0;
@@ -28,7 +26,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
     await market.moveMarketToInplay();
 
     await market.cancelPreplayOrderPostEventStart(orderPk);
@@ -74,7 +71,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
     await market.moveMarketToInplay();
 
     await market.cancelPreplayOrderPostEventStart(orderPk);
@@ -114,7 +110,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
     await market.moveMarketToInplay();
 
     await market.cancelPreplayOrderPostEventStart(orderPk);
@@ -169,7 +164,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
     await market.moveMarketToInplay();
     await market.settle(outcomeIndex);
 
@@ -213,7 +207,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
 
     try {
       await market.cancelPreplayOrderPostEventStart(orderPk);
@@ -233,7 +226,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((e) => setTimeout(e, moveMarketToInplayDelay));
     await market.moveMarketToInplay();
 
     // Create Order after event start time

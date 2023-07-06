@@ -892,7 +892,6 @@ describe("Protocol - Create Order", () => {
     assert.equal(matchingPool.liquidity, 10);
 
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
@@ -929,7 +928,6 @@ describe("Protocol - Create Order", () => {
     assert.equal(matchingPool.liquidity, 10);
 
     await market.updateMarketEventStartTimeToNow();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);

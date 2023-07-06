@@ -90,7 +90,7 @@ fn initialize_order(
     order.stake = data.stake;
     order.expected_price = data.price;
     order.creation_timestamp = now;
-    order.delay_expiration_timestamp = match market.inplay {
+    order.delay_expiration_timestamp = match market.is_inplay() {
         true => now
             .checked_add(market.inplay_order_delay as i64)
             .ok_or(CoreError::ArithmeticError),

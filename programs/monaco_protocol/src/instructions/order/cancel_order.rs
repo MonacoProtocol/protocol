@@ -26,7 +26,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
 
     let now = Clock::get().unwrap().unix_timestamp;
     require!(
-        !ctx.accounts.market.inplay || order.delay_expiration_timestamp <= now,
+        !ctx.accounts.market.is_inplay() || order.delay_expiration_timestamp <= now,
         CoreError::InplayDelay
     );
 
