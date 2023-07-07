@@ -789,10 +789,10 @@ pub struct CloseMarketPosition<'info> {
 #[derive(Accounts)]
 pub struct CloseMarketMatchingPool<'info> {
     #[account(
-    mut,
-    has_one = payer @ CoreError::CloseAccountPayerMismatch,
-    has_one = market @ CoreError::CloseAccountMarketMismatch,
-    close = payer,
+        mut,
+        has_one = payer @ CoreError::CloseAccountPayerMismatch,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = payer,
     )]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
     #[account()]
