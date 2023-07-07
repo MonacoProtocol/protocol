@@ -1,15 +1,16 @@
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
+use crate::instructions::current_timestamp;
 use crate::state::market_account::Market;
 
 pub fn update_market_event_start_time(market: &mut Market, event_start_time: i64) -> Result<()> {
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     update_market_event_start_time_internal(market, event_start_time, now)
 }
 
 pub fn update_market_event_start_time_to_now(market: &mut Market) -> Result<()> {
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     update_market_event_start_time_internal(market, now, now)
 }
 

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::CancelOrder;
 use crate::error::CoreError;
-use crate::instructions::{account, market_position, matching, transfer};
+use crate::instructions::{account, current_timestamp, market_position, matching, transfer};
 use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
@@ -24,7 +24,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         CoreError::CancelOrderNotCancellable
     );
 
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     require!(
         !ctx.accounts.market.is_inplay() || order.delay_expiration_timestamp <= now,
         CoreError::InplayDelay

@@ -1,4 +1,5 @@
 use crate::error::CoreError;
+use crate::instructions::current_timestamp;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
@@ -67,7 +68,7 @@ impl Market {
     }
 
     pub fn is_inplay(&self) -> bool {
-        Market::market_is_inplay(self, Clock::get().unwrap().unix_timestamp)
+        Market::market_is_inplay(self, current_timestamp())
     }
 
     pub fn market_is_inplay(market: &Market, now: UnixTimestamp) -> bool {

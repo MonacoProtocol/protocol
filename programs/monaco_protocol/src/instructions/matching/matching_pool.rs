@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
+use crate::instructions::current_timestamp;
 use crate::state::market_account::{Market, MarketStatus, QueueItem};
 use crate::{CoreError, MarketMatchingPool, MarketOutcome, Order};
 
@@ -155,7 +156,7 @@ pub fn updated_liquidity_with_delay_expired_orders(
         CoreError::MatchingMarketNotYetInplay
     );
 
-    let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
+    let now: UnixTimestamp = current_timestamp();
     for i in 0..market_matching_pool.orders.len() {
         if let Some(order) = market_matching_pool.orders.peek(i) {
             if order.delay_expiration_timestamp > now {
@@ -190,7 +191,7 @@ fn update_matching_queue_with_matched_order(
                 CoreError::OrderNotAtFrontOfQueue
             );
             if queue_item.liquidity_to_add > 0 {
-                let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
+                let now: UnixTimestamp = current_timestamp();
                 if queue_item.delay_expiration_timestamp <= now {
                     matching_pool.liquidity_amount = matching_pool
                         .liquidity_amount
