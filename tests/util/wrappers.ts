@@ -40,14 +40,13 @@ export let monaco: Monaco;
 export let externalPrograms: ExternalPrograms;
 
 beforeAll(async () => {
+  const provider = anchor.AnchorProvider.local();
+
   // Programs
-  monaco = new Monaco(
-    anchor.getProvider() as anchor.AnchorProvider,
-    anchor.workspace.MonacoProtocol,
-  );
+  monaco = new Monaco(provider, anchor.workspace.MonacoProtocol);
 
   externalPrograms = new ExternalPrograms(
-    anchor.getProvider() as anchor.AnchorProvider,
+    provider,
     getProtocolProductProgram(),
   );
 });
@@ -357,7 +356,6 @@ export class Monaco {
             console.error(e);
             throw e;
           }),
-        "confirmed",
       );
 
       const priceLadderBatchSize = 20;
@@ -386,7 +384,6 @@ export class Monaco {
               console.error(e);
               throw e;
             }),
-          "confirmed",
         );
       }
     }

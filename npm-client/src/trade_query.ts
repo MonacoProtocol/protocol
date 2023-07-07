@@ -105,7 +105,6 @@ export class Trades {
     try {
       const accountsWithData = (await this.program.account.trade.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-        "confirmed",
       )) as Trade[];
 
       const result = accountPublicKeys.data.publicKeys

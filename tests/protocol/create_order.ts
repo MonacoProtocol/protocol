@@ -281,7 +281,7 @@ describe("Protocol - Create Order", () => {
         marketEscrow: MarketAccounts.data.escrowPda,
         product: null,
       })
-      .rpc({ commitment: "confirmed" })
+      .rpc()
       .catch((e) => {
         assert.equal(e.error.errorCode.code, "ConstraintSeeds");
       });

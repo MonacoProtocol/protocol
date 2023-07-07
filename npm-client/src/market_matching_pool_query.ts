@@ -68,7 +68,6 @@ export class MarketMatchingPools {
       const accountsWithData =
         (await this.program.account.marketMatchingPool.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-          "confirmed",
         )) as MarketMatchingPoolAccount[];
 
       const result = accountPublicKeys.data.publicKeys

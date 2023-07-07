@@ -123,7 +123,7 @@ export async function createOrder(
       product: productPk == undefined ? null : productPk,
     })
     .signers(provider.wallet instanceof Keypair ? [provider.wallet] : [])
-    .rpc({ commitment: "confirmed" })
+    .rpc()
     .catch((e) => {
       response.addError(e);
     });

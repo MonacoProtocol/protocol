@@ -149,7 +149,6 @@ export class Markets {
     try {
       const accountsWithData = (await this.program.account.market.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-        "confirmed",
       )) as MarketAccount[];
 
       const result = accountPublicKeys.data.publicKeys

@@ -204,7 +204,6 @@ export async function createMarket(
       marketOperator.publicKey,
       1000000000,
     ),
-    "confirmed",
   );
 
   const eventAccount = anchor.web3.Keypair.generate();
@@ -281,7 +280,6 @@ export async function createMarket(
           console.error(e);
           throw e;
         }),
-      "confirmed",
     );
 
     const priceLadderBatchSize = 20;
@@ -303,7 +301,6 @@ export async function createMarket(
             console.error(e);
             throw e;
           }),
-        "confirmed",
       );
     }
   }
@@ -367,7 +364,6 @@ export async function authoriseAdminOperator(
         systemProgram: SystemProgram.programId,
       })
       .rpc(),
-    "confirmed",
   );
 
   return authorisedOperatorsPk;
@@ -426,7 +422,6 @@ export async function createWalletWithBalance(
   const payer = Keypair.generate();
   await provider.connection.confirmTransaction(
     await provider.connection.requestAirdrop(payer.publicKey, lamportBalance),
-    "confirmed",
   );
   return payer;
 }
