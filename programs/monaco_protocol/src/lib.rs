@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 #[program]
 pub mod monaco_protocol {
     use super::*;
+    use crate::instructions::current_timestamp;
 
     pub const PRICE_SCALE: u8 = 3_u8;
 
@@ -384,7 +385,7 @@ pub mod monaco_protocol {
     }
 
     pub fn move_market_to_inplay(ctx: Context<UpdateMarketUnauthorized>) -> Result<()> {
-        let now = Clock::get().unwrap().unix_timestamp;
+        let now = current_timestamp();
         let market = &mut ctx.accounts.market;
 
         // market must have inplay enabled
@@ -427,7 +428,7 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        let settle_time = Clock::get().unwrap().unix_timestamp;
+        let settle_time = current_timestamp();
         instructions::market::settle(&mut ctx.accounts.market, winning_outcome_index, settle_time)
     }
 
@@ -450,7 +451,7 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        let void_time = Clock::get().unwrap().unix_timestamp;
+        let void_time = current_timestamp();
         instructions::market::void(&mut ctx.accounts.market, void_time)
     }
 

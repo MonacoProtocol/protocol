@@ -3,6 +3,7 @@ use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
 
 use crate::context::{CreateMarket, InitializeMarketOutcome};
+use crate::instructions::current_timestamp;
 use crate::monaco_protocol::PRICE_SCALE;
 use crate::state::market_account::{
     Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
@@ -28,7 +29,7 @@ pub fn create(
         CoreError::MarketTitleTooLong
     );
     require!(
-        market_lock_timestamp > Clock::get().unwrap().unix_timestamp,
+        market_lock_timestamp > current_timestamp(),
         CoreError::MarketLockTimeNotInTheFuture
     );
     require!(
@@ -67,7 +68,7 @@ pub fn create(
         0
     };
     ctx.accounts.market.inplay = if inplay_enabled {
-        event_start_timestamp <= Clock::get().unwrap().unix_timestamp
+        event_start_timestamp <= current_timestamp()
     } else {
         false
     };

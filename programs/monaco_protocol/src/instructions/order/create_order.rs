@@ -5,7 +5,7 @@ use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
-use crate::instructions::{market, market_position, matching, transfer};
+use crate::instructions::{current_timestamp, market, market_position, matching, transfer};
 use crate::state::market_account::*;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
@@ -56,7 +56,7 @@ fn initialize_order(
     product: &Option<Account<Product>>,
     data: OrderData,
 ) -> Result<()> {
-    let now: UnixTimestamp = Clock::get().unwrap().unix_timestamp;
+    let now: UnixTimestamp = current_timestamp();
     validate_market_for_order(market, now)?;
 
     // validate

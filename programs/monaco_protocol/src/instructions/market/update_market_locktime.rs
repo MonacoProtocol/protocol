@@ -1,10 +1,9 @@
 use anchor_lang::prelude::*;
-use solana_program::clock::Clock;
 use solana_program::msg;
-use solana_program::sysvar::Sysvar;
 
 use crate::context::UpdateMarket;
 use crate::error::CoreError;
+use crate::instructions::current_timestamp;
 use crate::state::market_account::Market;
 
 pub fn update_locktime(ctx: Context<UpdateMarket>, lock_time: i64) -> Result<()> {
@@ -15,7 +14,7 @@ pub fn update_locktime(ctx: Context<UpdateMarket>, lock_time: i64) -> Result<()>
         CoreError::MarketLockTimeAfterEventStartTime
     );
 
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     update_market_locktime(market, lock_time, now)
 }
 

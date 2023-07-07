@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
-use solana_program::clock::Clock;
-use solana_program::sysvar::Sysvar;
 
 use crate::context::MatchOrders;
 use crate::error::CoreError;
 use crate::instructions::matching::create_trade::initialize_trade;
-use crate::instructions::{calculate_risk_from_stake, matching, order, transfer};
+use crate::instructions::{
+    calculate_risk_from_stake, current_timestamp, matching, order, transfer,
+};
 use crate::state::market_account::MarketStatus::Open;
 use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
 use crate::state::order_account::Order;
@@ -20,7 +20,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
         CoreError::MarketNotOpen,
     );
 
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     require!(
         ctx.accounts.market.market_lock_timestamp > now,
         CoreError::MarketLocked
@@ -143,7 +143,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     }
 
     // 5. Initialize the trade accounts
-    let now = Clock::get().unwrap().unix_timestamp;
+    let now = current_timestamp();
     initialize_trade(
         &mut ctx.accounts.trade_against,
         &ctx.accounts.order_against,
