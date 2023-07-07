@@ -22,7 +22,7 @@ export class MarketMatchingPools {
   private program: Program;
   private market: PublicKeyCriterion = new PublicKeyCriterion(8);
   private marketOutcomeIndex: U16Criterion = new U16Criterion(8 + 32);
-  private forOutcome: BooleanCriterion = new BooleanCriterion(8 + 32 + 2 + 8);
+  private forOutcome: BooleanCriterion = new BooleanCriterion(8 + 32 + 2);
 
   constructor(program: Program) {
     this.program = program;

@@ -4,8 +4,8 @@ import { PublicKey } from "@solana/web3.js";
 export type MarketMatchingPool = {
   market: PublicKey;
   marketOutcomeIndex: number;
-  price: number;
   forOutcome: boolean;
+  price: number;
   payer: PublicKey;
   liquidityAmount: BN;
   matchedAmount: BN;

@@ -111,8 +111,8 @@ impl MarketOutcome {
 pub struct MarketMatchingPool {
     pub market: Pubkey,
     pub market_outcome_index: u16,
-    pub price: f64,
     pub for_outcome: bool,
+    pub price: f64,
     pub payer: Pubkey,
     pub liquidity_amount: u64,
     pub matched_amount: u64,
@@ -126,8 +126,8 @@ impl MarketMatchingPool {
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
         U16_SIZE + // market_outcome_index
-        F64_SIZE + // price
         BOOL_SIZE + // for_outcome
+        F64_SIZE + // price
         PUB_KEY_SIZE + // payer
         U64_SIZE + // liquidity_amount
         U64_SIZE + // matched_amount
