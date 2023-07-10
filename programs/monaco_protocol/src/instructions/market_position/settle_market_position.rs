@@ -620,7 +620,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 10,
             matched_risk_per_product: matched_risk_for_product,
