@@ -468,7 +468,7 @@ describe("Protocol - Create Order", () => {
     );
     assert.equal(matchingPool.matchedAmount.toNumber(), 0);
     assert.equal(
-      matchingPool.purchaser.toBase58(),
+      matchingPool.payer.toBase58(),
       provider.wallet.publicKey.toBase58(),
     );
 

@@ -92,7 +92,7 @@ Type: {order: PublicKey, delayExpirationTimestamp: BN, liquidityToAdd: BN}
 
 ## MarketMatchingPoolAccount
 
-Type: {market: PublicKey, orders: {front: [number][37], len: [number][37], items: [Array][40]<[MatchingQueueItem][8]>}, inplay: [boolean][39], liquidityAmount: BN, matchedAmount: BN, purchaser: PublicKey}
+Type: {market: PublicKey, orders: {front: [number][37], len: [number][37], items: [Array][40]<[MatchingQueueItem][8]>}, inplay: [boolean][39], liquidityAmount: BN, matchedAmount: BN, payer: PublicKey, marketOutcomeIndex: [number][37], price: [number][37], forOutcome: [boolean][39]}
 
 ### Properties
 
@@ -101,7 +101,10 @@ Type: {market: PublicKey, orders: {front: [number][37], len: [number][37], items
 *   `inplay` **[boolean][39]**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
-*   `purchaser` **PublicKey**&#x20;
+*   `payer` **PublicKey**&#x20;
+*   `marketOutcomeIndex` **[number][37]**&#x20;
+*   `price` **[number][37]**&#x20;
+*   `forOutcome` **[boolean][39]**&#x20;
 
 ## MarketMatchingPoolAccounts
 

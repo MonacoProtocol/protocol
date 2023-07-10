@@ -609,11 +609,7 @@ pub mod monaco_protocol {
         Ok(())
     }
 
-    pub fn close_market_matching_pool(
-        ctx: Context<CloseMarketMatchingPool>,
-        _price: f64,
-        _for_outcome: bool,
-    ) -> Result<()> {
+    pub fn close_market_matching_pool(ctx: Context<CloseMarketMatchingPool>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.crank_operator.key,
             &ctx.accounts.authorised_operators,

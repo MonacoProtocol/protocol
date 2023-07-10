@@ -787,30 +787,18 @@ pub struct CloseMarketPosition<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(_price: f64, _for_outcome: bool)]
 pub struct CloseMarketMatchingPool<'info> {
-    #[account()]
-    pub market: Account<'info, Market>,
-    #[account(has_one = market @ CoreError::CloseAccountMarketMismatch)]
-    pub market_outcome: Account<'info, MarketOutcome>,
-    #[account(mut)]
-    pub purchaser: SystemAccount<'info>,
-
-    // accounts being closed --------------------------------------------
     #[account(
         mut,
-        seeds = [
-            market.key().as_ref(),
-            market_outcome.index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{_price:.3}").as_ref(),
-            _for_outcome.to_string().as_ref(),
-        ],
-        bump,
-        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
-        close = purchaser,
+        has_one = payer @ CoreError::CloseAccountPayerMismatch,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = payer,
     )]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub payer: SystemAccount<'info>,
 
     #[account(mut)]
     pub crank_operator: Signer<'info>,

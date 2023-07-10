@@ -32,7 +32,7 @@ abstract class Criterion<T> {
     this.value = value;
   }
 
-  abstract writeToBuffer(buffer: Buffer): number;
+  abstract toBuffer(): Buffer;
 }
 
 export class BooleanCriterion extends Criterion<boolean> {
@@ -40,10 +40,8 @@ export class BooleanCriterion extends Criterion<boolean> {
     super(offset, 1);
   }
 
-  writeToBuffer(buffer: Buffer): number {
-    const bytes = this.toBytes();
-    Buffer.from(bytes).copy(buffer, this.getOffset(), 0, bytes.byteLength);
-    return bytes.byteLength;
+  toBuffer(): Buffer {
+    return Buffer.from(this.toBytes());
   }
 
   private toBytes(): Uint8Array {
@@ -57,10 +55,8 @@ export class ByteCriterion extends Criterion<number> {
     super(offset, 1);
   }
 
-  writeToBuffer(buffer: Buffer): number {
-    const bytes = this.toBytes();
-    Buffer.from(bytes).copy(buffer, this.getOffset(), 0, bytes.byteLength);
-    return bytes.byteLength;
+  toBuffer(): Buffer {
+    return Buffer.from(this.toBytes());
   }
 
   private toBytes(): Uint8Array {
@@ -74,10 +70,8 @@ export class U16Criterion extends Criterion<number> {
     super(offset, 2);
   }
 
-  writeToBuffer(buffer: Buffer): number {
-    const bytes = this.toBytes();
-    Buffer.from(bytes).copy(buffer, this.getOffset(), 0, bytes.byteLength);
-    return bytes.byteLength;
+  toBuffer(): Buffer {
+    return Buffer.from(this.toBytes());
   }
 
   private toBytes(): Uint8Array {
@@ -95,10 +89,8 @@ export class PublicKeyCriterion extends Criterion<PublicKey> {
     super(offset, 32);
   }
 
-  writeToBuffer(buffer: Buffer): number {
-    const bytes = this.toBytes();
-    Buffer.from(bytes).copy(buffer, this.getOffset(), 0, bytes.byteLength);
-    return bytes.byteLength;
+  toBuffer(): Buffer {
+    return Buffer.from(this.toBytes());
   }
 
   private toBytes(): Uint8Array {
@@ -111,46 +103,51 @@ export function toFilters(
   accountName: string,
   ...criteria: Criterion<unknown>[]
 ): MemcmpFilter[] {
-  const filters: MemcmpFilter[] = [];
+  type FilterData = { offset: number; size: number; buffer: Buffer };
 
-  const criteriaSize = criteria
-    .map((criterion) => criterion.getSize())
-    .reduce((partialSum, a) => partialSum + a, 0);
-  const buffer = Buffer.alloc(8 + criteriaSize);
+  const filterData: FilterData[] = [
+    {
+      buffer: BorshAccountsCoder.accountDiscriminator(accountName),
+      offset: 0,
+      size: 8,
+    },
+  ].concat(
+    criteria
+      .filter((c) => c.hasValue())
+      .sort((a, b) => a.getOffset() - b.getOffset())
+      .map((c) => {
+        return {
+          buffer: c.toBuffer(),
+          offset: c.getOffset(),
+          size: c.getSize(),
+        };
+      }),
+  );
 
-  let filterIndex = 0;
-  let filterLength = 0;
+  const filterDataIsContiguous = (a: FilterData, b: FilterData) => {
+    return a.offset + a.size == b.offset;
+  };
 
-  BorshAccountsCoder.accountDiscriminator(accountName).copy(buffer, 0, 0, 8);
-  filterLength = filterLength + 8;
-
-  criteria.forEach((criterion) => {
-    if (criterion.hasValue()) {
-      filterLength += criterion.writeToBuffer(buffer);
-    } else {
-      if (filterLength > 0) {
-        filters.push(toFilter(buffer, filterIndex, filterIndex + filterLength));
+  const filters = [] as MemcmpFilter[];
+  for (let i = 0, j = 0; i < filterData.length; i = j) {
+    let buffer = filterData[i].buffer;
+    for (j = i + 1; j < filterData.length; j++) {
+      if (filterDataIsContiguous(filterData[i], filterData[j])) {
+        buffer = Buffer.concat([buffer, filterData[j].buffer]);
+      } else {
+        break;
       }
-      filterIndex = filterIndex + filterLength + criterion.getSize();
-      filterLength = 0;
     }
-  });
-  if (filterLength > 0) {
-    filters.push(toFilter(buffer, filterIndex, filterIndex + filterLength));
+    filters.push(toFilter(buffer, filterData[i].offset));
   }
-
   return filters;
 }
 
-function toFilter(
-  buffer: Buffer,
-  startIndex: number,
-  endIndex: number,
-): MemcmpFilter {
+function toFilter(buffer: Buffer, offset: number): MemcmpFilter {
   return {
     memcmp: {
-      offset: startIndex,
-      bytes: bs58.encode(buffer.subarray(startIndex, endIndex)),
+      offset: offset,
+      bytes: bs58.encode(buffer),
     },
   };
 }

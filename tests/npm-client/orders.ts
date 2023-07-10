@@ -159,6 +159,8 @@ describe("Pending Orders by index and for order", () => {
       ),
     ]);
 
+    assert.deepEqual(preMatchResponseFor.errors, []);
+    assert.deepEqual(preMatchResponseAgainst.errors, []);
     assert.deepEqual(preMatchResponseFor.data.pendingOrders.length, 1);
     assert.deepEqual(preMatchResponseAgainst.data.pendingOrders.length, 1);
 
