@@ -46,6 +46,13 @@ export async function createOrderUiStake(
     marketPk,
     mintDecimal,
   );
+
+  if (!stakeInteger.success) {
+    const response = new ResponseFactory({} as CreateOrderResponse);
+    response.addErrors(stakeInteger.errors);
+    return response.body;
+  }
+
   return await createOrder(
     program,
     marketPk,
