@@ -13,6 +13,10 @@ pub fn open(market: &mut Market) -> Result<()> {
         Initializing.eq(&market.market_status),
         CoreError::OpenMarketNotInitializing
     );
+    require!(
+        market.market_outcomes_count > 1,
+        CoreError::OpenMarketNotEnoughOutcomes
+    );
     market.market_status = Open;
     Ok(())
 }
@@ -227,7 +231,7 @@ mod tests {
             decimal_limit: 0,
             published: false,
             suspended: false,
-            market_outcomes_count: 0,
+            market_outcomes_count: 2,
             market_winning_outcome_index: None,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
@@ -258,7 +262,7 @@ mod tests {
             decimal_limit: 0,
             published: false,
             suspended: false,
-            market_outcomes_count: 0,
+            market_outcomes_count: 2,
             market_winning_outcome_index: None,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
@@ -276,6 +280,38 @@ mod tests {
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotInitializing));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn open_market_not_enough_outcomes() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 1,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+
+        let result = open(&mut market);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::OpenMarketNotEnoughOutcomes));
         assert_eq!(expected_error, result)
     }
 
