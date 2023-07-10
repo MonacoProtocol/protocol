@@ -72,15 +72,15 @@ describe("Order Settlement Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [594, 850, 850] },
+        { matched: [0, 0, 0], unmatched: [0, 250, 250] },
         { len: 0, liquidity: 0, matched: 400 },
         { len: 1, liquidity: 150, matched: 200 },
         { len: 1, liquidity: 100, matched: 0 },
         { len: 0, liquidity: 0, matched: 200 },
         { len: 0, liquidity: 0, matched: 200 },
         { len: 0, liquidity: 0, matched: 200 },
-        850,
-        150,
+        250,
+        750,
       ],
     );
 
@@ -100,7 +100,7 @@ describe("Order Settlement Payment 3", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [594, 850, 850] }, 0, 1000],
+      [{ matched: [0, 0, 0], unmatched: [0, 250, 250] }, 0, 1000],
     );
   });
 
@@ -156,7 +156,7 @@ describe("Order Settlement Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [600, 850, 850] },
+        { matched: [0, 0, 0], unmatched: [600, 850, 850] },
         { len: 3, liquidity: 400, matched: 0 },
         { len: 2, liquidity: 350, matched: 0 },
         { len: 1, liquidity: 100, matched: 0 },
@@ -202,15 +202,15 @@ describe("Order Settlement Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], maxExposure: [594, 850, 850] },
+        { matched: [0, 0, 0], unmatched: [0, 250, 250] },
         { len: 0, liquidity: 0, matched: 400 },
         { len: 1, liquidity: 150, matched: 200 },
         { len: 1, liquidity: 100, matched: 0 },
         { len: 0, liquidity: 0, matched: 200 },
         { len: 0, liquidity: 0, matched: 200 },
         { len: 0, liquidity: 0, matched: 200 },
-        850,
-        150,
+        250,
+        750,
       ],
     );
 
@@ -230,7 +230,7 @@ describe("Order Settlement Payment 3", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], maxExposure: [594, 850, 850] }, 0, 1000],
+      [{ matched: [0, 0, 0], unmatched: [0, 250, 250] }, 0, 1000],
     );
   });
 });

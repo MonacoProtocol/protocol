@@ -10,39 +10,40 @@ pub fn update_on_order_creation(
 ) -> Result<u64> {
     let outcome_index = order.market_outcome_index as usize;
     let for_outcome = order.for_outcome;
-    let order_exposure = match order.for_outcome {
+    let order_exposure = match for_outcome {
         true => order.stake,
         false => calculate_risk_from_stake(order.stake, order.expected_price),
     };
 
-    let max_exposure = market_position.max_exposure();
+    let total_exposure_before = market_position.total_exposure();
 
+    // update unmatched_exposures
     match for_outcome {
         true => {
-            let market_outcomes_len = market_position.outcome_max_exposure.len();
+            let market_outcomes_len = market_position.unmatched_exposures.len();
             for index in 0..market_outcomes_len {
                 if outcome_index == index {
                     continue;
                 }
-                market_position.outcome_max_exposure[index] = market_position.outcome_max_exposure
+                market_position.unmatched_exposures[index] = market_position.unmatched_exposures
                     [index]
                     .checked_add(order_exposure)
                     .ok_or(CoreError::ArithmeticError)?;
             }
         }
         false => {
-            market_position.outcome_max_exposure[outcome_index] = market_position
-                .outcome_max_exposure[outcome_index]
+            market_position.unmatched_exposures[outcome_index] = market_position
+                .unmatched_exposures[outcome_index]
                 .checked_add(order_exposure)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
 
-    // max_exposure change
-    let max_exposure_change = market_position
-        .max_exposure()
-        .checked_sub(max_exposure)
+    // total_exposure_change change
+    let total_exposure_change = market_position
+        .total_exposure()
+        .checked_sub(total_exposure_before)
         .ok_or(CoreError::ArithmeticError)?;
 
-    Ok(max_exposure_change)
+    Ok(total_exposure_change)
 }

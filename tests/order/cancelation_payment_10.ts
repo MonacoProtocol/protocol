@@ -60,10 +60,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 15, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -83,10 +80,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 0, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 0, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
         10,
@@ -108,7 +102,7 @@ describe("Order Cancelation Payment 10", () => {
       [
         {
           matched: [0, 0, 0],
-          maxExposure: [0, 0, 0],
+          unmatched: [0, 0, 0],
         },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
@@ -149,10 +143,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 15, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -172,10 +163,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 15, 0],
-        },
+        { matched: [0, 0, 0], unmatched: [0, 15, 0] },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -195,10 +183,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
         0,
@@ -238,10 +223,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 15, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -261,10 +243,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 0, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 0, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
         10,
@@ -284,10 +263,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
         0,
@@ -327,10 +303,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [10, 15, 10],
-        },
+        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -350,10 +323,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 15, 0],
-        },
+        { matched: [0, 0, 0], unmatched: [0, 15, 0] },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
@@ -373,10 +343,7 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        {
-          matched: [0, 0, 0],
-          maxExposure: [0, 0, 0],
-        },
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 0 },
         { len: 0, liquidity: 0, matched: 0 },
         0,

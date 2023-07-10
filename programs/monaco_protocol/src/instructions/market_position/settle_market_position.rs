@@ -28,7 +28,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
     let payment_queue = &mut ctx.accounts.commission_payment_queue.payment_queue;
     let position_profit = market_position.market_outcome_sums
         [market_account.market_winning_outcome_index.unwrap() as usize];
-    let max_exposure = market_position.max_exposure();
+    let total_exposure = market_position.total_exposure();
 
     let protocol_commission = calculate_commission(
         ctx.accounts.protocol_config.commission_rate,
@@ -56,11 +56,11 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
 
     let total_payout = position_profit
         // protocol_commission > 0 only if position_profit > 0
+        .checked_add(i128::from(total_exposure))
+        .ok_or(CoreError::SettlementPaymentCalculation)?
         .checked_sub(i128::from(protocol_commission))
         .ok_or(CoreError::SettlementPaymentCalculation)?
         .checked_sub(i128::from(total_product_commission))
-        .ok_or(CoreError::SettlementPaymentCalculation)?
-        .checked_add(i128::from(max_exposure))
         .ok_or(CoreError::SettlementPaymentCalculation)?;
     let total_payout_u64 =
         u64::try_from(total_payout).map_err(|_| CoreError::SettlementPaymentCalculation)?;
@@ -400,7 +400,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 10,
             matched_risk_per_product: product_matched_risk,
@@ -454,7 +454,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 10,
             matched_risk_per_product: matched_risk_for_product,
@@ -533,7 +533,7 @@ mod tests {
             market: Default::default(),
             paid: false,
             market_outcome_sums: vec![],
-            outcome_max_exposure: vec![],
+            unmatched_exposures: vec![],
             payer: Default::default(),
             matched_risk: 20,
             matched_risk_per_product: product_matched_risks,

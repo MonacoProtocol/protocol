@@ -46,7 +46,7 @@ describe("Order Matching Refunds 1", () => {
       [
         { stakeUnmatched: 11, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 11.11, 10] },
+        { matched: [0, 0, 0], unmatched: [10, 11.11, 10] },
         { len: 1, liquidity: 10, matched: 0 },
         { len: 1, liquidity: 11, matched: 0 },
         11.11,
@@ -69,11 +69,11 @@ describe("Order Matching Refunds 1", () => {
       [
         { stakeUnmatched: 1, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [10, 11.11, 10] },
+        { matched: [0, 0, 0], unmatched: [0, 1.01, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 1, matched: 10 },
-        11.11,
-        988.89,
+        1.01,
+        998.99,
       ],
     );
 
@@ -111,13 +111,13 @@ describe("Order Matching Refunds 1", () => {
         { stakeUnmatched: 11, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 1, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [21, 23.11, 21] },
+        { matched: [0, 0, 0], unmatched: [11, 13.01, 11] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 11, matched: 0 },
         { len: 1, liquidity: 1, matched: 10 },
         { len: 1, liquidity: 10, matched: 0 },
-        23.11,
-        976.89,
+        13.01,
+        986.99,
       ],
     );
 
@@ -143,13 +143,13 @@ describe("Order Matching Refunds 1", () => {
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [21, 23.11, 21] },
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 11 },
         { len: 0, liquidity: 0, matched: 11 },
         { len: 0, liquidity: 0, matched: 10 },
-        23.11,
-        976.89,
+        0,
+        1000,
       ],
     );
 
@@ -191,13 +191,13 @@ describe("Order Matching Refunds 1", () => {
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [31, 36.31, 31] },
+        { matched: [0, 0, 0], unmatched: [10, 13.2, 10] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 10, matched: 11 },
         { len: 0, liquidity: 0, matched: 11 },
         { len: 1, liquidity: 11, matched: 10 },
-        36.31,
-        963.69,
+        13.2,
+        986.8,
       ],
     );
 
@@ -226,13 +226,13 @@ describe("Order Matching Refunds 1", () => {
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [31, 36.31, 31] },
+        { matched: [0, 0, 0], unmatched: [0, 1.2, 0] },
         { len: 0, liquidity: 0, matched: 10 },
         { len: 0, liquidity: 0, matched: 21 },
         { len: 0, liquidity: 0, matched: 11 },
         { len: 1, liquidity: 1, matched: 20 },
-        36.31,
-        963.69,
+        1.2,
+        998.8,
       ],
     );
   });

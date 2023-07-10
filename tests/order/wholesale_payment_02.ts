@@ -56,8 +56,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         30,
         80,
         90,
@@ -67,10 +67,8 @@ describe("Order Wholesale Payment 02", () => {
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeA);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -85,8 +83,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         0,
         80,
         118,
@@ -144,8 +142,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         30,
         80,
         90,
@@ -155,10 +153,8 @@ describe("Order Wholesale Payment 02", () => {
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeB);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -173,8 +169,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         0,
         109,
         90,
@@ -232,8 +228,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         30,
         80,
         90,
@@ -243,10 +239,8 @@ describe("Order Wholesale Payment 02", () => {
     // SETTLE ---------------------------------------------------------------------
 
     await market.settle(outcomeC);
-
     await market.settleMarketPositionForPurchaser(purchaserA.publicKey);
     await market.settleMarketPositionForPurchaser(purchaserB.publicKey);
-
     await market.settleOrder(a1AgainstPk);
     await market.settleOrder(a2AgainstPk);
     await market.settleOrder(a3AgainstPk);
@@ -261,8 +255,8 @@ describe("Order Wholesale Payment 02", () => {
         market.getTokenBalance(purchaserB),
       ]),
       [
-        { matched: [-20, 10, 10], maxExposure: [20, 20, 20] },
-        { matched: [20, -10, -10], maxExposure: [0, 10, 10] },
+        { matched: [-20, 10, 10], unmatched: [0, 20, 20] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         0,
         109,
         90,

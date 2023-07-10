@@ -10,17 +10,16 @@ pub fn update_on_order_match(
     stake_matched: u64,
     price_matched: f64,
 ) -> Result<u64> {
+    let total_exposure_before = market_position.total_exposure();
+
     let outcome_index = order.market_outcome_index as usize;
     let for_outcome = order.for_outcome;
-    let unmatched_price = order.expected_price;
+    let price_unmatched = order.expected_price;
 
-    let max_exposure = market_position.max_exposure();
+    let unmatched_risk = calculate_risk_from_stake(stake_matched, price_unmatched);
+    let matched_risk = calculate_risk_from_stake(stake_matched, price_matched);
 
     // update chosen outcome position
-    let matched_risk = calculate_risk_from_stake(stake_matched, price_matched);
-    let risk_change =
-        calculate_risk_from_stake(stake_matched, unmatched_price).saturating_sub(matched_risk);
-
     match for_outcome {
         true => {
             market_position.market_outcome_sums[outcome_index] = market_position
@@ -32,11 +31,6 @@ pub fn update_on_order_match(
             market_position.market_outcome_sums[outcome_index] = market_position
                 .market_outcome_sums[outcome_index]
                 .checked_sub(matched_risk as i128)
-                .ok_or(CoreError::ArithmeticError)?;
-
-            market_position.outcome_max_exposure[outcome_index] = market_position
-                .outcome_max_exposure[outcome_index]
-                .checked_sub(risk_change)
                 .ok_or(CoreError::ArithmeticError)?;
         }
     }
@@ -64,17 +58,40 @@ pub fn update_on_order_match(
         }
     }
 
-    // max_exposure change
-    let max_exposure_change = max_exposure
-        .checked_sub(market_position.max_exposure())
+    // update unmatched_exposures
+    match for_outcome {
+        true => {
+            let market_outcomes_len = market_position.unmatched_exposures.len();
+            for index in 0..market_outcomes_len {
+                if outcome_index == index {
+                    continue;
+                }
+                market_position.unmatched_exposures[index] = market_position.unmatched_exposures
+                    [index]
+                    .checked_sub(stake_matched)
+                    .ok_or(CoreError::ArithmeticError)?;
+            }
+        }
+        false => {
+            market_position.unmatched_exposures[outcome_index] = market_position
+                .unmatched_exposures[outcome_index]
+                .checked_sub(unmatched_risk)
+                .ok_or(CoreError::ArithmeticError)?;
+        }
+    }
+
+    // total exposure change
+    let total_exposure_change = total_exposure_before
+        .checked_sub(market_position.total_exposure())
         .ok_or(CoreError::ArithmeticError)?;
 
-    Ok(max_exposure_change)
+    Ok(total_exposure_change)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::instructions::market_position;
     use test_case::test_case;
 
     struct OrderData {
@@ -217,6 +234,9 @@ mod tests {
                 order_data.price,
             );
 
+            market_position::update_on_order_creation(&mut market_position, &order)
+                .expect("not expecting failure");
+
             update_on_order_match(
                 &mut market_position,
                 &order,
@@ -257,14 +277,14 @@ mod tests {
 
     fn market_position(
         market_outcome_sums: Vec<i128>,
-        outcome_max_exposure: Vec<u64>,
+        unmatched_exposures: Vec<u64>,
     ) -> MarketPosition {
         MarketPosition {
             purchaser: Default::default(),
             market: Default::default(),
             paid: false,
             market_outcome_sums,
-            outcome_max_exposure,
+            unmatched_exposures,
             payer: Pubkey::new_unique(),
             matched_risk_per_product: vec![],
             matched_risk: 0,

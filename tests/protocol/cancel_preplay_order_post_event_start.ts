@@ -39,7 +39,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 0, stakeVoided: 2000, status: { cancelled: {} } },
-        { matched: [0, 0, 0], maxExposure: [0, 0, 0] },
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         0,
         10000,
       ],
@@ -84,9 +84,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 0, stakeVoided: 1000, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [1000, 5000, 1000] },
-        5000,
-        5000,
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
+        0,
+        10000,
       ],
     );
   });
@@ -123,9 +123,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 10000, 2000] },
-        10000,
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
         0,
+        10000,
       ],
     );
   });
@@ -156,7 +156,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -199,7 +199,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -245,7 +245,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -308,7 +308,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -369,7 +369,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -425,7 +425,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -486,7 +486,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -550,7 +550,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -613,7 +613,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -676,7 +676,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       ]),
       [
         { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+        { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
         2000,
         8000,
       ],
@@ -708,7 +708,7 @@ async function setupUnmatchedOrder(
     ]),
     [
       { stakeUnmatched: 2000, stakeVoided: 0, status: { open: {} } },
-      { matched: [0, 0, 0], maxExposure: [2000, 0, 2000] },
+      { matched: [0, 0, 0], unmatched: [2000, 0, 2000] },
       2000,
       8000,
     ],
