@@ -45,6 +45,10 @@ export async function cancelOrder(
 
   if (!mintPk) {
     const marketResponse = await getMarket(program, order.market);
+    if (!marketResponse.success) {
+      response.addErrors(marketResponse.errors);
+      return response.body;
+    }
     const market = marketResponse.data.account;
     mintPk = new PublicKey(market.mintAccount);
   }
