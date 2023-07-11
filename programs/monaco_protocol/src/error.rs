@@ -220,6 +220,8 @@ pub enum CoreError {
     MarketAlreadyInplay,
     #[msg("Market: market event not started")]
     MarketEventNotStarted,
+    #[msg("Market: market not open to allow transition to inplay")]
+    MarketNotOpenForInplay,
 
     /*
     Close Account

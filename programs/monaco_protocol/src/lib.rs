@@ -4,8 +4,9 @@ use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
 use crate::instructions::verify_operator_authority;
+use crate::state::market_account::MarketStatus::*;
 use crate::state::market_account::{
-    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus::ReadyToClose,
+    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome,
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
@@ -385,24 +386,8 @@ pub mod monaco_protocol {
     }
 
     pub fn move_market_to_inplay(ctx: Context<UpdateMarketUnauthorized>) -> Result<()> {
-        let now = current_timestamp();
         let market = &mut ctx.accounts.market;
-
-        // market must have inplay enabled
-        require!(market.inplay_enabled, CoreError::MarketInplayNotEnabled);
-
-        // set it `true` only if it's `false`
-        require!(!market.inplay, CoreError::MarketAlreadyInplay);
-
-        // set it `true` only if now is after event start
-        require!(
-            market.event_start_timestamp <= now,
-            CoreError::MarketEventNotStarted,
-        );
-
-        market.inplay = true;
-
-        Ok(())
+        instructions::market::move_market_to_inplay(market)
     }
 
     pub fn open_market(ctx: Context<UpdateMarket>) -> Result<()> {
