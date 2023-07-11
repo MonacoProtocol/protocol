@@ -20,6 +20,7 @@ For the provided order publicKey, cancel the order if the program provider owns 
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `orderPk` **PublicKey** {PublicKey} publicKey of the order to cancel
+*   `mintPk` **PublicKey?** {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
 
 ### Examples
 
