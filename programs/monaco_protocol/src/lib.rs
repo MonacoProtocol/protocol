@@ -4,9 +4,8 @@ use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
 use crate::instructions::verify_operator_authority;
-use crate::state::market_account::MarketStatus::*;
 use crate::state::market_account::{
-    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome,
+    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus::ReadyToClose,
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
