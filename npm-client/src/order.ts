@@ -9,6 +9,7 @@ import {
 import { ClientResponse, ResponseFactory } from "../types/client";
 import { GetAccount } from "../types/get_account";
 import { Orders, OrderStatusFilter } from "./order_query";
+import { v4 as uuid } from "uuid";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -31,7 +32,7 @@ export async function findOrderPda(
 ): Promise<ClientResponse<orderPdaResponse>> {
   const response = new ResponseFactory({} as orderPdaResponse);
 
-  const distinctSeed = Date.now().toString();
+  const distinctSeed = uuid().toString().substring(0, 13);
   try {
     const [orderPk, _] = await PublicKey.findProgramAddress(
       [marketPk.toBuffer(), purchaserPk.toBuffer(), Buffer.from(distinctSeed)],
