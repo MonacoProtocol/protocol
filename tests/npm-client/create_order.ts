@@ -44,4 +44,24 @@ describe("NPM client - create order", () => {
     )) as Order;
     assert.equal(orderAccount.product, null);
   });
+
+  it("Create order with mint decimals (6)", async () => {
+    const market = await monaco.create3WayMarket([2.0]);
+    await market.airdropProvider(10000);
+
+    const orderPk = await createOrderUiStake(
+      monaco.getRawProgram(),
+      market.pk,
+      0,
+      true,
+      2.0,
+      10,
+      null,
+      6,
+    );
+    const orderAccount = (await monaco.program.account.order.fetch(
+      orderPk.data.orderPk,
+    )) as Order;
+    assert.equal(orderAccount.stake.toNumber(), 10000000);
+  });
 });

@@ -22,6 +22,7 @@ Create an order account on the Monaco protocol using a UI stake value, the clien
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
+*   `mintDecimal` **[number][7]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
 
@@ -32,7 +33,8 @@ const forOutcome = true
 const price = 1.5
 const stake = 20
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk)
+const mintDecimal = 6
+const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
 ```
 
 Returns **CreateOrderResponse** derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
@@ -58,7 +60,7 @@ const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
-const stake = 20,000,000,000
+const stake = 20_000_000_000
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
 ```

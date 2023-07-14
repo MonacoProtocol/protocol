@@ -82,36 +82,42 @@ export async function getMarketAccounts(
  * @param program {program} anchor program initialized by the consuming client
  * @param stake {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
  * @param marketPk {PublicKey} publicKey of a market
+ * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {BN} ui stake adjusted for the market token decimal places
  *
  * @example
  *
  * const uiStake = await uiStakeToInteger(20, new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D'), program)
- * // returns 20,000,000,000 represented as a BN for a token with 9 decimals
+ * // returns 20_000_000_000 represented as a BN for a token with 9 decimals
  */
 export async function uiStakeToInteger(
   program: Program,
   stake: number,
   marketPk: PublicKey,
+  mintDecimals?: number,
 ): Promise<ClientResponse<StakeInteger>> {
   const response = new ResponseFactory({});
-  const market = await getMarket(program, marketPk);
 
-  if (!market.success) {
-    response.addErrors(market.errors);
-    return response.body;
-  }
+  if (!mintDecimals) {
+    const market = await getMarket(program, marketPk);
 
-  const marketTokenPk = new PublicKey(market.data.account.mintAccount);
-  const mintInfo = await getMintInfo(program, marketTokenPk);
+    if (!market.success) {
+      response.addErrors(market.errors);
+      return response.body;
+    }
 
-  if (!mintInfo.success) {
-    response.addErrors(mintInfo.errors);
-    return response.body;
+    const marketTokenPk = new PublicKey(market.data.account.mintAccount);
+    const mintInfo = await getMintInfo(program, marketTokenPk);
+
+    if (!mintInfo.success) {
+      response.addErrors(mintInfo.errors);
+      return response.body;
+    }
+    mintDecimals = mintInfo.data.decimals;
   }
 
   const stakeInteger = new BN(
-    new Big(stake).times(10 ** mintInfo.data.decimals).toNumber(),
+    new Big(stake).times(10 ** mintDecimals).toNumber(),
   );
   response.addResponseData({
     stakeInteger: stakeInteger,
