@@ -82,7 +82,7 @@ export async function createOrderUiStake(
  * const marketOutcomeIndex = 0
  * const forOutcome = true
  * const price = 1.5
- * const stake = 20,000,000,000
+ * const stake = 20_000_000_000
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
  */

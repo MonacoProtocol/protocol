@@ -82,12 +82,13 @@ export async function getMarketAccounts(
  * @param program {program} anchor program initialized by the consuming client
  * @param stake {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
  * @param marketPk {PublicKey} publicKey of a market
+ * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {BN} ui stake adjusted for the market token decimal places
  *
  * @example
  *
  * const uiStake = await uiStakeToInteger(20, new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D'), program)
- * // returns 20,000,000,000 represented as a BN for a token with 9 decimals
+ * // returns 20_000_000_000 represented as a BN for a token with 9 decimals
  */
 export async function uiStakeToInteger(
   program: Program,

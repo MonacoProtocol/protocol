@@ -52,12 +52,13 @@ For the provided stake and market, get a BN representation of the stake adjusted
 *   `stake` **[number][17]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
 *   `mintDecimals` **[number][17]?**&#x20;
+*   `mintDecimal`  {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
 
 ```javascript
 const uiStake = await uiStakeToInteger(20, new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D'), program)
-// returns 20,000,000,000 represented as a BN for a token with 9 decimals
+// returns 20_000_000_000 represented as a BN for a token with 9 decimals
 ```
 
 Returns **BN** ui stake adjusted for the market token decimal places
