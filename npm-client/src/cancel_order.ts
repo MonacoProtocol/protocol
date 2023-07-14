@@ -24,6 +24,7 @@ import { NoCancellableOrdersFound } from "../types";
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param orderPk {PublicKey} publicKey of the order to cancel
+ * @param mintPk {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
  * @returns {CancelOrderResponse} the provided order publicKey and the transactionId for the request, this ID can be used to confirm the success of the transaction
  *
  * @example
@@ -34,6 +35,7 @@ import { NoCancellableOrdersFound } from "../types";
 export async function cancelOrder(
   program: Program,
   orderPk: PublicKey,
+  mintPk?: PublicKey,
 ): Promise<ClientResponse<CancelOrderResponse>> {
   const response = new ResponseFactory({} as CancelOrderResponse);
 
@@ -41,9 +43,15 @@ export async function cancelOrder(
   const orderResponse = await getOrder(program, orderPk);
   const order = orderResponse.data.account;
 
-  const marketResponse = await getMarket(program, order.market);
-  const market = marketResponse.data.account;
-  const marketTokenPk = new PublicKey(market.mintAccount);
+  if (!mintPk) {
+    const marketResponse = await getMarket(program, order.market);
+    if (!marketResponse.success) {
+      response.addErrors(marketResponse.errors);
+      return response.body;
+    }
+    const market = marketResponse.data.account;
+    mintPk = new PublicKey(market.mintAccount);
+  }
 
   const [
     marketPositionPda,
@@ -60,7 +68,7 @@ export async function cancelOrder(
       order.forOutcome,
     ),
     findEscrowPda(program, order.market),
-    getWalletTokenAccount(program, marketTokenPk),
+    getWalletTokenAccount(program, mintPk),
   ]);
 
   const tnxID = await program.methods
@@ -73,7 +81,7 @@ export async function cancelOrder(
       marketMatchingPool: marketMatchingPool.data.pda,
       market: order.market,
       marketEscrow: escrowPda.data.pda,
-      mint: market.mintAccount,
+      mint: mintPk,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .rpc()
