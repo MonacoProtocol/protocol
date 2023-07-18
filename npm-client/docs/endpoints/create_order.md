@@ -17,7 +17,7 @@ Create an order account on the Monaco protocol using a UI stake value, the clien
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to create the order for
-*   `marketOutcomeIndex` **[number][7]** {number} index of the chosen outcome
+*   `marketOutcomeIndex` **[number][7]** {number} index of the chosen outcome, the outcome index should be valid for the market (i.e. < marketOutcomesCount)
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
@@ -47,7 +47,7 @@ Create an order account on the Monaco protocol using the raw token value for the
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to create the order for
-*   `marketOutcomeIndex` **[number][7]** {number} index of the chosen outcome
+*   `marketOutcomeIndex` **[number][7]** {number} index of the chosen outcome, the outcome index should be valid for the market (i.e. < marketOutcomesCount)
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {BN} raw token value of the order taking into account the decimal amount of the token associated with the market

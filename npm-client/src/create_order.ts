@@ -17,7 +17,7 @@ import { buildOrderInstruction } from "./create_order_instruction";
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for
- * @param marketOutcomeIndex {number} index of the chosen outcome
+ * @param marketOutcomeIndex {number} index of the chosen outcome, the outcome index should be valid for the market (i.e. < marketOutcomesCount)
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
@@ -75,7 +75,7 @@ export async function createOrderUiStake(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for
- * @param marketOutcomeIndex {number} index of the chosen outcome
+ * @param marketOutcomeIndex {number} index of the chosen outcome, the outcome index should be valid for the market (i.e. < marketOutcomesCount)
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
