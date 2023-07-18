@@ -7,6 +7,7 @@ import {
   cancelOrdersForMarket,
 } from "../../npm-client/src/cancel_order";
 import { monaco } from "../util/wrappers";
+import { getOrder } from "../../npm-client/src";
 
 // Order parameters
 const outcomeIndex = 1;
@@ -31,18 +32,20 @@ describe("NPM client", () => {
 
     const orderPk = orderResponse.data.orderPk;
 
-    await cancelOrderNpm(monaco.program as Program, orderPk);
+    const cancelOrder = await cancelOrderNpm(
+      monaco.program as Program,
+      orderPk,
+    );
+    assert(cancelOrder.success);
 
-    // check order was deleted
-    try {
-      await monaco.getOrder(orderPk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
-      );
-    }
+    await new Promise((e) => setTimeout(e, 1000));
+
+    const orderCheck = await getOrder(monaco.program as Program, orderPk);
+    assert(orderCheck.success === false);
+    assert(
+      orderCheck.errors[0] as unknown as string,
+      "Account does not exist or has no data " + orderPk,
+    );
   });
 
   it("cancel all orders for a market", async () => {
@@ -73,27 +76,28 @@ describe("NPM client", () => {
     const order1Pk = orderResponse1.data.orderPk;
     const order2Pk = orderResponse2.data.orderPk;
 
-    await cancelOrdersForMarket(monaco.program as Program, market.pk);
+    const cancelOrders = await cancelOrdersForMarket(
+      monaco.program as Program,
+      market.pk,
+    );
+    assert(cancelOrders.success);
 
-    // check order was deleted
-    try {
-      await monaco.getOrder(order1Pk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + order1Pk,
-      );
-    }
-    // check order was deleted
-    try {
-      await monaco.getOrder(order2Pk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + order2Pk,
-      );
-    }
+    await new Promise((e) => setTimeout(e, 1000));
+
+    const [orderCheck1, orderCheck2] = await Promise.all([
+      getOrder(monaco.program as Program, order1Pk),
+      getOrder(monaco.program as Program, order2Pk),
+    ]);
+
+    assert(orderCheck1.success === false);
+    assert(orderCheck2.success === false);
+    assert(
+      orderCheck1.errors[0] as unknown as string,
+      "Account does not exist or has no data " + order1Pk,
+    );
+    assert(
+      orderCheck2.errors[0] as unknown as string,
+      "Account does not exist or has no data " + order2Pk,
+    );
   });
 });
