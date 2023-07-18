@@ -1,5 +1,9 @@
-import { PublicKey } from "@solana/web3.js";
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 import { Big } from "big.js";
 import { getMarket } from "./markets";
@@ -201,4 +205,85 @@ export async function findProductPda(program: Program, productTitle: string) {
     program.programId,
   );
   return productPk;
+}
+
+type SignAndSendInstructionResponse = {
+  signature: web3.TransactionSignature;
+};
+
+/**
+ * Sign and send, as the provider authority, the given transaction instructions.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param instructions {TransactionInstruction[]} list of instruction for the transaction
+ * @param computerUnitLimit {number} optional limit on the number of compute units to be used by the transaction
+ * @returns {SignAndSendInstructionResponse} containing the signature of the transaction
+ *
+ * @example
+ *
+ * const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const computerUnitLimit = 1234567
+ * const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computerUnitLimit)
+ */
+export async function signAndSendInstructions(
+  program: Program,
+  instructions: TransactionInstruction[],
+  computerUnitLimit?: number,
+): Promise<ClientResponse<SignAndSendInstructionResponse>> {
+  const response = new ResponseFactory({} as SignAndSendInstructionResponse);
+  const provider = program.provider as AnchorProvider;
+
+  const transaction = new web3.Transaction();
+  instructions.forEach((instruction) => transaction.add(instruction));
+  if (computerUnitLimit)
+    transaction.add(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: computerUnitLimit }),
+    );
+
+  transaction.feePayer = provider.wallet.publicKey;
+  transaction.recentBlockhash = (
+    await provider.connection.getLatestBlockhash()
+  ).blockhash;
+  try {
+    const signature = await provider.connection.sendRawTransaction(
+      (await provider.wallet.signTransaction(transaction)).serialize(),
+    );
+    response.addResponseData({ signature });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+/**
+ * For the provided transaction signature, confirm the transaction.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param signature {string} signature of the transaction
+ * @returns {ClientResponse<unknown>} empty client response containing no data, only success state and errors
+ *
+ * @example
+ *
+ * const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const transaction = await signAndSendInstruction(program, orderInstruction.data.instruction)
+ * const confirmation = await confirmTransaction(program, transaction.data.signature);
+ */
+export async function confirmTransaction(
+  program: Program,
+  signature: string,
+): Promise<ClientResponse<unknown>> {
+  const response = new ResponseFactory({});
+  const provider = program.provider as AnchorProvider;
+  try {
+    const blockHash = await provider.connection.getLatestBlockhash();
+    const confirmRequest = {
+      blockhash: blockHash.blockhash,
+      lastValidBlockHeight: blockHash.lastValidBlockHeight,
+      signature: signature,
+    };
+    await provider.connection.confirmTransaction(confirmRequest);
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
 }

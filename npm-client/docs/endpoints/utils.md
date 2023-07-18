@@ -17,6 +17,12 @@
 *   [findProductPda][13]
     *   [Parameters][14]
     *   [Examples][15]
+*   [signAndSendInstructions][16]
+    *   [Parameters][17]
+    *   [Examples][18]
+*   [confirmTransaction][19]
+    *   [Parameters][20]
+    *   [Examples][21]
 
 ## getMarketAccounts
 
@@ -26,9 +32,9 @@ For the provided market, outcome, price and forOutcome condition - return all th
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `forOutcome` **[boolean][16]** {boolean} bool representing for or against a market outcome
-*   `marketOutcomeIndex` **[number][17]** {number} index representing the chosen outcome of a market
-*   `price` **[number][17]** {number} price for order
+*   `forOutcome` **[boolean][22]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][23]** {number} index representing the chosen outcome of a market
+*   `price` **[number][23]** {number} price for order
 
 ### Examples
 
@@ -40,7 +46,7 @@ const price = 5.9
 const marketAccounts = await getMarketAccounts(program, marketPK, forOutcome, marketOutcomeIndex, price)
 ```
 
-Returns **[Promise][18]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
+Returns **[Promise][24]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
 
 ## uiStakeToInteger
 
@@ -49,9 +55,9 @@ For the provided stake and market, get a BN representation of the stake adjusted
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `stake` **[number][17]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
+*   `stake` **[number][23]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `mintDecimals` **[number][17]?**&#x20;
+*   `mintDecimals` **[number][23]?**&#x20;
 *   `mintDecimal`  {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
@@ -106,7 +112,7 @@ For the provided product title, get the pda for the Product account
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `productTitle` **[string][19]** title of product
+*   `productTitle` **[string][25]** title of product
 
 ### Examples
 
@@ -114,7 +120,46 @@ For the provided product title, get the pda for the Product account
 const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
 ```
 
-Returns **[Promise][18]\<PublicKey>**&#x20;
+Returns **[Promise][24]\<PublicKey>**&#x20;
+
+## signAndSendInstructions
+
+Sign and send, as the provider authority, the given transaction instructions.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `instructions` **[Array][26]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `computerUnitLimit` **[number][23]?** {number} optional limit on the number of compute units to be used by the transaction
+
+### Examples
+
+```javascript
+const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const computerUnitLimit = 1234567
+const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computerUnitLimit)
+```
+
+Returns **SignAndSendInstructionResponse** containing the signature of the transaction
+
+## confirmTransaction
+
+For the provided transaction signature, confirm the transaction.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `signature` **[string][25]** {string} signature of the transaction
+
+### Examples
+
+```javascript
+const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const transaction = await signAndSendInstruction(program, orderInstruction.data.instruction)
+const confirmation = await confirmTransaction(program, transaction.data.signature);
+```
+
+Returns **ClientResponse\<unknown>** empty client response containing no data, only success state and errors
 
 [1]: #getmarketaccounts
 
@@ -146,10 +191,24 @@ Returns **[Promise][18]\<PublicKey>**&#x20;
 
 [15]: #examples-4
 
-[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[16]: #signandsendinstructions
 
-[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[17]: #parameters-5
 
-[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[18]: #examples-5
 
-[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[19]: #confirmtransaction
+
+[20]: #parameters-6
+
+[21]: #examples-6
+
+[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

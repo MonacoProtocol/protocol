@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
 
@@ -34,6 +34,15 @@ export type Order = {
   productCommissionRate: number;
 };
 
+export type OrderInstructionResponse = {
+  orderPk: PublicKey;
+  instruction: TransactionInstruction;
+};
+
+export type OrderInstructionsResponse = {
+  orderInstructions: OrderInstructionResponse[];
+};
+
 export type PendingOrders = {
   pendingOrders: GetAccount<Order>[];
 };
@@ -42,14 +51,9 @@ export type OrderAccounts = {
   orderAccounts: GetAccount<Order>[];
 };
 
-export type CreateOrderResponse = {
+export type OrderTransactionResponse = {
   orderPk: PublicKey;
   tnxID: string | void;
-};
-
-export type CancelOrderResponse = {
-  orderPk: PublicKey;
-  tnxID: string;
 };
 
 export type CancelOrdersResponse = {

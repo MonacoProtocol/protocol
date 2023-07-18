@@ -29,7 +29,7 @@ const orderPk = new PublicKey('Fy7WiqBy6MuWfnVjiPE8HQqkeLnyaLwBsk8cyyJ5WD8X')
 const cancelledOrder = await cancelOrder(program, orderPk)
 ```
 
-Returns **CancelOrderResponse** the provided order publicKey and the transactionId for the request, this ID can be used to confirm the success of the transaction
+Returns **OrderTransactionResponse** the provided order publicKey and the transactionId for the request, this ID can be used to confirm the success of the transaction
 
 ## cancelOrdersForMarket
 

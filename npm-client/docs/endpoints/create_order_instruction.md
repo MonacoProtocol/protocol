@@ -2,16 +2,16 @@
 
 ### Table of Contents
 
-*   [createOrderUiStake][1]
+*   [buildOrderInstructionUIStake][1]
     *   [Parameters][2]
     *   [Examples][3]
-*   [createOrder][4]
+*   [buildOrderInstruction][4]
     *   [Parameters][5]
     *   [Examples][6]
 
-## createOrderUiStake
+## buildOrderInstructionUIStake
 
-Create an order account on the Monaco protocol using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
+Constructs the instruction required to perform a create order transaction using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
 
 ### Parameters
 
@@ -22,7 +22,6 @@ Create an order account on the Monaco protocol using a UI stake value, the clien
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
-*   `mintDecimal` **[number][7]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
 
@@ -31,17 +30,16 @@ const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
-const stake = 20
+const stake = 20,000,000,000
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const mintDecimal = 6
-const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
+const instruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
 ```
 
-Returns **OrderTransactionResponse** derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
+Returns **OrderInstructionResponse** derived order publicKey and the instruction to perform a create order transaction
 
-## createOrder
+## buildOrderInstruction
 
-Create an order account on the Monaco protocol using the raw token value for the order stake.
+Constructs the instruction required to perform a create order transaction using the raw token value for the order stake.
 
 ### Parameters
 
@@ -60,20 +58,20 @@ const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
-const stake = 20_000_000_000
+const stake = 20,000,000,000
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
 ```
 
-Returns **OrderTransactionResponse** derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
+Returns **OrderInstructionResponse** derived order publicKey and the instruction to perform a create order transaction
 
-[1]: #createorderuistake
+[1]: #buildorderinstructionuistake
 
 [2]: #parameters
 
 [3]: #examples
 
-[4]: #createorder
+[4]: #buildorderinstruction
 
 [5]: #parameters-1
 

@@ -12,7 +12,7 @@ import {
 import assert from "assert";
 import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { Keypair, SystemProgram } from "@solana/web3.js";
+import { Keypair, SendTransactionError, SystemProgram } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   findOrderPda,
@@ -210,12 +210,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationStakePrecisionIsTooHigh");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(
-      thrownError.error.errorCode.code,
-      "CreationStakePrecisionIsTooHigh",
-    );
+    assert(containsError.includes(true));
   });
 
   it("Throws appropriate error when outcome index is out of bounds", async () => {
@@ -334,9 +334,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationMarketNotOpen");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationMarketNotOpen");
+    assert(containsError.includes(true));
   });
 
   it("is blocked when market suspended", async () => {
@@ -385,9 +388,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
-    assert.equal(thrownError.error.errorCode.code, "CreationMarketSuspended");
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationMarketSuspended");
+    });
     assert.equal(orderResponse.success, false);
+    assert(containsError.includes(true));
   });
 
   it("create order where order initializes matching pool", async () => {
@@ -516,9 +522,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("purchaser uses different token account for the same mint", async () => {
