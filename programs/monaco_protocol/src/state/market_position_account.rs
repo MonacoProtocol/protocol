@@ -81,12 +81,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn test_total_exposure_overflow() {
         let mut market_position: MarketPosition = MarketPosition::default();
-        let loss = (u64::MAX as i128).checked_sub(1).unwrap();
+        let loss = (u64::MAX as i128)
+            .checked_neg()
+            .unwrap()
+            .checked_sub(1)
+            .unwrap();
+
         market_position.unmatched_exposures = vec![0, 0, 0];
         market_position.market_outcome_sums = vec![0, 0, loss];
 
-        assert_eq!(0, market_position.total_exposure());
+        market_position.total_exposure();
     }
 }
