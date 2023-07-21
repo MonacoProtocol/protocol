@@ -51,7 +51,7 @@ impl PaymentQueue {
         PaymentQueue {
             front: 0,
             len: 0,
-            items: vec![PaymentInfo::default(); size],
+            items: vec![PaymentInfo::default(); size.min(u32::MAX as usize)],
         }
     }
 

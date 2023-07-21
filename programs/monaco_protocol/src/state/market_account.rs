@@ -207,7 +207,7 @@ impl Cirque {
         Cirque {
             front: 0,
             len: 0,
-            items: vec![QueueItem::default(); size],
+            items: vec![QueueItem::default(); size.min(u32::MAX as usize)],
         }
     }
 
