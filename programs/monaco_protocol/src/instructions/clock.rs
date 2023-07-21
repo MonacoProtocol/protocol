@@ -1,4 +1,6 @@
-pub fn current_timestamp() -> i64 {
+use solana_program::clock::UnixTimestamp;
+
+pub fn current_timestamp() -> UnixTimestamp {
     #[cfg(not(test))]
     {
         use solana_program::clock::Clock;
@@ -11,6 +13,7 @@ pub fn current_timestamp() -> i64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() as i64
+            .as_secs()
+            .min(UnixTimestamp::MAX as u64) as UnixTimestamp
     }
 }
