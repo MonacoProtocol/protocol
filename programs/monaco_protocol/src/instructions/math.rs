@@ -1,5 +1,7 @@
 use std::ops::{Div, Mul, Sub};
 
+use crate::error::CoreError;
+use anchor_lang::{require, Result};
 use rust_decimal::prelude::{FromPrimitive, One, ToPrimitive};
 use rust_decimal::Decimal;
 
@@ -25,10 +27,13 @@ pub fn calculate_for_payout(stake: u64, price: f64) -> u64 {
     Decimal::from(stake).mul(price_decimal).to_u64().unwrap()
 }
 
-pub fn stake_precision_is_within_range(stake: u64, decimal_limit: u8) -> bool {
-    Decimal::new(stake as i64, decimal_limit as u32)
-        .fract()
-        .is_zero()
+pub fn stake_precision_is_within_range(stake: u64, decimal_limit: u8) -> Result<bool> {
+    let mut stake_decimal = Decimal::from_u64(stake).unwrap();
+    require!(
+        stake_decimal.set_scale(decimal_limit as u32).is_ok(),
+        CoreError::ArithmeticError
+    );
+    Ok(stake_decimal.fract().is_zero())
 }
 
 pub fn calculate_commission(commission_rate: f64, profit: i128) -> u64 {
@@ -94,18 +99,22 @@ mod tests {
 
     #[test]
     fn test_stake_precision_is_within_range_failure() {
-        assert!(!stake_precision_is_within_range(1, 3));
-        assert!(!stake_precision_is_within_range(1001, 3));
-        assert!(!stake_precision_is_within_range(1010, 3));
-        assert!(!stake_precision_is_within_range(1100, 3));
+        assert!(!stake_precision_is_within_range(1, 3).unwrap());
+        assert!(!stake_precision_is_within_range(1001, 3).unwrap());
+        assert!(!stake_precision_is_within_range(1010, 3).unwrap());
+        assert!(!stake_precision_is_within_range(1100, 3).unwrap());
+        assert!(!stake_precision_is_within_range(u64::MAX, 3).unwrap());
     }
 
     #[test]
     fn test_stake_precision_is_within_range_success() {
-        assert!(stake_precision_is_within_range(0, 3));
-        assert!(stake_precision_is_within_range(1000, 3));
-        assert!(stake_precision_is_within_range(10000, 3));
-        assert!(stake_precision_is_within_range(100000, 3));
+        assert!(stake_precision_is_within_range(0, 3).unwrap());
+        assert!(stake_precision_is_within_range(1000, 3).unwrap());
+        assert!(stake_precision_is_within_range(10000, 3).unwrap());
+        assert!(stake_precision_is_within_range(100000, 3).unwrap());
+
+        let test_case = (u64::MAX / 1000) * 1000;
+        assert!(stake_precision_is_within_range(test_case, 3).unwrap());
     }
 
     #[test]
