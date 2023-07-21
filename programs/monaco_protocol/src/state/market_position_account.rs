@@ -1,5 +1,6 @@
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
+use std::convert::TryFrom;
 
 #[account]
 #[derive(Default)]
@@ -41,12 +42,13 @@ impl MarketPosition {
     }
 
     pub fn total_exposure(&self) -> u64 {
-        self.unmatched_exposures
+        self.market_outcome_sums
             .iter()
-            .zip(&self.market_outcome_sums)
-            .map(|(unmatched_exposure, market_outcome_sum)| {
-                let postmatch_exposure =
-                    (*market_outcome_sum).min(0_i128).checked_neg().unwrap() as u64;
+            .map(|market_outcome_sum| {
+                u64::try_from(market_outcome_sum.min(&0_i128).checked_neg().unwrap()).unwrap()
+            })
+            .zip(&self.unmatched_exposures)
+            .map(|(postmatch_exposure, unmatched_exposure)| {
                 unmatched_exposure.checked_add(postmatch_exposure).unwrap()
             })
             .max_by(|x, y| x.cmp(y))
