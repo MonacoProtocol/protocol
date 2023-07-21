@@ -55,3 +55,38 @@ impl MarketPosition {
             .unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Market account tests
+
+    #[test]
+    fn test_total_exposure_empty() {
+        let mut market_position: MarketPosition = MarketPosition::default();
+        market_position.unmatched_exposures = vec![0, 0, 0];
+        market_position.market_outcome_sums = vec![0, 0, 0];
+
+        assert_eq!(0, market_position.total_exposure());
+    }
+
+    #[test]
+    fn test_total_exposure_some() {
+        let mut market_position: MarketPosition = MarketPosition::default();
+        market_position.unmatched_exposures = vec![10, 10, 10];
+        market_position.market_outcome_sums = vec![20, -10, -10]; // match of 10 @ 3.0
+
+        assert_eq!(20, market_position.total_exposure());
+    }
+
+    #[test]
+    fn test_total_exposure_overflow() {
+        let mut market_position: MarketPosition = MarketPosition::default();
+        let loss = (u64::MAX as i128).checked_sub(1).unwrap();
+        market_position.unmatched_exposures = vec![0, 0, 0];
+        market_position.market_outcome_sums = vec![0, 0, loss];
+
+        assert_eq!(0, market_position.total_exposure());
+    }
+}
