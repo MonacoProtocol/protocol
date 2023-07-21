@@ -9,7 +9,7 @@ pub struct MarketPaymentsQueue {
 }
 
 impl MarketPaymentsQueue {
-    pub const QUEUE_LENGTH: usize = 100;
+    pub const QUEUE_LENGTH: u32 = 100;
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + PUB_KEY_SIZE
         + PaymentQueue::size_for(MarketPaymentsQueue::QUEUE_LENGTH);
@@ -42,16 +42,16 @@ pub struct PaymentQueue {
 }
 
 impl PaymentQueue {
-    pub const fn size_for(length: usize) -> usize {
+    pub const fn size_for(length: u32) -> usize {
         (U32_SIZE * 2) + // front and len
-            vec_size(PaymentInfo::SIZE, length) // items
+            vec_size(PaymentInfo::SIZE, length as usize) // items
     }
 
-    pub fn new(size: usize) -> PaymentQueue {
+    pub fn new(size: u32) -> PaymentQueue {
         PaymentQueue {
             front: 0,
             len: 0,
-            items: vec![PaymentInfo::default(); size.min(u32::MAX as usize)],
+            items: vec![PaymentInfo::default(); size as usize],
         }
     }
 

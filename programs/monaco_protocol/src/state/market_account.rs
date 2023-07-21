@@ -127,7 +127,7 @@ pub struct MarketMatchingPool {
 }
 
 impl MarketMatchingPool {
-    pub const QUEUE_LENGTH: usize = 100;
+    pub const QUEUE_LENGTH: u32 = 100;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
@@ -198,16 +198,16 @@ pub struct Cirque {
 }
 
 impl Cirque {
-    pub const fn size_for(length: usize) -> usize {
+    pub const fn size_for(length: u32) -> usize {
         (U32_SIZE  * 2) + // front and len
-        vec_size(QueueItem::SIZE, length) // items
+        vec_size(QueueItem::SIZE, length as usize) // items
     }
 
-    pub fn new(size: usize) -> Cirque {
+    pub fn new(size: u32) -> Cirque {
         Cirque {
             front: 0,
             len: 0,
-            items: vec![QueueItem::default(); size.min(u32::MAX as usize)],
+            items: vec![QueueItem::default(); size as usize],
         }
     }
 
@@ -566,8 +566,8 @@ mod tests {
 
             assert_eq!(item_to_remove.order, result.unwrap().order);
             assert_eq!(4, queue.len());
-            assert_eq!(i, queue.back() as usize);
-            assert_eq!((i + 1) % queue_size, queue.front as usize);
+            assert_eq!(i, queue.back());
+            assert_eq!((i + 1) % queue_size, queue.front);
             assert_eq!(expected_keys, queue.items);
 
             queue.enqueue(item_to_remove);
@@ -1061,8 +1061,8 @@ mod tests {
         assert_eq!(expected_items, queue.items);
     }
 
-    fn generate_populated_queue(size: usize, enqueued_items: usize) -> Cirque {
-        let mut queue = Cirque::new(size as usize);
+    fn generate_populated_queue(size: u32, enqueued_items: u32) -> Cirque {
+        let mut queue = Cirque::new(size);
         for _ in 0..enqueued_items {
             queue.enqueue(QueueItem::new_unique());
         }
