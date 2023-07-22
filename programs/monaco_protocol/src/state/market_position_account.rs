@@ -70,7 +70,16 @@ mod total_exposure_tests {
     }
 
     #[test]
-    fn test_total_exposure_some() {
+    fn test_only_unmatched_exposures() {
+        let mut market_position: MarketPosition = MarketPosition::default();
+        market_position.unmatched_exposures = vec![10, 20, 30];
+        market_position.market_outcome_sums = vec![0, 0, 0];
+
+        assert_eq!(30, market_position.total_exposure());
+    }
+
+    #[test]
+    fn test_only_postmatch_exposures() {
         let mut market_position: MarketPosition = MarketPosition::default();
         market_position.unmatched_exposures = vec![0, 0, 0];
         market_position.market_outcome_sums = vec![20, -10, -10]; // match of 10 @ 3.0
@@ -79,17 +88,26 @@ mod total_exposure_tests {
     }
 
     #[test]
+    fn test_both_exposures() {
+        let mut market_position: MarketPosition = MarketPosition::default();
+        market_position.unmatched_exposures = vec![10, 20, 30];
+        market_position.market_outcome_sums = vec![20, -10, -10]; // match of 10 @ 3.0
+
+        assert_eq!(40, market_position.total_exposure());
+    }
+
+    #[test]
     #[should_panic]
     fn test_overflow() {
         let mut market_position: MarketPosition = MarketPosition::default();
-        let loss = (u64::MAX as i128)
+        let loss_bigger_than_u64 = (u64::MAX as i128)
             .checked_neg()
             .unwrap()
             .checked_sub(1)
             .unwrap();
 
         market_position.unmatched_exposures = vec![0, 0, 0];
-        market_position.market_outcome_sums = vec![0, 0, loss];
+        market_position.market_outcome_sums = vec![0, 0, loss_bigger_than_u64];
 
         market_position.total_exposure();
     }
