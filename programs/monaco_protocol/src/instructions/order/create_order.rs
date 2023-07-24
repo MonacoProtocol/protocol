@@ -69,8 +69,10 @@ fn initialize_order(
     );
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
+    let stake_precision_check_result =
+        stake_precision_is_within_range(data.stake, market.decimal_limit)?;
     require!(
-        stake_precision_is_within_range(data.stake, market.decimal_limit),
+        stake_precision_check_result,
         CoreError::CreationStakePrecisionIsTooHigh
     );
     require!(
