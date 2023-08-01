@@ -22,7 +22,7 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
-| 2023-MM-DD | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2023-08-01 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-07-06 | [0.10.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-06-26 | [0.10.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-05-26 | [0.9.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.9.0)   | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
