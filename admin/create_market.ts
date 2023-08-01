@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import {
   createMarketWithOutcomesAndPriceLadder as npmCreateMarket,
@@ -6,6 +6,7 @@ import {
   MarketType,
 } from "../npm-admin-client/src/";
 import { getProtocolProgram } from "./util";
+import { Markets, MarketStatusFilter } from "../npm-client";
 
 export async function create_market() {
   const protocolProgram = await getProtocolProgram();
@@ -52,4 +53,26 @@ export function print_market() {
 async function get_market(marketPK: PublicKey) {
   const program = await getProtocolProgram();
   return await program.account.market.fetch(marketPK);
+}
+
+export async function getMarketsByStatus() {
+  const program = await getProtocolProgram();
+  const query = Markets.marketQuery(program);
+  const result = { totals: {}, pks: {} };
+  let total = 0;
+  for (const status in MarketStatusFilter) {
+    if (!isNaN(parseInt(status))) continue;
+    const marketPksWithStatus = (
+      await query
+        .filterByStatus(
+          MarketStatusFilter[status as keyof typeof MarketStatusFilter],
+        )
+        .fetchPublicKeys()
+    ).data.publicKeys;
+    result.totals[status] = marketPksWithStatus.length;
+    result.pks[status] = marketPksWithStatus;
+    total += result.totals[status];
+  }
+  result.totals["total"] = total;
+  console.log(JSON.stringify(result, null, 2));
 }

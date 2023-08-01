@@ -1,5 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
-import { create_market, print_market } from "./create_market";
+import {
+  create_market,
+  getMarketsByStatus,
+  print_market,
+} from "./create_market";
 import { create_order } from "./create_order";
 import {
   openMarket,
@@ -39,6 +43,9 @@ switch (script) {
     break;
   case "getAllMarkets":
     getAllMarkets();
+    break;
+  case "getMarketsByStatus":
+    getMarketsByStatus();
     break;
   case "create_market":
     create_market();
