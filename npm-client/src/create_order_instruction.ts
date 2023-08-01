@@ -48,7 +48,7 @@ export async function buildOrderInstructionUIStake(
     marketOutcomeIndex,
     forOutcome,
     price,
-    stakeInteger,
+    stakeInteger.data.stakeInteger,
     productPk,
   );
 }

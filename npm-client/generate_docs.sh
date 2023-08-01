@@ -39,6 +39,7 @@ declare -a types=(
     "protocol"
     "trade"
     "wallet_tokens"
+    "transactions"
 )
 
 npm run build

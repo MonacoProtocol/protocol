@@ -8,3 +8,4 @@ export * from "./matching_pool";
 export * from "./wallet_tokens";
 export * from "./protocol";
 export * from "./trade";
+export * from "./transactions";

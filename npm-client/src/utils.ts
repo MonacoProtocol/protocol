@@ -15,8 +15,10 @@ import {
   ResponseFactory,
   FindPdaResponse,
   StakeInteger,
+  SignAndSendInstructionsResponse,
+  SignAndSendInstructionsBatchResponse,
+  MarketAccountsForCreateOrder,
 } from "../types";
-import { MarketAccountsForCreateOrder } from "../types";
 
 /**
  * For the provided market, outcome, price and forOutcome condition - return all the necessary PDAs and account information required for order creation.
@@ -207,37 +209,33 @@ export async function findProductPda(program: Program, productTitle: string) {
   return productPk;
 }
 
-type SignAndSendInstructionResponse = {
-  signature: web3.TransactionSignature;
-};
-
 /**
  * Sign and send, as the provider authority, the given transaction instructions.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param instructions {TransactionInstruction[]} list of instruction for the transaction
- * @param computerUnitLimit {number} optional limit on the number of compute units to be used by the transaction
- * @returns {SignAndSendInstructionResponse} containing the signature of the transaction
+ * @param computeUnitLimit {number} optional limit on the number of compute units to be used by the transaction
+ * @returns {SignAndSendInstructionsResponse} containing the signature of the transaction
  *
  * @example
  *
  * const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
- * const computerUnitLimit = 1234567
- * const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computerUnitLimit)
+ * const computeUnitLimit = 1400000
+ * const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computeUnitLimit)
  */
 export async function signAndSendInstructions(
   program: Program,
   instructions: TransactionInstruction[],
-  computerUnitLimit?: number,
-): Promise<ClientResponse<SignAndSendInstructionResponse>> {
-  const response = new ResponseFactory({} as SignAndSendInstructionResponse);
+  computeUnitLimit?: number,
+): Promise<ClientResponse<SignAndSendInstructionsResponse>> {
+  const response = new ResponseFactory({} as SignAndSendInstructionsResponse);
   const provider = program.provider as AnchorProvider;
 
   const transaction = new web3.Transaction();
   instructions.forEach((instruction) => transaction.add(instruction));
-  if (computerUnitLimit)
+  if (computeUnitLimit)
     transaction.add(
-      ComputeBudgetProgram.setComputeUnitLimit({ units: computerUnitLimit }),
+      ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitLimit }),
     );
 
   transaction.feePayer = provider.wallet.publicKey;
@@ -252,6 +250,59 @@ export async function signAndSendInstructions(
   } catch (e) {
     response.addError(e);
   }
+  return response.body;
+}
+
+/**
+ * Sign and send, as the provider authority, the given transaction instructions in the provided batch sizes.
+ *
+ * Note: batches can be optimised for size by ensuring that instructions have commonality among accounts (same walletPk, same marketPk, same marketMatchingPoolPk, etc.)
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param instructions {TransactionInstruction[]} list of instruction for the transaction
+ * @param batchSize {number} number of instructions to be included in each transaction
+ * @param computeUnitLimit {number} optional limit on the number of compute units to be used by the transaction
+ * @returns {SignAndSendInstructionsBatchResponse} containing the signature of the transaction
+ * @returns
+ *
+ * @example
+ *
+ * const orderInstruction1 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * ...
+ * const orderInstruction20 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const batchSize = 5
+ * const computeUnitLimit = 1400000
+ * const transactions = await signAndSendInstructionsBatch(program, [orderInstruction1.data.instruction, ..., orderInstruction20.data.instruction], batchSize, computeUnitLimit)
+ */
+export async function signAndSendInstructionsBatch(
+  program: Program,
+  instructions: TransactionInstruction[],
+  batchSize: number,
+  computeUnitLimit?: number,
+): Promise<ClientResponse<SignAndSendInstructionsBatchResponse>> {
+  const response = new ResponseFactory(
+    {} as SignAndSendInstructionsBatchResponse,
+  );
+  const signatures = [] as string[];
+  const failedInstructions = [] as TransactionInstruction[];
+
+  for (let i = 0; i < instructions.length; i += batchSize) {
+    const slicedInstructions = instructions.slice(i, i + batchSize);
+    const send = await signAndSendInstructions(
+      program,
+      slicedInstructions,
+      computeUnitLimit,
+    );
+    if (send.success) {
+      signatures.push(send.data.signature);
+    } else {
+      response.addErrors(send.errors);
+      failedInstructions.push(...slicedInstructions);
+    }
+  }
+
+  response.addResponseData({ signatures, failedInstructions });
+
   return response.body;
 }
 

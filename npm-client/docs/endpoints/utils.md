@@ -20,9 +20,12 @@
 *   [signAndSendInstructions][16]
     *   [Parameters][17]
     *   [Examples][18]
-*   [confirmTransaction][19]
+*   [signAndSendInstructionsBatch][19]
     *   [Parameters][20]
     *   [Examples][21]
+*   [confirmTransaction][22]
+    *   [Parameters][23]
+    *   [Examples][24]
 
 ## getMarketAccounts
 
@@ -32,9 +35,9 @@ For the provided market, outcome, price and forOutcome condition - return all th
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `forOutcome` **[boolean][22]** {boolean} bool representing for or against a market outcome
-*   `marketOutcomeIndex` **[number][23]** {number} index representing the chosen outcome of a market
-*   `price` **[number][23]** {number} price for order
+*   `forOutcome` **[boolean][25]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][26]** {number} index representing the chosen outcome of a market
+*   `price` **[number][26]** {number} price for order
 
 ### Examples
 
@@ -46,7 +49,7 @@ const price = 5.9
 const marketAccounts = await getMarketAccounts(program, marketPK, forOutcome, marketOutcomeIndex, price)
 ```
 
-Returns **[Promise][24]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
+Returns **[Promise][27]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
 
 ## uiStakeToInteger
 
@@ -55,9 +58,9 @@ For the provided stake and market, get a BN representation of the stake adjusted
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `stake` **[number][23]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
+*   `stake` **[number][26]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `mintDecimals` **[number][23]?**&#x20;
+*   `mintDecimals` **[number][26]?**&#x20;
 *   `mintDecimal`  {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
@@ -112,7 +115,7 @@ For the provided product title, get the pda for the Product account
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `productTitle` **[string][25]** title of product
+*   `productTitle` **[string][28]** title of product
 
 ### Examples
 
@@ -120,7 +123,7 @@ For the provided product title, get the pda for the Product account
 const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
 ```
 
-Returns **[Promise][24]\<PublicKey>**&#x20;
+Returns **[Promise][27]\<PublicKey>**&#x20;
 
 ## signAndSendInstructions
 
@@ -129,18 +132,46 @@ Sign and send, as the provider authority, the given transaction instructions.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `instructions` **[Array][26]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
-*   `computerUnitLimit` **[number][23]?** {number} optional limit on the number of compute units to be used by the transaction
+*   `instructions` **[Array][29]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `computeUnitLimit` **[number][26]?** {number} optional limit on the number of compute units to be used by the transaction
 
 ### Examples
 
 ```javascript
 const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
-const computerUnitLimit = 1234567
-const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computerUnitLimit)
+const computeUnitLimit = 1400000
+const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computeUnitLimit)
 ```
 
-Returns **SignAndSendInstructionResponse** containing the signature of the transaction
+Returns **SignAndSendInstructionsResponse** containing the signature of the transaction
+
+## signAndSendInstructionsBatch
+
+Sign and send, as the provider authority, the given transaction instructions in the provided batch sizes.
+
+Note: batches can be optimised for size by ensuring that instructions have commonality among accounts (same walletPk, same marketPk, same marketMatchingPoolPk, etc.)
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `instructions` **[Array][29]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `batchSize` **[number][26]** {number} number of instructions to be included in each transaction
+*   `computeUnitLimit` **[number][26]?** {number} optional limit on the number of compute units to be used by the transaction
+
+### Examples
+
+```javascript
+const orderInstruction1 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+...
+const orderInstruction20 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const batchSize = 5
+const computeUnitLimit = 1400000
+const transactions = await signAndSendInstructionsBatch(program, [orderInstruction1.data.instruction, ..., orderInstruction20.data.instruction], batchSize, computeUnitLimit)
+```
+
+Returns **SignAndSendInstructionsBatchResponse** containing the signature of the transaction
+
+Returns **any**&#x20;
 
 ## confirmTransaction
 
@@ -149,7 +180,7 @@ For the provided transaction signature, confirm the transaction.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `signature` **[string][25]** {string} signature of the transaction
+*   `signature` **[string][28]** {string} signature of the transaction
 
 ### Examples
 
@@ -197,18 +228,24 @@ Returns **ClientResponse\<unknown>** empty client response containing no data, o
 
 [18]: #examples-5
 
-[19]: #confirmtransaction
+[19]: #signandsendinstructionsbatch
 
 [20]: #parameters-6
 
 [21]: #examples-6
 
-[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[22]: #confirmtransaction
 
-[23]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[23]: #parameters-7
 
-[24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[24]: #examples-7
 
-[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
