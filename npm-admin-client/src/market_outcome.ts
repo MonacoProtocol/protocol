@@ -4,12 +4,14 @@ import {
   OutcomeInitialisationsResponse,
   OutcomeInitialisationResponse,
   Operator,
-  ClientResponse,
-  ResponseFactory,
-  FindPdaResponse,
 } from "../types";
 import { confirmTransaction } from "./utils";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
+import {
+  ClientResponse,
+  FindPdaResponse,
+  ResponseFactory,
+} from "@monaco-protocol/client";
 
 /**
  * For the given market account, initialise an outcome account for the provided outcome.

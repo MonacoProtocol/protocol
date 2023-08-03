@@ -1,15 +1,17 @@
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { getMarketOutcomesByMarket } from "./market_helpers";
 import {
-  ClientResponse,
-  ResponseFactory,
-  GetAccount,
-  MarketOutcomeAccount,
   ValidateMarketResponse,
   ValidateMarketOutcomePriceLadder,
   ValidateMarketOutcomeTitles,
 } from "../types";
+import {
+  ClientResponse,
+  GetAccount,
+  MarketOutcomeAccount,
+  ResponseFactory,
+  getMarketOutcomesByMarket,
+} from "@monaco-protocol/client";
 
 /**
  * For the given market account, validate that all expected outcomes exist on that market and that all outcomes have the expected price ladder

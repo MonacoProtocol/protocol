@@ -5,11 +5,13 @@ import {
   AuthoriseOperatorResponse,
   AuthorisedOperatorsAccountResponse,
   CheckOperatorRolesResponse,
-  ClientResponse,
-  ResponseFactory,
-  FindPdaResponse,
 } from "../types";
 import { findPdaWithSeeds } from "./utils";
+import {
+  ClientResponse,
+  FindPdaResponse,
+  ResponseFactory,
+} from "@monaco-protocol/client";
 
 /**
  * Authorises the provided publicKey as a `MARKET` operator - program must be initialized an `ADMIN` operator

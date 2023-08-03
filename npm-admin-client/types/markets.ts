@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { MarketAccount, MarketOrderBehaviour } from "@monaco-protocol/client";
 
 export type CreateMarketResponse = {
   marketPk: PublicKey;
@@ -74,54 +74,7 @@ export type ValidateMarketResponse = {
   priceLadderValidation: ValidateMarketOutcomePriceLadder[];
 };
 
-// Duplicates from primary client
-
-export class MarketStatus {
-  initializing?: Record<string, never>;
-  open?: Record<string, never>;
-  locked?: Record<string, never>;
-  readyForSettlement?: Record<string, never>;
-  settled?: Record<string, never>;
-  readyToClose?: Record<string, never>;
-}
-
-export class MarketOrderBehaviour {
-  none?: Record<string, never>;
-  cancelUnmatched?: Record<string, never>;
-}
-
 export const MarketOrderBehaviourValue = {
   none: { none: {} } as MarketOrderBehaviour,
   cancelUnmatched: { cancelUnmatched: {} } as MarketOrderBehaviour,
-};
-
-export type MarketAccount = {
-  authority: BN;
-  decimalLimit: number;
-  escrowAccountBump: number;
-  eventAccount: PublicKey;
-  eventStartTimestamp: BN;
-  marketLockTimestamp: BN;
-  marketOutcomesCount: number;
-  marketSettleTimestamp?: BN;
-  marketStatus: MarketStatus;
-  marketType: string;
-  marketWinningOutcomeIndex?: number;
-  mintAccount: PublicKey;
-  published: boolean;
-  suspended: boolean;
-  title: string;
-  inplay: boolean;
-  inplayEnabled: boolean;
-  inplayDelay: number;
-  eventStartOrderBehaviour: MarketOrderBehaviour;
-  marketLockedOrderBehaviour: MarketOrderBehaviour;
-};
-
-export type EpochTimeStamp = number;
-
-export type PaymentInfo = {
-  from: PublicKey;
-  to: PublicKey;
-  amount: BN;
 };

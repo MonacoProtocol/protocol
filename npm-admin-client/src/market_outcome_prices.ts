@@ -6,11 +6,10 @@ import {
   BatchAddPricesToOutcomes,
   BatchAddPricesToOutcomesResponse,
   Operator,
-  ClientResponse,
-  ResponseFactory,
 } from "../types";
 import { findMarketOutcomePda } from "./market_outcome";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
+import { ClientResponse, ResponseFactory } from "@monaco-protocol/client";
 
 /**
  * For the given market and outcome index, add the provided prices to the price ladder for that outcome - program must be initialized by the `MARKET` operator that initialised the market
