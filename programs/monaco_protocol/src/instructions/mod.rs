@@ -10,6 +10,7 @@ pub(crate) mod market;
 pub(crate) mod market_position;
 pub(crate) mod matching;
 pub(crate) mod order;
+pub(crate) mod price_ladder;
 
 mod clock;
 mod math;

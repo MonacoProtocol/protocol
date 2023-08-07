@@ -2,7 +2,44 @@ import { PublicKey, SystemProgram } from "@solana/web3.js";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
 
-describe("Market: creation", () => {
+describe("Market: market outcome initialization", () => {
+  it("Success with price ladder account", async () => {
+    // create a new market
+    const market = await monaco.createMarket([], []);
+    const priceLadderPk = await monaco.createPriceLadder([1.001, 1.01, 1.1]);
+
+    const [marketOutcomePk, __] = await PublicKey.findProgramAddress(
+      [market.pk.toBuffer(), Buffer.from("0")],
+      monaco.program.programId,
+    );
+
+    await monaco.program.methods
+      .initializeMarketOutcome("EXTRA")
+      .accounts({
+        systemProgram: SystemProgram.programId,
+        outcome: marketOutcomePk,
+        priceLadder: priceLadderPk,
+        market: market.pk,
+        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    // check the state of the newly created account
+    const marketAccount = await monaco.fetchMarket(market.pk);
+    assert.deepEqual(marketAccount.marketOutcomesCount, 1);
+
+    const marketOutcome = await monaco.fetchMarketOutcome(marketOutcomePk);
+    assert.deepEqual(marketOutcome.index, 0);
+    assert.deepEqual(marketOutcome.title, "EXTRA");
+    assert.deepEqual(marketOutcome.priceLadder, []);
+    assert.equal(marketOutcome.prices.toString(), priceLadderPk.toString());
+  });
+
   it("Success", async () => {
     // create a new market
     const market = await monaco.createMarket(
@@ -26,6 +63,7 @@ describe("Market: creation", () => {
       .accounts({
         systemProgram: SystemProgram.programId,
         outcome: marketOutcomePk,
+        priceLadder: null,
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
@@ -70,6 +108,7 @@ describe("Market: creation", () => {
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
+          priceLadder: null,
           market: marketOther.pk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
           marketOperator: monaco.operatorPk,
@@ -122,6 +161,7 @@ describe("Market: creation", () => {
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
+          priceLadder: null,
           market: market.pk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
           marketOperator: monaco.operatorPk,
@@ -173,6 +213,7 @@ describe("Market: creation", () => {
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: marketOutcomePk,
+          priceLadder: null,
           market: market.pk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
           marketOperator: monaco.operatorPk,

@@ -19,20 +19,22 @@
 
 For the given market account, initialise an outcome account for the provided outcome.
 
-**Note** To add prices to an outcome use `batchAddPricesToOutcomePool`.
+**Note** To add prices to an outcome use `batchAddPricesToOutcomePool` (deprecated).
 
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
 *   `outcome` **[string][13]** {string} string representation of the outcome
+*   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the reusable price ladder to associate with the outcome - if null, the protocol's default price ladder will be used. Price ladders can be shared by multiple outcomes
 
 ### Examples
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const outcome = "Draw"
-const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome)
+const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
+const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome, priceLadderPk)
 ```
 
 Returns **OutcomeInitialisationResponse** the outcome provided, the pda for the outcome account and the transaction ID of the request
@@ -46,13 +48,15 @@ For the given market account, initialise outcome accounts for the provided outco
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
 *   `outcomes` **[Array][14]<[string][13]>** {string\[]} list of strings representing the market outcomes
+*   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
 
 ### Examples
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const outcomes = ["Monaco Protocol", "Draw"]
-const initialiseOutcomeRequest = await initialiseOutcomes(program, marketPk, outcomes)
+const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
+const initialiseOutcomeRequest = await initialiseOutcomes(program, marketPk, outcomes, priceLadderPk)
 ```
 
 Returns **OutcomeInitialisationsResponse** list of the outcomes provided, their pdas and the transaction IDs performed in the request

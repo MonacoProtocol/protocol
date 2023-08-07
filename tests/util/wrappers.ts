@@ -30,8 +30,11 @@ import {
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
-import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
-import console from "console";
+import {
+  createPriceLadderWithPrices,
+  findCommissionPaymentsQueuePda,
+  findPriceLadderPda,
+} from "../../npm-admin-client";
 
 const { SystemProgram } = anchor.web3;
 
@@ -60,6 +63,7 @@ export class Monaco {
 
   private marketAuthorisedOperatorsPk: PublicKey;
   private crankAuthorisedOperatorsPk: PublicKey;
+  private defaultPriceLadderPk: PublicKey;
 
   constructor(
     provider: anchor.AnchorProvider,
@@ -339,6 +343,7 @@ export class Monaco {
           .initializeMarketOutcome(outcomes[outcomeIndex])
           .accounts({
             outcome: outcomePks[outcomeIndex],
+            priceLadder: null,
             market: marketPdaResponse.data.pda,
             authorisedOperators: authorisedOperatorsPk,
             marketOperator:
@@ -415,6 +420,25 @@ export class Monaco {
       marketOperatorKeypair,
     );
     return bmarket;
+  }
+
+  async createPriceLadder(prices: number[]): Promise<PublicKey> {
+    const distinctSeed = JSON.stringify(prices);
+    const priceLadderPk = findPriceLadderPda(
+      this.program as Program,
+      JSON.stringify(prices),
+    ).data.pda;
+
+    const response = await createPriceLadderWithPrices(
+      this.program as Program,
+      priceLadderPk,
+      distinctSeed,
+      prices,
+    );
+    if (!response.success) {
+      throw response.errors[0];
+    }
+    return priceLadderPk;
   }
 }
 

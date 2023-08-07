@@ -13,15 +13,17 @@
     *   [data][9]
 *   [TransactionResponse][10]
     *   [Properties][11]
+*   [TransactionBatchResponse][12]
+    *   [Properties][13]
 
 ## ClientResponse
 
-Type: {success: [boolean][12], errors: [Array][13]<[object][14]>, data: T}
+Type: {success: [boolean][14], errors: [Array][15]<[object][16]>, data: T}
 
 ### Properties
 
-*   `success` **[boolean][12]**&#x20;
-*   `errors` **[Array][13]<[object][14]>**&#x20;
+*   `success` **[boolean][14]**&#x20;
+*   `errors` **[Array][15]<[object][16]>**&#x20;
 *   `data` **T**&#x20;
 
 ## FindPdaResponse
@@ -59,11 +61,11 @@ return response.body
 
 ### success
 
-Type: [boolean][12]
+Type: [boolean][14]
 
 ### errors
 
-Type: [Array][13]<[object][14]>
+Type: [Array][15]<[object][16]>
 
 ### data
 
@@ -73,11 +75,19 @@ Type: any
 
 The transaction ID returned by a successful request
 
-Type: {tnxId: [string][15]}
+Type: {tnxId: [string][17]}
 
 ### Properties
 
-*   `tnxId` **[string][15]**&#x20;
+*   `tnxId` **[string][17]**&#x20;
+
+## TransactionBatchResponse
+
+Type: {tnxIds: [Array][15]<[string][17]>}
+
+### Properties
+
+*   `tnxIds` **[Array][15]<[string][17]>**&#x20;
 
 [1]: #clientresponse
 
@@ -101,10 +111,14 @@ Type: {tnxId: [string][15]}
 
 [11]: #properties-2
 
-[12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[12]: #transactionbatchresponse
 
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[13]: #properties-3
 
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

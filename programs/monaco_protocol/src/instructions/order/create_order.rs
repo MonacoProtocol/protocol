@@ -11,7 +11,9 @@ use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
+use crate::state::price_ladder::{PriceLadder, DEFAULT_PRICES};
 
+#[allow(clippy::too_many_arguments)]
 pub fn create_order<'info>(
     order: &mut Account<Order>,
     market: &mut Account<Market>,
@@ -23,9 +25,18 @@ pub fn create_order<'info>(
     market_position: &mut Account<MarketPosition>,
     market_escrow: &Account<'info, TokenAccount>,
     market_outcome: &Account<MarketOutcome>,
+    price_ladder: &Option<Account<PriceLadder>>,
     data: OrderData,
 ) -> Result<()> {
-    initialize_order(order, market, purchaser, market_outcome, product, data)?;
+    initialize_order(
+        order,
+        market,
+        purchaser,
+        market_outcome,
+        price_ladder,
+        product,
+        data,
+    )?;
 
     // initialize market position if needed
     if market_position.purchaser == Pubkey::default() {
@@ -61,6 +72,7 @@ fn initialize_order(
     market: &Account<Market>,
     purchaser: &Signer,
     market_outcome: &Account<MarketOutcome>,
+    price_ladder: &Option<Account<PriceLadder>>,
     product: &Option<Account<Product>>,
     data: OrderData,
 ) -> Result<()> {
@@ -83,10 +95,28 @@ fn initialize_order(
         stake_precision_check_result,
         CoreError::CreationStakePrecisionIsTooHigh
     );
-    require!(
-        market_outcome.price_ladder.contains(&data.price),
-        CoreError::CreationInvalidPrice
-    );
+
+    // TODO only check against price ladder account once backwards compat. is removed
+    if market_outcome.price_ladder.is_empty() {
+        // No prices included on the outcome, use a PriceLadder or default prices
+        match price_ladder {
+            Some(price_ladder_account) => require!(
+                price_ladder_account.prices.is_empty()
+                    || price_ladder_account.prices.contains(&data.price),
+                CoreError::CreationInvalidPrice
+            ),
+            None => require!(
+                DEFAULT_PRICES.contains(&data.price),
+                CoreError::CreationInvalidPrice
+            ),
+        }
+    } else {
+        // Prices are included on the outcome, use those
+        require!(
+            market_outcome.price_ladder.contains(&data.price),
+            CoreError::CreationInvalidPrice
+        );
+    }
 
     // update the order account with data we have received from the caller
     order.market = market.key();

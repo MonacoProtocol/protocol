@@ -8,6 +8,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
 
 use crate::state::payments_queue::MarketPaymentsQueue;
+use crate::state::price_ladder::PriceLadder;
 use protocol_product::state::product::Product;
 
 #[derive(Accounts)]
@@ -136,6 +137,7 @@ pub struct CreateOrderV2<'info> {
         space = MarketMatchingPool::SIZE
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+
     #[account(
         mut,
         seeds = [
@@ -143,8 +145,12 @@ pub struct CreateOrderV2<'info> {
             data.market_outcome_index.to_string().as_ref(),
         ],
         bump,
+        constraint = market_outcome.prices.is_none() || (market_outcome.prices.is_some() && price_ladder.is_some() && market_outcome.prices.unwrap() == price_ladder.as_ref().unwrap().key()) @ CoreError::CreationInvalidPriceLadder
     )]
     pub market_outcome: Account<'info, MarketOutcome>,
+
+    pub price_ladder: Option<Account<'info, PriceLadder>>,
+
     #[account(
         mut,
         token::mint = market.mint_account,
@@ -547,6 +553,57 @@ pub struct CreateMarket<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(_distinct_seed: String, max_number_of_prices: u16)]
+pub struct CreatePriceLadder<'info> {
+    #[account(
+        init,
+        seeds = [
+            b"price_ladder".as_ref(),
+            authority.key().as_ref(),
+            _distinct_seed.as_ref()
+        ],
+        bump,
+        payer = authority,
+        space = PriceLadder::size_for(max_number_of_prices)
+    )]
+    pub price_ladder: Account<'info, PriceLadder>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdatePriceLadder<'info> {
+    #[account(mut, has_one = authority)]
+    pub price_ladder: Account<'info, PriceLadder>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(max_number_of_prices: u16)]
+pub struct UpdatePriceLadderSize<'info> {
+    #[account(
+        mut,
+        has_one = authority,
+        realloc = PriceLadder::size_for(max_number_of_prices),
+        realloc::zero = false,
+        realloc::payer = authority
+    )]
+    pub price_ladder: Account<'info, PriceLadder>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ClosePriceLadder<'info> {
+    #[account(mut, has_one = authority, close = authority)]
+    pub price_ladder: Account<'info, PriceLadder>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct InitializeMarketOutcome<'info> {
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -562,6 +619,9 @@ pub struct InitializeMarketOutcome<'info> {
         space =  MarketOutcome::SIZE
     )]
     pub outcome: Account<'info, MarketOutcome>,
+
+    pub price_ladder: Option<Account<'info, PriceLadder>>,
+
     #[account(mut)]
     pub market: Account<'info, Market>,
 

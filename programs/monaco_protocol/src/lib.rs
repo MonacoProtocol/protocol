@@ -48,6 +48,7 @@ pub mod monaco_protocol {
             &mut ctx.accounts.market_position,
             &ctx.accounts.market_escrow,
             &ctx.accounts.market_outcome,
+            &None,
             data,
         )
     }
@@ -68,6 +69,7 @@ pub mod monaco_protocol {
             &mut ctx.accounts.market_position,
             &ctx.accounts.market_escrow,
             &ctx.accounts.market_outcome,
+            &ctx.accounts.price_ladder,
             data,
         )
     }
@@ -212,6 +214,52 @@ pub mod monaco_protocol {
 
         instructions::matching::match_orders(&mut ctx)?;
 
+        Ok(())
+    }
+
+    pub fn create_price_ladder(
+        ctx: Context<CreatePriceLadder>,
+        _distinct_seed: String,
+        max_number_of_prices: u16,
+    ) -> Result<()> {
+        instructions::price_ladder::create_price_ladder(
+            &mut ctx.accounts.price_ladder,
+            max_number_of_prices,
+            &ctx.accounts.authority.key(),
+        )
+    }
+
+    pub fn add_prices_to_price_ladder(
+        ctx: Context<UpdatePriceLadder>,
+        prices_to_add: Vec<f64>,
+    ) -> Result<()> {
+        instructions::price_ladder::add_prices_to_price_ladder(
+            &mut ctx.accounts.price_ladder,
+            prices_to_add,
+        )
+    }
+
+    pub fn remove_prices_from_price_ladder(
+        ctx: Context<UpdatePriceLadder>,
+        prices_to_remove: Vec<f64>,
+    ) -> Result<()> {
+        instructions::price_ladder::remove_prices_from_price_ladder(
+            &mut ctx.accounts.price_ladder,
+            prices_to_remove,
+        )
+    }
+
+    pub fn increase_price_ladder_size(
+        ctx: Context<UpdatePriceLadderSize>,
+        max_number_of_prices: u16,
+    ) -> Result<()> {
+        instructions::price_ladder::increase_price_ladder_size(
+            &mut ctx.accounts.price_ladder,
+            max_number_of_prices,
+        )
+    }
+
+    pub fn close_price_ladder(_ctx: Context<ClosePriceLadder>) -> Result<()> {
         Ok(())
     }
 
