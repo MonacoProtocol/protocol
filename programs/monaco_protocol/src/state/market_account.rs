@@ -33,6 +33,9 @@ pub struct Market {
 
     pub title: String,
 
+    pub unsettled_accounts: u32,
+    pub unclosed_accounts: u32,
+
     pub escrow_account_bump: u8,
     pub event_start_timestamp: i64,
 }
@@ -57,7 +60,8 @@ impl Market {
         + U8_SIZE // inplay_order_delay
         + vec_size(CHAR_SIZE, Market::TITLE_MAX_LENGTH) // title
         + U8_SIZE // bump
-        + I64_SIZE; // event_start_timestamp
+        + I64_SIZE // event_start_timestamp
+        + U32_SIZE * 2; // unsettled_accounts + unclosed_accounts
 
     pub fn increment_market_outcomes_count(&mut self) -> Result<u16> {
         self.market_outcomes_count = self
