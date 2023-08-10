@@ -54,6 +54,7 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: false,
@@ -64,6 +65,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
         let time_in_future = 100;
         let now = 99;
@@ -85,6 +87,7 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: false,
@@ -95,6 +98,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
         let time_in_future = 100;
         let now = 101;
@@ -116,6 +120,7 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: false,
@@ -126,6 +131,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
         let time_in_future = 100;
         let now = 99;

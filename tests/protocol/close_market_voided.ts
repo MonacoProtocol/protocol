@@ -200,4 +200,36 @@ describe("Close market accounts (voided)", () => {
         assert.equal(e.error.errorCode.code, "CloseAccountMarketMismatch");
       });
   });
+
+  it("complete void: unclosed accounts", async () => {
+    const price = 2.0;
+    const marketOperator = await createWalletWithBalance(monaco.provider);
+    await authoriseMarketOperator(
+      monaco.getRawProgram(),
+      marketOperator.publicKey,
+    );
+    const market = await monaco.createMarket(
+      ["A", "B"],
+      [price],
+      marketOperator,
+    );
+
+    await market.open();
+    await market.voidMarket();
+
+    await monaco.program.methods
+      .completeMarketVoid()
+      .accounts({
+        market: market.pk,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        crankOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        assert.equal(
+          e.error.errorCode.code,
+          "MarketUnclosedAccountsCountNonZero",
+        );
+      });
+  });
 });

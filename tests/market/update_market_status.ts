@@ -89,6 +89,43 @@ describe("Market: update status", () => {
     assert.deepEqual(marketAccount.marketStatus, { settled: {} });
   });
 
+  it("complete market settlement: unclosed accounts", async () => {
+    // create a new market
+    const market = await monaco.create3WayMarket([4.2]);
+
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+    await market.forOrder(0, 1, 4.2, purchaser);
+
+    await monaco.program.methods
+      .settleMarket(1)
+      .accounts({
+        market: market.pk,
+        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    await monaco.program.methods
+      .completeMarketSettlement()
+      .accounts({
+        market: market.pk,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        crankOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => {
+        assert.equal(
+          e.error.errorCode.code,
+          "MarketUnsettledAccountsCountNonZero",
+        );
+      });
+  });
+
   it("Transfer market escrow surplus fails if market not settled", async () => {
     // create a new market and purchaser
     const [market, purchaser] = await Promise.all([

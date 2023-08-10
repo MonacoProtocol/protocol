@@ -102,6 +102,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -112,6 +113,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -150,6 +152,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -160,6 +163,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -198,6 +202,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -208,6 +213,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -246,6 +252,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -256,6 +263,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then

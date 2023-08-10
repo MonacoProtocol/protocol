@@ -1242,4 +1242,85 @@ mod tests {
         result1.liquidity_to_add = 20;
         assert_eq!(20, queue.items[1].liquidity_to_add);
     }
+
+    // test account count fields
+
+    #[test]
+    fn test_increment_unsettled_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unsettled_accounts_count);
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(2, market.unsettled_accounts_count);
+    }
+
+    #[test]
+    fn test_decrement_unsettled_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unsettled_accounts_count);
+
+        let result = market.decrement_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(0, market.unsettled_accounts_count);
+    }
+
+    #[test]
+    fn test_increment_unclosed_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unclosed_accounts_count);
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(2, market.unclosed_accounts_count);
+    }
+
+    #[test]
+    fn test_decrement_unclosed_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unclosed_accounts_count);
+
+        let result = market.decrement_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(0, market.unclosed_accounts_count);
+    }
+
+    fn test_market() -> Market {
+        Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: false,
+            inplay: false,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        }
+    }
 }
