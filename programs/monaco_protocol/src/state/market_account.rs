@@ -33,8 +33,8 @@ pub struct Market {
 
     pub title: String,
 
-    pub unsettled_accounts: u32,
-    pub unclosed_accounts: u32,
+    pub unsettled_accounts_count: u32,
+    pub unclosed_accounts_count: u32,
 
     pub escrow_account_bump: u8,
     pub event_start_timestamp: i64,
@@ -69,6 +69,50 @@ impl Market {
             .checked_add(1_u16)
             .ok_or(CoreError::ArithmeticError)?;
         Ok(self.market_outcomes_count)
+    }
+
+    pub fn increment_unsettled_accounts_count(&mut self) -> Result<u32> {
+        self.unsettled_accounts_count = self
+            .unsettled_accounts_count
+            .checked_add(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(self.unsettled_accounts_count)
+    }
+
+    pub fn decrement_unsettled_accounts_count(&mut self) -> Result<u32> {
+        self.unsettled_accounts_count = self
+            .unsettled_accounts_count
+            .checked_sub(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(self.unsettled_accounts_count)
+    }
+
+    pub fn increment_unclosed_accounts_count(&mut self) -> Result<u32> {
+        self.unclosed_accounts_count = self
+            .unclosed_accounts_count
+            .checked_add(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(self.unclosed_accounts_count)
+    }
+
+    pub fn decrement_unclosed_accounts_count(&mut self) -> Result<u32> {
+        self.unclosed_accounts_count = self
+            .unclosed_accounts_count
+            .checked_sub(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(self.unclosed_accounts_count)
+    }
+
+    pub fn increment_account_counts(&mut self) -> Result<()> {
+        self.increment_unsettled_accounts_count()?;
+        self.increment_unclosed_accounts_count()?;
+        Ok(())
+    }
+
+    pub fn decrement_account_counts(&mut self) -> Result<()> {
+        self.decrement_unsettled_accounts_count()?;
+        self.decrement_unclosed_accounts_count()?;
+        Ok(())
     }
 
     pub fn is_inplay(&self) -> bool {
@@ -387,6 +431,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
@@ -419,6 +465,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
@@ -451,6 +499,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now,
         };
@@ -483,6 +533,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now,
         };

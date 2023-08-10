@@ -8,7 +8,7 @@ use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
-    let market_account = &ctx.accounts.market;
+    let market_account = &mut ctx.accounts.market;
 
     // validate the market is settled
     require!(
@@ -28,6 +28,7 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
 
     // if never matched close
     if Open.eq(&ctx.accounts.order.order_status) {
+        market_account.decrement_account_counts()?;
         account::close_account(
             &mut ctx.accounts.order.to_account_info(),
             &mut ctx.accounts.purchaser.to_account_info(),
@@ -42,6 +43,8 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         true => ctx.accounts.order.order_status = SettledWin,
         false => ctx.accounts.order.order_status = SettledLose,
     };
+
+    market_account.decrement_unsettled_accounts_count()?;
 
     Ok(())
 }

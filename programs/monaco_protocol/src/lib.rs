@@ -40,7 +40,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::order::create_order(
             &mut ctx.accounts.order,
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &ctx.accounts.purchaser,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
@@ -60,7 +60,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::order::create_order(
             &mut ctx.accounts.order,
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &ctx.accounts.purchaser,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
@@ -137,7 +137,7 @@ pub mod monaco_protocol {
     }
 
     pub fn void_order(ctx: Context<VoidOrder>) -> Result<()> {
-        instructions::order::void_order(&mut ctx.accounts.order, &ctx.accounts.market)
+        instructions::order::void_order(&mut ctx.accounts.order, &mut ctx.accounts.market)
     }
 
     pub fn authorise_admin_operator(
@@ -578,6 +578,8 @@ pub mod monaco_protocol {
             CoreError::CloseAccountOrderNotComplete
         );
 
+        ctx.accounts.market.decrement_unclosed_accounts_count()?;
+
         Ok(())
     }
 
@@ -591,6 +593,8 @@ pub mod monaco_protocol {
             ReadyToClose.eq(&ctx.accounts.market.market_status),
             CoreError::MarketNotReadyToClose
         );
+
+        ctx.accounts.market.decrement_unclosed_accounts_count()?;
 
         Ok(())
     }
@@ -606,6 +610,8 @@ pub mod monaco_protocol {
             CoreError::MarketNotReadyToClose
         );
 
+        ctx.accounts.market.decrement_unclosed_accounts_count()?;
+
         Ok(())
     }
 
@@ -620,6 +626,8 @@ pub mod monaco_protocol {
             CoreError::MarketNotReadyToClose
         );
 
+        ctx.accounts.market.decrement_unclosed_accounts_count()?;
+
         Ok(())
     }
 
@@ -633,6 +641,8 @@ pub mod monaco_protocol {
             ReadyToClose.eq(&ctx.accounts.market.market_status),
             CoreError::MarketNotReadyToClose
         );
+
+        ctx.accounts.market.decrement_unclosed_accounts_count()?;
 
         Ok(())
     }
@@ -651,6 +661,11 @@ pub mod monaco_protocol {
         require!(
             ctx.accounts.commission_payment_queue.payment_queue.len() == 0,
             CoreError::CloseAccountMarketPaymentQueueNotEmpty
+        );
+
+        require!(
+            ctx.accounts.market.unclosed_accounts_count == 0,
+            CoreError::MarketUnclosedAccountsCountNonZero
         );
 
         instructions::market::close_escrow_token_account(&ctx)?;

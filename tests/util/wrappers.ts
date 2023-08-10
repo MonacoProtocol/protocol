@@ -31,6 +31,7 @@ import {
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
+import console from "console";
 
 const { SystemProgram } = anchor.web3;
 
@@ -515,17 +516,21 @@ export class MonacoMarket {
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
     );
-    const wallet = this.monaco.provider.wallet as NodeWallet;
+    await this.airdropTokenAccount(purchaserTokenPk, balance);
+    return purchaserTokenPk;
+  }
+
+  async airdropTokenAccount(receivingTokenAccount: PublicKey, balance: number) {
+    const providerWallet = this.monaco.provider.wallet as NodeWallet;
     const provider = this.monaco.provider;
     await mintTo(
       provider.connection,
-      wallet.payer,
+      providerWallet.payer,
       this.mintInfo.address,
-      purchaserTokenPk,
+      receivingTokenAccount,
       this.monaco.provider.wallet.publicKey, // Assume mint was created by provider.wallet
       balance * 10 ** this.mintInfo.decimals,
     );
-    return purchaserTokenPk;
   }
 
   async airdropProvider(balance: number) {
@@ -1031,6 +1036,26 @@ export class MonacoMarket {
         console.error(e);
         throw e;
       });
+  }
+
+  async closeOutcome(outcomeIndex: number) {
+    await monaco.program.methods
+      .closeMarketOutcome()
+      .accounts({
+        market: this.pk,
+        authority: this.marketAuthority.publicKey,
+        marketOutcome: (
+          await findMarketOutcomePda(
+            monaco.program as Program,
+            this.pk,
+            outcomeIndex,
+          )
+        ).data.pda,
+        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
+        crankOperator: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
   }
 
   async settleMarketPositionForPurchaser(purchaser: PublicKey) {

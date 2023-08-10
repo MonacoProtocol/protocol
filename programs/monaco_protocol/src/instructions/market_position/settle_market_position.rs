@@ -18,7 +18,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
         return Ok(());
     }
 
-    let market_account = &ctx.accounts.market;
+    let market_account = &mut ctx.accounts.market;
     // validate the market is settled
     require!(
         market_account.market_winning_outcome_index.is_some(),
@@ -66,6 +66,7 @@ pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> 
         u64::try_from(total_payout).map_err(|_| CoreError::SettlementPaymentCalculation)?;
 
     market_position.paid = true;
+    market_account.decrement_unsettled_accounts_count()?;
 
     transfer::transfer_market_position(&ctx, total_payout_u64)
 }
