@@ -25,8 +25,11 @@ pub fn create_order<'info>(
 ) -> Result<()> {
     initialize_order(order, market, purchaser, market_outcome, product, data)?;
 
-    // initialize market position
-    market_position::create_market_position(purchaser, market, market_position)?;
+    // initialize market position if needed
+    if market_position.purchaser == Pubkey::default() {
+        market_position::create_market_position(purchaser, market, market_position)?;
+        market.increment_account_counts()?;
+    }
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {
