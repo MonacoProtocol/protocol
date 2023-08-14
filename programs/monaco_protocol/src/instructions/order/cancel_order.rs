@@ -44,6 +44,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
 
     // if never matched close
     if order.stake == order.voided_stake {
+        ctx.accounts.market.decrement_account_counts()?;
         ctx.accounts
             .order
             .close(ctx.accounts.purchaser.to_account_info())?;

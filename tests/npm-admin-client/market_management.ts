@@ -302,9 +302,14 @@ describe("Transfer market escrow surplus", () => {
     const market = await monaco.create3WayMarket([1.001]);
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 1);
-    // This order is never matched or cancelled or settled
-    await market.forOrder(0, 1, 1.001, purchaser);
+
+    // airdrop market escrow an additional token
+    await market.airdropTokenAccount(market.escrowPk, 1);
+
+    const orderPk = await market.forOrder(0, 1, 1.001, purchaser);
     await market.settle(0);
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
+    await market.settleOrder(orderPk);
     await market.completeSettlement();
 
     const response = await setMarketReadyToClose(protocolProgram, market.pk);
@@ -325,7 +330,7 @@ describe("Transfer market escrow surplus", () => {
         .value.uiAmount,
       0,
     );
-    assert.equal(await market.getTokenBalance(purchaser), 0);
+    assert.equal(await market.getTokenBalance(purchaser), 1);
     assert.equal(await market.getTokenBalance(provider.wallet.publicKey), 1);
   });
 

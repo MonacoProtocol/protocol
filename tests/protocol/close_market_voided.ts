@@ -13,7 +13,7 @@ describe("Close market accounts (voided)", () => {
       marketOperator.publicKey,
     );
     const market = await monaco.createMarket(
-      ["A", "B", "C"],
+      ["A", "B"],
       [price],
       marketOperator,
     );
@@ -21,11 +21,19 @@ describe("Close market accounts (voided)", () => {
     const balanceMarketCreated = await monaco.provider.connection.getBalance(
       marketOperator.publicKey,
     );
+    const outcomeARent = await monaco.provider.connection.getBalance(
+      market.outcomePks[0],
+    );
+    const outcomeBRent = await monaco.provider.connection.getBalance(
+      market.outcomePks[1],
+    );
 
     await market.open();
     await market.voidMarket();
     await market.completeVoid();
     await market.readyToClose();
+    await market.closeOutcome(0);
+    await market.closeOutcome(1);
 
     const marketRent = await monaco.provider.connection.getBalance(market.pk);
     const escrowRent = await monaco.provider.connection.getBalance(
@@ -41,8 +49,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -53,7 +60,12 @@ describe("Close market accounts (voided)", () => {
 
     // ensure rent has been returned
     const expectedBalanceAfterMarketClosed =
-      balanceMarketCreated + marketRent + escrowRent + paymentsQueueRent;
+      balanceMarketCreated +
+      marketRent +
+      escrowRent +
+      paymentsQueueRent +
+      outcomeARent +
+      outcomeBRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
 
     await monaco.program.account.market.fetch(market.pk).catch((e) => {
@@ -96,8 +108,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -130,8 +141,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -148,12 +158,12 @@ describe("Close market accounts (voided)", () => {
       marketOperator.publicKey,
     );
     const marketA = await monaco.createMarket(
-      ["A", "B", "C"],
+      ["A", "B"],
       [price],
       marketOperator,
     );
     const marketB = await monaco.createMarket(
-      ["A", "B", "C"],
+      ["A", "B"],
       [price],
       marketOperator,
     );
@@ -162,11 +172,15 @@ describe("Close market accounts (voided)", () => {
     await marketA.voidMarket();
     await marketA.completeVoid();
     await marketA.readyToClose();
+    await marketA.closeOutcome(0);
+    await marketA.closeOutcome(1);
 
     await marketB.open();
     await marketB.voidMarket();
     await marketB.completeVoid();
     await marketB.readyToClose();
+    await marketB.closeOutcome(0);
+    await marketB.closeOutcome(1);
 
     await monaco.program.methods
       .closeMarket()
@@ -174,13 +188,42 @@ describe("Close market accounts (voided)", () => {
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: marketB.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
         assert.equal(e.error.errorCode.code, "CloseAccountMarketMismatch");
+      });
+  });
+
+  it("complete void: unclosed accounts", async () => {
+    const price = 2.0;
+    const marketOperator = await createWalletWithBalance(monaco.provider);
+    await authoriseMarketOperator(
+      monaco.getRawProgram(),
+      marketOperator.publicKey,
+    );
+    const market = await monaco.createMarket(
+      ["A", "B"],
+      [price],
+      marketOperator,
+    );
+
+    await market.open();
+    await market.voidMarket();
+
+    await monaco.program.methods
+      .completeMarketVoid()
+      .accounts({
+        market: market.pk,
+      })
+      .rpc()
+      .catch((e) => {
+        assert.equal(
+          e.error.errorCode.code,
+          "MarketUnclosedAccountsCountNonZero",
+        );
       });
   });
 });

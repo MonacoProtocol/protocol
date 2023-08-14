@@ -33,6 +33,9 @@ pub struct Market {
 
     pub title: String,
 
+    pub unsettled_accounts_count: u32,
+    pub unclosed_accounts_count: u32,
+
     pub escrow_account_bump: u8,
     pub event_start_timestamp: i64,
 }
@@ -57,7 +60,8 @@ impl Market {
         + U8_SIZE // inplay_order_delay
         + vec_size(CHAR_SIZE, Market::TITLE_MAX_LENGTH) // title
         + U8_SIZE // bump
-        + I64_SIZE; // event_start_timestamp
+        + I64_SIZE // event_start_timestamp
+        + U32_SIZE * 2; // unsettled_accounts + unclosed_accounts
 
     pub fn increment_market_outcomes_count(&mut self) -> Result<u16> {
         self.market_outcomes_count = self
@@ -65,6 +69,50 @@ impl Market {
             .checked_add(1_u16)
             .ok_or(CoreError::ArithmeticError)?;
         Ok(self.market_outcomes_count)
+    }
+
+    pub fn increment_unsettled_accounts_count(&mut self) -> Result<()> {
+        self.unsettled_accounts_count = self
+            .unsettled_accounts_count
+            .checked_add(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(())
+    }
+
+    pub fn decrement_unsettled_accounts_count(&mut self) -> Result<()> {
+        self.unsettled_accounts_count = self
+            .unsettled_accounts_count
+            .checked_sub(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(())
+    }
+
+    pub fn increment_unclosed_accounts_count(&mut self) -> Result<()> {
+        self.unclosed_accounts_count = self
+            .unclosed_accounts_count
+            .checked_add(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(())
+    }
+
+    pub fn decrement_unclosed_accounts_count(&mut self) -> Result<()> {
+        self.unclosed_accounts_count = self
+            .unclosed_accounts_count
+            .checked_sub(1_u32)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(())
+    }
+
+    pub fn increment_account_counts(&mut self) -> Result<()> {
+        self.increment_unsettled_accounts_count()?;
+        self.increment_unclosed_accounts_count()?;
+        Ok(())
+    }
+
+    pub fn decrement_account_counts(&mut self) -> Result<()> {
+        self.decrement_unsettled_accounts_count()?;
+        self.decrement_unclosed_accounts_count()?;
+        Ok(())
     }
 
     pub fn is_inplay(&self) -> bool {
@@ -383,6 +431,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
@@ -415,6 +465,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
@@ -447,6 +499,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now,
         };
@@ -479,6 +533,8 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: now,
         };
@@ -1185,5 +1241,86 @@ mod tests {
         let result1 = queue.peek(1).unwrap();
         result1.liquidity_to_add = 20;
         assert_eq!(20, queue.items[1].liquidity_to_add);
+    }
+
+    // test account count fields
+
+    #[test]
+    fn test_increment_unsettled_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unsettled_accounts_count);
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(2, market.unsettled_accounts_count);
+    }
+
+    #[test]
+    fn test_decrement_unsettled_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unsettled_accounts_count);
+
+        let result = market.decrement_unsettled_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(0, market.unsettled_accounts_count);
+    }
+
+    #[test]
+    fn test_increment_unclosed_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unclosed_accounts_count);
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(2, market.unclosed_accounts_count);
+    }
+
+    #[test]
+    fn test_decrement_unclosed_accounts_count() {
+        let mut market = test_market();
+
+        let result = market.increment_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(1, market.unclosed_accounts_count);
+
+        let result = market.decrement_unclosed_accounts_count();
+        assert!(result.is_ok());
+        assert_eq!(0, market.unclosed_accounts_count);
+    }
+
+    fn test_market() -> Market {
+        Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: false,
+            inplay: false,
+            market_type: "".to_string(),
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        }
     }
 }

@@ -99,6 +99,10 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
         .market
         .increment_market_outcomes_count()
         .map_err(|_| CoreError::MarketOutcomeInitError)?;
+    ctx.accounts
+        .market
+        .increment_unclosed_accounts_count()
+        .map_err(|_| CoreError::MarketOutcomeInitError)?;
 
     Ok(())
 }

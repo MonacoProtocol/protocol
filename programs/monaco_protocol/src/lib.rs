@@ -5,7 +5,7 @@ use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{
-    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus::ReadyToClose,
+    Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome,
 };
 use crate::state::market_position_account::MarketPosition;
 use crate::state::market_type::verify_market_type;
@@ -40,7 +40,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::order::create_order(
             &mut ctx.accounts.order,
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &ctx.accounts.purchaser,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
@@ -60,7 +60,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::order::create_order(
             &mut ctx.accounts.order,
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &ctx.accounts.purchaser,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
@@ -104,40 +104,19 @@ pub mod monaco_protocol {
     }
 
     pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        instructions::order::settle_order(ctx)?;
-
-        Ok(())
+        instructions::order::settle_order(ctx)
     }
 
     pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        instructions::market_position::settle_market_position(ctx)?;
-
-        Ok(())
+        instructions::market_position::settle_market_position(ctx)
     }
 
     pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        instructions::market_position::void_market_position(ctx)?;
-
-        Ok(())
+        instructions::market_position::void_market_position(ctx)
     }
 
     pub fn void_order(ctx: Context<VoidOrder>) -> Result<()> {
-        instructions::order::void_order(&mut ctx.accounts.order, &ctx.accounts.market)
+        instructions::order::void_order(&mut ctx.accounts.order, &mut ctx.accounts.market)
     }
 
     pub fn authorise_admin_operator(
@@ -431,11 +410,6 @@ pub mod monaco_protocol {
     }
 
     pub fn complete_market_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
         instructions::market::complete_settlement(ctx)
     }
 
@@ -454,11 +428,6 @@ pub mod monaco_protocol {
     }
 
     pub fn complete_market_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
         instructions::market::complete_void(ctx)
     }
 
@@ -561,98 +530,32 @@ pub mod monaco_protocol {
      */
 
     pub fn close_order(ctx: Context<CloseOrder>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        require!(
-            ctx.accounts.order.is_completed(),
-            CoreError::CloseAccountOrderNotComplete
-        );
-
-        Ok(())
+        instructions::close::close_order(&mut ctx.accounts.market, &ctx.accounts.order)
     }
 
     pub fn close_trade(ctx: Context<CloseTrade>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        Ok(())
+        instructions::close::close_market_child_account(&mut ctx.accounts.market)
     }
 
     pub fn close_market_position(ctx: Context<CloseMarketPosition>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        Ok(())
+        instructions::close::close_market_child_account(&mut ctx.accounts.market)
     }
 
     pub fn close_market_matching_pool(ctx: Context<CloseMarketMatchingPool>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        Ok(())
+        instructions::close::close_market_child_account(&mut ctx.accounts.market)
     }
 
     pub fn close_market_outcome(ctx: Context<CloseMarketOutcome>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        Ok(())
+        instructions::close::close_market_child_account(&mut ctx.accounts.market)
     }
 
     pub fn close_market(ctx: Context<CloseMarket>) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.crank_operator.key,
-            &ctx.accounts.authorised_operators,
+        instructions::close::close_market(
+            &ctx.accounts.market.market_status,
+            ctx.accounts.commission_payment_queue.payment_queue.len(),
+            ctx.accounts.market.unclosed_accounts_count,
         )?;
 
-        require!(
-            ReadyToClose.eq(&ctx.accounts.market.market_status),
-            CoreError::MarketNotReadyToClose
-        );
-
-        require!(
-            ctx.accounts.commission_payment_queue.payment_queue.len() == 0,
-            CoreError::CloseAccountMarketPaymentQueueNotEmpty
-        );
-
-        instructions::market::close_escrow_token_account(&ctx)?;
-
-        Ok(())
+        instructions::market::close_escrow_token_account(&ctx)
     }
 }

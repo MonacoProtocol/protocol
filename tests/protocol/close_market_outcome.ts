@@ -38,8 +38,6 @@ describe("Close market outcome accounts", () => {
         market: market.pk,
         authority: marketOperator.publicKey,
         marketOutcome: marketOutcomePk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -75,8 +73,6 @@ describe("Close market outcome accounts", () => {
         market: market.pk,
         authority: marketOperator.publicKey,
         marketOutcome: market.outcomePks[0],
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -108,8 +104,6 @@ describe("Close market outcome accounts", () => {
         market: market.pk,
         authority: monaco.operatorPk,
         marketOutcome: market.outcomePks[0],
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -151,8 +145,6 @@ describe("Close market outcome accounts", () => {
         market: marketB.pk,
         authority: monaco.operatorPk,
         marketOutcome: marketA.outcomePks[0],
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {

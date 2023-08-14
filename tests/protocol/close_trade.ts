@@ -53,8 +53,6 @@ describe("Close trade accounts", () => {
         market: market.pk,
         payer: crankOperator.publicKey,
         trade: tradePk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -107,8 +105,6 @@ describe("Close trade accounts", () => {
         market: market.pk,
         payer: crankOperator.publicKey,
         trade: tradeResponse.data.tradePk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -158,8 +154,6 @@ describe("Close trade accounts", () => {
         market: marketB.pk,
         payer: crankOperator.publicKey,
         trade: tradeResponse.data.tradePk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -209,8 +203,6 @@ describe("Close trade accounts", () => {
         market: marketB.pk,
         payer: purchaserA.publicKey,
         trade: tradeResponse.data.tradePk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
