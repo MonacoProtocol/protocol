@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::CancelOrder;
 use crate::error::CoreError;
-use crate::instructions::{account, current_timestamp, market_position, matching, transfer};
+use crate::instructions::{current_timestamp, market_position, matching, transfer};
 use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
@@ -45,10 +45,9 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     // if never matched close
     if order.stake == order.voided_stake {
         ctx.accounts.market.decrement_account_counts()?;
-        account::close_account(
-            &mut ctx.accounts.order.to_account_info(),
-            &mut ctx.accounts.purchaser.to_account_info(),
-        )?;
+        ctx.accounts
+            .order
+            .close(ctx.accounts.purchaser.to_account_info())?;
     }
 
     Ok(())
