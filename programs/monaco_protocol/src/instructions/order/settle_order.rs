@@ -3,7 +3,6 @@ use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
-use crate::instructions::account;
 use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
@@ -28,11 +27,10 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
 
     // if never matched close
     if Open.eq(&ctx.accounts.order.order_status) {
-        account::close_account(
-            &mut ctx.accounts.order.to_account_info(),
-            &mut ctx.accounts.purchaser.to_account_info(),
-        )?;
-        return Ok(());
+        return ctx
+            .accounts
+            .order
+            .close(ctx.accounts.purchaser.to_account_info());
     }
 
     if ctx.accounts.order.stake_unmatched > 0_u64 {

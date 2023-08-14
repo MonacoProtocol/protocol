@@ -1,4 +1,3 @@
-pub use account::*;
 pub use clock::*;
 pub use math::*;
 pub use operator::*;
@@ -10,7 +9,6 @@ pub(crate) mod market_position;
 pub(crate) mod matching;
 pub(crate) mod order;
 
-mod account;
 mod clock;
 mod math;
 mod operator;
