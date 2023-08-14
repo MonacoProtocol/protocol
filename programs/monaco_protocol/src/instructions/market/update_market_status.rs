@@ -33,6 +33,10 @@ pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
         ReadyToVoid.eq(&market.market_status),
         CoreError::VoidMarketNotReadyForVoid
     );
+    require!(
+        market.unsettled_accounts_count == 0_u32,
+        CoreError::MarketUnsettledAccountsCountNonZero,
+    );
     market.market_status = Voided;
     Ok(())
 }
@@ -62,6 +66,10 @@ pub fn complete_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()>
     require!(
         ReadyForSettlement.eq(&market.market_status),
         CoreError::SettlementMarketNotReadyForSettlement
+    );
+    require!(
+        market.unsettled_accounts_count == 0_u32,
+        CoreError::MarketUnsettledAccountsCountNonZero,
     );
     market.market_status = Settled;
     Ok(())
@@ -130,6 +138,8 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
@@ -163,6 +173,8 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
@@ -196,6 +208,8 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
@@ -232,6 +246,8 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
@@ -263,6 +279,8 @@ mod tests {
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
@@ -300,6 +318,8 @@ mod tests {
             inplay: false,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
@@ -333,6 +353,8 @@ mod tests {
             inplay: false,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
@@ -366,6 +388,8 @@ mod tests {
             inplay: false,
             inplay_order_delay: 0,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };

@@ -46,6 +46,7 @@ pub struct CreateOrder<'info> {
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
+    #[account(mut)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         init_if_needed,
@@ -120,6 +121,7 @@ pub struct CreateOrderV2<'info> {
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
+    #[account(mut)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         init_if_needed,
@@ -375,6 +377,7 @@ pub struct MatchOrders<'info> {
     )]
     pub market_matching_pool_for: Account<'info, MarketMatchingPool>,
 
+    #[account(mut)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
@@ -422,12 +425,6 @@ pub struct SettleOrder<'info> {
     pub purchaser: SystemAccount<'info>,
     #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
-
-    // crank operator --------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -438,7 +435,7 @@ pub struct SettleMarketPosition<'info> {
         associated_token::authority = market_position.purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-    #[account(address = market_position.market @ CoreError::SettlementMarketMismatch)]
+    #[account(mut, address = market_position.market @ CoreError::SettlementMarketMismatch)]
     pub market: Account<'info, Market>,
     #[account(
         mut,
@@ -462,12 +459,6 @@ pub struct SettleMarketPosition<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-
-    // crank operator -------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -478,7 +469,7 @@ pub struct VoidMarketPosition<'info> {
         associated_token::authority = market_position.purchaser,
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-    #[account(address = market_position.market @ CoreError::VoidMarketMismatch)]
+    #[account(mut, address = market_position.market @ CoreError::VoidMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
@@ -493,12 +484,6 @@ pub struct VoidMarketPosition<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-
-    // crank operator -------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -651,11 +636,6 @@ pub struct SetMarketReadyToClose<'info> {
 pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -735,15 +715,10 @@ pub struct CloseOrder<'info> {
         close = purchaser,
     )]
     pub order: Account<'info, Order>,
-    #[account()]
+    #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub purchaser: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -755,15 +730,10 @@ pub struct CloseTrade<'info> {
         close = payer,
     )]
     pub trade: Account<'info, Trade>,
-    #[account()]
+    #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub payer: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -775,15 +745,10 @@ pub struct CloseMarketPosition<'info> {
         close = purchaser,
     )]
     pub market_position: Account<'info, MarketPosition>,
-    #[account()]
+    #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub purchaser: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -795,15 +760,10 @@ pub struct CloseMarketMatchingPool<'info> {
         close = payer,
     )]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
-    #[account()]
+    #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub payer: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -815,16 +775,12 @@ pub struct CloseMarketOutcome<'info> {
     )]
     pub market_outcome: Account<'info, MarketOutcome>,
     #[account(
+        mut,
         has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
     )]
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub authority: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -854,12 +810,6 @@ pub struct CloseMarket<'info> {
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 }

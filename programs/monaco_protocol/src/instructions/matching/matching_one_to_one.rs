@@ -153,6 +153,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
         now,
         ctx.accounts.crank_operator.key(),
     );
+    ctx.accounts.market.increment_unclosed_accounts_count()?;
     initialize_trade(
         &mut ctx.accounts.trade_for,
         &ctx.accounts.order_for,
@@ -162,6 +163,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
         now,
         ctx.accounts.crank_operator.key(),
     );
+    ctx.accounts.market.increment_unclosed_accounts_count()?;
 
     Ok(())
 }

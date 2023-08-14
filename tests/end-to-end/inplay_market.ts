@@ -198,9 +198,6 @@ describe("End to end test of", () => {
               market: market.pk,
               trade: trade,
               payer: monaco.operatorPk,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -221,9 +218,6 @@ describe("End to end test of", () => {
               market: market.pk,
               order: order,
               purchaser: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -244,9 +238,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketPosition: marketPosition,
               purchaser: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -267,9 +258,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketMatchingPool: marketMatchingPool,
               payer: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -290,9 +278,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketOutcome: marketOutcome,
               authority: monaco.operatorPk,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -308,8 +293,6 @@ describe("End to end test of", () => {
         market: market.pk,
         authority: monaco.operatorPk,
         marketEscrow: market.escrowPk,
-        crankOperator: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()

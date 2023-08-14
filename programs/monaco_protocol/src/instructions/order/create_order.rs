@@ -12,7 +12,7 @@ use crate::state::order_account::*;
 
 pub fn create_order<'info>(
     order: &mut Account<Order>,
-    market: &Account<Market>,
+    market: &mut Account<Market>,
     purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
@@ -25,12 +25,16 @@ pub fn create_order<'info>(
 ) -> Result<()> {
     initialize_order(order, market, purchaser, market_outcome, product, data)?;
 
-    // initialize market position
-    market_position::create_market_position(purchaser, market, market_position)?;
+    // initialize market position if needed
+    if market_position.purchaser == Pubkey::default() {
+        market_position::create_market_position(purchaser, market, market_position)?;
+        market.increment_account_counts()?;
+    }
 
     // queues are always initialized with default items, so if this queue is new, initialize it
     if matching_pool.orders.size() == 0 {
         market::initialize_market_matching_pool(matching_pool, market, order)?;
+        market.increment_unclosed_accounts_count()?;
     }
 
     matching::update_matching_queue_with_new_order(market, matching_pool, order)?;
@@ -44,6 +48,8 @@ pub fn create_order<'info>(
         token_program,
         payment,
     )?;
+
+    market.increment_account_counts()?;
 
     Ok(())
 }
@@ -247,6 +253,8 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
+            unsettled_accounts_count: 0,
         }
     }
 }

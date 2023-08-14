@@ -92,6 +92,14 @@ pub enum CoreError {
     VoidOrderIsVoided,
 
     /*
+    Account counts
+     */
+    #[msg("Some accounts are not yet settled/voided for this market")]
+    MarketUnsettledAccountsCountNonZero,
+    #[msg("Some accounts are not yet closed for this market")]
+    MarketUnclosedAccountsCountNonZero,
+
+    /*
     Authorised Operator
      */
     #[msg("Authorised operator list is full")]
