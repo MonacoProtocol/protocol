@@ -49,8 +49,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -109,8 +108,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -143,8 +141,7 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
@@ -191,8 +188,7 @@ describe("Close market accounts (voided)", () => {
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
+
         commissionPaymentQueue: marketB.paymentsQueuePk,
       })
       .rpc()
@@ -221,8 +217,6 @@ describe("Close market accounts (voided)", () => {
       .completeMarketVoid()
       .accounts({
         market: market.pk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {

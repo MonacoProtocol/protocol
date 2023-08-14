@@ -893,10 +893,7 @@ export class MonacoMarket {
   }
 
   async settleOrder(orderPk: PublicKey) {
-    const [order, authorisedOperatorsPk] = await Promise.all([
-      this.monaco.fetchOrder(orderPk),
-      await this.monaco.findCrankAuthorisedOperatorsPda(),
-    ]);
+    const order = await this.monaco.fetchOrder(orderPk);
 
     await this.monaco.program.methods
       .settleOrder()
@@ -904,8 +901,6 @@ export class MonacoMarket {
         order: orderPk,
         market: this.pk,
         purchaser: order.purchaser,
-        crankOperator: this.monaco.operatorPk,
-        authorisedOperators: authorisedOperatorsPk,
       })
       .rpc()
       .catch((e) => {
@@ -991,9 +986,6 @@ export class MonacoMarket {
       .completeMarketSettlement()
       .accounts({
         market: this.pk,
-        crankOperator: this.monaco.operatorPk,
-        authorisedOperators:
-          await this.monaco.findCrankAuthorisedOperatorsPda(),
       })
       .rpc()
       .catch((e) => {
@@ -1007,9 +999,6 @@ export class MonacoMarket {
       .completeMarketVoid()
       .accounts({
         market: this.pk,
-        crankOperator: this.monaco.operatorPk,
-        authorisedOperators:
-          await this.monaco.findCrankAuthorisedOperatorsPda(),
       })
       .rpc()
       .catch((e) => {
@@ -1051,8 +1040,6 @@ export class MonacoMarket {
             outcomeIndex,
           )
         ).data.pda,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -1060,8 +1047,6 @@ export class MonacoMarket {
 
   async settleMarketPositionForPurchaser(purchaser: PublicKey) {
     const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
-    const authorisedOperatorsPk =
-      await this.monaco.findCrankAuthorisedOperatorsPda();
     const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
     const protocolCommissionPks = await this.cacheProtocolCommissionPks();
 
@@ -1074,8 +1059,6 @@ export class MonacoMarket {
         marketPosition: marketPositionPk,
         marketEscrow: this.escrowPk,
         commissionPaymentQueue: this.paymentsQueuePk,
-        crankOperator: this.monaco.operatorPk,
-        authorisedOperators: authorisedOperatorsPk,
         protocolConfig: protocolCommissionPks.protocolConfigPk,
       })
       .rpc()
@@ -1120,8 +1103,6 @@ export class MonacoMarket {
 
   async voidMarketPositionForPurchaser(purchaser: PublicKey) {
     const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
-    const authorisedOperatorsPk =
-      await this.monaco.findCrankAuthorisedOperatorsPda();
     const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
 
     await this.monaco.program.methods
@@ -1132,8 +1113,6 @@ export class MonacoMarket {
         purchaserTokenAccount: purchaserTokenPk,
         marketPosition: marketPositionPk,
         marketEscrow: this.escrowPk,
-        crankOperator: this.monaco.operatorPk,
-        authorisedOperators: authorisedOperatorsPk,
       })
       .rpc()
       .catch((e) => {

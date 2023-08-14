@@ -425,12 +425,6 @@ pub struct SettleOrder<'info> {
     pub purchaser: SystemAccount<'info>,
     #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
-
-    // crank operator --------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -465,12 +459,6 @@ pub struct SettleMarketPosition<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-
-    // crank operator -------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -496,12 +484,6 @@ pub struct VoidMarketPosition<'info> {
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-
-    // crank operator -------------------------------------------
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -654,11 +636,6 @@ pub struct SetMarketReadyToClose<'info> {
 pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -742,11 +719,6 @@ pub struct CloseOrder<'info> {
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub purchaser: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -762,11 +734,6 @@ pub struct CloseTrade<'info> {
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub payer: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -782,11 +749,6 @@ pub struct CloseMarketPosition<'info> {
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub purchaser: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -802,11 +764,6 @@ pub struct CloseMarketMatchingPool<'info> {
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub payer: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -824,11 +781,6 @@ pub struct CloseMarketOutcome<'info> {
     pub market: Account<'info, Market>,
     #[account(mut)]
     pub authority: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -858,12 +810,6 @@ pub struct CloseMarket<'info> {
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,
-
-    #[account(mut)]
-    pub crank_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"CRANK".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 }

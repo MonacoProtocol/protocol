@@ -40,8 +40,6 @@ describe("Close order accounts", () => {
         market: market.pk,
         purchaser: purchaserA.publicKey,
         order: forOrder,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -82,8 +80,6 @@ describe("Close order accounts", () => {
         market: market.pk,
         purchaser: purchaserA.publicKey,
         order: forOrder,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -119,8 +115,6 @@ describe("Close order accounts", () => {
         market: market.pk,
         purchaser: purchaserB.publicKey,
         order: forOrder,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -161,8 +155,6 @@ describe("Close order accounts", () => {
         market: marketB.pk,
         purchaser: purchaserA.publicKey,
         order: forOrder,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -192,8 +184,6 @@ describe("Close order accounts", () => {
         market: market.pk,
         purchaser: purchaser.publicKey,
         order: forOrderPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));

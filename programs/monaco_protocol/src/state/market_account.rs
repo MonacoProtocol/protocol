@@ -71,36 +71,36 @@ impl Market {
         Ok(self.market_outcomes_count)
     }
 
-    pub fn increment_unsettled_accounts_count(&mut self) -> Result<u32> {
+    pub fn increment_unsettled_accounts_count(&mut self) -> Result<()> {
         self.unsettled_accounts_count = self
             .unsettled_accounts_count
             .checked_add(1_u32)
             .ok_or(CoreError::ArithmeticError)?;
-        Ok(self.unsettled_accounts_count)
+        Ok(())
     }
 
-    pub fn decrement_unsettled_accounts_count(&mut self) -> Result<u32> {
+    pub fn decrement_unsettled_accounts_count(&mut self) -> Result<()> {
         self.unsettled_accounts_count = self
             .unsettled_accounts_count
             .checked_sub(1_u32)
             .ok_or(CoreError::ArithmeticError)?;
-        Ok(self.unsettled_accounts_count)
+        Ok(())
     }
 
-    pub fn increment_unclosed_accounts_count(&mut self) -> Result<u32> {
+    pub fn increment_unclosed_accounts_count(&mut self) -> Result<()> {
         self.unclosed_accounts_count = self
             .unclosed_accounts_count
             .checked_add(1_u32)
             .ok_or(CoreError::ArithmeticError)?;
-        Ok(self.unclosed_accounts_count)
+        Ok(())
     }
 
-    pub fn decrement_unclosed_accounts_count(&mut self) -> Result<u32> {
+    pub fn decrement_unclosed_accounts_count(&mut self) -> Result<()> {
         self.unclosed_accounts_count = self
             .unclosed_accounts_count
             .checked_sub(1_u32)
             .ok_or(CoreError::ArithmeticError)?;
-        Ok(self.unclosed_accounts_count)
+        Ok(())
     }
 
     pub fn increment_account_counts(&mut self) -> Result<()> {

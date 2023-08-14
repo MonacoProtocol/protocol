@@ -76,8 +76,6 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -114,8 +112,6 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -222,8 +218,6 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc();
 
@@ -284,8 +278,6 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {

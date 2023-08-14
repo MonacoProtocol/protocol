@@ -50,8 +50,6 @@ describe("Close market accounts (settled)", () => {
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -110,8 +108,6 @@ describe("Close market accounts (settled)", () => {
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -144,8 +140,6 @@ describe("Close market accounts (settled)", () => {
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -192,8 +186,6 @@ describe("Close market accounts (settled)", () => {
         marketEscrow: marketB.escrowPk,
         commissionPaymentQueue: marketB.paymentsQueuePk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -227,8 +219,6 @@ describe("Close market accounts (settled)", () => {
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {

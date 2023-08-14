@@ -41,8 +41,6 @@ describe("Close market matching pool accounts", () => {
         market: market.pk,
         payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -87,8 +85,6 @@ describe("Close market matching pool accounts", () => {
         market: market.pk,
         payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -126,8 +122,6 @@ describe("Close market matching pool accounts", () => {
         market: market.pk,
         payer: purchaserB.publicKey,
         marketMatchingPool: matchingPoolPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -170,8 +164,6 @@ describe("Close market matching pool accounts", () => {
         market: marketB.pk,
         payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -214,8 +206,6 @@ describe("Close market matching pool accounts", () => {
         market: marketA.pk,
         payer: purchaserA.publicKey,
         marketMatchingPool: matchingPoolPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        crankOperator: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {

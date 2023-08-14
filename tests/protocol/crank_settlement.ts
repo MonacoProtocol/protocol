@@ -34,102 +34,7 @@ describe("Settlement Crank", () => {
   const protocolProgram = anchor.workspace
     .MonacoProtocol as Program<MonacoProtocol>;
 
-  it("unauthorised access", async () => {
-    // Unauthorised operator
-    const operatorAccountUnauthorised = anchor.web3.Keypair.generate();
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
-    // Create market
-    const outcome = 1; // DRAW
-    const price = 1.7;
-    const forStake = 5.0;
-    const againstStake = forStake * (price - 1.0);
-
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
-      outcome,
-      price,
-      forStake,
-    );
-
-    // Settle for order
-    await protocolProgram.methods
-      .settleOrder()
-      .accounts({
-        order: forOrderPda,
-        market: market.marketPda,
-        purchaser: wallet1.publicKey,
-        crankOperator: operatorAccountUnauthorised.publicKey,
-        authorisedOperators: authorisedOperators,
-      })
-      .signers([operatorAccountUnauthorised])
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: anchor.AnchorError) {
-          assert.equal(err.error.errorCode.code, "UnauthorisedOperator");
-        },
-      );
-
-    const forOrder = await protocolProgram.account.order.fetch(forOrderPda);
-    assert.deepEqual(forOrder.orderStatus, { matched: {} });
-
-    // Settle against order
-    await protocolProgram.methods
-      .settleOrder()
-      .accounts({
-        order: againstOrderPda,
-        market: market.marketPda,
-        purchaser: wallet2.publicKey,
-        crankOperator: operatorAccountUnauthorised.publicKey,
-        authorisedOperators: authorisedOperators,
-      })
-      .signers([operatorAccountUnauthorised])
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (err: anchor.AnchorError) {
-          assert.equal(err.error.errorCode.code, "UnauthorisedOperator");
-        },
-      );
-
-    const againstOrder = await protocolProgram.account.order.fetch(
-      againstOrderPda,
-    );
-    assert.deepEqual(againstOrder.orderStatus, { matched: {} });
-
-    // tokens transferred back from market to purchaser after settlement
-    assert.deepEqual(
-      await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
-      ]),
-      [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
-    );
-  });
-
   it("full match", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -177,8 +82,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc()
@@ -192,8 +95,6 @@ describe("Settlement Crank", () => {
         order: forOrderPda,
         market: market.marketPda,
         purchaser: wallet1.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc();
 
@@ -210,8 +111,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPositionAgainst.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc()
@@ -225,8 +124,6 @@ describe("Settlement Crank", () => {
         order: againstOrderPda,
         market: market.marketPda,
         purchaser: wallet2.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc();
 
@@ -253,12 +150,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: different market", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -301,8 +192,6 @@ describe("Settlement Crank", () => {
           order: forOrderPda,
           purchaser: wallet1.publicKey,
           market: marketOther.marketPda,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
         })
         .rpc();
 
@@ -322,8 +211,6 @@ describe("Settlement Crank", () => {
           order: againstOrderPda,
           purchaser: wallet2.publicKey,
           market: marketOther.marketPda,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
         })
         .rpc();
 
@@ -349,12 +236,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: different market/escrow", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -408,8 +289,6 @@ describe("Settlement Crank", () => {
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -433,8 +312,6 @@ describe("Settlement Crank", () => {
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -461,12 +338,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: different market/escrow/mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -521,8 +392,6 @@ describe("Settlement Crank", () => {
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -546,8 +415,6 @@ describe("Settlement Crank", () => {
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -574,12 +441,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser impostor for the same mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -640,8 +501,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -665,8 +524,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -693,12 +550,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser impostor for a different mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -764,8 +615,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -789,8 +638,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -817,12 +664,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser impostor for a different mint which is passed in as well", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -888,8 +729,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -913,8 +752,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -945,12 +782,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser uses different token account for a different mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -1016,8 +847,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1041,8 +870,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1069,12 +896,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser uses different token account for a different mint which is passed in as well", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -1140,8 +961,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1165,8 +984,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1193,12 +1010,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser with impostor token account for the same mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -1259,8 +1070,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1284,8 +1093,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1312,12 +1119,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser with impostor token account for a different mint", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -1383,8 +1184,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1408,8 +1207,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1436,12 +1233,6 @@ describe("Settlement Crank", () => {
   });
 
   it("full match: purchaser with impostor token account for a different mint which is passed in as well", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const outcome = 1; // DRAW
     const price = 1.7;
@@ -1507,8 +1298,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1532,8 +1321,6 @@ describe("Settlement Crank", () => {
           marketEscrow: market.escrowPda,
           commissionPaymentQueue: market.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          crankOperator: operatorAccount,
-          authorisedOperators: authorisedOperators,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
         .rpc();
@@ -1561,7 +1348,6 @@ describe("Settlement Crank", () => {
 
   it("partial match", async () => {
     // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
     const authorisedOperators = await createAuthorisedOperatorsPda(
       OperatorType.CRANK,
     );
@@ -1710,8 +1496,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1723,8 +1507,6 @@ describe("Settlement Crank", () => {
         order: forOrderPK,
         market: market.marketPda,
         purchaser: wallet1.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
       .catch((e) => {
@@ -1776,8 +1558,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPositionAgainst.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1789,8 +1569,6 @@ describe("Settlement Crank", () => {
         order: againstOrderPK,
         market: market.marketPda,
         purchaser: wallet2.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
 
@@ -1818,12 +1596,6 @@ describe("Settlement Crank", () => {
   });
 
   it("open order account closed and refunded", async () => {
-    // Default operator
-    const operatorAccount = monaco.provider.wallet.publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     // Create market
     const price = 1.7;
     const market = await createMarket(protocolProgram, monaco.provider, [
@@ -1893,8 +1665,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPositionFor.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1906,8 +1676,6 @@ describe("Settlement Crank", () => {
         order: forOrderPK,
         market: market.marketPda,
         purchaser: wallet1.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc();
 
@@ -2020,13 +1788,6 @@ describe("Settlement Crank", () => {
       .signers([market.marketOperator])
       .rpc();
 
-    // Settle orders
-    const operatorAccount = (monaco.provider.wallet as NodeWallet).payer
-      .publicKey;
-    const authorisedOperators = await createAuthorisedOperatorsPda(
-      OperatorType.CRANK,
-    );
-
     const commissionAccounts = await getSettlementCommissionAccounts(
       monaco.provider,
       market.mintPk,
@@ -2043,8 +1804,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPosition1.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -2054,8 +1813,6 @@ describe("Settlement Crank", () => {
         order: againstOrderPda,
         market: market.marketPda,
         purchaser: wallet1.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
       .catch((e) => {
@@ -2068,8 +1825,6 @@ describe("Settlement Crank", () => {
         order: subsequentForOrderPda,
         market: market.marketPda,
         purchaser: wallet1.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
       .catch((e) => {
@@ -2087,8 +1842,6 @@ describe("Settlement Crank", () => {
         marketPosition: marketPosition2.data.pda,
         marketEscrow: market.escrowPda,
         commissionPaymentQueue: market.paymentsQueuePda,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -2098,8 +1851,6 @@ describe("Settlement Crank", () => {
         order: forOrderPda,
         market: market.marketPda,
         purchaser: wallet2.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
       .catch((e) => {
@@ -2112,8 +1863,6 @@ describe("Settlement Crank", () => {
         order: subsequentAgainstOrderPda,
         market: market.marketPda,
         purchaser: wallet2.publicKey,
-        crankOperator: operatorAccount,
-        authorisedOperators: authorisedOperators,
       })
       .rpc()
       .catch((e) => {
