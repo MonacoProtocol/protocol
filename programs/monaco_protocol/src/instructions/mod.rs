@@ -15,4 +15,4 @@ mod clock;
 mod math;
 mod operator;
 mod payment;
-mod transfer;
+pub mod transfer;
