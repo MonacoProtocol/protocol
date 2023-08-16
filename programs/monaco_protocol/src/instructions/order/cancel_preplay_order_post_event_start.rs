@@ -32,10 +32,6 @@ pub fn cancel_preplay_order_post_event_start(
         CoreError::CancelationOrderStatusInvalid
     );
     require!(
-        order.stake_unmatched > 0_u64,
-        CoreError::CancelOrderNotCancellable
-    );
-    require!(
         order.creation_timestamp < market.event_start_timestamp,
         CoreError::CancelationOrderCreatedAfterMarketEventStarted
     );
@@ -44,10 +40,11 @@ pub fn cancel_preplay_order_post_event_start(
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    order.void_stake_unmatched();
-
-    // calculate refund
-    let refund = market_position::update_on_order_cancellation(market_position, order)?;
+    let mut refund = 0;
+    if order.stake_unmatched > 0_u64 {
+        order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
+        refund = market_position::update_on_order_cancellation(market_position, order)?;
+    }
 
     Ok(refund)
 }
@@ -115,60 +112,6 @@ mod test {
     }
 
     #[test]
-    fn error_stake_unmatched_is_zero() {
-        let market_outcome_index = 1;
-        let matched_price = 2.2_f64;
-        let payer_pk = Pubkey::new_unique();
-
-        let market_pk = Pubkey::new_unique();
-        let market = mock_market();
-
-        let mut order = Order {
-            purchaser: Pubkey::new_unique(),
-            market: market_pk,
-            market_outcome_index,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            stake_unmatched: 0_u64,
-            voided_stake: 0_u64,
-            payout: 0_u64,
-            creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
-            payer: payer_pk,
-        };
-
-        let mut market_position = MarketPosition::default();
-        market_position.market_outcome_sums.resize(3, 0_i128);
-        market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_creation(&mut market_position, &order);
-        assert!(update_on_order_creation.is_ok());
-        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
-
-        let mut market_matching_pool =
-            mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
-
-        // when
-        let result = cancel_preplay_order_post_event_start(
-            &market,
-            &mut market_matching_pool,
-            &mut order,
-            &mut market_position,
-        );
-
-        // then
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            error!(CoreError::CancelOrderNotCancellable)
-        );
-    }
-
-    #[test]
     fn ok_cancle_remaining_unmatched_stake() {
         let market_outcome_index = 1;
         let matched_price = 2.2_f64;
@@ -182,7 +125,7 @@ mod test {
             market: market_pk,
             market_outcome_index,
             for_outcome: false,
-            order_status: OrderStatus::Open,
+            order_status: OrderStatus::Matched,
             product: None,
             product_commission_rate: 0.0,
             expected_price: 2.4_f64,
@@ -206,17 +149,30 @@ mod test {
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
-        // when
-        let result = cancel_preplay_order_post_event_start(
+        // when 1
+        let result1 = cancel_preplay_order_post_event_start(
             &market,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
         );
 
-        // then
-        assert!(result.is_ok());
-        assert_eq!(14, result.unwrap());
+        // then 1
+        assert!(result1.is_ok());
+        assert_eq!(14, result1.unwrap());
+        assert_eq!(10, order.voided_stake);
+
+        // when 2
+        let result2 = cancel_preplay_order_post_event_start(
+            &market,
+            &mut market_matching_pool,
+            &mut order,
+            &mut market_position,
+        );
+
+        // then 2
+        assert!(result2.is_ok());
+        assert_eq!(0, result2.unwrap());
         assert_eq!(10, order.voided_stake);
     }
 
