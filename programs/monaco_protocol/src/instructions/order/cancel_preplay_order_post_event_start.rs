@@ -32,6 +32,10 @@ pub fn cancel_preplay_order_post_event_start(
         CoreError::CancelationOrderStatusInvalid
     );
     require!(
+        order.stake_unmatched > 0_u64,
+        CoreError::CancelOrderNotCancellable
+    );
+    require!(
         order.creation_timestamp < market.event_start_timestamp,
         CoreError::CancelationOrderCreatedAfterMarketEventStarted
     );
@@ -40,11 +44,8 @@ pub fn cancel_preplay_order_post_event_start(
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    let mut refund = 0;
-    if order.stake_unmatched > 0_u64 {
-        order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
-        refund = market_position::update_on_order_cancellation(market_position, order)?;
-    }
+    order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
+    let refund = market_position::update_on_order_cancellation(market_position, order)?;
 
     Ok(refund)
 }
@@ -171,9 +172,11 @@ mod test {
         );
 
         // then 2
-        assert!(result2.is_ok());
-        assert_eq!(0, result2.unwrap());
-        assert_eq!(10, order.voided_stake);
+        assert!(result2.is_err());
+        assert_eq!(
+            result2.unwrap_err(),
+            error!(CoreError::CancelOrderNotCancellable)
+        );
     }
 
     fn mock_market() -> Market {
