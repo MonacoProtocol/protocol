@@ -113,7 +113,7 @@ mod test {
     }
 
     #[test]
-    fn ok_cancle_remaining_unmatched_stake() {
+    fn ok_cancel_remaining_unmatched_stake() {
         let market_outcome_index = 1;
         let matched_price = 2.2_f64;
         let payer_pk = Pubkey::new_unique();
