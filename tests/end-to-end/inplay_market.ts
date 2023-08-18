@@ -156,8 +156,6 @@ describe("End to end test of", () => {
     assert.equal(order.stakeUnmatched, 0);
 
     // Close orders due to event start
-    await market.cancelPreplayOrderPostEventStart(prePlayOrder01);
-    await market.cancelPreplayOrderPostEventStart(prePlayOrder02);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder03);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder10);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder11);

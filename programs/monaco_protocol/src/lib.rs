@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
+use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{
     Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome,
@@ -98,7 +99,20 @@ pub mod monaco_protocol {
     pub fn cancel_preplay_order_post_event_start(
         ctx: Context<CancelPreplayOrderPostEventStart>,
     ) -> Result<()> {
-        instructions::order::cancel_preplay_order_post_event_start(ctx)?;
+        let refund_amount = instructions::order::cancel_preplay_order_post_event_start(
+            &ctx.accounts.market,
+            &mut ctx.accounts.market_matching_pool,
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
 
         Ok(())
     }

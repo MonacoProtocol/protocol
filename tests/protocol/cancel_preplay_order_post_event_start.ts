@@ -91,7 +91,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     );
   });
 
-  it("success: matched order", async () => {
+  // -----------------------------------------------------------------------------------------------------
+
+  it("failure: matched order", async () => {
     // Set up Market and related accounts
     const { market, purchaser, orderPk } = await setupUnmatchedOrder(
       monaco,
@@ -112,25 +114,13 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     await market.updateMarketEventStartTimeToNow();
     await market.moveMarketToInplay();
 
-    await market.cancelPreplayOrderPostEventStart(orderPk);
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(orderPk),
-        market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
-        market.getTokenBalance(purchaser),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
-        0,
-        10000,
-      ],
-    );
+    try {
+      await market.cancelPreplayOrderPostEventStart(orderPk);
+      assert.fail("expected CancelOrderNotCancellable");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+    }
   });
-
-  // -----------------------------------------------------------------------------------------------------
 
   it("failure: market settled", async () => {
     // Create market, purchaser
