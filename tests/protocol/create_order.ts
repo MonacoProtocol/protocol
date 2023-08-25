@@ -19,6 +19,7 @@ import {
   findMarketMatchingPoolPda,
   getMarketAccounts,
   findMarketPositionPda,
+  confirmTransaction,
 } from "../../npm-client/src";
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
@@ -164,6 +165,10 @@ describe("Protocol - Create Order", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(
+      protocolProgram as Program<anchor.Idl>,
+      orderResponse.data.tnxID,
+    );
 
     // check the state of the newly created account
     const orderAccount = await protocolProgram.account.order.fetch(orderPk);
@@ -463,6 +468,10 @@ describe("Protocol - Create Order", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(
+      protocolProgram as Program<anchor.Idl>,
+      orderResponse.data.tnxID,
+    );
 
     const matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
       matchingPoolPda.data.pda,

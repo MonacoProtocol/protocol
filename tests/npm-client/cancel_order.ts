@@ -1,4 +1,3 @@
-import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
@@ -7,7 +6,7 @@ import {
   cancelOrdersForMarket,
 } from "../../npm-client/src/cancel_order";
 import { monaco } from "../util/wrappers";
-import { getOrder } from "../../npm-client/src";
+import { confirmTransaction, getOrder } from "../../npm-client/src";
 
 // Order parameters
 const outcomeIndex = 1;
@@ -22,7 +21,7 @@ describe("NPM client", () => {
 
     // use createOrderUiStake from npm client create order
     const orderResponse = await createOrderNpm(
-      monaco.program as Program<anchor.Idl>,
+      monaco.getRawProgram(),
       market.pk,
       outcomeIndex,
       true,
@@ -31,6 +30,7 @@ describe("NPM client", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(monaco.getRawProgram(), orderResponse.data.tnxID);
 
     const cancelOrder = await cancelOrderNpm(
       monaco.program as Program,
@@ -56,7 +56,7 @@ describe("NPM client", () => {
     // use createOrderUiStake from npm client create order
     const [orderResponse1, orderResponse2] = await Promise.all([
       createOrderNpm(
-        monaco.program as Program<anchor.Idl>,
+        monaco.getRawProgram(),
         market.pk,
         outcomeIndex,
         true,
@@ -64,7 +64,7 @@ describe("NPM client", () => {
         stake,
       ),
       createOrderNpm(
-        monaco.program as Program<anchor.Idl>,
+        monaco.getRawProgram(),
         market.pk,
         outcomeIndex,
         true,
@@ -75,6 +75,11 @@ describe("NPM client", () => {
 
     const order1Pk = orderResponse1.data.orderPk;
     const order2Pk = orderResponse2.data.orderPk;
+
+    await Promise.all([
+      confirmTransaction(monaco.getRawProgram(), orderResponse1.data.tnxID),
+      confirmTransaction(monaco.getRawProgram(), orderResponse2.data.tnxID),
+    ]);
 
     const cancelOrders = await cancelOrdersForMarket(
       monaco.program as Program,

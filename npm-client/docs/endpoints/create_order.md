@@ -13,6 +13,8 @@
 
 Create an order account on the Monaco protocol using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
 
+The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
+
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
@@ -35,6 +37,9 @@ const stake = 20
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const mintDecimal = 6
 const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
+
+// optional
+const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
 ```
 
 Returns **OrderTransactionResponse** derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
@@ -42,6 +47,8 @@ Returns **OrderTransactionResponse** derived order publicKey and transactionID f
 ## createOrder
 
 Create an order account on the Monaco protocol using the raw token value for the order stake.
+
+The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
 
 ### Parameters
 
@@ -63,6 +70,9 @@ const price = 1.5
 const stake = 20_000_000_000
 const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+
+// optional
+const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
 ```
 
 Returns **OrderTransactionResponse** derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction

@@ -1,10 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN, Program } from "@coral-xyz/anchor";
-import {
-  confirmTransaction,
-  signAndSendInstructions,
-  uiStakeToInteger,
-} from "./utils";
+import { signAndSendInstructions, uiStakeToInteger } from "./utils";
 import {
   ClientResponse,
   OrderTransactionResponse,
@@ -14,6 +10,8 @@ import { buildOrderInstruction } from "./create_order_instruction";
 
 /**
  * Create an order account on the Monaco protocol using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
+ *
+ * The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for
@@ -35,6 +33,9 @@ import { buildOrderInstruction } from "./create_order_instruction";
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const mintDecimal = 6
  * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
+ *
+ * // optional
+ * const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
  */
 export async function createOrderUiStake(
   program: Program,
@@ -73,6 +74,8 @@ export async function createOrderUiStake(
 /**
  * Create an order account on the Monaco protocol using the raw token value for the order stake.
  *
+ * The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
+ *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for
  * @param marketOutcomeIndex {number} index of the chosen outcome, the outcome index should be valid for the market (i.e. < marketOutcomesCount)
@@ -91,6 +94,9 @@ export async function createOrderUiStake(
  * const stake = 20_000_000_000
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ *
+ * // optional
+ * const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
  */
 export async function createOrder(
   program: Program,
@@ -128,15 +134,6 @@ export async function createOrder(
   response.addResponseData({
     tnxID: transaction.data.signature,
   });
-
-  const confirmation = await confirmTransaction(
-    program,
-    transaction.data.signature,
-  );
-
-  if (!confirmation.success) {
-    response.addErrors(confirmation.errors);
-  }
 
   return response.body;
 }

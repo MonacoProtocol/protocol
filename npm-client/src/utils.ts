@@ -310,7 +310,7 @@ export async function signAndSendInstructionsBatch(
  * For the provided transaction signature, confirm the transaction.
  *
  * @param program {program} anchor program initialized by the consuming client
- * @param signature {string} signature of the transaction
+ * @param signature {string | void} signature of the transaction
  * @returns {ClientResponse<unknown>} empty client response containing no data, only success state and errors
  *
  * @example
@@ -321,7 +321,7 @@ export async function signAndSendInstructionsBatch(
  */
 export async function confirmTransaction(
   program: Program,
-  signature: string,
+  signature: string | void,
 ): Promise<ClientResponse<unknown>> {
   const response = new ResponseFactory({});
   const provider = program.provider as AnchorProvider;
@@ -330,7 +330,7 @@ export async function confirmTransaction(
     const confirmRequest = {
       blockhash: blockHash.blockhash,
       lastValidBlockHeight: blockHash.lastValidBlockHeight,
-      signature: signature,
+      signature: signature as string,
     };
     await provider.connection.confirmTransaction(confirmRequest);
   } catch (e) {

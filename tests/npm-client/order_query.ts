@@ -7,6 +7,7 @@ import {
   getCancellableOrdersByMarketForProviderWallet,
   OrderStatusFilter,
   Orders,
+  confirmTransaction,
 } from "../../npm-client/src";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
 import { monaco } from "../util/wrappers";
@@ -34,6 +35,11 @@ describe("Order Query", () => {
     );
 
     assert(createOrderResponse.success);
+
+    await confirmTransaction(
+      monaco.getRawProgram(),
+      createOrderResponse.data.tnxID,
+    );
 
     const responseByMarket = await getOrdersByMarketForProviderWallet(
       monaco.getRawProgram(),

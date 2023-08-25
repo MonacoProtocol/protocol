@@ -16,6 +16,8 @@ For the provided order publicKey, cancel the order if the program provider owns 
 *   Have the status of OPEN
 *   Are partially matched (only unmatched stake will be cancelled)
 
+The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
+
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
@@ -27,6 +29,9 @@ For the provided order publicKey, cancel the order if the program provider owns 
 ```javascript
 const orderPk = new PublicKey('Fy7WiqBy6MuWfnVjiPE8HQqkeLnyaLwBsk8cyyJ5WD8X')
 const cancelledOrder = await cancelOrder(program, orderPk)
+
+// optional
+const confirmed = await (confirmTransaction(program, cancelledOrder.data.tnxID)).success
 ```
 
 Returns **OrderTransactionResponse** the provided order publicKey and the transactionId for the request, this ID can be used to confirm the success of the transaction
@@ -37,6 +42,8 @@ For the provided market publicKey, attempt to cancel all cancellable orders owne
 
 *   Have the status of OPEN
 *   Are partially matched (only unmatched stake will be cancelled)
+
+The transactions can then be optionally confirmed with the confirmTransaction() endpoint.
 
 ### Parameters
 

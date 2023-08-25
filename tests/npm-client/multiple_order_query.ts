@@ -1,5 +1,6 @@
 import assert from "assert";
 import {
+  confirmTransaction,
   getOrders,
   getOrdersByMarketForProviderWallet,
 } from "../../npm-client/src";
@@ -17,31 +18,38 @@ describe("Multi Order Query", () => {
     const market = await monaco.create3WayMarket([price1, price2, price3]);
     await market.airdropProvider(10_000.0);
 
-    const orderResponse1 = await createOrderNpm(
-      monaco.getRawProgram(),
-      market.pk,
-      outcomeIndex,
-      true,
-      price1,
-      stake,
-    );
+    const [orderResponse1, orderResponse2, orderResponse3] = await Promise.all([
+      createOrderNpm(
+        monaco.getRawProgram(),
+        market.pk,
+        outcomeIndex,
+        true,
+        price1,
+        stake,
+      ),
+      createOrderNpm(
+        monaco.getRawProgram(),
+        market.pk,
+        outcomeIndex,
+        true,
+        price2,
+        stake,
+      ),
+      createOrderNpm(
+        monaco.getRawProgram(),
+        market.pk,
+        outcomeIndex,
+        true,
+        price3,
+        stake,
+      ),
+    ]);
 
-    const orderResponse2 = await createOrderNpm(
-      monaco.getRawProgram(),
-      market.pk,
-      outcomeIndex,
-      true,
-      price2,
-      stake,
-    );
-    await createOrderNpm(
-      monaco.getRawProgram(),
-      market.pk,
-      outcomeIndex,
-      true,
-      price3,
-      stake,
-    );
+    await Promise.all([
+      confirmTransaction(monaco.getRawProgram(), orderResponse1.data.tnxID),
+      confirmTransaction(monaco.getRawProgram(), orderResponse2.data.tnxID),
+      confirmTransaction(monaco.getRawProgram(), orderResponse3.data.tnxID),
+    ]);
 
     const responseByMarket = await getOrdersByMarketForProviderWallet(
       monaco.getRawProgram(),

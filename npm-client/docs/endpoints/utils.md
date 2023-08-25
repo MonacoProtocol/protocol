@@ -180,7 +180,7 @@ For the provided transaction signature, confirm the transaction.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `signature` **[string][28]** {string} signature of the transaction
+*   `signature` **([string][28] | void)** {string | void} signature of the transaction
 
 ### Examples
 

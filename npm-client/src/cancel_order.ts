@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { confirmTransaction, signAndSendInstructions } from "./utils";
+import { signAndSendInstructions } from "./utils";
 import {
   ClientResponse,
   ResponseFactory,
@@ -18,6 +18,8 @@ import {
  * - Have the status of OPEN
  * - Are partially matched (only unmatched stake will be cancelled)
  *
+ * The transaction can then be optionally confirmed with the confirmTransaction() endpoint.
+ *
  * @param program {program} anchor program initialized by the consuming client
  * @param orderPk {PublicKey} publicKey of the order to cancel
  * @param mintPk {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
@@ -27,6 +29,9 @@ import {
  *
  * const orderPk = new PublicKey('Fy7WiqBy6MuWfnVjiPE8HQqkeLnyaLwBsk8cyyJ5WD8X')
  * const cancelledOrder = await cancelOrder(program, orderPk)
+ *
+ * // optional
+ * const confirmed = await (confirmTransaction(program, cancelledOrder.data.tnxID)).success
  */
 export async function cancelOrder(
   program: Program,
@@ -54,15 +59,6 @@ export async function cancelOrder(
     tnxID: transaction.data.signature,
   });
 
-  const confirmation = await confirmTransaction(
-    program,
-    transaction.data.signature,
-  );
-
-  if (!confirmation.success) {
-    response.addErrors(confirmation.errors);
-  }
-
   return response.body;
 }
 
@@ -71,6 +67,8 @@ export async function cancelOrder(
  *
  * - Have the status of OPEN
  * - Are partially matched (only unmatched stake will be cancelled)
+ *
+ * The transactions can then be optionally confirmed with the confirmTransaction() endpoint.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
@@ -107,16 +105,7 @@ export async function cancelOrdersForMarket(
       failedCancellationOrders.push(orderInstruction.orderPk);
       response.addErrors(transaction.errors);
     } else {
-      const confirmation = await confirmTransaction(
-        program,
-        transaction.data.signature,
-      );
-      if (!confirmation.success) {
-        failedCancellationOrders.push(orderInstruction.orderPk);
-        response.addErrors(confirmation.errors);
-      } else {
-        tnxIDs.push(transaction.data.signature);
-      }
+      tnxIDs.push(transaction.data.signature);
     }
   });
 
