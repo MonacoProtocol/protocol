@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   createAssociatedTokenAccountWithBalance,
@@ -50,7 +50,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -68,7 +67,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -165,7 +163,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -251,7 +248,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -274,7 +270,6 @@ describe("Settlement Crank", () => {
     ]);
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -353,7 +348,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -376,7 +370,6 @@ describe("Settlement Crank", () => {
     ]);
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -386,7 +379,6 @@ describe("Settlement Crank", () => {
         .settleMarketPosition()
         .accounts({
           purchaserTokenAccount: wallet1Token,
-
           marketPosition: marketPositionFor.data.pda,
           market: marketOther.marketPda,
           marketEscrow: marketOther.escrowPda,
@@ -456,7 +448,6 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -486,7 +477,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -565,7 +555,6 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -600,7 +589,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -679,7 +667,6 @@ describe("Settlement Crank", () => {
       wallet1Token,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -714,7 +701,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -797,7 +783,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -832,7 +817,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -911,7 +895,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -946,7 +929,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1025,7 +1007,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -1055,7 +1036,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1134,7 +1114,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -1169,7 +1148,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1248,7 +1226,6 @@ describe("Settlement Crank", () => {
       wallet2,
       wallet2Token,
     } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      monaco.provider,
       outcome,
       price,
       forStake,
@@ -1277,13 +1254,11 @@ describe("Settlement Crank", () => {
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
-
       market.marketPda,
       wallet2.publicKey,
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1482,7 +1457,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1651,7 +1625,6 @@ describe("Settlement Crank", () => {
     );
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1737,7 +1710,6 @@ describe("Settlement Crank", () => {
     let forStake = 10.0;
 
     const { forOrderPda, againstOrderPda } = await setupFullyMatchedOrders(
-      monaco.provider,
       outcomeIndex,
       orderPrice,
       forStake,
@@ -1756,7 +1728,6 @@ describe("Settlement Crank", () => {
       forOrderPda: subsequentForOrderPda,
       againstOrderPda: subsequentAgainstOrderPda,
     } = await setupFullyMatchedOrders(
-      monaco.provider,
       outcomeIndex,
       orderPrice,
       forStake,
@@ -1789,7 +1760,6 @@ describe("Settlement Crank", () => {
       .rpc();
 
     const commissionAccounts = await getSettlementCommissionAccounts(
-      monaco.provider,
       market.mintPk,
     );
 
@@ -1899,7 +1869,6 @@ describe("Settlement Crank", () => {
 });
 
 async function setupFullyMatchedOrders(
-  provider: AnchorProvider,
   outcomeIndex: number,
   price: number,
   forStake: number,
@@ -1959,7 +1928,6 @@ async function setupFullyMatchedOrders(
 }
 
 async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
-  provider: AnchorProvider,
   outcomeIndex: number,
   price: number,
   forStake: number,
@@ -1987,7 +1955,6 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
   ]);
 
   const { forOrderPda, againstOrderPda } = await setupFullyMatchedOrders(
-    monaco.provider,
     outcomeIndex,
     price,
     forStake,
@@ -2020,11 +1987,8 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
   };
 }
 
-async function getSettlementCommissionAccounts(
-  provider: AnchorProvider,
-  mintPk: PublicKey,
-) {
-  const protocolProductProgram = await getProtocolProductProgram();
+async function getSettlementCommissionAccounts(mintPk: PublicKey) {
+  const protocolProductProgram = getProtocolProductProgram();
   const wallet = monaco.provider.wallet as NodeWallet;
 
   const protocolProductPk = await findProductPda(
