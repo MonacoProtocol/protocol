@@ -23,13 +23,9 @@ import { findMarketPositionPda, getMarketPosition } from "../../npm-client/src";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { findProductPda } from "../util/pdas";
 import console from "console";
-import { monaco } from "../util/wrappers";
+import { monaco, MonacoMarket } from "../util/wrappers";
 
 describe("Settlement Crank", () => {
-  const getTokenBalance = async (tokenPk: PublicKey) =>
-    (await monaco.provider.connection.getTokenAccountBalance(tokenPk)).value
-      .uiAmount;
-
   // Programs
   const protocolProgram = anchor.workspace
     .MonacoProtocol as Program<MonacoProtocol>;
@@ -41,28 +37,21 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -75,11 +64,13 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
-        purchaserTokenAccount: wallet1Token,
+        market: market.pk,
+        purchaserTokenAccount: await market.cachePurchaserTokenPk(
+          wallet1.publicKey,
+        ),
         marketPosition: marketPositionFor.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc()
@@ -91,7 +82,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: forOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet1.publicKey,
       })
       .rpc();
@@ -104,11 +95,13 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
-        purchaserTokenAccount: wallet2Token,
+        market: market.pk,
+        purchaserTokenAccount: await market.cachePurchaserTokenPk(
+          wallet2.publicKey,
+        ),
         marketPosition: marketPositionAgainst.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc()
@@ -120,7 +113,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: againstOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet2.publicKey,
       })
       .rpc();
@@ -133,15 +126,15 @@ describe("Settlement Crank", () => {
     await processCommissionPayments(
       protocolProgram as Program,
       getProtocolProductProgram() as Program,
-      market.marketPda,
+      market.pk,
     );
 
     // tokens transferred back from market to purchaser after settlement, protocol commission deducted from winnings
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [0.0, 10.0 + againstStake * 0.9, 10.0 - againstStake],
     );
@@ -154,19 +147,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const marketOther = await createMarket(
       protocolProgram,
@@ -224,9 +210,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -239,29 +225,22 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -278,9 +257,11 @@ describe("Settlement Crank", () => {
       await protocolProgram.methods
         .settleMarketPosition()
         .accounts({
-          purchaserTokenAccount: wallet1Token,
+          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+            wallet1.publicKey,
+          ),
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
+          market: market.pk,
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -301,9 +282,11 @@ describe("Settlement Crank", () => {
       await protocolProgram.methods
         .settleMarketPosition()
         .accounts({
-          purchaserTokenAccount: wallet2Token,
+          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+            wallet2.publicKey,
+          ),
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
+          market: market.pk,
           marketEscrow: marketOther.escrowPda,
           commissionPaymentQueue: marketOther.paymentsQueuePda,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -324,9 +307,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -339,29 +322,22 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -378,7 +354,9 @@ describe("Settlement Crank", () => {
       await protocolProgram.methods
         .settleMarketPosition()
         .accounts({
-          purchaserTokenAccount: wallet1Token,
+          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+            wallet1.publicKey,
+          ),
           marketPosition: marketPositionFor.data.pda,
           market: marketOther.marketPda,
           marketEscrow: marketOther.escrowPda,
@@ -401,7 +379,9 @@ describe("Settlement Crank", () => {
       await protocolProgram.methods
         .settleMarketPosition()
         .accounts({
-          purchaserTokenAccount: wallet2Token,
+          purchaserTokenAccount: await market.cachePurchaserTokenPk(
+            wallet2.publicKey,
+          ),
           marketPosition: marketPositionAgainst.data.pda,
           market: marketOther.marketPda,
           marketEscrow: marketOther.escrowPda,
@@ -424,9 +404,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -439,19 +419,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet2,
-      wallet1Token,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const purchaserImpostor = await createWalletWithBalance(
       monaco.provider,
@@ -466,13 +439,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -487,9 +460,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -510,9 +483,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -531,9 +504,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -546,19 +519,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet2,
-      wallet1Token,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -578,13 +544,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -599,9 +565,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -622,9 +588,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -643,9 +609,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -658,19 +624,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet2,
-      wallet1Token,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -690,13 +649,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -711,9 +670,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -734,9 +693,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -755,9 +714,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -774,19 +733,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -806,13 +758,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -827,9 +779,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: wallet1InvalidToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -850,9 +802,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: wallet2InvalidToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -871,9 +823,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -886,19 +838,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -918,13 +863,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -939,9 +884,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: wallet1InvalidToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -962,9 +907,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: wallet2InvalidToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -983,9 +928,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -998,19 +943,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const purchaserImpostor = await createWalletWithBalance(
       monaco.provider,
@@ -1025,13 +963,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -1046,9 +984,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1069,9 +1007,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1090,9 +1028,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -1105,19 +1043,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -1137,13 +1068,13 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -1158,9 +1089,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1181,9 +1112,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1202,9 +1133,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -1217,19 +1148,12 @@ describe("Settlement Crank", () => {
     const forStake = 5.0;
     const againstStake = forStake * (price - 1.0);
 
-    const {
-      market,
-      forOrderPda,
-      againstOrderPda,
-      wallet1,
-      wallet1Token,
-      wallet2,
-      wallet2Token,
-    } = await setupMarketAndFullyMatchedOrdersAndSettleMarket(
-      outcome,
-      price,
-      forStake,
-    );
+    const { market, forOrderPda, againstOrderPda, wallet1, wallet2 } =
+      await setupMarketAndFullyMatchedOrdersAndSettleMarket(
+        outcome,
+        price,
+        forStake,
+      );
 
     const mintOther = await createNewMint(
       monaco.provider,
@@ -1249,12 +1173,12 @@ describe("Settlement Crank", () => {
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -1269,9 +1193,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionFor.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1292,9 +1216,9 @@ describe("Settlement Crank", () => {
         .accounts({
           purchaserTokenAccount: purchaserImpostorToken,
           marketPosition: marketPositionAgainst.data.pda,
-          market: market.marketPda,
-          marketEscrow: market.escrowPda,
-          commissionPaymentQueue: market.paymentsQueuePda,
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          commissionPaymentQueue: market.paymentsQueuePk,
           tokenProgram: TOKEN_PROGRAM_ID,
           protocolConfig: commissionAccounts.protocolProductPk,
         })
@@ -1313,9 +1237,9 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstStake, 10.0 - forStake, 10.0 - againstStake],
     );
@@ -1329,9 +1253,7 @@ describe("Settlement Crank", () => {
 
     // Create market
     const price = 1.8;
-    const market = await createMarket(protocolProgram, monaco.provider, [
-      price,
-    ]);
+    const market = await monaco.create3WayMarket([price]);
 
     // Create wallets
     const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
@@ -1357,7 +1279,7 @@ describe("Settlement Crank", () => {
     const againstRefund = againstStake - forPayout + forStake;
 
     const forOrderPK = await createOrder(
-      market.marketPda,
+      market.pk,
       wallet1,
       outcome,
       true,
@@ -1367,7 +1289,7 @@ describe("Settlement Crank", () => {
     );
 
     const againstOrderPK = await createOrder(
-      market.marketPda,
+      market.pk,
       wallet2,
       outcome,
       false,
@@ -1379,9 +1301,9 @@ describe("Settlement Crank", () => {
     // Check balances after purchases
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstLiability, 100.0 - forStake, 100.0 - againstLiability],
     );
@@ -1392,8 +1314,8 @@ describe("Settlement Crank", () => {
     await matchOrder(
       forOrderPK,
       againstOrderPK,
-      market.marketPda,
-      market.outcomePdas[outcome],
+      market.pk,
+      market.outcomePks[outcome],
       market.matchingPools[outcome][price],
       (monaco.provider.wallet as NodeWallet).payer,
       authorisedOperators,
@@ -1418,9 +1340,9 @@ describe("Settlement Crank", () => {
     // Check balances after match
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [forStake + againstLiability, 100.0 - forStake, 100.0 - againstLiability],
     );
@@ -1430,29 +1352,17 @@ describe("Settlement Crank", () => {
     //
 
     // Settle market
-    await protocolProgram.methods
-      .settleMarket(outcome)
-      .accounts({
-        market: market.marketPda,
-        authorisedOperators: market.authorisedMarketOperators,
-        marketOperator: market.marketOperator.publicKey,
-      })
-      .signers([market.marketOperator])
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
+    await market.settle(outcome);
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketPositionAgainst = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -1465,11 +1375,11 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
+        market: market.pk,
         purchaserTokenAccount: wallet1Token,
         marketPosition: marketPositionFor.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1479,7 +1389,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: forOrderPK,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet1.publicKey,
       })
       .rpc()
@@ -1491,7 +1401,7 @@ describe("Settlement Crank", () => {
     await processCommissionPayments(
       protocolProgram as Program,
       getProtocolProductProgram() as Program,
-      market.marketPda,
+      market.pk,
     );
 
     const forOrderSettled = await protocolProgram.account.order.fetch(
@@ -1503,7 +1413,7 @@ describe("Settlement Crank", () => {
 
     const marketPosition = await getMarketPosition(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketOutcomeSums = marketPosition.data.marketOutcomeSums.map(
@@ -1515,9 +1425,9 @@ describe("Settlement Crank", () => {
     assert.deepEqual(
       await Promise.all([
         marketOutcomeSums,
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [[-50, 40, -50], 1.6, 100.0 + expectedProfit, 100.0 - againstLiability],
     );
@@ -1527,11 +1437,11 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
+        market: market.pk,
         purchaserTokenAccount: wallet2Token,
         marketPosition: marketPositionAgainst.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1541,7 +1451,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: againstOrderPK,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet2.publicKey,
       })
       .rpc()
@@ -1561,9 +1471,9 @@ describe("Settlement Crank", () => {
     // Check balances after 2nd settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [0.0, 100.0 + expectedProfit, 100.0 - againstStake + againstRefund],
     );
@@ -1572,9 +1482,7 @@ describe("Settlement Crank", () => {
   it("open order account closed and refunded", async () => {
     // Create market
     const price = 1.7;
-    const market = await createMarket(protocolProgram, monaco.provider, [
-      price,
-    ]);
+    const market = await monaco.create3WayMarket([price]);
 
     // Create wallet
     const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
@@ -1588,7 +1496,7 @@ describe("Settlement Crank", () => {
     const stake = 5;
 
     const forOrderPK = await createOrder(
-      market.marketPda,
+      market.pk,
       wallet1,
       outcome,
       true,
@@ -1600,27 +1508,19 @@ describe("Settlement Crank", () => {
     // Check tokens transferred from purchaser to market after purchase
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
       ]),
       [stake, 10.0 - stake],
     );
 
     // Settle market
-    await protocolProgram.methods
-      .settleMarket(1)
-      .accounts({
-        market: market.marketPda,
-        authorisedOperators: market.authorisedMarketOperators,
-        marketOperator: market.marketOperator.publicKey,
-      })
-      .signers([market.marketOperator])
-      .rpc();
+    await market.settle(1);
 
     const marketPositionFor = await findMarketPositionPda(
       protocolProgram as Program,
 
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
 
@@ -1633,11 +1533,11 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
+        market: market.pk,
         purchaserTokenAccount: wallet1Token,
         marketPosition: marketPositionFor.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1647,7 +1547,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: forOrderPK,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet1.publicKey,
       })
       .rpc();
@@ -1655,8 +1555,8 @@ describe("Settlement Crank", () => {
     // tokens transferred back from market to purchaser after settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
       ]),
       [0.0, 10.0],
     );
@@ -1674,11 +1574,9 @@ describe("Settlement Crank", () => {
   });
 
   it("matching refunds offset settlement payouts correctly", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
     // Create market
     const prices = [2.0, 20.0];
-    const market = await createMarket(program, monaco.provider, prices);
+    const market = await monaco.create3WayMarket(prices);
 
     // Create wallets
     const wallet1 = await createWalletWithBalance(monaco.provider, 100000000);
@@ -1689,7 +1587,7 @@ describe("Settlement Crank", () => {
     );
     const marketPosition1 = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const wallet2 = await createWalletWithBalance(monaco.provider, 100000000);
@@ -1700,7 +1598,7 @@ describe("Settlement Crank", () => {
     );
     const marketPosition2 = await findMarketPositionPda(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet2.publicKey,
     );
 
@@ -1715,9 +1613,7 @@ describe("Settlement Crank", () => {
       forStake,
       market,
       wallet2,
-      wallet2Token,
       wallet1,
-      wallet1Token,
     );
 
     // Order 1 Data
@@ -1733,31 +1629,21 @@ describe("Settlement Crank", () => {
       forStake,
       market,
       wallet1,
-      wallet1Token,
       wallet2,
-      wallet2Token,
     );
 
     // All stakes will have been returned and there should be 9 left to pay out at settlement
     assert.deepEqual(
       await Promise.all([
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [9, 50, 41],
     );
 
     // Settle market
-    await program.methods
-      .settleMarket(outcomeIndex)
-      .accounts({
-        market: market.marketPda,
-        authorisedOperators: market.authorisedMarketOperators,
-        marketOperator: market.marketOperator.publicKey,
-      })
-      .signers([market.marketOperator])
-      .rpc();
+    await market.settle(outcomeIndex);
 
     const commissionAccounts = await getSettlementCommissionAccounts(
       market.mintPk,
@@ -1768,12 +1654,11 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
+        market: market.pk,
         purchaserTokenAccount: wallet1Token,
-
         marketPosition: marketPosition1.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1781,7 +1666,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: againstOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet1.publicKey,
       })
       .rpc()
@@ -1793,7 +1678,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: subsequentForOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet1.publicKey,
       })
       .rpc()
@@ -1807,11 +1692,11 @@ describe("Settlement Crank", () => {
       .settleMarketPosition()
       .accounts({
         tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.marketPda,
+        market: market.pk,
         purchaserTokenAccount: wallet2Token,
         marketPosition: marketPosition2.data.pda,
-        marketEscrow: market.escrowPda,
-        commissionPaymentQueue: market.paymentsQueuePda,
+        marketEscrow: market.escrowPk,
+        commissionPaymentQueue: market.paymentsQueuePk,
         protocolConfig: commissionAccounts.protocolProductPk,
       })
       .rpc();
@@ -1819,7 +1704,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: forOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet2.publicKey,
       })
       .rpc()
@@ -1831,7 +1716,7 @@ describe("Settlement Crank", () => {
       .settleOrder()
       .accounts({
         order: subsequentAgainstOrderPda,
-        market: market.marketPda,
+        market: market.pk,
         purchaser: wallet2.publicKey,
       })
       .rpc()
@@ -1843,12 +1728,12 @@ describe("Settlement Crank", () => {
     await processCommissionPayments(
       protocolProgram as Program,
       getProtocolProductProgram() as Program,
-      market.marketPda,
+      market.pk,
     );
 
     const marketPosition = await getMarketPosition(
       protocolProgram as Program,
-      market.marketPda,
+      market.pk,
       wallet1.publicKey,
     );
     const marketOutcomeSums = marketPosition.data.marketOutcomeSums.map(
@@ -1859,9 +1744,9 @@ describe("Settlement Crank", () => {
     assert.deepEqual(
       await Promise.all([
         marketOutcomeSums,
-        getTokenBalance(market.escrowPda),
-        getTokenBalance(wallet1Token),
-        getTokenBalance(wallet2Token),
+        market.getEscrowBalance(),
+        market.getTokenBalance(wallet1),
+        market.getTokenBalance(wallet2),
       ]),
       [[9, 9, 9], 0.0, 58.1, 41.0],
     );
@@ -1872,57 +1757,23 @@ async function setupFullyMatchedOrders(
   outcomeIndex: number,
   price: number,
   forStake: number,
-  market: {
-    mintPk: PublicKey;
-    outcomePdas: Awaited<PublicKey>[];
-    authorisedMarketOperators: PublicKey;
-    escrowPda: PublicKey;
-    outcomes: string[];
-    marketPda: PublicKey;
-    marketOperator: Keypair;
-    matchingPools: { against: PublicKey; forOutcome: PublicKey }[][];
-  },
+  market: MonacoMarket,
   wallet1: Keypair,
-  wallet1Token: PublicKey,
   wallet2: Keypair,
-  wallet2Token: PublicKey,
 ) {
-  const forOrderPda = await createOrder(
-    market.marketPda,
+  const forOrderPda = await market.forOrder(
+    outcomeIndex,
+    forStake,
+    price,
     wallet1,
-    outcomeIndex,
-    true,
-    price,
-    forStake,
-    wallet1Token,
   );
-
-  const againstOrderPda = await createOrder(
-    market.marketPda,
+  const againstOrderPda = await market.againstOrder(
+    outcomeIndex,
+    forStake,
+    price,
     wallet2,
-    outcomeIndex,
-    false,
-    price,
-    forStake,
-    wallet2Token,
   );
-
-  //
-  // Match
-  //
-  const marketOperator = (monaco.provider.wallet as NodeWallet).payer;
-  const authorisedOperators = await createAuthorisedOperatorsPda(
-    OperatorType.CRANK,
-  );
-  await matchOrder(
-    forOrderPda,
-    againstOrderPda,
-    market.marketPda,
-    market.outcomePdas[outcomeIndex],
-    market.matchingPools[outcomeIndex][price],
-    marketOperator,
-    authorisedOperators,
-  );
+  await market.match(forOrderPda, againstOrderPda);
 
   return { forOrderPda, againstOrderPda };
 }
@@ -1932,27 +1783,14 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
   price: number,
   forStake: number,
 ) {
-  const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
-  const market = await createMarket(program, monaco.provider, [price]);
-
   // Create wallets
-  const [wallet1, wallet2] = await Promise.all([
+  const [wallet1, wallet2, market] = await Promise.all([
     createWalletWithBalance(monaco.provider),
     createWalletWithBalance(monaco.provider),
+    monaco.create3WayMarket([price]),
   ]);
-  const [wallet1Token, wallet2Token] = await Promise.all([
-    createAssociatedTokenAccountWithBalance(
-      market.mintPk,
-      wallet1.publicKey,
-      10.0,
-    ),
-    createAssociatedTokenAccountWithBalance(
-      market.mintPk,
-      wallet2.publicKey,
-      10.0,
-    ),
-  ]);
+  await market.airdrop(wallet1, 10.0);
+  await market.airdrop(wallet2, 10.0);
 
   const { forOrderPda, againstOrderPda } = await setupFullyMatchedOrders(
     outcomeIndex,
@@ -1960,30 +1798,18 @@ async function setupMarketAndFullyMatchedOrdersAndSettleMarket(
     forStake,
     market,
     wallet1,
-    wallet1Token,
     wallet2,
-    wallet2Token,
   );
 
   // Settle market
-  await program.methods
-    .settleMarket(outcomeIndex)
-    .accounts({
-      market: market.marketPda,
-      authorisedOperators: market.authorisedMarketOperators,
-      marketOperator: market.marketOperator.publicKey,
-    })
-    .signers([market.marketOperator])
-    .rpc();
+  await market.settle(outcomeIndex);
 
   return {
     market,
     forOrderPda,
     againstOrderPda,
     wallet1,
-    wallet1Token,
     wallet2,
-    wallet2Token,
   };
 }
 
