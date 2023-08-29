@@ -2,9 +2,8 @@ use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
 use crate::instructions::market_position;
-use crate::state::market_account::{
-    Market, MarketMatchingPool, MarketOrderBehaviour, MarketStatus,
-};
+use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
+use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderStatus;
@@ -52,8 +51,8 @@ pub fn cancel_preplay_order_post_event_start(
 
 #[cfg(test)]
 mod test {
-    use crate::state::market_account::Cirque;
     use crate::state::market_account::MarketStatus;
+    use crate::state::market_matching_pool_account::Cirque;
     use crate::state::order_account::OrderStatus;
 
     use super::*;
