@@ -7,6 +7,8 @@ use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
 use crate::instructions::{current_timestamp, market, market_position, matching, transfer};
 use crate::state::market_account::*;
+use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 

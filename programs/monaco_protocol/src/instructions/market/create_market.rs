@@ -5,9 +5,9 @@ use rust_decimal::Decimal;
 use crate::context::{CreateMarket, InitializeMarketOutcome};
 use crate::instructions::current_timestamp;
 use crate::monaco_protocol::PRICE_SCALE;
-use crate::state::market_account::{
-    Cirque, Market, MarketMatchingPool, MarketOrderBehaviour, MarketOutcome, MarketStatus,
-};
+use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
+use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
+use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::order_account::Order;
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
@@ -172,10 +172,10 @@ fn intialize_commission_payments_queue(
 
 #[cfg(test)]
 mod tests {
-    use crate::instructions::market::create_market::{
-        add_prices_to_market_outcome, validate_prices,
+    use crate::{
+        instructions::market::create_market::{add_prices_to_market_outcome, validate_prices},
+        state::market_outcome_account::MarketOutcome,
     };
-    use crate::MarketOutcome;
 
     #[test]
     fn test_add_prices_to_market_outcome() {

@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
 use crate::instructions::current_timestamp;
-use crate::state::market_account::{Market, MarketStatus, QueueItem};
-use crate::{CoreError, MarketMatchingPool, MarketOutcome, Order};
+use crate::state::market_account::{Market, MarketStatus};
+use crate::state::market_matching_pool_account::{MarketMatchingPool, QueueItem};
+use crate::state::market_outcome_account::MarketOutcome;
+use crate::{CoreError, Order};
 
 pub fn update_on_match(
     market_outcome: &mut Account<MarketOutcome>,

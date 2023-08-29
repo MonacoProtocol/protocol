@@ -1,8 +1,7 @@
 use crate::error::CoreError;
-use crate::{
-    AuthorisedOperators, Market, MarketMatchingPool, MarketOutcome, MarketPosition, Order,
-    OrderData, Trade,
-};
+use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_outcome_account::MarketOutcome;
+use crate::{AuthorisedOperators, Market, MarketPosition, Order, OrderData, Trade};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
