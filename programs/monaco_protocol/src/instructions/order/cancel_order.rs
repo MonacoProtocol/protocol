@@ -34,7 +34,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
 
     let order = &ctx.accounts.order;
 
-    // remove from matching queue
+    // remove from matching pool
     matching::matching_pool::update_on_cancel(order, &mut ctx.accounts.market_matching_pool)?;
 
     // calculate refund
