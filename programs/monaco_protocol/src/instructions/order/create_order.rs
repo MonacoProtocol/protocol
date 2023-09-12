@@ -33,13 +33,13 @@ pub fn create_order<'info>(
         market.increment_account_counts()?;
     }
 
-    // queues are always initialized with default items, so if this queue is new, initialize it
+    // pools are always initialized with default items, so if this pool is new, initialize it
     if matching_pool.orders.size() == 0 {
         market::initialize_market_matching_pool(matching_pool, market, order)?;
         market.increment_unclosed_accounts_count()?;
     }
 
-    matching::update_matching_queue_with_new_order(market, matching_pool, order)?;
+    matching::update_matching_pool_with_new_order(market, matching_pool, order)?;
 
     // calculate payment
     let payment = market_position::update_on_order_creation(market_position, order)?;
