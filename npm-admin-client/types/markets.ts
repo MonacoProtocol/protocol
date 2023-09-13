@@ -116,6 +116,8 @@ export type MarketAccount = {
   inplayDelay: number;
   eventStartOrderBehaviour: MarketOrderBehaviour;
   marketLockedOrderBehaviour: MarketOrderBehaviour;
+  unsettledAccountsCount: number;
+  unclosedAccountsCount: number;
 };
 
 export type EpochTimeStamp = number;
