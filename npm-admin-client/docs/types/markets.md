@@ -202,7 +202,7 @@ Type: {none: [MarketOrderBehaviour][33], cancelUnmatched: [MarketOrderBehaviour]
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][43], escrowAccountBump: [number][43], eventAccount: PublicKey, eventStartTimestamp: BN, marketLockTimestamp: BN, marketOutcomesCount: [number][43], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][26], marketType: [string][42], marketWinningOutcomeIndex: [number][43]?, mintAccount: PublicKey, published: [boolean][45], suspended: [boolean][45], title: [string][42], inplay: [boolean][45], inplayEnabled: [boolean][45], inplayDelay: [number][43], eventStartOrderBehaviour: [MarketOrderBehaviour][33], marketLockedOrderBehaviour: [MarketOrderBehaviour][33]}
+Type: {authority: BN, decimalLimit: [number][43], escrowAccountBump: [number][43], eventAccount: PublicKey, eventStartTimestamp: BN, marketLockTimestamp: BN, marketOutcomesCount: [number][43], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][26], marketType: [string][42], marketWinningOutcomeIndex: [number][43]?, mintAccount: PublicKey, published: [boolean][45], suspended: [boolean][45], title: [string][42], inplay: [boolean][45], inplayEnabled: [boolean][45], inplayDelay: [number][43], eventStartOrderBehaviour: [MarketOrderBehaviour][33], marketLockedOrderBehaviour: [MarketOrderBehaviour][33], unsettledAccountsCount: [number][43], unclosedAccountsCount: [number][43]}
 
 ### Properties
 
@@ -226,6 +226,8 @@ Type: {authority: BN, decimalLimit: [number][43], escrowAccountBump: [number][43
 *   `inplayDelay` **[number][43]**&#x20;
 *   `eventStartOrderBehaviour` **[MarketOrderBehaviour][33]**&#x20;
 *   `marketLockedOrderBehaviour` **[MarketOrderBehaviour][33]**&#x20;
+*   `unsettledAccountsCount` **[number][43]**&#x20;
+*   `unclosedAccountsCount` **[number][43]**&#x20;
 
 ## EpochTimeStamp
 

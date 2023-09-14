@@ -47,6 +47,8 @@ export type MarketAccount = {
   eventStartOrderBehaviour: MarketOrderBehaviour;
   marketLockOrderBehaviour: MarketOrderBehaviour;
   eventStartTimestamp: BN;
+  unsettledAccountsCount: number;
+  unclosedAccountsCount: number;
 };
 
 export type MarketAccounts = {
