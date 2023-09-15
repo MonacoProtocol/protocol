@@ -22,6 +22,8 @@ pub enum CoreError {
     CreationMarketLocked,
     #[msg("Order Creation: Failed to create Order, market is currently suspended")]
     CreationMarketSuspended,
+    #[msg("Order Creation: Failed to create Order, provided price ladder is invalid for outcome")]
+    CreationInvalidPriceLadder,
     #[msg("Order Creation: Failed to create Order, selected price is invalid for outcome")]
     CreationInvalidPrice,
     #[msg("Order Creation: calculating payment/refund amount error")]
@@ -180,6 +182,18 @@ pub enum CoreError {
      */
     #[msg("The order is currently within the inplay delay period and the operation cannot be completed")]
     InplayDelay,
+
+    /*
+    PriceLadder
+     */
+    #[msg("PriceLadder can only be increased in size")]
+    PriceLadderSizeCanOnlyBeIncreased,
+    #[msg("PriceLadder is full")]
+    PriceLadderIsFull,
+    #[msg("Price cannot be 1.0 or less")]
+    PriceOneOrLess,
+    #[msg("Price support up to 3 decimal places only")]
+    PricePrecisionTooLarge,
 
     /*
     Markets

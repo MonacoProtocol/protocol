@@ -95,3 +95,7 @@ export class ResponseFactory {
 export type TransactionResponse = {
   tnxId: string;
 };
+
+export type TransactionBatchResponse = {
+  tnxIds: string[];
+};

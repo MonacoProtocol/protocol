@@ -11,6 +11,7 @@ declare -a endpoints=(
     "market_validate"
     "market_helpers"
     "operators"
+    "price_ladder"
     "utils"
 )
 

@@ -9,6 +9,7 @@ pub struct MarketOutcome {
     pub title: String,
     pub latest_matched_price: f64,
     pub matched_total: u64,
+    pub prices: Option<Pubkey>,
     pub price_ladder: Vec<f64>,
 }
 
@@ -22,5 +23,6 @@ impl MarketOutcome {
         + vec_size(CHAR_SIZE, MarketOutcome::TITLE_MAX_LENGTH) // title
         + F64_SIZE // latest_matched_price
         + U64_SIZE // matched_total
+        + option_size(PUB_KEY_SIZE) // price ladder account
         + vec_size(F64_SIZE, MarketOutcome::PRICE_LADDER_LENGTH); // price_ladder
 }

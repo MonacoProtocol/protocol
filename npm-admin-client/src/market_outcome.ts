@@ -14,23 +14,26 @@ import { findAuthorisedOperatorsAccountPda } from "./operators";
 /**
  * For the given market account, initialise an outcome account for the provided outcome.
  *
- * **Note** To add prices to an outcome use `batchAddPricesToOutcomePool`.
+ * **Note** To add prices to an outcome use `batchAddPricesToOutcomePool` (deprecated).
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
  * @param outcome {string} string representation of the outcome
+ * @param priceLadderPk {PublicKey | null} publicKey of the reusable price ladder to associate with the outcome - if null, the protocol's default price ladder will be used. Price ladders can be shared by multiple outcomes
  * @returns {OutcomeInitialisationResponse} the outcome provided, the pda for the outcome account and the transaction ID of the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const outcome = "Draw"
- * const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome)
+ * const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
+ * const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome, priceLadderPk)
  */
 export async function initialiseOutcome(
   program: Program,
   marketPk: PublicKey,
   outcome: string,
+  priceLadderPk?: PublicKey,
 ): Promise<ClientResponse<OutcomeInitialisationResponse>> {
   const response = new ResponseFactory({} as OutcomeInitialisationResponse);
   const provider = program.provider as AnchorProvider;
@@ -55,6 +58,9 @@ export async function initialiseOutcome(
       .accounts({
         systemProgram: SystemProgram.programId,
         outcome: nextOutcomePda.data.pda,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
         market: marketPk,
         authorisedOperators: authorisedOperatorsPda.data.pda,
         marketOperator: provider.wallet.publicKey,
@@ -82,18 +88,21 @@ export async function initialiseOutcome(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
  * @param outcomes {string[]} list of strings representing the market outcomes
+ * @param priceLadderPk {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
  * @returns {OutcomeInitialisationsResponse} list of the outcomes provided, their pdas and the transaction IDs performed in the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const outcomes = ["Monaco Protocol", "Draw"]
- * const initialiseOutcomeRequest = await initialiseOutcomes(program, marketPk, outcomes)
+ * const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
+ * const initialiseOutcomeRequest = await initialiseOutcomes(program, marketPk, outcomes, priceLadderPk)
  */
 export async function initialiseOutcomes(
   program: Program,
   marketPk: PublicKey,
   outcomes: string[],
+  priceLadderPk?: PublicKey,
 ): Promise<ClientResponse<OutcomeInitialisationsResponse>> {
   const response = new ResponseFactory({} as OutcomeInitialisationsResponse);
   const provider = program.provider as AnchorProvider;
@@ -121,6 +130,9 @@ export async function initialiseOutcomes(
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: nextOutcomePda.data.pda,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
           market: marketPk,
           authorisedOperators: authorisedOperatorsPda.data.pda,
           marketOperator: provider.wallet.publicKey,

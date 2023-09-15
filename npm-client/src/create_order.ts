@@ -15,6 +15,7 @@ import { findOrderPda } from "./order";
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {CreateOrderResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
@@ -25,8 +26,9 @@ import { findOrderPda } from "./order";
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk)
+ * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, priceLadderPk, productPk)
  */
 export async function createOrderUiStake(
   program: Program,
@@ -35,6 +37,7 @@ export async function createOrderUiStake(
   forOutcome: boolean,
   price: number,
   stake: number,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
 ): Promise<ClientResponse<CreateOrderResponse>> {
   const stakeInteger = await uiStakeToInteger(program, stake, marketPk);
@@ -45,6 +48,7 @@ export async function createOrderUiStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
+    priceLadderPk,
     productPk,
   );
 }
@@ -58,6 +62,7 @@ export async function createOrderUiStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} raw token value of the order taking into account the decimal amount of the token associated with the market
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {CreateOrderResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
@@ -68,8 +73,9 @@ export async function createOrderUiStake(
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20,000,000,000
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
  * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, priceLadderPk, productPk)
  */
 export async function createOrder(
   program: Program,
@@ -78,6 +84,7 @@ export async function createOrder(
   forOutcome: boolean,
   price: number,
   stake: BN,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
 ): Promise<ClientResponse<CreateOrderResponse>> {
   const provider = program.provider as AnchorProvider;
@@ -116,6 +123,9 @@ export async function createOrder(
       market: marketPk,
       marketMatchingPool: MarketAccounts.data.marketOutcomePoolPda,
       marketOutcome: MarketAccounts.data.marketOutcomePda,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
       purchaserToken: purchaserTokenAccount.data.associatedTokenAccount,
       marketEscrow: MarketAccounts.data.escrowPda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

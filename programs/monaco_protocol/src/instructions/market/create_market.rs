@@ -95,6 +95,12 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
     ctx.accounts.outcome.matched_total = 0_u64;
     ctx.accounts.outcome.price_ladder = vec![];
 
+    ctx.accounts.outcome.prices = ctx
+        .accounts
+        .price_ladder
+        .as_ref()
+        .map(|price_ladder| price_ladder.key());
+
     ctx.accounts
         .market
         .increment_market_outcomes_count()
@@ -188,6 +194,7 @@ mod tests {
             title: "".to_string(),
             latest_matched_price: 0.0,
             matched_total: 0,
+            prices: Default::default(),
             price_ladder: existing_prices,
         };
 

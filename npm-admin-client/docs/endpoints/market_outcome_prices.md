@@ -34,6 +34,10 @@ const addPrices = await addPricesToOutcome(program, marketPk, outcomeIndex, pric
 
 Returns **AddPricesToOutcomeResponse** the transaction ID for the request and confirmation of the ladder passed
 
+**Meta**
+
+*   **deprecated**: See `addPricesToPriceLadder` instead
+
 ## batchAddPricesToOutcomePool
 
 Batch process to, for the given market and outcome, add the provided prices to the price ladder for that outcome - program must be initialized by the `MARKET` operator that initialised the market.
@@ -60,6 +64,10 @@ const batchAddPrices = await batchAddPricesToOutcomePool(program, marketPk, outc
 
 Returns **BatchAddPricesToOutcomeResponse** array of the batches sent during the request containing the transaction ID for the request and confirmation of the ladder passed
 
+**Meta**
+
+*   **deprecated**: See `addPricesToPriceLadder` instead
+
 ## batchAddPricesToAllOutcomePools
 
 Batch process to, for the given market, add the provided prices to the price ladder for all outcomes - program must be initialized by the `MARKET` operator that initialised the market.
@@ -83,6 +91,10 @@ const batchAddPrices = await batchAddPricesToAllOutcomePools(program, marketPk, 
 ```
 
 Returns **BatchAddPricesToOutcomeResponse** array of the batches sent during the request containing the transaction ID for the request and confirmation of the ladder passed
+
+**Meta**
+
+*   **deprecated**: See `addPricesToPriceLadder` instead
 
 [1]: #addpricestooutcome
 

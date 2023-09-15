@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./default_price_ladder";
 export * from "./errors";
 export * from "./order";
 export * from "./market";

@@ -27,6 +27,8 @@ import { findAuthorisedOperatorsAccountPda } from "./operators";
  * const priceLadder = [5, 6, 7, 8]
  * const outcomeIndex = 1
  * const addPrices = await addPricesToOutcome(program, marketPk, outcomeIndex, priceLadder)
+ *
+ * @deprecated See `addPricesToPriceLadder` instead
  */
 export async function addPricesToOutcome(
   program: Program,
@@ -95,6 +97,8 @@ export async function addPricesToOutcome(
  * const outcomeIndex = 1
  * const batchSize = 2
  * const batchAddPrices = await batchAddPricesToOutcomePool(program, marketPk, outcomeIndex, priceLadder, batchSize)
+ *
+ * @deprecated See `addPricesToPriceLadder` instead
  */
 export async function batchAddPricesToOutcomePool(
   program: Program,
@@ -143,6 +147,8 @@ export async function batchAddPricesToOutcomePool(
  * const priceLadder = [5, 6, 7, 8]
  * const batchSize = 2
  * const batchAddPrices = await batchAddPricesToAllOutcomePools(program, marketPk, priceLadder, batchSize)
+ *
+ * @deprecated See `addPricesToPriceLadder` instead
  */
 export async function batchAddPricesToAllOutcomePools(
   program: Program,
