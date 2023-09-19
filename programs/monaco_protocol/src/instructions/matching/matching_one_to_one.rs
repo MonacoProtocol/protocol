@@ -22,7 +22,8 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
 
     let now = current_timestamp();
     require!(
-        ctx.accounts.market.market_lock_timestamp > now,
+        order_for.creation_timestamp <= ctx.accounts.market.market_lock_timestamp
+            && order_against.creation_timestamp <= ctx.accounts.market.market_lock_timestamp,
         CoreError::MarketLocked
     );
 
