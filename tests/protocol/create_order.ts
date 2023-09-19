@@ -580,9 +580,12 @@ describe("Protocol - Create Order", () => {
       priceLadderPk,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("any price used to create orders - using empty price ladder account", async () => {
@@ -663,9 +666,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("purchaser uses different token account for the same mint", async () => {

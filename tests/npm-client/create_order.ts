@@ -66,6 +66,7 @@ describe("NPM client - create order", () => {
       2.0,
       10,
       null,
+      null,
       6,
     );
 
