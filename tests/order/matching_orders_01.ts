@@ -92,4 +92,38 @@ describe("Order Matching Market State", () => {
       assert.ok(err.logs.toString().includes("MarketNotOpen"));
     }
   });
+
+  it("matching: orders created before market lock should match after lock", async () => {
+    const price = 2.0;
+    const now = Math.floor(new Date().getTime() / 1000);
+    const lockTime = now + 3000;
+
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price], false, 0, lockTime, lockTime),
+    ]);
+
+    await Promise.all([
+      market.airdrop(purchaserA, 100.0),
+      market.airdrop(purchaserB, 50.0),
+    ]);
+
+    const [AforPk, BAgainstPk] = await Promise.all([
+      market.forOrder(1, 10, price, purchaserA),
+      market.againstOrder(1, 10, price, purchaserB),
+    ]);
+
+    // wait for market lock
+    await new Promise((e) => setTimeout(e, 3000));
+    await market.match(AforPk, BAgainstPk);
+
+    assert.deepEqual(
+      await Promise.all([monaco.getOrder(AforPk), monaco.getOrder(BAgainstPk)]),
+      [
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+      ],
+    );
+  });
 });
