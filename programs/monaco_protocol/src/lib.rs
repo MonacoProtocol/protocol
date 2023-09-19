@@ -7,7 +7,6 @@ use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
 use crate::state::market_position_account::MarketPosition;
-use crate::state::market_type::verify_market_type;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderData;
@@ -217,6 +216,20 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn create_market_type(
+        ctx: Context<CreateMarketType>,
+        name: String,
+        requires_discriminator: bool,
+        requires_value: bool,
+    ) -> Result<()> {
+        instructions::market_type::create_market_type(
+            &mut ctx.accounts.market_type,
+            name,
+            requires_discriminator,
+            requires_value,
+        )
+    }
+
     pub fn create_price_ladder(
         ctx: Context<CreatePriceLadder>,
         _distinct_seed: String,
@@ -263,43 +276,15 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn create_market(
         ctx: Context<CreateMarket>,
         event_account: Pubkey,
-        market_type: String,
+        market_type_discriminator: String,
+        market_type_value: String,
         title: String,
-        market_lock_timestamp: i64,
         max_decimals: u8,
-    ) -> Result<()> {
-        verify_operator_authority(
-            ctx.accounts.market_operator.key,
-            &ctx.accounts.authorised_operators,
-        )?;
-        verify_market_type(&market_type)?;
-
-        instructions::market::create(
-            ctx,
-            event_account,
-            market_type,
-            market_lock_timestamp,
-            title,
-            max_decimals,
-            market_lock_timestamp,
-            false,
-            0,
-            MarketOrderBehaviour::None,
-            MarketOrderBehaviour::None,
-        )?;
-        Ok(())
-    }
-
-    pub fn create_market_v2(
-        ctx: Context<CreateMarket>,
-        event_account: Pubkey,
-        market_type: String,
-        title: String,
         market_lock_timestamp: i64,
-        max_decimals: u8,
         event_start_timestamp: i64,
         inplay_enabled: bool,
         inplay_order_delay: u8,
@@ -310,15 +295,16 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
         )?;
-        verify_market_type(&market_type)?;
-
+        let market_type = ctx.accounts.market_type.key();
         instructions::market::create(
             ctx,
             event_account,
             market_type,
-            market_lock_timestamp,
+            market_type_discriminator,
+            market_type_value,
             title,
             max_decimals,
+            market_lock_timestamp,
             event_start_timestamp,
             inplay_enabled,
             inplay_order_delay,

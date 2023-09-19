@@ -4,6 +4,7 @@ import { MonacoProtocol } from "../target/types/monaco_protocol";
 import {
   authoriseAdminOperator,
   authoriseOperator,
+  getOrCreateMarketType,
   createProtocolProduct,
   OperatorType,
 } from "./util/test_util";
@@ -29,4 +30,9 @@ module.exports = async function (_globalConfig, _projectConfig) {
   );
 
   await createProtocolProduct(provider);
+
+  await getOrCreateMarketType(
+    protocolProgram as anchor.Program,
+    "EventResultWinner",
+  );
 };

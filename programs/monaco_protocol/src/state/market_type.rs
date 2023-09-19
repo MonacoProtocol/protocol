@@ -1,17 +1,17 @@
-use crate::error::CoreError;
+use crate::state::type_size::{string_size, BOOL_SIZE, DISCRIMINATOR_SIZE};
 use anchor_lang::prelude::*;
 
-pub const EVENT_RESULT_FULL_TIME: &str = "EventResultFullTime";
-pub const EVENT_RESULT_HALF_TIME: &str = "EventResultHalfTime";
-pub const EVENT_RESULT_BOTH_SIDES_SCORE: &str = "EventResultBothSidesScore";
-pub const EVENT_RESULT_WINNER: &str = "EventResultWinner";
+#[account]
+pub struct MarketType {
+    pub name: String,
+    pub requires_discriminator: bool,
+    pub requires_value: bool,
+}
 
-pub fn verify_market_type(market_type: &str) -> Result<()> {
-    match market_type {
-        EVENT_RESULT_FULL_TIME => Ok(()),
-        EVENT_RESULT_HALF_TIME => Ok(()),
-        EVENT_RESULT_BOTH_SIDES_SCORE => Ok(()),
-        EVENT_RESULT_WINNER => Ok(()),
-        _ => Err(error!(CoreError::MarketTypeInvalid)),
+impl MarketType {
+    pub const NAME_MAX_LENGTH: usize = 32;
+
+    pub fn size_for(str_len: usize) -> usize {
+        DISCRIMINATOR_SIZE + string_size(str_len) + BOOL_SIZE * 2
     }
 }

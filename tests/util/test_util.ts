@@ -33,7 +33,6 @@ import {
   findMarketPda,
   findMarketPositionPda,
   findTradePda,
-  MarketType,
 } from "../../npm-client/src";
 import { findMarketPdas, findProductPda, findUserPdas } from "../util/pdas";
 import * as assert from "assert";
@@ -45,6 +44,7 @@ import {
   findCommissionPaymentsQueuePda,
   PaymentInfo,
 } from "../../npm-admin-client";
+import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
 
 const { SystemProgram } = anchor.web3;
 
@@ -207,18 +207,31 @@ export async function createMarket(
   );
 
   const eventAccount = anchor.web3.Keypair.generate();
-  const marketType = MarketType.EventResultWinner;
+  const marketType = "EventResultWinner";
+  const marketTypeDiscriminator = "";
+  const marketTypeValue = "";
   const wallet = provider.wallet as NodeWallet;
 
   if (mintPk == null) {
     mintPk = await createNewMint(provider, wallet, mint_decimals);
   }
 
+  const marketTypeResp = await getOrCreateMarketTypeClient(
+    protocolProgram as Program,
+    marketType,
+  );
+  if (!marketTypeResp.success) {
+    throw new Error(marketTypeResp.errors[0].toString());
+  }
+  const marketTypePk = marketTypeResp.data.publicKey;
+
   const marketPda = (
     await findMarketPda(
       protocolProgram as Program,
       eventAccount.publicKey,
-      marketType,
+      marketTypePk,
+      marketTypeDiscriminator,
+      marketTypeValue,
       mintPk,
     )
   ).data.pda;
@@ -233,13 +246,21 @@ export async function createMarket(
   await protocolProgram.methods
     .createMarket(
       eventAccount.publicKey,
-      marketType,
+      marketTypeDiscriminator,
+      marketTypeValue,
       "SOME TITLE",
-      new anchor.BN(1924254038),
       max_decimals,
+      new BN(1924254038),
+      new BN(1924254038),
+      false,
+      0,
+      { none: {} },
+      { none: {} },
     )
     .accounts({
+      existingMarket: null,
       market: marketPda,
+      marketType: marketTypePk,
       systemProgram: SystemProgram.programId,
       escrow: escrowPda,
       mint: mintPk,
@@ -783,4 +804,12 @@ export async function assertTransactionThrowsErrorCode(
       assert.ok(err.logs.toString().includes(errorCode));
     },
   );
+}
+
+export async function getOrCreateMarketType(program: Program, name: string) {
+  const response = await getOrCreateMarketTypeClient(program, name);
+  if (!response.success) {
+    throw response.errors[0];
+  }
+  return response.data.publicKey;
 }

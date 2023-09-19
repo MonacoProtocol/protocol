@@ -10,11 +10,11 @@ import {
   EpochTimeStamp,
   MarketOrderBehaviour,
   MarketOrderBehaviourValue,
+  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
   findMarketPda,
-  MarketType,
   getMarket,
   getMintInfo,
   findEscrowPda,
@@ -23,6 +23,7 @@ import {
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
 import { confirmTransaction } from "./utils";
+import { findMarketTypePda } from "./market_type_create";
 
 /**
  * For the given parameters:
@@ -33,62 +34,77 @@ import { confirmTransaction } from "./utils";
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
- * @param marketType {MarketType} type of the market being created
+ * @param marketType {string} type of the market being created
+ * @param marketTypeDiscriminator {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
+ * @param marketTypeValue {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
  * @param outcomes {string[]} list of possible outcomes for the market
  * @param priceLadder {number[]} array of price points to add to the outcome
- * @param eventStartTimestamp {EpochTimeStamp} timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)
- * @param inplayEnabled {boolean} whether the market can accept orders after the event starts (defaults to false)
- * @param inplayOrderDelay {number} number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)
- * @param eventStartOrderBehaviour {MarketOrderBehaviour} protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)
- * @param marketLockOrderBehaviour {MarketOrderBehaviour} protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)
- * @param batchSize {number} number of prices to add in a single request
+ * @param options {object} optional parameters:
+ *   <ul>
+ *     <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
+ *     <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
+ *     <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
+ *     <li> inplayEnabled - whether the market can accept orders after the event starts (defaults to false)</li>
+ *     <li> inplayOrderDelay - number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)</li>
+ *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
+ *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
+ *     <li> batchSize - number of prices to add in a single request (defaults to 50)</li>
+ *    </ul>
+ *
  * @returns {CreateMarketWithOutcomesAndPriceLadderResponse} containing the newly-created market account publicKey, creation transaction ID, the market account and the results of the batched requests to add prices to the outcome accounts
  *
  * @example
  *
  * const name = "Full Time Result"
- * const type = MarketType.EventResultWinner
+ * const marketType = "EventResultWinner"
+ * const marketTypeDiscriminator = "";
+ * const marketTypeValue = "";
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const outcomes = ["Red", "Draw", "Blue"]
  * const priceLadder = DEFAULT_PRICE_LADDER
  * const batchSize = 100
- * const newMarket = await createMarket(program, name, type, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder, batchSize)
+ * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder, batchSize)
  */
 export async function createMarketWithOutcomesAndPriceLadder(
   program: Program,
   marketName: string,
-  marketType: MarketType,
+  marketType: string,
+  marketTypeDiscriminator: string,
+  marketTypeValue: string,
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   outcomes: string[],
   priceLadder: number[],
-  eventStartTimestamp: EpochTimeStamp = marketLockTimestamp,
-  inplayEnabled = false,
-  inplayOrderDelay = 0,
-  eventStartOrderBehaviour: MarketOrderBehaviour = MarketOrderBehaviourValue.none,
-  marketLockOrderBehaviour: MarketOrderBehaviour = MarketOrderBehaviourValue.none,
-  batchSize = 50,
+  options?: {
+    existingMarketPk?: PublicKey;
+    existingMarket?: MarketAccount;
+    eventStartTimestamp?: EpochTimeStamp;
+    inplayEnabled?: boolean;
+    inplayOrderDelay?: number;
+    eventStartOrderBehaviour?: MarketOrderBehaviour;
+    marketLockOrderBehaviour?: MarketOrderBehaviour;
+    batchSize?: number;
+  },
 ): Promise<ClientResponse<CreateMarketWithOutcomesAndPriceLadderResponse>> {
   const response = new ResponseFactory({});
+  const batchSize = options?.batchSize ? options.batchSize : 50;
 
   const marketResponse = await createMarket(
     program,
     marketName,
     marketType,
+    marketTypeDiscriminator,
+    marketTypeValue,
     marketTokenPk,
     marketLockTimestamp,
     eventAccountPk,
-    eventStartTimestamp,
-    inplayEnabled,
-    inplayOrderDelay,
-    eventStartOrderBehaviour,
-    marketLockOrderBehaviour,
+    options,
   );
 
   if (!marketResponse.success) {
@@ -136,45 +152,107 @@ export async function createMarketWithOutcomesAndPriceLadder(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
- * @param marketType {MarketType} type of the market being created
+ * @param marketType {string} type of the market being created
+ * @param marketTypeDiscriminator {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
+ * @param marketTypeValue {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
- * @param eventStartTimestamp {EpochTimeStamp} timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)
- * @param inplayEnabled {boolean} whether the market can accept orders after the event starts (defaults to false)
- * @param inplayOrderDelay {number} number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)
- * @param eventStartOrderBehaviour {MarketOrderBehaviour} protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)
- * @param marketLockOrderBehaviour {MarketOrderBehaviour} protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)
- * @returns {CreateMarketResponse} containing the newly-created market account publicKey, creation transaction ID and the market account
+ * @param options {object} optional parameters:
+ *   <ul>
+ *     <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
+ *     <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
+ *     <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
+ *     <li> inplayEnabled - whether the market can accept orders after the event starts (defaults to false)</li>
+ *     <li> inplayOrderDelay - number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)</li>
+ *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
+ *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
+ *    </ul>
+ *
+ *  @returns {CreateMarketResponse} containing the newly-created market account publicKey, creation transaction ID and the market account
  *
  * @example
  *
  * const name = "Full Time Result"
- * const type = MarketType.EventResultWinner
+ * const marketType = "EventResultWinner"
+ * const marketTypeDiscriminator = "";
+ * const marketTypeValue = "";
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
- * const newMarket = await createMarket(program, name, type, marketTokenPk, marketLock, eventAccountPk, outcomes)
+ * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes)
  */
 export async function createMarket(
   program: Program,
   marketName: string,
-  marketType: MarketType,
+  marketType: string,
+  marketTypeDiscriminator: string,
+  marketTypeValue: string,
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
-  eventStartTimestamp: EpochTimeStamp = marketLockTimestamp,
-  inplayEnabled = false,
-  inplayOrderDelay = 0,
-  eventStartOrderBehaviour: MarketOrderBehaviour = MarketOrderBehaviourValue.none,
-  marketLockOrderBehaviour: MarketOrderBehaviour = MarketOrderBehaviourValue.none,
+  options?: {
+    existingMarketPk?: PublicKey;
+    existingMarket?: MarketAccount;
+    eventStartTimestamp?: EpochTimeStamp;
+    inplayEnabled?: boolean;
+    inplayOrderDelay?: number;
+    eventStartOrderBehaviour?: MarketOrderBehaviour;
+    marketLockOrderBehaviour?: MarketOrderBehaviour;
+  },
 ): Promise<ClientResponse<CreateMarketResponse>> {
   const response = new ResponseFactory({});
+
+  /* eslint-disable */
+  // prettier-ignore-start
+  const existingMarketPk = options?.existingMarketPk
+    ? options.existingMarketPk
+    : null;
+  const eventStartTimestamp = options?.eventStartTimestamp
+    ? options.eventStartTimestamp
+    : marketLockTimestamp;
+  const inplayEnabled = options?.inplayEnabled ? options.inplayEnabled : false;
+  const inplayOrderDelay = options?.inplayOrderDelay
+    ? options.inplayOrderDelay
+    : 0;
+  const eventStartOrderBehaviour = options?.eventStartOrderBehaviour
+    ? options.eventStartOrderBehaviour
+    : MarketOrderBehaviourValue.none;
+  const marketLockOrderBehaviour = options?.marketLockOrderBehaviour
+    ? options.marketLockOrderBehaviour
+    : MarketOrderBehaviourValue.none;
+  // prettier-ignore-end
+  /* eslint-enable */
+
   const provider = program.provider as AnchorProvider;
   const mintDecimalOffset = 3;
 
+  const marketTypePk = findMarketTypePda(program, marketType).data.pda;
+
+  let version = 0;
+  if (existingMarketPk) {
+    let existingMarket = options?.existingMarket;
+    if (!existingMarket) {
+      const existingMarketResponse = await getMarket(program, existingMarketPk);
+      if (!existingMarketResponse.success) {
+        response.addErrors(existingMarketResponse.errors);
+        return response.body;
+      }
+      existingMarket = existingMarketResponse.data.account;
+    }
+    version = existingMarket.version + 1;
+  }
+
   const marketPda = (
-    await findMarketPda(program, eventAccountPk, marketType, marketTokenPk)
+    await findMarketPda(
+      program,
+      eventAccountPk,
+      marketTypePk,
+      marketTypeDiscriminator,
+      marketTypeValue,
+      marketTokenPk,
+      version,
+    )
   ).data.pda;
 
   const [escrowPda, authorisedOperators, mintInfo, paymentsQueuePda] =
@@ -187,12 +265,13 @@ export async function createMarket(
 
   try {
     const tnxId = await program.methods
-      .createMarketV2(
+      .createMarket(
         eventAccountPk,
-        marketType,
+        marketTypeDiscriminator,
+        marketTypeValue,
         marketName,
-        new BN(marketLockTimestamp),
         mintInfo.data.decimals - mintDecimalOffset,
+        new BN(marketLockTimestamp),
         new BN(eventStartTimestamp),
         inplayEnabled,
         inplayOrderDelay,
@@ -200,7 +279,11 @@ export async function createMarket(
         marketLockOrderBehaviour,
       )
       .accounts({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        existingMarket: existingMarketPk,
         market: marketPda,
+        marketType: marketTypePk,
         systemProgram: SystemProgram.programId,
         escrow: escrowPda.data.pda,
         mint: marketTokenPk,

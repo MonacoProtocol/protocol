@@ -181,7 +181,6 @@ fn validate_market_for_order(market: &Market, now: UnixTimestamp) -> Result<()> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::market_type::EVENT_RESULT_WINNER;
 
     #[test]
     fn test_market_valid() {
@@ -271,7 +270,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index,
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp,
             market_settle_timestamp: None,
             title: String::from("META"),

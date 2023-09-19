@@ -25,7 +25,6 @@ fn update_market_title(market: &mut Market, title: String) -> Result<()> {
 mod tests {
     use crate::instructions::market::update_market_title::update_market_title;
     use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
-    use crate::state::market_type::EVENT_RESULT_WINNER;
 
     #[test]
     fn test_market_update_success_100_char_title() {
@@ -36,7 +35,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),
@@ -67,7 +69,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: 0,
             market_settle_timestamp: None,
             title: "".to_string(),

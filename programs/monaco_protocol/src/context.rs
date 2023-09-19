@@ -7,6 +7,7 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
 
+use crate::state::market_type::MarketType;
 use crate::state::payments_queue::MarketPaymentsQueue;
 use crate::state::price_ladder::PriceLadder;
 use protocol_product::state::product::Product;
@@ -500,20 +501,59 @@ pub struct VoidOrder<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(event_account: Pubkey, market_type: String)]
+#[instruction(name: String)]
+pub struct CreateMarketType<'info> {
+    #[account(
+        init,
+        seeds = [
+            b"market_type".as_ref(),
+            name.as_ref(),
+        ],
+        bump,
+        payer = authority,
+        space = MarketType::size_for(name.len())
+    )]
+    pub market_type: Account<'info, MarketType>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+}
+
+fn get_create_market_version(existing_market: &Option<Account<Market>>) -> u8 {
+    if let Some(existing_market) = existing_market {
+        existing_market.version + 1
+    } else {
+        0
+    }
+}
+
+#[derive(Accounts)]
+#[instruction(
+    event_account: Pubkey,
+    market_type_discriminator: String,
+    market_type_value: String,
+)]
 pub struct CreateMarket<'info> {
+    pub existing_market: Option<Account<'info, Market>>,
+
     #[account(
         init,
         seeds = [
             event_account.as_ref(),
-            market_type.as_ref(),
+            market_type.key().as_ref(),
+            market_type_discriminator.as_ref(),
+            b"-".as_ref(),
+            market_type_value.as_ref(),
+            b"-".as_ref(),
+            get_create_market_version(&existing_market).to_string().as_ref(),
             mint.key().as_ref(),
         ],
         bump,
         payer = market_operator,
         space = Market::SIZE
     )]
-    pub market: Account<'info, Market>,
+    pub market: Box<Account<'info, Market>>,
     #[account(
         init,
         seeds = [
@@ -537,10 +577,14 @@ pub struct CreateMarket<'info> {
         space = MarketPaymentsQueue::SIZE
     )]
     pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+
+    pub market_type: Account<'info, MarketType>,
+
     pub rent: Sysvar<'info, Rent>,
 
     // #[soteria(ignore)] used to create `escrow`
     pub mint: Account<'info, Mint>,
+
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(address = anchor_spl::token::ID)]

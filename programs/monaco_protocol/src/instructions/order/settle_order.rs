@@ -58,7 +58,6 @@ fn is_winning_order(order: &Order, market: &Market) -> bool {
 mod tests {
     use super::*;
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
-    use crate::state::market_type::EVENT_RESULT_WINNER;
     use crate::state::order_account::OrderStatus;
 
     use anchor_lang::prelude::Pubkey;
@@ -96,7 +95,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
@@ -146,7 +148,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(2),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
@@ -196,7 +201,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(0),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
@@ -246,7 +254,10 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),

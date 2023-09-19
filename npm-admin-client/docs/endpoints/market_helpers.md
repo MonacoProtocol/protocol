@@ -2,33 +2,30 @@
 
 ### Table of Contents
 
-*   [MarketType][1]
-*   [findMarketPda][2]
-    *   [Parameters][3]
-    *   [Examples][4]
-*   [getMarket][5]
-    *   [Parameters][6]
-    *   [Examples][7]
-*   [getMintInfo][8]
-    *   [Parameters][9]
-    *   [Examples][10]
-*   [findEscrowPda][11]
-    *   [Parameters][12]
-    *   [Examples][13]
-*   [findCommissionPaymentsQueuePda][14]
-    *   [Parameters][15]
-    *   [Examples][16]
-*   [MarketOutcomes][17]
-    *   [Parameters][18]
-    *   [Examples][19]
-*   [getMarketOutcomesByMarket][20]
-    *   [Parameters][21]
-    *   [Examples][22]
-*   [getMarketOutcomeTitlesByMarket][23]
-    *   [Parameters][24]
-    *   [Examples][25]
-
-## MarketType
+*   [findMarketPda][1]
+    *   [Parameters][2]
+    *   [Examples][3]
+*   [getMarket][4]
+    *   [Parameters][5]
+    *   [Examples][6]
+*   [getMintInfo][7]
+    *   [Parameters][8]
+    *   [Examples][9]
+*   [findEscrowPda][10]
+    *   [Parameters][11]
+    *   [Examples][12]
+*   [findCommissionPaymentsQueuePda][13]
+    *   [Parameters][14]
+    *   [Examples][15]
+*   [MarketOutcomes][16]
+    *   [Parameters][17]
+    *   [Examples][18]
+*   [getMarketOutcomesByMarket][19]
+    *   [Parameters][20]
+    *   [Examples][21]
+*   [getMarketOutcomeTitlesByMarket][22]
+    *   [Parameters][23]
+    *   [Examples][24]
 
 ## findMarketPda
 
@@ -38,16 +35,21 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `eventPk` **PublicKey** {PublicKey} publicKey of an event
-*   `marketType` **[MarketType][1]** {MarketType} type of the market
+*   `marketTypePk` **PublicKey** {PublicKey} publicKey of the market type
+*   `marketTypeDiscriminator` **[string][25]** {string} discriminator of the market type
+*   `marketTypeValue` **[string][25]** {string} value of the market type
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the currency token
+*   `version` **[number][26]?** {number} (Optional) version of the market, defaults to 0
 
 ### Examples
 
 ```javascript
 const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const marketType = "MatchResult"
+const marketTypePk = new PublicKey('f9cEhHopn2C9R4G6GaGakmUkCoBWmJ6c4YEArr83hYBWk')
+const marketTypeDiscriminator = "";
+const marketTypeValue = "";
 const mintPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
-const marketPda = await findMarketPda(program, eventPk, marketType, mintPk)
+const marketPda = await findMarketPda(program, eventPk, marketTypePk, marketTypeDiscriminator, marketTypeValue, mintPk)
 ```
 
 Returns **FindPdaResponse** publicKey (PDA) and the seed used to generate it
@@ -184,52 +186,54 @@ const marketOutcomeTitles = await getMarketOutcomeTitlesByMarket(program, market
 
 Returns **MarketOutcomeTitlesResponse** fetched market outcome titles - ordered by index
 
-[1]: #markettype
+[1]: #findmarketpda
 
-[2]: #findmarketpda
+[2]: #parameters
 
-[3]: #parameters
+[3]: #examples
 
-[4]: #examples
+[4]: #getmarket
 
-[5]: #getmarket
+[5]: #parameters-1
 
-[6]: #parameters-1
+[6]: #examples-1
 
-[7]: #examples-1
+[7]: #getmintinfo
 
-[8]: #getmintinfo
+[8]: #parameters-2
 
-[9]: #parameters-2
+[9]: #examples-2
 
-[10]: #examples-2
+[10]: #findescrowpda
 
-[11]: #findescrowpda
+[11]: #parameters-3
 
-[12]: #parameters-3
+[12]: #examples-3
 
-[13]: #examples-3
+[13]: #findcommissionpaymentsqueuepda
 
-[14]: #findcommissionpaymentsqueuepda
+[14]: #parameters-4
 
-[15]: #parameters-4
+[15]: #examples-4
 
-[16]: #examples-4
+[16]: #marketoutcomes
 
-[17]: #marketoutcomes
+[17]: #parameters-5
 
-[18]: #parameters-5
+[18]: #examples-5
 
-[19]: #examples-5
+[19]: #getmarketoutcomesbymarket
 
-[20]: #getmarketoutcomesbymarket
+[20]: #parameters-6
 
-[21]: #parameters-6
+[21]: #examples-6
 
-[22]: #examples-6
+[22]: #getmarketoutcometitlesbymarket
 
-[23]: #getmarketoutcometitlesbymarket
+[23]: #parameters-7
 
-[24]: #parameters-7
+[24]: #examples-7
 
-[25]: #examples-7
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

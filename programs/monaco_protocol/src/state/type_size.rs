@@ -24,6 +24,10 @@ pub const fn vec_size(element_size: usize, length: usize) -> usize {
     VEC_PREFIX_SIZE + element_size * length
 }
 
+pub const fn string_size(str_len: usize) -> usize {
+    vec_size(CHAR_SIZE, str_len)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -50,5 +54,13 @@ mod tests {
         assert_eq!(6, vec_size(1_usize, 2_usize));
         assert_eq!(8, vec_size(2_usize, 2_usize));
         assert_eq!(10, vec_size(3_usize, 2_usize));
+    }
+
+    #[test]
+    fn test_string_size() {
+        assert_eq!(4, string_size("".len()));
+        assert_eq!(8, string_size("a".len()));
+        assert_eq!(12, string_size("aa".len()));
+        assert_eq!(16, string_size("aaa".len()));
     }
 }

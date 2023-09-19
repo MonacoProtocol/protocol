@@ -3,7 +3,6 @@ import { Program } from "@coral-xyz/anchor";
 import {
   createMarketWithOutcomesAndPriceLadder as npmCreateMarket,
   DEFAULT_PRICE_LADDER,
-  MarketType,
 } from "../npm-admin-client/src/";
 import { getProtocolProgram } from "./util";
 import { Markets, MarketStatusFilter } from "../npm-client";
@@ -19,7 +18,7 @@ export async function create_market() {
   const createMarketResponse = await npmCreateMarket(
     protocolProgram as Program,
     "Aduana Stars-Bechem United",
-    MarketType.EventResultWinner,
+    "EventResultWinner",
     marketToken,
     1924254038,
     eventAccountKeyPair.publicKey,

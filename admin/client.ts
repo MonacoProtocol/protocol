@@ -27,6 +27,12 @@ import { addPricesToLadder } from "./add_prices_to_ladder";
 import { getTokenLeaderboard } from "./leaderboard/token_leaderboard";
 import { getLeaderboardPerMarket } from "./leaderboard/market_leaderboard";
 import { create_product } from "./product";
+import {
+  createMarketType,
+  printAllMarketTypes,
+  printMarketType,
+  printMarketTypeByName,
+} from "./market_types";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -40,6 +46,18 @@ const script = process.argv[2];
 switch (script) {
   case "getAll":
     getAll();
+    break;
+  case "createMarketType":
+    createMarketType();
+    break;
+  case "printAllMarketTypes":
+    printAllMarketTypes();
+    break;
+  case "printMarketTypeByName":
+    printMarketTypeByName();
+    break;
+  case "printMarketType":
+    printMarketType();
     break;
   case "getAllMarkets":
     getAllMarkets();

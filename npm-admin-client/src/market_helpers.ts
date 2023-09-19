@@ -16,34 +16,35 @@ import {
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 
-export enum MarketType {
-  EventResultFullTime = "EventResultFullTime",
-  EventResultHalfTime = "EventResultHalfTime",
-  EventResultBothSidesScore = "EventResultBothSidesScore",
-  EventResultWinner = "EventResultWinner",
-}
-
 /**
  * For the provided event publicKey, market type and mint publicKey return a Program Derived Address (PDA). This PDA is used for market creation.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param eventPk {PublicKey} publicKey of an event
- * @param marketType {MarketType} type of the market
+ * @param marketTypePk {PublicKey} publicKey of the market type
+ * @param marketTypeDiscriminator {string} discriminator of the market type
+ * @param marketTypeValue {string} value of the market type
  * @param mintPk {PublicKey} publicKey of the currency token
+ * @param version {number} (Optional) version of the market, defaults to 0
  * @returns {FindPdaResponse} publicKey (PDA) and the seed used to generate it
  *
  * @example
  *
  * const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const marketType = "MatchResult"
+ * const marketTypePk = new PublicKey('f9cEhHopn2C9R4G6GaGakmUkCoBWmJ6c4YEArr83hYBWk')
+ * const marketTypeDiscriminator = "";
+ * const marketTypeValue = "";
  * const mintPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
- * const marketPda = await findMarketPda(program, eventPk, marketType, mintPk)
+ * const marketPda = await findMarketPda(program, eventPk, marketTypePk, marketTypeDiscriminator, marketTypeValue, mintPk)
  */
 export async function findMarketPda(
   program: Program,
   eventPk: PublicKey,
-  marketType: MarketType,
+  marketTypePk: PublicKey,
+  marketTypeDiscriminator: string,
+  marketTypeValue: string,
   mintPk: PublicKey,
+  version = 0,
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
 
@@ -51,7 +52,12 @@ export async function findMarketPda(
     const [pda] = await PublicKey.findProgramAddress(
       [
         eventPk.toBuffer(),
-        Buffer.from(marketType.toString()),
+        marketTypePk.toBuffer(),
+        Buffer.from(marketTypeDiscriminator),
+        Buffer.from("-"),
+        Buffer.from(marketTypeValue),
+        Buffer.from("-"),
+        Buffer.from(version.toString()),
         mintPk.toBuffer(),
       ],
       program.programId,

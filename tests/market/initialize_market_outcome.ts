@@ -116,7 +116,6 @@ describe("Market: market outcome initialization", () => {
         .rpc();
       assert(false, "an exception should have been thrown");
     } catch (e) {
-      console.error(e);
       expect(e.message).toMatch(
         /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
@@ -169,7 +168,6 @@ describe("Market: market outcome initialization", () => {
         .rpc();
       assert(false, "an exception should have been thrown");
     } catch (e) {
-      console.error(e);
       expect(e.message).toMatch(
         /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
@@ -221,7 +219,6 @@ describe("Market: market outcome initialization", () => {
         .rpc();
       assert(false, "an exception should have been thrown");
     } catch (e) {
-      console.error(e);
       expect(e.message).toMatch(
         /^AnchorError caused by account: outcome. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
       );
