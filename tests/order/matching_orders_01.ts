@@ -115,7 +115,7 @@ describe("Order Matching Market State", () => {
     ]);
 
     // wait for market lock
-    await new Promise((e) => setTimeout(e, 7000));
+    await new Promise((e) => setTimeout(e, 10000));
     await market.match(AforPk, BAgainstPk);
 
     assert.deepEqual(
