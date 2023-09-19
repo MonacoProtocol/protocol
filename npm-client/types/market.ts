@@ -14,13 +14,6 @@ export interface MarketStatus {
   readonly voided?: Record<string, never>;
 }
 
-export enum MarketType {
-  EventResultFullTime = "EventResultFullTime",
-  EventResultHalfTime = "EventResultHalfTime",
-  EventResultBothSidesScore = "EventResultBothSidesScore",
-  EventResultWinner = "EventResultWinner",
-}
-
 export interface MarketOrderBehaviour {
   none?: Record<string, never>;
   cancelUnmatched?: Record<string, never>;
@@ -35,7 +28,9 @@ export type MarketAccount = {
   marketOutcomesCount: number;
   marketSettleTimestamp?: BN;
   marketStatus: MarketStatus;
-  marketType: string;
+  marketType: PublicKey;
+  marketTypeDiscriminator: string;
+  marketTypeValue: string;
   marketWinningOutcomeIndex?: number;
   mintAccount: PublicKey;
   published: boolean;
@@ -49,6 +44,7 @@ export type MarketAccount = {
   eventStartTimestamp: BN;
   unsettledAccountsCount: number;
   unclosedAccountsCount: number;
+  version: number;
 };
 
 export type MarketAccounts = {

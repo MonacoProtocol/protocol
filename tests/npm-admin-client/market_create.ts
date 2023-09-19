@@ -12,9 +12,9 @@ import { createNewMint } from "../util/test_util";
 import {
   createMarket,
   createMarketWithOutcomesAndPriceLadder,
-  MarketType,
 } from "../../npm-admin-client/src";
 import { getMarketOutcomeTitlesByMarket } from "../../npm-client/src/market_outcome_query";
+import { getOrCreateMarketType } from "../../npm-admin-client/src/market_type_create";
 
 describe("Admin Client Create Market", () => {
   const provider = AnchorProvider.local();
@@ -22,7 +22,9 @@ describe("Admin Client Create Market", () => {
   const newMintDecimals = 9;
   const marketLockTimestamp = new BN(1924254038);
   const marketTitle = "Test Market";
-  const marketType = MarketType.EventResultWinner;
+  const marketType = "aMarketType";
+  const marketTypeDiscriminator = "";
+  const marketTypeValue = "";
 
   it("Creates a market", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
@@ -33,19 +35,24 @@ describe("Admin Client Create Market", () => {
       nodeWallet,
       newMintDecimals,
     );
+
+    await getOrCreateMarketType(protocolProgram, marketType);
+
     const market = await createMarket(
       protocolProgram,
       marketTitle,
       marketType,
+      marketTypeDiscriminator,
+      marketTypeValue,
       newMintPk,
       marketLockTimestamp,
       event.publicKey,
     );
 
+    assert.deepEqual(market.errors, []);
     assert(market.success);
     assert(market.data.marketPk);
     assert(market.data.tnxId);
-    assert.deepEqual(market.errors, []);
     assert.deepEqual(market.data.market.mintAccount, newMintPk);
     assert.deepEqual(market.data.market.title, marketTitle);
   });
@@ -58,7 +65,9 @@ describe("Admin Client Create Full Market", () => {
   const marketLockTimestamp = new BN(1924254038);
   const marketTitle = "Test Market";
   const marketOutcomes = ["TEAM_1", "TEAM_2"];
-  const marketType = MarketType.EventResultWinner;
+  const marketType = "AnotherMarketType";
+  const marketTypeDiscriminator = "";
+  const marketTypeValue = "";
 
   it("Creates a market with outcomes and ladder", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
@@ -69,20 +78,19 @@ describe("Admin Client Create Full Market", () => {
       nodeWallet,
       newMintDecimals,
     );
+
+    await getOrCreateMarketType(protocolProgram, marketType);
     const market = await createMarketWithOutcomesAndPriceLadder(
       protocolProgram,
       marketTitle,
       marketType,
+      marketTypeDiscriminator,
+      marketTypeValue,
       newMintPk,
       marketLockTimestamp,
       event.publicKey,
       marketOutcomes,
       [1.001],
-    );
-
-    const outcomeTitles = await getMarketOutcomeTitlesByMarket(
-      protocolProgram,
-      market.data.marketPk,
     );
 
     assert.deepEqual(market.errors, []);
@@ -92,6 +100,12 @@ describe("Admin Client Create Full Market", () => {
     assert(market.data.tnxId);
     assert.deepEqual(market.data.market.mintAccount, newMintPk);
     assert.deepEqual(market.data.market.title, marketTitle);
+
+    const outcomeTitles = await getMarketOutcomeTitlesByMarket(
+      protocolProgram,
+      market.data.marketPk,
+    );
+
     assert.equal(market.data.priceLadderResults.length, marketOutcomes.length);
     assert.deepEqual(outcomeTitles.data.marketOutcomeTitles, marketOutcomes);
   });

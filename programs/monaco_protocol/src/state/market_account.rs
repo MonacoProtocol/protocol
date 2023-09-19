@@ -14,8 +14,11 @@ pub struct Market {
     pub market_status: MarketStatus,
     pub inplay_enabled: bool,
     pub inplay: bool,
+    pub market_type: Pubkey,
     // this section cannot be moved or on-chain search will stop working
-    pub market_type: String,
+    pub market_type_discriminator: String,
+    pub market_type_value: String,
+    pub version: u8,
     pub decimal_limit: u8,
 
     pub published: bool,
@@ -41,7 +44,7 @@ pub struct Market {
 }
 
 impl Market {
-    pub const TYPE_MAX_LENGTH: usize = 50;
+    pub const TYPE_FIELD_MAX_LENGTH: usize = 16;
     pub const TITLE_MAX_LENGTH: usize = 100;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE
@@ -50,7 +53,10 @@ impl Market {
         + ENUM_SIZE // market_status
         + BOOL_SIZE // inplay_enabled
         + BOOL_SIZE // inplay
-        + vec_size (CHAR_SIZE, Market::TYPE_MAX_LENGTH) // market_type
+        + PUB_KEY_SIZE // market_type
+        + string_size (Market::TYPE_FIELD_MAX_LENGTH) // market_type disc.
+        + string_size (Market::TYPE_FIELD_MAX_LENGTH) // market_type value
+        + U8_SIZE // version
         + BOOL_SIZE * 2 // published + suspended
         + U16_SIZE // market_outcomes_count
         + option_size(U16_SIZE) // market_winning_outcome_index
@@ -164,7 +170,10 @@ mod tests {
             market_status: MarketStatus::Initializing,
             inplay_enabled: true,
             inplay: true,
-            market_type: "".to_string(),
+            market_type: Pubkey::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             decimal_limit: 0,
             published: false,
             suspended: false,
@@ -198,7 +207,10 @@ mod tests {
             market_status: MarketStatus::Initializing,
             inplay_enabled: true,
             inplay: false,
-            market_type: "".to_string(),
+            market_type: Pubkey::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             decimal_limit: 0,
             published: false,
             suspended: false,
@@ -232,7 +244,10 @@ mod tests {
             market_status: MarketStatus::Initializing,
             inplay_enabled: true,
             inplay: false,
-            market_type: "".to_string(),
+            market_type: Pubkey::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             decimal_limit: 0,
             published: false,
             suspended: false,
@@ -266,7 +281,10 @@ mod tests {
             market_status: MarketStatus::Initializing,
             inplay_enabled: false,
             inplay: false,
-            market_type: "".to_string(),
+            market_type: Pubkey::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             decimal_limit: 0,
             published: false,
             suspended: false,
@@ -349,7 +367,10 @@ mod tests {
             market_status: MarketStatus::Initializing,
             inplay_enabled: false,
             inplay: false,
-            market_type: "".to_string(),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
             decimal_limit: 0,
             published: false,
             suspended: false,

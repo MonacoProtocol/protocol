@@ -12,13 +12,19 @@ use crate::state::order_account::Order;
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
 
+const STATUSES_THAT_SUPPORT_MARKET_RECREATION: [MarketStatus; 2] =
+    [MarketStatus::ReadyToVoid, MarketStatus::Voided];
+
+#[allow(clippy::too_many_arguments)]
 pub fn create(
     ctx: Context<CreateMarket>,
     event_account: Pubkey,
-    market_type: String,
-    market_lock_timestamp: i64,
+    market_type: Pubkey,
+    market_type_discriminator: String,
+    market_type_value: String,
     title: String,
     max_decimals: u8,
+    market_lock_timestamp: i64,
     event_start_timestamp: i64,
     inplay_enabled: bool,
     inplay_order_delay: u8,
@@ -44,10 +50,65 @@ pub fn create(
     let decimal_limit = ctx.accounts.mint.decimals.saturating_sub(max_decimals);
     require!(PRICE_SCALE <= decimal_limit, CoreError::MaxDecimalsTooLarge);
 
+    require!(
+        ctx.accounts.market_type.requires_discriminator != market_type_discriminator.is_empty(),
+        CoreError::MarketTypeDiscriminatorUsageIncorrect
+    );
+    require!(
+        ctx.accounts.market_type.requires_value != market_type_value.is_empty(),
+        CoreError::MarketTypeValueUsageIncorrect
+    );
+
+    let mut version = 0;
+    if let Some(existing_market) = &ctx.accounts.existing_market {
+        // check market status is OK to recreate
+        require!(
+            STATUSES_THAT_SUPPORT_MARKET_RECREATION.contains(&existing_market.market_status),
+            CoreError::MarketInvalidStatus
+        );
+
+        // check seeds match
+        require_keys_eq!(
+            existing_market.event_account,
+            event_account,
+            CoreError::MarketEventAccountMismatch
+        );
+        require_keys_eq!(
+            existing_market.market_type,
+            market_type,
+            CoreError::MarketTypeMismatch
+        );
+        require!(
+            existing_market.market_type_discriminator == market_type_discriminator,
+            CoreError::MarketTypeDiscriminatorMismatch
+        );
+        require!(
+            existing_market.market_type_value == market_type_value,
+            CoreError::MarketTypeValueMismatch
+        );
+        require_keys_eq!(
+            existing_market.mint_account,
+            ctx.accounts.mint.key(),
+            CoreError::MarketMintMismatch
+        );
+
+        // check authority matches
+        require_eq!(
+            existing_market.authority,
+            ctx.accounts.market_operator.key(),
+            CoreError::MarketAuthorityMismatch
+        );
+
+        version = existing_market.version + 1;
+    }
+
     ctx.accounts.market.authority = ctx.accounts.market_operator.key();
 
     ctx.accounts.market.event_account = event_account;
     ctx.accounts.market.market_type = market_type;
+    ctx.accounts.market.market_type_discriminator = market_type_discriminator;
+    ctx.accounts.market.market_type_value = market_type_value;
+    ctx.accounts.market.version = version;
     ctx.accounts.market.market_outcomes_count = 0_u16;
     ctx.accounts.market.market_winning_outcome_index = None;
     ctx.accounts.market.market_lock_timestamp = market_lock_timestamp;

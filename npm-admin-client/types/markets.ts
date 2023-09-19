@@ -1,6 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 
+export type GetOrCreateAccountResponse<T> = {
+  account: T;
+  publicKey: PublicKey;
+  txId?: string;
+};
+
 export type CreateMarketResponse = {
   marketPk: PublicKey;
   tnxId: string;
@@ -105,7 +111,9 @@ export type MarketAccount = {
   marketOutcomesCount: number;
   marketSettleTimestamp?: BN;
   marketStatus: MarketStatus;
-  marketType: string;
+  marketType: PublicKey;
+  marketTypeDiscriminator: string;
+  marketTypeValue: string;
   marketWinningOutcomeIndex?: number;
   mintAccount: PublicKey;
   published: boolean;
@@ -118,6 +126,7 @@ export type MarketAccount = {
   marketLockedOrderBehaviour: MarketOrderBehaviour;
   unsettledAccountsCount: number;
   unclosedAccountsCount: number;
+  version: number;
 };
 
 export type EpochTimeStamp = number;

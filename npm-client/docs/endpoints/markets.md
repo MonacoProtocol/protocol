@@ -20,16 +20,21 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `eventPk` **PublicKey** {PublicKey} publicKey of an event
-*   `marketType` **MarketType** {MarketType} type of the market
+*   `marketTypePk` **PublicKey** {PublicKey} publicKey of the market type
+*   `marketTypeDiscriminator` **[string][10]** {string} discriminator of the market type
+*   `marketTypeValue` **[string][10]** {string} value of the market type
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the currency token
+*   `version` **[number][11]?** {number} (Optional) version of the market, defaults to 0
 
 ### Examples
 
 ```javascript
 const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const marketType = "MatchResult"
+const marketTypePk =  new PublicKey('n2C9R4G6GaPwFAxaNWM33DoBWmZtBBDFZf9cWM3xaNW')
+const marketTypeDiscriminator = "";
+const marketTypeValue = "";
 const mintPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
-const marketPda = await findMarketPda(program, eventPk, marketType, mintPk)
+const marketPda = await findMarketPda(program, eventPk, marketTypePk, marketTypeDiscriminator, marketTypeValue, mintPk)
 ```
 
 Returns **FindPdaResponse** publicKey (PDA) and the seed used to generate it
@@ -59,7 +64,7 @@ For the provided list of market publicKeys, get the market account details for e
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPks` **[Array][10]\<PublicKey>** {PublicKey} publicKey of a market
+*   `marketPks` **[Array][12]\<PublicKey>** {PublicKey} publicKey of a market
 
 ### Examples
 
@@ -90,4 +95,8 @@ Returns **MarketAccounts** list of market account details
 
 [9]: #examples-2
 
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

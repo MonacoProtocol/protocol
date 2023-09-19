@@ -8,6 +8,7 @@ declare -a endpoints=(
     "market_management"
     "market_outcome_prices"
     "market_outcome"
+    "market_type_create"
     "market_validate"
     "market_helpers"
     "operators"
@@ -19,6 +20,7 @@ declare -a types=(
     "client"
     "default_price_ladder"
     "markets"
+    "market_type"
     "market_outcomes"
     "operator"
 )

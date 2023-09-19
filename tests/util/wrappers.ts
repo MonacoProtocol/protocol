@@ -16,7 +16,6 @@ import {
   findMarketPositionPda,
   findTradePda,
   findMarketPda,
-  MarketType,
 } from "../../npm-client/src/";
 import {
   authoriseOperator,
@@ -27,6 +26,7 @@ import {
   getProtocolProductProgram,
   processCommissionPayments,
   executeTransactionMaxCompute,
+  getOrCreateMarketType,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
@@ -246,20 +246,58 @@ export class Monaco {
     return market;
   }
 
-  async createMarket(
-    outcomes: string[],
-    priceLadder: number[],
-    marketOperatorKeypair?: Keypair,
-    inplayEnabled?: boolean,
-    inplayDelay?: number,
-    eventStartTimestamp = 1924254038,
-    marketLockTimestamp = 1924254038,
-    eventStartOrderBehaviour: object = { cancelUnmatched: {} },
-  ) {
-    const event = anchor.web3.Keypair.generate();
-    const marketType = MarketType.EventResultWinner;
-    const marketTitle = "SOME TITLE";
-    const decimals = 3;
+  async createMarketWithOptions(options: {
+    outcomes: string[];
+    priceLadder: number[];
+    eventPk?: PublicKey;
+    marketTypePk?: PublicKey;
+    marketTypeDiscriminator?: string;
+    marketTypeValue?: string;
+    marketTitle?: string;
+    decimals?: number;
+    eventStartTimestamp?: number;
+    marketLockTimestamp?: number;
+    inplayEnabled?: boolean;
+    inplayOrderDelay?: number;
+    eventStartOrderBehaviour?: object;
+    marketOperatorKeypair?: Keypair;
+  }) {
+    /* eslint-disable */
+    // prettier-ignore-start
+    const eventPk: PublicKey = options.eventPk
+      ? options.eventPk
+      : Keypair.generate().publicKey;
+    const marketTitle = options.marketTitle
+      ? options.marketTitle
+      : "SOME TITLE";
+    const decimals = options.decimals ? options.decimals : 3;
+    const marketTypePk = options.marketTypePk
+      ? options.marketTypePk
+      : await getOrCreateMarketType(
+          this.program as Program,
+          "EventResultWinner",
+        );
+    const marketTypeDiscriminator = options.marketTypeDiscriminator
+      ? options.marketTypeDiscriminator
+      : "";
+    const marketTypeValue = options.marketTypeValue
+      ? options.marketTypeValue
+      : "";
+    const eventStartTimestamp = options.eventStartTimestamp
+      ? options.eventStartTimestamp
+      : 1924254038;
+    const marketLockTimestamp = options.marketLockTimestamp
+      ? options.marketLockTimestamp
+      : 1924254038;
+    const inplayEnabled = options.inplayEnabled ? options.inplayEnabled : false;
+    const inplayOrderDelay = options.inplayOrderDelay
+      ? options.inplayOrderDelay
+      : 0;
+    const eventStartOrderBehaviour = options.eventStartOrderBehaviour
+      ? options.eventStartOrderBehaviour
+      : { cancelUnmatched: {} };
+    // prettier-ignore-end
+    /* eslint-enable */
 
     const [mintPk, authorisedOperatorsPk] = await Promise.all([
       createNewMint(
@@ -272,53 +310,62 @@ export class Monaco {
 
     const mintInfo = await getMint(this.provider.connection, mintPk);
 
-    const marketPdaResponse = await findMarketPda(
-      this.program as Program,
-      event.publicKey,
-      marketType,
-      mintPk,
-    );
+    const marketPk = (
+      await findMarketPda(
+        monaco.program as Program,
+        eventPk,
+        marketTypePk,
+        marketTypeDiscriminator,
+        marketTypeValue,
+        mintPk,
+      )
+    ).data.pda;
 
     const marketEscrowPk = await findEscrowPda(
       this.program as Program,
-      marketPdaResponse.data.pda,
+      marketPk,
     );
 
     const commissionQueuePk = await findCommissionPaymentsQueuePda(
       this.program as Program,
-      marketPdaResponse.data.pda,
+      marketPk,
     );
 
     // invoke core program to call operations required for creating an order
     await this.program.methods
-      .createMarketV2(
-        event.publicKey,
-        marketType,
+      .createMarket(
+        eventPk,
+        marketTypeDiscriminator,
+        marketTypeValue,
         marketTitle,
-        new anchor.BN(marketLockTimestamp),
         decimals,
+        new anchor.BN(marketLockTimestamp),
         new anchor.BN(eventStartTimestamp),
         inplayEnabled,
-        inplayDelay,
+        inplayOrderDelay,
         eventStartOrderBehaviour,
         { none: {} },
       )
       .accounts({
-        market: marketPdaResponse.data.pda,
+        existingMarket: null,
+        market: marketPk,
+        marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
         commissionPaymentQueue: commissionQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
         marketOperator:
-          marketOperatorKeypair instanceof Keypair
-            ? marketOperatorKeypair.publicKey
+          options.marketOperatorKeypair instanceof Keypair
+            ? options.marketOperatorKeypair.publicKey
             : this.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .signers(
-        marketOperatorKeypair instanceof Keypair ? [marketOperatorKeypair] : [],
+        options.marketOperatorKeypair instanceof Keypair
+          ? [options.marketOperatorKeypair]
+          : [],
       )
       .rpc()
       .catch((e) => {
@@ -327,34 +374,34 @@ export class Monaco {
       });
 
     const outcomePks = await Promise.all(
-      outcomes.map(async (_, index) => {
+      options.outcomes.map(async (_, index) => {
         const outcomePkResponse = await findMarketOutcomePda(
           this.program as Program,
-          marketPdaResponse.data.pda,
+          marketPk,
           index,
         );
         return outcomePkResponse.data.pda;
       }),
     );
 
-    for (const outcomeIndex in outcomes) {
+    for (const outcomeIndex in options.outcomes) {
       await this.provider.connection.confirmTransaction(
         await this.program.methods
-          .initializeMarketOutcome(outcomes[outcomeIndex])
+          .initializeMarketOutcome(options.outcomes[outcomeIndex])
           .accounts({
             outcome: outcomePks[outcomeIndex],
+            market: marketPk,
             priceLadder: null,
-            market: marketPdaResponse.data.pda,
             authorisedOperators: authorisedOperatorsPk,
             marketOperator:
-              marketOperatorKeypair instanceof Keypair
-                ? marketOperatorKeypair.publicKey
+              options.marketOperatorKeypair instanceof Keypair
+                ? options.marketOperatorKeypair.publicKey
                 : this.operatorPk,
             systemProgram: SystemProgram.programId,
           })
           .signers(
-            marketOperatorKeypair instanceof Keypair
-              ? [marketOperatorKeypair]
+            options.marketOperatorKeypair instanceof Keypair
+              ? [options.marketOperatorKeypair]
               : [],
           )
           .rpc()
@@ -365,24 +412,28 @@ export class Monaco {
       );
 
       const priceLadderBatchSize = 20;
-      for (let i = 0; i < priceLadder.length; i += priceLadderBatchSize) {
-        const batch = priceLadder.slice(i, i + priceLadderBatchSize);
+      for (
+        let i = 0;
+        i < options.priceLadder.length;
+        i += priceLadderBatchSize
+      ) {
+        const batch = options.priceLadder.slice(i, i + priceLadderBatchSize);
         await this.provider.connection.confirmTransaction(
           await this.program.methods
             .addPricesToMarketOutcome(parseInt(outcomeIndex), batch)
             .accounts({
               outcome: outcomePks[outcomeIndex],
-              market: marketPdaResponse.data.pda,
+              market: marketPk,
               authorisedOperators: authorisedOperatorsPk,
               marketOperator:
-                marketOperatorKeypair instanceof Keypair
-                  ? marketOperatorKeypair.publicKey
+                options.marketOperatorKeypair instanceof Keypair
+                  ? options.marketOperatorKeypair.publicKey
                   : this.operatorPk,
               systemProgram: SystemProgram.programId,
             })
             .signers(
-              marketOperatorKeypair instanceof Keypair
-                ? [marketOperatorKeypair]
+              options.marketOperatorKeypair instanceof Keypair
+                ? [options.marketOperatorKeypair]
                 : [],
             )
             .rpc()
@@ -398,10 +449,10 @@ export class Monaco {
     matchingPools = await Promise.all(
       outcomePks.map(async (outcomePk, index) => {
         return await getMarketMatchingPoolsPks(
-          marketPdaResponse.data.pda,
+          marketPk,
           index,
           outcomePk,
-          priceLadder,
+          options.priceLadder,
         );
       }),
     );
@@ -409,17 +460,40 @@ export class Monaco {
     const bmarket = new MonacoMarket(
       this,
       externalPrograms,
-      marketPdaResponse.data.pda,
+      marketPk,
       marketEscrowPk.data.pda,
       commissionQueuePk.data.pda,
       outcomePks,
       matchingPools,
-      event.publicKey,
+      eventPk,
+      marketTypePk,
       mintPk,
       mintInfo,
-      marketOperatorKeypair,
+      options.marketOperatorKeypair,
     );
     return bmarket;
+  }
+
+  async createMarket(
+    outcomes: string[],
+    priceLadder: number[],
+    marketOperatorKeypair?: Keypair,
+    inplayEnabled?: boolean,
+    inplayOrderDelay?: number,
+    eventStartTimestamp = 1924254038,
+    marketLockTimestamp = 1924254038,
+    eventStartOrderBehaviour: object = { cancelUnmatched: {} },
+  ) {
+    return await this.createMarketWithOptions({
+      outcomes,
+      priceLadder,
+      marketOperatorKeypair,
+      inplayEnabled,
+      inplayOrderDelay,
+      eventStartTimestamp,
+      marketLockTimestamp,
+      eventStartOrderBehaviour,
+    });
   }
 
   async createPriceLadder(prices: number[]): Promise<PublicKey> {
@@ -453,6 +527,7 @@ export class MonacoMarket {
     against: PublicKey;
     forOutcome: PublicKey;
   }[][];
+  readonly marketTypePk: PublicKey;
   readonly eventPk: PublicKey;
   readonly mintPk: PublicKey;
   readonly mintInfo: Mint;
@@ -477,6 +552,7 @@ export class MonacoMarket {
       forOutcome: PublicKey;
     }[][],
     eventPk: PublicKey,
+    marketTypePk: PublicKey,
     mintPk: PublicKey,
     mintInfo: Mint,
     marketAuthority?: Keypair,
@@ -489,6 +565,7 @@ export class MonacoMarket {
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;
     this.eventPk = eventPk;
+    this.marketTypePk = marketTypePk;
     this.mintPk = mintPk;
     this.mintInfo = mintInfo;
     this.marketAuthority = marketAuthority;

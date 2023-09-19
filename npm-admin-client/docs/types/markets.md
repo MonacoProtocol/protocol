@@ -2,57 +2,69 @@
 
 ### Table of Contents
 
-*   [CreateMarketResponse][1]
+*   [GetOrCreateAccountResponse][1]
     *   [Properties][2]
-*   [CreateMarketWithOutcomesAndPriceLadderResponse][3]
-*   [OutcomePdaResponse][4]
-    *   [Properties][5]
-*   [OutcomeInitialisationResponse][6]
-*   [OddsInitialisationResponse][7]
-*   [OutcomePdasResponse][8]
-    *   [Properties][9]
-*   [OutcomeInitialisationsResponse][10]
+*   [CreateMarketResponse][3]
+    *   [Properties][4]
+*   [CreateMarketWithOutcomesAndPriceLadderResponse][5]
+*   [OutcomePdaResponse][6]
+    *   [Properties][7]
+*   [OutcomeInitialisationResponse][8]
+*   [OddsInitialisationResponse][9]
+*   [OutcomePdasResponse][10]
     *   [Properties][11]
-*   [AddPricesToOutcomeResponse][12]
+*   [OutcomeInitialisationsResponse][12]
     *   [Properties][13]
-*   [BatchAddPricesToOutcomeResponse][14]
+*   [AddPricesToOutcomeResponse][14]
     *   [Properties][15]
-*   [BatchAddPricesToOutcomes][16]
+*   [BatchAddPricesToOutcomeResponse][16]
     *   [Properties][17]
-*   [BatchAddPricesToOutcomesResponse][18]
+*   [BatchAddPricesToOutcomes][18]
     *   [Properties][19]
-*   [ValidateMarketOutcomeTitles][20]
+*   [BatchAddPricesToOutcomesResponse][20]
     *   [Properties][21]
-*   [ValidateMarketOutcomePriceLadder][22]
+*   [ValidateMarketOutcomeTitles][22]
     *   [Properties][23]
-*   [ValidateMarketResponse][24]
+*   [ValidateMarketOutcomePriceLadder][24]
     *   [Properties][25]
-*   [MarketStatus][26]
-    *   [initializing][27]
-    *   [open][28]
-    *   [locked][29]
-    *   [readyForSettlement][30]
-    *   [settled][31]
-    *   [readyToClose][32]
-*   [MarketOrderBehaviour][33]
-    *   [none][34]
-    *   [cancelUnmatched][35]
-*   [MarketOrderBehaviourValue][36]
-*   [MarketAccount][37]
-    *   [Properties][38]
-*   [EpochTimeStamp][39]
-*   [PaymentInfo][40]
-    *   [Properties][41]
+*   [ValidateMarketResponse][26]
+    *   [Properties][27]
+*   [MarketStatus][28]
+    *   [initializing][29]
+    *   [open][30]
+    *   [locked][31]
+    *   [readyForSettlement][32]
+    *   [settled][33]
+    *   [readyToClose][34]
+*   [MarketOrderBehaviour][35]
+    *   [none][36]
+    *   [cancelUnmatched][37]
+*   [MarketOrderBehaviourValue][38]
+*   [MarketAccount][39]
+    *   [Properties][40]
+*   [EpochTimeStamp][41]
+*   [PaymentInfo][42]
+    *   [Properties][43]
+
+## GetOrCreateAccountResponse
+
+Type: {account: T, publicKey: PublicKey, txId: [string][44]?}
+
+### Properties
+
+*   `account` **T**&#x20;
+*   `publicKey` **PublicKey**&#x20;
+*   `txId` **[string][44]?**&#x20;
 
 ## CreateMarketResponse
 
-Type: {marketPk: PublicKey, tnxId: [string][42], market: [MarketAccount][37]}
+Type: {marketPk: PublicKey, tnxId: [string][44], market: [MarketAccount][39]}
 
 ### Properties
 
 *   `marketPk` **PublicKey**&#x20;
-*   `tnxId` **[string][42]**&#x20;
-*   `market` **[MarketAccount][37]**&#x20;
+*   `tnxId` **[string][44]**&#x20;
+*   `market` **[MarketAccount][39]**&#x20;
 
 ## CreateMarketWithOutcomesAndPriceLadderResponse
 
@@ -60,11 +72,11 @@ Type: any
 
 ## OutcomePdaResponse
 
-Type: {outcomeIndex: [number][43], outcomePda: PublicKey}
+Type: {outcomeIndex: [number][45], outcomePda: PublicKey}
 
 ### Properties
 
-*   `outcomeIndex` **[number][43]**&#x20;
+*   `outcomeIndex` **[number][45]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
 
 ## OutcomeInitialisationResponse
@@ -77,161 +89,164 @@ Type: any
 
 ## OutcomePdasResponse
 
-Type: {outcomePdas: [Array][44]<[OutcomePdaResponse][4]>}
+Type: {outcomePdas: [Array][46]<[OutcomePdaResponse][6]>}
 
 ### Properties
 
-*   `outcomePdas` **[Array][44]<[OutcomePdaResponse][4]>**&#x20;
+*   `outcomePdas` **[Array][46]<[OutcomePdaResponse][6]>**&#x20;
 
 ## OutcomeInitialisationsResponse
 
-Type: {outcomes: [Array][44]<[OutcomeInitialisationResponse][6]>}
+Type: {outcomes: [Array][46]<[OutcomeInitialisationResponse][8]>}
 
 ### Properties
 
-*   `outcomes` **[Array][44]<[OutcomeInitialisationResponse][6]>**&#x20;
+*   `outcomes` **[Array][46]<[OutcomeInitialisationResponse][8]>**&#x20;
 
 ## AddPricesToOutcomeResponse
 
-Type: {priceLadder: [Array][44]<[number][43]>, tnxId: [string][42]}
+Type: {priceLadder: [Array][46]<[number][45]>, tnxId: [string][44]}
 
 ### Properties
 
-*   `priceLadder` **[Array][44]<[number][43]>**&#x20;
-*   `tnxId` **[string][42]**&#x20;
+*   `priceLadder` **[Array][46]<[number][45]>**&#x20;
+*   `tnxId` **[string][44]**&#x20;
 
 ## BatchAddPricesToOutcomeResponse
 
-Type: {batches: [Array][44]<[AddPricesToOutcomeResponse][12]>}
+Type: {batches: [Array][46]<[AddPricesToOutcomeResponse][14]>}
 
 ### Properties
 
-*   `batches` **[Array][44]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][46]<[AddPricesToOutcomeResponse][14]>**&#x20;
 
 ## BatchAddPricesToOutcomes
 
-Type: {outcomeIndex: [number][43], outcomePda: PublicKey, batches: [Array][44]<[AddPricesToOutcomeResponse][12]>}
+Type: {outcomeIndex: [number][45], outcomePda: PublicKey, batches: [Array][46]<[AddPricesToOutcomeResponse][14]>}
 
 ### Properties
 
-*   `outcomeIndex` **[number][43]**&#x20;
+*   `outcomeIndex` **[number][45]**&#x20;
 *   `outcomePda` **PublicKey**&#x20;
-*   `batches` **[Array][44]<[AddPricesToOutcomeResponse][12]>**&#x20;
+*   `batches` **[Array][46]<[AddPricesToOutcomeResponse][14]>**&#x20;
 
 ## BatchAddPricesToOutcomesResponse
 
-Type: {results: [Array][44]<[BatchAddPricesToOutcomes][16]>}
+Type: {results: [Array][46]<[BatchAddPricesToOutcomes][18]>}
 
 ### Properties
 
-*   `results` **[Array][44]<[BatchAddPricesToOutcomes][16]>**&#x20;
+*   `results` **[Array][46]<[BatchAddPricesToOutcomes][18]>**&#x20;
 
 ## ValidateMarketOutcomeTitles
 
-Type: {outcomesValid: [boolean][45], missingOutcomes: [Array][44]<[string][42]>, additionalOutcomes: [Array][44]<[string][42]>}
+Type: {outcomesValid: [boolean][47], missingOutcomes: [Array][46]<[string][44]>, additionalOutcomes: [Array][46]<[string][44]>}
 
 ### Properties
 
-*   `outcomesValid` **[boolean][45]**&#x20;
-*   `missingOutcomes` **[Array][44]<[string][42]>**&#x20;
-*   `additionalOutcomes` **[Array][44]<[string][42]>**&#x20;
+*   `outcomesValid` **[boolean][47]**&#x20;
+*   `missingOutcomes` **[Array][46]<[string][44]>**&#x20;
+*   `additionalOutcomes` **[Array][46]<[string][44]>**&#x20;
 
 ## ValidateMarketOutcomePriceLadder
 
-Type: {priceLadderValid: [boolean][45], outcomePk: PublicKey, missingPrices: [Array][44]<[number][43]>, additionalPrices: [Array][44]<[number][43]>}
+Type: {priceLadderValid: [boolean][47], outcomePk: PublicKey, missingPrices: [Array][46]<[number][45]>, additionalPrices: [Array][46]<[number][45]>}
 
 ### Properties
 
-*   `priceLadderValid` **[boolean][45]**&#x20;
+*   `priceLadderValid` **[boolean][47]**&#x20;
 *   `outcomePk` **PublicKey**&#x20;
-*   `missingPrices` **[Array][44]<[number][43]>**&#x20;
-*   `additionalPrices` **[Array][44]<[number][43]>**&#x20;
+*   `missingPrices` **[Array][46]<[number][45]>**&#x20;
+*   `additionalPrices` **[Array][46]<[number][45]>**&#x20;
 
 ## ValidateMarketResponse
 
-Type: {outcomesValid: [boolean][45], priceLaddersValid: [boolean][45], marketValid: [boolean][45], missingOutcomes: [Array][44]<[string][42]>, additionalOutcomes: [Array][44]<[string][42]>, priceLadderValidation: [Array][44]<[ValidateMarketOutcomePriceLadder][22]>}
+Type: {outcomesValid: [boolean][47], priceLaddersValid: [boolean][47], marketValid: [boolean][47], missingOutcomes: [Array][46]<[string][44]>, additionalOutcomes: [Array][46]<[string][44]>, priceLadderValidation: [Array][46]<[ValidateMarketOutcomePriceLadder][24]>}
 
 ### Properties
 
-*   `outcomesValid` **[boolean][45]**&#x20;
-*   `priceLaddersValid` **[boolean][45]**&#x20;
-*   `marketValid` **[boolean][45]**&#x20;
-*   `missingOutcomes` **[Array][44]<[string][42]>**&#x20;
-*   `additionalOutcomes` **[Array][44]<[string][42]>**&#x20;
-*   `priceLadderValidation` **[Array][44]<[ValidateMarketOutcomePriceLadder][22]>**&#x20;
+*   `outcomesValid` **[boolean][47]**&#x20;
+*   `priceLaddersValid` **[boolean][47]**&#x20;
+*   `marketValid` **[boolean][47]**&#x20;
+*   `missingOutcomes` **[Array][46]<[string][44]>**&#x20;
+*   `additionalOutcomes` **[Array][46]<[string][44]>**&#x20;
+*   `priceLadderValidation` **[Array][46]<[ValidateMarketOutcomePriceLadder][24]>**&#x20;
 
 ## MarketStatus
 
 ### initializing
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### open
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### locked
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### readyForSettlement
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### settled
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### readyToClose
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ## MarketOrderBehaviour
 
 ### none
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ### cancelUnmatched
 
-Type: Record<[string][42], never>
+Type: Record<[string][44], never>
 
 ## MarketOrderBehaviourValue
 
-Type: {none: [MarketOrderBehaviour][33], cancelUnmatched: [MarketOrderBehaviour][33]}
+Type: {none: [MarketOrderBehaviour][35], cancelUnmatched: [MarketOrderBehaviour][35]}
 
 ## MarketAccount
 
-Type: {authority: BN, decimalLimit: [number][43], escrowAccountBump: [number][43], eventAccount: PublicKey, eventStartTimestamp: BN, marketLockTimestamp: BN, marketOutcomesCount: [number][43], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][26], marketType: [string][42], marketWinningOutcomeIndex: [number][43]?, mintAccount: PublicKey, published: [boolean][45], suspended: [boolean][45], title: [string][42], inplay: [boolean][45], inplayEnabled: [boolean][45], inplayDelay: [number][43], eventStartOrderBehaviour: [MarketOrderBehaviour][33], marketLockedOrderBehaviour: [MarketOrderBehaviour][33], unsettledAccountsCount: [number][43], unclosedAccountsCount: [number][43]}
+Type: {authority: BN, decimalLimit: [number][45], escrowAccountBump: [number][45], eventAccount: PublicKey, eventStartTimestamp: BN, marketLockTimestamp: BN, marketOutcomesCount: [number][45], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][28], marketType: PublicKey, marketTypeDiscriminator: [string][44], marketTypeValue: [string][44], marketWinningOutcomeIndex: [number][45]?, mintAccount: PublicKey, published: [boolean][47], suspended: [boolean][47], title: [string][44], inplay: [boolean][47], inplayEnabled: [boolean][47], inplayDelay: [number][45], eventStartOrderBehaviour: [MarketOrderBehaviour][35], marketLockedOrderBehaviour: [MarketOrderBehaviour][35], unsettledAccountsCount: [number][45], unclosedAccountsCount: [number][45], version: [number][45]}
 
 ### Properties
 
 *   `authority` **BN**&#x20;
-*   `decimalLimit` **[number][43]**&#x20;
-*   `escrowAccountBump` **[number][43]**&#x20;
+*   `decimalLimit` **[number][45]**&#x20;
+*   `escrowAccountBump` **[number][45]**&#x20;
 *   `eventAccount` **PublicKey**&#x20;
 *   `eventStartTimestamp` **BN**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
-*   `marketOutcomesCount` **[number][43]**&#x20;
+*   `marketOutcomesCount` **[number][45]**&#x20;
 *   `marketSettleTimestamp` **BN?**&#x20;
-*   `marketStatus` **[MarketStatus][26]**&#x20;
-*   `marketType` **[string][42]**&#x20;
-*   `marketWinningOutcomeIndex` **[number][43]?**&#x20;
+*   `marketStatus` **[MarketStatus][28]**&#x20;
+*   `marketType` **PublicKey**&#x20;
+*   `marketTypeDiscriminator` **[string][44]**&#x20;
+*   `marketTypeValue` **[string][44]**&#x20;
+*   `marketWinningOutcomeIndex` **[number][45]?**&#x20;
 *   `mintAccount` **PublicKey**&#x20;
-*   `published` **[boolean][45]**&#x20;
-*   `suspended` **[boolean][45]**&#x20;
-*   `title` **[string][42]**&#x20;
-*   `inplay` **[boolean][45]**&#x20;
-*   `inplayEnabled` **[boolean][45]**&#x20;
-*   `inplayDelay` **[number][43]**&#x20;
-*   `eventStartOrderBehaviour` **[MarketOrderBehaviour][33]**&#x20;
-*   `marketLockedOrderBehaviour` **[MarketOrderBehaviour][33]**&#x20;
-*   `unsettledAccountsCount` **[number][43]**&#x20;
-*   `unclosedAccountsCount` **[number][43]**&#x20;
+*   `published` **[boolean][47]**&#x20;
+*   `suspended` **[boolean][47]**&#x20;
+*   `title` **[string][44]**&#x20;
+*   `inplay` **[boolean][47]**&#x20;
+*   `inplayEnabled` **[boolean][47]**&#x20;
+*   `inplayDelay` **[number][45]**&#x20;
+*   `eventStartOrderBehaviour` **[MarketOrderBehaviour][35]**&#x20;
+*   `marketLockedOrderBehaviour` **[MarketOrderBehaviour][35]**&#x20;
+*   `unsettledAccountsCount` **[number][45]**&#x20;
+*   `unclosedAccountsCount` **[number][45]**&#x20;
+*   `version` **[number][45]**&#x20;
 
 ## EpochTimeStamp
 
-Type: [number][43]
+Type: [number][45]
 
 ## PaymentInfo
 
@@ -243,92 +258,96 @@ Type: {from: PublicKey, to: PublicKey, amount: BN}
 *   `to` **PublicKey**&#x20;
 *   `amount` **BN**&#x20;
 
-[1]: #createmarketresponse
+[1]: #getorcreateaccountresponse
 
 [2]: #properties
 
-[3]: #createmarketwithoutcomesandpriceladderresponse
+[3]: #createmarketresponse
 
-[4]: #outcomepdaresponse
+[4]: #properties-1
 
-[5]: #properties-1
+[5]: #createmarketwithoutcomesandpriceladderresponse
 
-[6]: #outcomeinitialisationresponse
+[6]: #outcomepdaresponse
 
-[7]: #oddsinitialisationresponse
+[7]: #properties-2
 
-[8]: #outcomepdasresponse
+[8]: #outcomeinitialisationresponse
 
-[9]: #properties-2
+[9]: #oddsinitialisationresponse
 
-[10]: #outcomeinitialisationsresponse
+[10]: #outcomepdasresponse
 
 [11]: #properties-3
 
-[12]: #addpricestooutcomeresponse
+[12]: #outcomeinitialisationsresponse
 
 [13]: #properties-4
 
-[14]: #batchaddpricestooutcomeresponse
+[14]: #addpricestooutcomeresponse
 
 [15]: #properties-5
 
-[16]: #batchaddpricestooutcomes
+[16]: #batchaddpricestooutcomeresponse
 
 [17]: #properties-6
 
-[18]: #batchaddpricestooutcomesresponse
+[18]: #batchaddpricestooutcomes
 
 [19]: #properties-7
 
-[20]: #validatemarketoutcometitles
+[20]: #batchaddpricestooutcomesresponse
 
 [21]: #properties-8
 
-[22]: #validatemarketoutcomepriceladder
+[22]: #validatemarketoutcometitles
 
 [23]: #properties-9
 
-[24]: #validatemarketresponse
+[24]: #validatemarketoutcomepriceladder
 
 [25]: #properties-10
 
-[26]: #marketstatus
+[26]: #validatemarketresponse
 
-[27]: #initializing
+[27]: #properties-11
 
-[28]: #open
+[28]: #marketstatus
 
-[29]: #locked
+[29]: #initializing
 
-[30]: #readyforsettlement
+[30]: #open
 
-[31]: #settled
+[31]: #locked
 
-[32]: #readytoclose
+[32]: #readyforsettlement
 
-[33]: #marketorderbehaviour
+[33]: #settled
 
-[34]: #none
+[34]: #readytoclose
 
-[35]: #cancelunmatched
+[35]: #marketorderbehaviour
 
-[36]: #marketorderbehaviourvalue
+[36]: #none
 
-[37]: #marketaccount
+[37]: #cancelunmatched
 
-[38]: #properties-11
+[38]: #marketorderbehaviourvalue
 
-[39]: #epochtimestamp
+[39]: #marketaccount
 
-[40]: #paymentinfo
+[40]: #properties-12
 
-[41]: #properties-12
+[41]: #epochtimestamp
 
-[42]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[42]: #paymentinfo
 
-[43]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[43]: #properties-13
 
-[44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[45]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[45]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[46]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[47]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

@@ -184,6 +184,16 @@ pub enum CoreError {
     InplayDelay,
 
     /*
+    Market Type
+     */
+    #[msg(format!("Market type name is too long, max length: {}", MarketType::NAME_MAX_LENGTH))]
+    MarketTypeNameTooLong,
+    #[msg("Market type discriminator usage is incorrect for this market type")]
+    MarketTypeDiscriminatorUsageIncorrect,
+    #[msg("Market type value usage is incorrect for this market type")]
+    MarketTypeValueUsageIncorrect,
+
+    /*
     PriceLadder
      */
     #[msg("PriceLadder can only be increased in size")]
@@ -246,6 +256,19 @@ pub enum CoreError {
     MarketEventNotStarted,
     #[msg("Market: market not open to allow transition to inplay")]
     MarketNotOpenForInplay,
+
+    #[msg("Market: cannot recreate market, provided event account does not match existing market")]
+    MarketEventAccountMismatch,
+    #[msg("Market: cannot recreate market, provided market type account does not match existing market")]
+    MarketTypeMismatch,
+    #[msg("Market: cannot recreate market, provided market type discriminator does not match existing market")]
+    MarketTypeDiscriminatorMismatch,
+    #[msg(
+        "Market: cannot recreate market, provided market type value does not match existing market"
+    )]
+    MarketTypeValueMismatch,
+    #[msg("Market: cannot recreate market, provided mint does not match existing market")]
+    MarketMintMismatch,
 
     /*
     Close Account
