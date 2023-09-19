@@ -19,6 +19,7 @@ import { findOrderPda } from "./order";
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {OrderInstructionResponse}  derived order publicKey and the instruction to perform a create order transaction
  *
@@ -29,8 +30,9 @@ import { findOrderPda } from "./order";
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20,000,000,000
- * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const instruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+ * const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const instruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, priceLadderPk, productPk)
  */
 export async function buildOrderInstructionUIStake(
   program: Program,
@@ -39,6 +41,7 @@ export async function buildOrderInstructionUIStake(
   forOutcome: boolean,
   price: number,
   stake: number,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
 ): Promise<ClientResponse<OrderInstructionResponse>> {
   const stakeInteger = await uiStakeToInteger(program, stake, marketPk);
@@ -49,6 +52,7 @@ export async function buildOrderInstructionUIStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
+    priceLadderPk,
     productPk,
   );
 }
@@ -62,6 +66,7 @@ export async function buildOrderInstructionUIStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {OrderInstructionResponse}  derived order publicKey and the instruction to perform a create order transaction
  *
@@ -72,8 +77,9 @@ export async function buildOrderInstructionUIStake(
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20,000,000,000
- * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+ * const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, , productPk)
  */
 export async function buildOrderInstruction(
   program: Program,
@@ -82,6 +88,7 @@ export async function buildOrderInstruction(
   forOutcome: boolean,
   price: number,
   stake: BN,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
 ): Promise<ClientResponse<OrderInstructionResponse>> {
   const response = new ResponseFactory({} as OrderInstructionResponse);
@@ -134,6 +141,9 @@ export async function buildOrderInstruction(
       market: marketPk,
       marketMatchingPool: marketAccounts.data.marketOutcomePoolPda,
       marketOutcome: marketAccounts.data.marketOutcomePda,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
       purchaserToken: purchaserTokenAccount.data.associatedTokenAccount,
       marketEscrow: marketAccounts.data.escrowPda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

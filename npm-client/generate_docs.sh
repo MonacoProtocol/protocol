@@ -30,6 +30,7 @@ declare -a endpoints=(
 declare -a types=(
     "order"
     "client"
+    "default_price_ladder"
     "errors"
     "get_account"
     "market_position"

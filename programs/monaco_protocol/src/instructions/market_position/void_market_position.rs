@@ -13,7 +13,7 @@ pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
         return Ok(());
     }
 
-    let market_account = &ctx.accounts.market;
+    let market_account = &mut ctx.accounts.market;
     // validate the market is ready to void
     require!(
         market_account.market_status.eq(&MarketStatus::ReadyToVoid),
@@ -23,6 +23,7 @@ pub fn void_market_position(ctx: Context<VoidMarketPosition>) -> Result<()> {
     let total_exposure = market_position.total_exposure();
 
     market_position.paid = true;
+    market_account.decrement_unsettled_accounts_count()?;
 
     transfer::transfer_market_position_void(&ctx, total_exposure)
 }

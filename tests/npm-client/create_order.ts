@@ -19,6 +19,7 @@ describe("NPM client - create order", () => {
       true,
       2.0,
       10,
+      undefined,
       productPk,
     );
 

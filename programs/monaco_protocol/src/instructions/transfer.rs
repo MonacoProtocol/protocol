@@ -3,8 +3,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::context::{
-    CancelOrder, CancelPreplayOrderPostEventStart, CreateOrder, MatchOrders, SettleMarketPosition,
-    VoidMarketPosition,
+    CancelOrder, CreateOrder, MatchOrders, SettleMarketPosition, VoidMarketPosition,
 };
 use crate::state::market_account::Market;
 
@@ -42,21 +41,6 @@ pub fn order_cancelation_refund(ctx: &Context<CancelOrder>, amount: u64) -> Resu
     transfer_from_market_escrow(
         &accounts.market_escrow,
         &accounts.purchaser_token_account,
-        &accounts.token_program,
-        &accounts.market,
-        amount,
-    )
-}
-
-pub fn order_cancelation_post_event_start_refund(
-    ctx: &Context<CancelPreplayOrderPostEventStart>,
-    amount: u64,
-) -> Result<()> {
-    let accounts = &ctx.accounts;
-
-    transfer_from_market_escrow(
-        &accounts.market_escrow,
-        &accounts.purchaser_token,
         &accounts.token_program,
         &accounts.market,
         amount,
@@ -128,7 +112,7 @@ pub fn transfer_market_escrow_surplus<'info>(
     )
 }
 
-fn transfer_to_market_escrow<'info>(
+pub fn transfer_to_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
     purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,

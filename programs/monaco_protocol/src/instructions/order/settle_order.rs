@@ -3,12 +3,11 @@ use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
-use crate::instructions::account;
 use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
-    let market_account = &ctx.accounts.market;
+    let market_account = &mut ctx.accounts.market;
 
     // validate the market is settled
     require!(
@@ -28,11 +27,11 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
 
     // if never matched close
     if Open.eq(&ctx.accounts.order.order_status) {
-        account::close_account(
-            &mut ctx.accounts.order.to_account_info(),
-            &mut ctx.accounts.purchaser.to_account_info(),
-        )?;
-        return Ok(());
+        market_account.decrement_account_counts()?;
+        return ctx
+            .accounts
+            .order
+            .close(ctx.accounts.purchaser.to_account_info());
     }
 
     if ctx.accounts.order.stake_unmatched > 0_u64 {
@@ -42,6 +41,8 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         true => ctx.accounts.order.order_status = SettledWin,
         false => ctx.accounts.order.order_status = SettledLose,
     };
+
+    market_account.decrement_unsettled_accounts_count()?;
 
     Ok(())
 }
@@ -99,6 +100,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -109,6 +111,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -147,6 +150,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -157,6 +161,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -195,6 +200,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -205,6 +211,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then
@@ -243,6 +250,7 @@ mod tests {
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
             title: String::from("META"),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::ReadyForSettlement,
             escrow_account_bump: 0,
             published: true,
@@ -253,6 +261,7 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
         };
 
         // then

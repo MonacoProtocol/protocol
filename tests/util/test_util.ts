@@ -179,7 +179,7 @@ export async function getMarketMatchingPoolsPks(
 export async function createMarket(
   protocolProgram: Program<MonacoProtocol>,
   provider: AnchorProvider,
-  priceLadder: number[] = [4.2],
+  priceLadder: PublicKey | number[] = [4.2],
   marketOperator: Keypair = null,
   authorisedMarketOperators: PublicKey = null,
   outcomes: string[] = ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
@@ -270,6 +270,7 @@ export async function createMarket(
         .accounts({
           systemProgram: SystemProgram.programId,
           outcome: outcomePdas[index],
+          priceLadder: Array.isArray(priceLadder) ? null : priceLadder,
           market: marketPda,
           authorisedOperators: authorisedMarketOperators,
           marketOperator: marketOperator.publicKey,
@@ -282,29 +283,38 @@ export async function createMarket(
         }),
     );
 
-    const priceLadderBatchSize = 20;
-    for (let i = 0; i < priceLadder.length; i += priceLadderBatchSize) {
-      const batch = priceLadder.slice(i, i + priceLadderBatchSize);
-      await getAnchorProvider().connection.confirmTransaction(
-        await protocolProgram.methods
-          .addPricesToMarketOutcome(index, batch)
-          .accounts({
-            systemProgram: SystemProgram.programId,
-            outcome: outcomePdas[index],
-            market: marketPda,
-            authorisedOperators: authorisedMarketOperators,
-            marketOperator: marketOperator.publicKey,
-          })
-          .signers([marketOperator])
-          .rpc()
-          .catch((e) => {
-            console.error(e);
-            throw e;
-          }),
-      );
+    if (Array.isArray(priceLadder)) {
+      const priceLadderBatchSize = 20;
+      for (let i = 0; i < priceLadder.length; i += priceLadderBatchSize) {
+        const batch = priceLadder.slice(i, i + priceLadderBatchSize);
+        await getAnchorProvider().connection.confirmTransaction(
+          await protocolProgram.methods
+            .addPricesToMarketOutcome(index, batch)
+            .accounts({
+              systemProgram: SystemProgram.programId,
+              outcome: outcomePdas[index],
+              market: marketPda,
+              authorisedOperators: authorisedMarketOperators,
+              marketOperator: marketOperator.publicKey,
+            })
+            .signers([marketOperator])
+            .rpc()
+            .catch((e) => {
+              console.error(e);
+              throw e;
+            }),
+        );
+      }
     }
   }
 
+  let prices = priceLadder;
+  if (!Array.isArray(priceLadder)) {
+    const priceLadderAccount = await protocolProgram.account.priceLadder.fetch(
+      priceLadder,
+    );
+    prices = priceLadderAccount.prices;
+  }
   let matchingPools: { against: PublicKey; forOutcome: PublicKey }[][] = [];
   if (initialisePools) {
     matchingPools = await Promise.all(
@@ -313,7 +323,7 @@ export async function createMarket(
           marketPda,
           index,
           outcomePda,
-          priceLadder,
+          prices as number[],
         );
       }),
     );
@@ -531,6 +541,7 @@ export async function createOrder(
       market: marketPk,
       marketMatchingPool: marketMatchingPoolPk,
       marketOutcome: marketOutcomePk,
+      priceLadder: null,
       purchaserToken: purchaserTokenAccount,
       marketEscrow: marketEscrowPk,
       product: productPk == undefined ? null : productPk,

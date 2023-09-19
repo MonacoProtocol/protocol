@@ -23,6 +23,7 @@ The transaction can then be optionally confirmed with the confirmTransaction() e
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
+*   `priceLadderPk` **PublicKey?** {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
 *   `mintDecimal` **[number][7]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
@@ -34,9 +35,10 @@ const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
 const stake = 20
-const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const mintDecimal = 6
-const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
+const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, priceLadderPk, productPk, mintDecimal)
 
 // optional
 const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
@@ -58,6 +60,7 @@ The transaction can then be optionally confirmed with the confirmTransaction() e
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
+*   `priceLadderPk` **PublicKey?** {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
 
 ### Examples
@@ -68,8 +71,9 @@ const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
 const stake = 20_000_000_000
-const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, priceLadderPk, productPk)
 
 // optional
 const confirmed = (await confirmTransaction(program, order.data.tnxID)).success

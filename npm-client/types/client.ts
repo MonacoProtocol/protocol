@@ -36,6 +36,7 @@ export type FindPdaResponse = {
 export class ResponseFactory {
   success: boolean;
   errors: object[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 
   constructor(opts) {

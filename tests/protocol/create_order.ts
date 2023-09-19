@@ -282,6 +282,7 @@ describe("Protocol - Create Order", () => {
         market: marketPda,
         marketMatchingPool: marketMatchingPool,
         marketOutcome: MarketAccounts.data.marketOutcomePda,
+        priceLadder: null,
         purchaserToken: purchaserTokenAccount,
         marketEscrow: MarketAccounts.data.escrowPda,
         product: null,
@@ -537,6 +538,134 @@ describe("Protocol - Create Order", () => {
     });
     assert.equal(orderResponse.success, false);
     assert(containsError.includes(true));
+  });
+
+  it("cannot create orders at invalid price - using price ladder account", async () => {
+    const protocolProgram = anchor.workspace
+      .MonacoProtocol as Program<MonacoProtocol>;
+
+    // Order parameters
+    const outcomeIndex = 1;
+    const forOutcome = true;
+    const stake = 2000;
+
+    const marketPrice = 6.0;
+    const orderPrice = 6.1;
+
+    // Set up Market and related accounts
+    const priceLadderPk = await monaco.createPriceLadder([marketPrice]);
+    const { mintPk, marketPda } = await createMarket(
+      protocolProgram,
+      provider,
+      priceLadderPk,
+    );
+
+    await createAssociatedTokenAccountWithBalance(
+      mintPk,
+      provider.wallet.publicKey,
+      10000,
+    );
+
+    const stakeInteger = new BN(
+      stake * 10 ** (await getMint(provider.connection, mintPk)).decimals,
+    );
+
+    const orderResponse = await createOrderNpm(
+      protocolProgram as Program<anchor.Idl>,
+      marketPda,
+      outcomeIndex,
+      forOutcome,
+      orderPrice,
+      stakeInteger,
+      priceLadderPk,
+    );
+
+    const thrownError = orderResponse.errors[0] as AnchorError;
+    assert.equal(orderResponse.success, false);
+    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+  });
+
+  it("any price used to create orders - using empty price ladder account", async () => {
+    const protocolProgram = anchor.workspace
+      .MonacoProtocol as Program<MonacoProtocol>;
+
+    // Order parameters
+    const outcomeIndex = 1;
+    const forOutcome = true;
+    const stake = 2000;
+
+    const orderPrice = 6.001;
+
+    // Set up Market and related accounts
+    const priceLadderPk = await monaco.createPriceLadder([]);
+    const { mintPk, marketPda } = await createMarket(
+      protocolProgram,
+      provider,
+      priceLadderPk,
+    );
+
+    await createAssociatedTokenAccountWithBalance(
+      mintPk,
+      provider.wallet.publicKey,
+      10000,
+    );
+
+    const stakeInteger = new BN(
+      stake * 10 ** (await getMint(provider.connection, mintPk)).decimals,
+    );
+
+    const orderResponse = await createOrderNpm(
+      protocolProgram as Program<anchor.Idl>,
+      marketPda,
+      outcomeIndex,
+      forOutcome,
+      orderPrice,
+      stakeInteger,
+      priceLadderPk,
+    );
+    assert.equal(orderResponse.success, true);
+  });
+
+  it("cannot create orders at invalid price - using default price ladder", async () => {
+    const protocolProgram = anchor.workspace
+      .MonacoProtocol as Program<MonacoProtocol>;
+
+    // Order parameters
+    const outcomeIndex = 1;
+    const forOutcome = true;
+    const stake = 2000;
+
+    const orderPrice = 6.001;
+
+    // Set up Market and related accounts
+    const { mintPk, marketPda } = await createMarket(
+      protocolProgram,
+      provider,
+      [] as number[],
+    );
+
+    await createAssociatedTokenAccountWithBalance(
+      mintPk,
+      provider.wallet.publicKey,
+      10000,
+    );
+
+    const stakeInteger = new BN(
+      stake * 10 ** (await getMint(provider.connection, mintPk)).decimals,
+    );
+
+    const orderResponse = await createOrderNpm(
+      protocolProgram as Program<anchor.Idl>,
+      marketPda,
+      outcomeIndex,
+      forOutcome,
+      orderPrice,
+      stakeInteger,
+    );
+
+    const thrownError = orderResponse.errors[0] as AnchorError;
+    assert.equal(orderResponse.success, false);
+    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
   });
 
   it("purchaser uses different token account for the same mint", async () => {

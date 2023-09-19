@@ -7,12 +7,16 @@ use crate::error::CoreError;
 use crate::instructions::math::stake_precision_is_within_range;
 use crate::instructions::{current_timestamp, market, market_position, matching, transfer};
 use crate::state::market_account::*;
+use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
+use crate::state::price_ladder::{PriceLadder, DEFAULT_PRICES};
 
+#[allow(clippy::too_many_arguments)]
 pub fn create_order<'info>(
     order: &mut Account<Order>,
-    market: &Account<Market>,
+    market: &mut Account<Market>,
     purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
@@ -21,19 +25,32 @@ pub fn create_order<'info>(
     market_position: &mut Account<MarketPosition>,
     market_escrow: &Account<'info, TokenAccount>,
     market_outcome: &Account<MarketOutcome>,
+    price_ladder: &Option<Account<PriceLadder>>,
     data: OrderData,
 ) -> Result<()> {
-    initialize_order(order, market, purchaser, market_outcome, product, data)?;
+    initialize_order(
+        order,
+        market,
+        purchaser,
+        market_outcome,
+        price_ladder,
+        product,
+        data,
+    )?;
 
-    // initialize market position
-    market_position::create_market_position(purchaser, market, market_position)?;
-
-    // queues are always initialized with default items, so if this queue is new, initialize it
-    if matching_pool.orders.size() == 0 {
-        market::initialize_market_matching_pool(matching_pool, market, order)?;
+    // initialize market position if needed
+    if market_position.purchaser == Pubkey::default() {
+        market_position::create_market_position(purchaser, market, market_position)?;
+        market.increment_account_counts()?;
     }
 
-    matching::update_matching_queue_with_new_order(market, matching_pool, order)?;
+    // pools are always initialized with default items, so if this pool is new, initialize it
+    if matching_pool.orders.size() == 0 {
+        market::initialize_market_matching_pool(matching_pool, market, order)?;
+        market.increment_unclosed_accounts_count()?;
+    }
+
+    matching::update_matching_pool_with_new_order(market, matching_pool, order)?;
 
     // calculate payment
     let payment = market_position::update_on_order_creation(market_position, order)?;
@@ -45,6 +62,8 @@ pub fn create_order<'info>(
         payment,
     )?;
 
+    market.increment_account_counts()?;
+
     Ok(())
 }
 
@@ -53,6 +72,7 @@ fn initialize_order(
     market: &Account<Market>,
     purchaser: &Signer,
     market_outcome: &Account<MarketOutcome>,
+    price_ladder: &Option<Account<PriceLadder>>,
     product: &Option<Account<Product>>,
     data: OrderData,
 ) -> Result<()> {
@@ -69,14 +89,34 @@ fn initialize_order(
     );
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
+    let stake_precision_check_result =
+        stake_precision_is_within_range(data.stake, market.decimal_limit)?;
     require!(
-        stake_precision_is_within_range(data.stake, market.decimal_limit),
+        stake_precision_check_result,
         CoreError::CreationStakePrecisionIsTooHigh
     );
-    require!(
-        market_outcome.price_ladder.contains(&data.price),
-        CoreError::CreationInvalidPrice
-    );
+
+    // TODO only check against price ladder account once backwards compat. is removed
+    if market_outcome.price_ladder.is_empty() {
+        // No prices included on the outcome, use a PriceLadder or default prices
+        match price_ladder {
+            Some(price_ladder_account) => require!(
+                price_ladder_account.prices.is_empty()
+                    || price_ladder_account.prices.contains(&data.price),
+                CoreError::CreationInvalidPrice
+            ),
+            None => require!(
+                DEFAULT_PRICES.contains(&data.price),
+                CoreError::CreationInvalidPrice
+            ),
+        }
+    } else {
+        // Prices are included on the outcome, use those
+        require!(
+            market_outcome.price_ladder.contains(&data.price),
+            CoreError::CreationInvalidPrice
+        );
+    }
 
     // update the order account with data we have received from the caller
     order.market = market.key();
@@ -245,6 +285,8 @@ mod tests {
             inplay_order_delay: 0,
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
+            unsettled_accounts_count: 0,
         }
     }
 }

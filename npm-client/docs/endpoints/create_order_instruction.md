@@ -21,6 +21,7 @@ Constructs the instruction required to perform a create order transaction using 
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **[number][7]** {number} UI value of the stake, the function will determine the raw value based on the market token type
+*   `priceLadderPk` **PublicKey?** {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
 
 ### Examples
@@ -31,8 +32,9 @@ const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
 const stake = 20,000,000,000
-const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const instruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const instruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, priceLadderPk, productPk)
 ```
 
 Returns **OrderInstructionResponse** derived order publicKey and the instruction to perform a create order transaction
@@ -49,6 +51,7 @@ Constructs the instruction required to perform a create order transaction using 
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
+*   `priceLadderPk` **PublicKey?** {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
 *   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
 
 ### Examples
@@ -59,8 +62,9 @@ const marketOutcomeIndex = 0
 const forOutcome = true
 const price = 1.5
 const stake = 20,000,000,000
-const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, , productPk)
 ```
 
 Returns **OrderInstructionResponse** derived order publicKey and the instruction to perform a create order transaction

@@ -19,6 +19,7 @@ import { buildOrderInstruction } from "./create_order_instruction";
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {number} UI value of the stake, the function will determine the raw value based on the market token type
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {OrderTransactionResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
@@ -30,9 +31,10 @@ import { buildOrderInstruction } from "./create_order_instruction";
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20
- * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+ * const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const mintDecimal = 6
- * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, productPk, mintDecimal)
+ * const order = await createOrderUiStake(program, marketPk, marketOutcomeIndex, forOutcome, price, 20, priceLadderPk, productPk, mintDecimal)
  *
  * // optional
  * const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
@@ -44,6 +46,7 @@ export async function createOrderUiStake(
   forOutcome: boolean,
   price: number,
   stake: number,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
   mintDecimal?: number,
 ): Promise<ClientResponse<OrderTransactionResponse>> {
@@ -67,6 +70,7 @@ export async function createOrderUiStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
+    priceLadderPk,
     productPk,
   );
 }
@@ -82,6 +86,7 @@ export async function createOrderUiStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
+ * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @returns {OrderTransactionResponse}  derived order publicKey and transactionID for the request, this ID should be used to confirm the success of the transaction
  *
@@ -92,8 +97,9 @@ export async function createOrderUiStake(
  * const forOutcome = true
  * const price = 1.5
  * const stake = 20_000_000_000
- * const productPk = new PublicKey('betDexExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+ * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
+ * const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const order = await createOrder(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, priceLadderPk, productPk)
  *
  * // optional
  * const confirmed = (await confirmTransaction(program, order.data.tnxID)).success
@@ -105,6 +111,7 @@ export async function createOrder(
   forOutcome: boolean,
   price: number,
   stake: BN,
+  priceLadderPk?: PublicKey,
   productPk?: PublicKey,
 ): Promise<ClientResponse<OrderTransactionResponse>> {
   const response = new ResponseFactory({} as OrderTransactionResponse);
@@ -115,6 +122,7 @@ export async function createOrder(
     forOutcome,
     price,
     stake,
+    priceLadderPk,
     productPk,
   );
 

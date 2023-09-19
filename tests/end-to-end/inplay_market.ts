@@ -156,8 +156,6 @@ describe("End to end test of", () => {
     assert.equal(order.stakeUnmatched, 0);
 
     // Close orders due to event start
-    await market.cancelPreplayOrderPostEventStart(prePlayOrder01);
-    await market.cancelPreplayOrderPostEventStart(prePlayOrder02);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder03);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder10);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder11);
@@ -198,9 +196,6 @@ describe("End to end test of", () => {
               market: market.pk,
               trade: trade,
               payer: monaco.operatorPk,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -221,9 +216,6 @@ describe("End to end test of", () => {
               market: market.pk,
               order: order,
               purchaser: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -244,9 +236,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketPosition: marketPosition,
               purchaser: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -267,9 +256,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketMatchingPool: marketMatchingPool,
               payer: purchaser.publicKey,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -290,9 +276,6 @@ describe("End to end test of", () => {
               market: market.pk,
               marketOutcome: marketOutcome,
               authority: monaco.operatorPk,
-              crankOperator: monaco.operatorPk,
-              authorisedOperators:
-                await monaco.findCrankAuthorisedOperatorsPda(),
             })
             .rpc()
             .catch((e) => {
@@ -308,8 +291,6 @@ describe("End to end test of", () => {
         market: market.pk,
         authority: monaco.operatorPk,
         marketEscrow: market.escrowPk,
-        crankOperator: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
         commissionPaymentQueue: market.paymentsQueuePk,
       })
       .rpc()
