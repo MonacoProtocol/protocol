@@ -96,7 +96,7 @@ describe("Order Matching Market State", () => {
   it("matching: orders created before market lock should match after lock", async () => {
     const price = 2.0;
     const now = Math.floor(new Date().getTime() / 1000);
-    const lockTime = now + 3000;
+    const lockTime = now + 10;
 
     const [purchaserA, purchaserB, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
@@ -115,7 +115,7 @@ describe("Order Matching Market State", () => {
     ]);
 
     // wait for market lock
-    await new Promise((e) => setTimeout(e, 3000));
+    await new Promise((e) => setTimeout(e, 7000));
     await market.match(AforPk, BAgainstPk);
 
     assert.deepEqual(
