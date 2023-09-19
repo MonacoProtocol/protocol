@@ -3,6 +3,7 @@ import {
   getTradesForProviderWallet,
   getTradesForMarket,
   getTradesForOrder,
+  confirmTransaction,
 } from "../../npm-client/src";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
 import { monaco } from "../util/wrappers";
@@ -34,6 +35,7 @@ describe("Trades Query", () => {
       market.againstOrder(outcomeIndex, 10.0, price, purchaser),
     ]);
 
+    await confirmTransaction(monaco.getRawProgram(), forOrder.data.tnxID);
     await market.match(forOrder.data.orderPk, againstOrderPk);
     await new Promise((e) => setTimeout(e, 1000));
 

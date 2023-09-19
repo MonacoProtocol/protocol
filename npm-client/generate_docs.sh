@@ -7,6 +7,8 @@ declare -a endpoints=(
     "order"
     "order_query"
     "cancel_order"
+    "cancel_order_instruction"
+    "create_order_instruction"
     "create_order"
     "market_matching_pools"
     "market_matching_pool_query"
@@ -38,6 +40,7 @@ declare -a types=(
     "protocol"
     "trade"
     "wallet_tokens"
+    "transactions"
 )
 
 npm run build

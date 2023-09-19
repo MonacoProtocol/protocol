@@ -12,13 +12,14 @@ import {
 import assert from "assert";
 import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { Keypair, SystemProgram } from "@solana/web3.js";
+import { Keypair, SendTransactionError, SystemProgram } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   findOrderPda,
   findMarketMatchingPoolPda,
   getMarketAccounts,
   findMarketPositionPda,
+  confirmTransaction,
 } from "../../npm-client/src";
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
@@ -164,6 +165,10 @@ describe("Protocol - Create Order", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(
+      protocolProgram as Program<anchor.Idl>,
+      orderResponse.data.tnxID,
+    );
 
     // check the state of the newly created account
     const orderAccount = await protocolProgram.account.order.fetch(orderPk);
@@ -210,12 +215,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationStakePrecisionIsTooHigh");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(
-      thrownError.error.errorCode.code,
-      "CreationStakePrecisionIsTooHigh",
-    );
+    assert(containsError.includes(true));
   });
 
   it("Throws appropriate error when outcome index is out of bounds", async () => {
@@ -335,9 +340,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationMarketNotOpen");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationMarketNotOpen");
+    assert(containsError.includes(true));
   });
 
   it("is blocked when market suspended", async () => {
@@ -386,9 +394,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
-    assert.equal(thrownError.error.errorCode.code, "CreationMarketSuspended");
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationMarketSuspended");
+    });
     assert.equal(orderResponse.success, false);
+    assert(containsError.includes(true));
   });
 
   it("create order where order initializes matching pool", async () => {
@@ -458,6 +469,10 @@ describe("Protocol - Create Order", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(
+      protocolProgram as Program<anchor.Idl>,
+      orderResponse.data.tnxID,
+    );
 
     const matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
       matchingPoolPda.data.pda,
@@ -517,9 +532,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("cannot create orders at invalid price - using price ladder account", async () => {
@@ -562,9 +580,12 @@ describe("Protocol - Create Order", () => {
       priceLadderPk,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("any price used to create orders - using empty price ladder account", async () => {
@@ -645,9 +666,12 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const thrownError = orderResponse.errors[0] as AnchorError;
+    const thrownError = orderResponse.errors[0] as SendTransactionError;
+    const containsError = thrownError.logs.map((log) => {
+      return log.includes("CreationInvalidPrice");
+    });
     assert.equal(orderResponse.success, false);
-    assert.equal(thrownError.error.errorCode.code, "CreationInvalidPrice");
+    assert(containsError.includes(true));
   });
 
   it("purchaser uses different token account for the same mint", async () => {

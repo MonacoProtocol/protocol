@@ -1,4 +1,3 @@
-import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
@@ -7,6 +6,7 @@ import {
   cancelOrdersForMarket,
 } from "../../npm-client/src/cancel_order";
 import { monaco } from "../util/wrappers";
+import { confirmTransaction, getOrder } from "../../npm-client/src";
 
 // Order parameters
 const outcomeIndex = 1;
@@ -21,7 +21,7 @@ describe("NPM client", () => {
 
     // use createOrderUiStake from npm client create order
     const orderResponse = await createOrderNpm(
-      monaco.program as Program<anchor.Idl>,
+      monaco.getRawProgram(),
       market.pk,
       outcomeIndex,
       true,
@@ -30,19 +30,22 @@ describe("NPM client", () => {
     );
 
     const orderPk = orderResponse.data.orderPk;
+    await confirmTransaction(monaco.getRawProgram(), orderResponse.data.tnxID);
 
-    await cancelOrderNpm(monaco.program as Program, orderPk);
+    const cancelOrder = await cancelOrderNpm(
+      monaco.program as Program,
+      orderPk,
+    );
+    assert(cancelOrder.success);
 
-    // check order was deleted
-    try {
-      await monaco.getOrder(orderPk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
-      );
-    }
+    await new Promise((e) => setTimeout(e, 1000));
+
+    const orderCheck = await getOrder(monaco.program as Program, orderPk);
+    assert(orderCheck.success === false);
+    assert(
+      orderCheck.errors[0] as unknown as string,
+      "Account does not exist or has no data " + orderPk,
+    );
   });
 
   it("cancel all orders for a market", async () => {
@@ -53,7 +56,7 @@ describe("NPM client", () => {
     // use createOrderUiStake from npm client create order
     const [orderResponse1, orderResponse2] = await Promise.all([
       createOrderNpm(
-        monaco.program as Program<anchor.Idl>,
+        monaco.getRawProgram(),
         market.pk,
         outcomeIndex,
         true,
@@ -61,7 +64,7 @@ describe("NPM client", () => {
         stake,
       ),
       createOrderNpm(
-        monaco.program as Program<anchor.Idl>,
+        monaco.getRawProgram(),
         market.pk,
         outcomeIndex,
         true,
@@ -73,27 +76,33 @@ describe("NPM client", () => {
     const order1Pk = orderResponse1.data.orderPk;
     const order2Pk = orderResponse2.data.orderPk;
 
-    await cancelOrdersForMarket(monaco.program as Program, market.pk);
+    await Promise.all([
+      confirmTransaction(monaco.getRawProgram(), orderResponse1.data.tnxID),
+      confirmTransaction(monaco.getRawProgram(), orderResponse2.data.tnxID),
+    ]);
 
-    // check order was deleted
-    try {
-      await monaco.getOrder(order1Pk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + order1Pk,
-      );
-    }
-    // check order was deleted
-    try {
-      await monaco.getOrder(order2Pk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + order2Pk,
-      );
-    }
+    const cancelOrders = await cancelOrdersForMarket(
+      monaco.program as Program,
+      market.pk,
+    );
+    assert(cancelOrders.success);
+
+    await new Promise((e) => setTimeout(e, 1000));
+
+    const [orderCheck1, orderCheck2] = await Promise.all([
+      getOrder(monaco.program as Program, order1Pk),
+      getOrder(monaco.program as Program, order2Pk),
+    ]);
+
+    assert(orderCheck1.success === false);
+    assert(orderCheck2.success === false);
+    assert(
+      orderCheck1.errors[0] as unknown as string,
+      "Account does not exist or has no data " + order1Pk,
+    );
+    assert(
+      orderCheck2.errors[0] as unknown as string,
+      "Account does not exist or has no data " + order2Pk,
+    );
   });
 });
