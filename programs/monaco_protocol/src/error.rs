@@ -230,6 +230,8 @@ pub enum CoreError {
     OpenMarketNotInitializing,
     #[msg("Market: cannot void market, market not open or initializing")]
     VoidMarketNotInitializingOrOpen,
+    #[msg("Market: cannot open market, must have more than 1 outcome")]
+    OpenMarketNotEnoughOutcomes,
     #[msg("Market: market is not settled or voided")]
     MarketNotSettledOrVoided,
     #[msg("Market: market is not ready to close")]
