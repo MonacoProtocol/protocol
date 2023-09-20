@@ -36,8 +36,6 @@ mod tests {
     use crate::instructions::market::move_market_to_inplay;
     use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 
-    use crate::state::market_type::EVENT_RESULT_WINNER;
-
     fn market_setup() -> Market {
         let market = Market {
             authority: Default::default(),
@@ -46,9 +44,12 @@ mod tests {
             decimal_limit: 2,
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
-            market_type: String::from(EVENT_RESULT_WINNER),
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
             market_settle_timestamp: None,
             title: "".to_string(),
+            unsettled_accounts_count: 0,
             market_status: MarketStatus::Open,
             escrow_account_bump: 0,
             published: false,
@@ -60,6 +61,8 @@ mod tests {
             event_start_timestamp: current_timestamp() - 1000000000,
             inplay_enabled: true,
             inplay: false,
+            version: 0,
+            unclosed_accounts_count: 0,
         };
         return market;
     }
