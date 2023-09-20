@@ -19,12 +19,16 @@ export async function create_market() {
     protocolProgram as Program,
     "Aduana Stars-Bechem United",
     "EventResultWinner",
+    "",
+    "",
     marketToken,
     1924254038,
     eventAccountKeyPair.publicKey,
     ["Aduana Stars", "Draw", "Bechem United"],
     DEFAULT_PRICE_LADDER,
-    20,
+    {
+      batchSize: 20,
+    },
   );
 
   if (createMarketResponse.success) {
