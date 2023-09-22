@@ -14,6 +14,7 @@ use crate::state::trade_account::Trade;
 
 pub mod context;
 pub mod error;
+pub mod events;
 pub mod instructions;
 pub mod state;
 
