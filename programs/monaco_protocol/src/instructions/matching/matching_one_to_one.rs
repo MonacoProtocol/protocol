@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::MatchOrders;
 use crate::error::CoreError;
+use crate::events::trade::TradeEvent;
 use crate::instructions::market_position::update_product_commission_contributions;
 use crate::instructions::matching::create_trade::initialize_trade;
 use crate::instructions::{
@@ -165,6 +166,12 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
         ctx.accounts.crank_operator.key(),
     );
     ctx.accounts.market.increment_unclosed_accounts_count()?;
+
+    emit!(TradeEvent {
+        amount: stake_matched,
+        price: selected_price,
+        market: ctx.accounts.market.key(),
+    });
 
     Ok(())
 }
