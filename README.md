@@ -12,16 +12,17 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 # Where to find the protocol :mag:
 
-| Address                                       | Network        | Description                                        |
-|-----------------------------------------------|----------------|----------------------------------------------------|
-| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `mainnet-beta` | `release` - The latest stable official release     |
-| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `devnet`       | `release` - The latest stable official release     |
-| `mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU` | `devnet`       | `bleeding-edge` - The most recently merged changes |
+| Address                                       | Network        | Description                                                                                                         |
+|-----------------------------------------------|----------------|---------------------------------------------------------------------------------------------------------------------|
+| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `mainnet-beta` | `release` - The latest stable official release. This will only be updated when an official approved upgrade occurs. |
+| `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` | `devnet`       | `release` - The latest stable official release. This will only be updated when an official approved upgrade occurs. |
+| `mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU` | `devnet`       | `bleeding-edge` - The most recently merged changes.                                                                 |
 
 # Mainnet upgrades :satellite:
 
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| 2023-MM-DD | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-08-01 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-07-06 | [0.10.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-06-26 | [0.10.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
@@ -37,6 +38,7 @@ Protocol releases, along with their corresponding client versions and audit repo
 
 | Protocol version                                                          | Client       | Admin client | Audit reports                                                                      |
 |---------------------------------------------------------------------------|--------------|--------------|------------------------------------------------------------------------------------|
+| [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | 9.0.0        | 8.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.12.0.pdf) |
 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | 8.0.0        | 7.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.11.0.pdf) |
 | [0.10.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.1) | 7.1.0        | 6.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.10.1.pdf) |
 | [0.10.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.0) | 7.1.0        | 6.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.10.0.pdf) |
