@@ -33,6 +33,7 @@ import {
   printMarketType,
   printMarketTypeByName,
 } from "./market_types";
+import { createPriceLadder } from "./price_ladders";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -46,6 +47,9 @@ const script = process.argv[2];
 switch (script) {
   case "getAll":
     getAll();
+    break;
+  case "createPriceLadder":
+    createPriceLadder();
     break;
   case "createMarketType":
     createMarketType();

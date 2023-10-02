@@ -1,6 +1,7 @@
 import { createOrderUiStake } from "../npm-client/src/create_order";
 import { PublicKey } from "@solana/web3.js";
 import { getProtocolProgram } from "./util";
+import { findMarketOutcomePda } from "../npm-admin-client";
 
 // yarn run create_order <MARKET_ID> <OUTCOME_INDEX> <FOR (true|false)> <PRICE> <STAKE>
 // or tsc; ANCHOR_WALLET=~/.config/solana/id.json yarn ts-node client.ts create_order <MARKET_ID> <OUTCOME_INDEX> <FOR (true|false)> <PRICE> <STAKE>
@@ -21,6 +22,12 @@ export async function create_order() {
 
   const protocolProgram = await getProtocolProgram();
 
+  const outcome = await protocolProgram.account.marketOutcome.fetch(
+    (
+      await findMarketOutcomePda(protocolProgram, marketPk, marketOutcomeIndex)
+    ).data.pda,
+  );
+
   const result = await createOrderUiStake(
     protocolProgram,
     marketPk,
@@ -28,6 +35,7 @@ export async function create_order() {
     forOutcome,
     price,
     stake,
+    outcome.prices,
   );
   console.log(JSON.stringify(result, null, 2));
 }
