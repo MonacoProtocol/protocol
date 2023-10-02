@@ -28,7 +28,7 @@ For the given parameters:
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
 *   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
-*   `priceLadder` **[Array][8]<[number][9]>** {number\[]} array of price points to add to the outcome
+*   `priceLadder` **([Array][8]<[number][9]> | PublicKey)?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
 *   `options` **{existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][9]?}?** {object} optional parameters:  <ul>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
         <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>

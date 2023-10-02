@@ -41,7 +41,7 @@ import { findMarketTypePda } from "./market_type_create";
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
  * @param outcomes {string[]} list of possible outcomes for the market
- * @param priceLadder {number[]} array of price points to add to the outcome
+ * @param priceLadder {number[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
  * @param options {object} optional parameters:
  *   <ul>
  *     <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -80,7 +80,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   outcomes: string[],
-  priceLadder: number[],
+  priceLadder?: number[] | PublicKey,
   options?: {
     existingMarketPk?: PublicKey;
     existingMarket?: MarketAccount;
@@ -118,6 +118,9 @@ export async function createMarketWithOutcomesAndPriceLadder(
     program,
     marketPk,
     outcomes,
+    priceLadder instanceof Array<number>
+      ? undefined
+      : (priceLadder as PublicKey),
   );
 
   if (!initialiseOutcomePoolsResponse.success) {
@@ -125,15 +128,20 @@ export async function createMarketWithOutcomesAndPriceLadder(
     return response.body;
   }
 
-  const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
-    program,
-    marketPk,
-    priceLadder,
-    batchSize,
-  );
+  if (priceLadder instanceof Array<number>) {
+    const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
+      program,
+      marketPk,
+      priceLadder,
+      batchSize,
+    );
 
-  if (!addPriceLaddersResponse.success) {
-    response.addErrors(addPriceLaddersResponse.errors);
+    if (!addPriceLaddersResponse.success) {
+      response.addErrors(addPriceLaddersResponse.errors);
+    }
+    response.addResponseData({
+      priceLadderResults: addPriceLaddersResponse.data.results,
+    });
   }
 
   const market = await getMarket(program, marketPk);
@@ -142,7 +150,6 @@ export async function createMarketWithOutcomesAndPriceLadder(
     marketPk: marketPk,
     market: market.data.account,
     tnxId: marketResponse.data.tnxId,
-    priceLadderResults: addPriceLaddersResponse.data.results,
   });
   return response.body;
 }
