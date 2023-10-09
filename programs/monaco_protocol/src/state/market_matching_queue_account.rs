@@ -105,8 +105,12 @@ pub struct OrderMatched {
 }
 
 impl OrderMatched {
-    pub const SIZE: usize =
-        BOOL_SIZE + U16_SIZE + F64_SIZE + U64_SIZE + PUB_KEY_SIZE + PUB_KEY_SIZE;
+    pub const SIZE: usize = PUB_KEY_SIZE +  // pk
+    PUB_KEY_SIZE + // purchaser
+        BOOL_SIZE + //for_outcome
+         U16_SIZE + // outcome_index
+         F64_SIZE + // price
+         U64_SIZE; // stake
 }
 
 impl PartialEq for OrderMatched {
@@ -126,7 +130,7 @@ mod tests_matching_queue {
         let mut queue = MatchingQueue::new(10);
         assert_eq!(0, queue.len());
 
-        let result = queue.enqueue(order_match());
+        let result = queue.enqueue(OrderMatched::default());
         assert!(result.is_some());
         assert_eq!(0, result.unwrap());
         assert_eq!(1, queue.len());
@@ -135,11 +139,11 @@ mod tests_matching_queue {
     #[test]
     fn enqueue_some_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
         assert_eq!(2, queue.len());
 
-        let result = queue.enqueue(order_match());
+        let result = queue.enqueue(OrderMatched::default());
         assert!(result.is_some());
         assert_eq!(2, result.unwrap());
         assert_eq!(3, queue.len());
@@ -148,19 +152,19 @@ mod tests_matching_queue {
     #[test]
     fn enqueue_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
         assert_eq!(10, queue.len());
 
-        let result = queue.enqueue(order_match());
+        let result = queue.enqueue(OrderMatched::default());
         assert!(result.is_none());
         assert_eq!(10, queue.len());
     }
@@ -178,9 +182,9 @@ mod tests_matching_queue {
     #[test]
     fn dequeue_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
         assert_eq!(3, queue.len());
 
         let result = queue.dequeue();
@@ -200,7 +204,7 @@ mod tests_matching_queue {
     #[test]
     fn peek_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        let item = order_match();
+        let item = OrderMatched::default();
         queue.enqueue(item);
         assert_eq!(1, queue.len());
 
@@ -213,23 +217,12 @@ mod tests_matching_queue {
     #[test]
     fn peek_edit_in_place() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(order_match());
-        queue.enqueue(order_match());
+        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatched::default());
         assert_eq!(2, queue.len());
 
         let result0 = queue.peek().unwrap();
         result0.stake = 10;
         assert_eq!(10, queue.items[0].stake);
-    }
-
-    fn order_match() -> OrderMatched {
-        OrderMatched {
-            pk: Pubkey::new_unique(),
-            purchaser: Pubkey::new_unique(),
-            for_outcome: true,
-            outcome_index: 0,
-            price: 1.1,
-            stake: 10,
-        }
     }
 }
