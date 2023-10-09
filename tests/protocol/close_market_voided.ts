@@ -39,6 +39,9 @@ describe("Close market accounts (voided)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const matchingQueueRent = await monaco.provider.connection.getBalance(
+      market.matchingQueuePk,
+    );
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
@@ -48,9 +51,9 @@ describe("Close market accounts (voided)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        authority: marketOperator.publicKey,
-
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        authority: marketOperator.publicKey,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -63,6 +66,7 @@ describe("Close market accounts (voided)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      matchingQueueRent +
       paymentsQueueRent +
       outcomeARent +
       outcomeBRent;
@@ -107,9 +111,9 @@ describe("Close market accounts (voided)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        authority: marketOperator.publicKey,
-
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        authority: marketOperator.publicKey,
       })
       .rpc()
       .catch((e) => {
@@ -140,9 +144,9 @@ describe("Close market accounts (voided)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        authority: monaco.operatorPk,
-
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        authority: monaco.operatorPk,
       })
       .rpc()
       .catch((e) => {
@@ -187,9 +191,9 @@ describe("Close market accounts (voided)", () => {
       .accounts({
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
-        authority: marketOperator.publicKey,
-
+        matchingQueue: marketB.matchingQueuePk,
         commissionPaymentQueue: marketB.paymentsQueuePk,
+        authority: marketOperator.publicKey,
       })
       .rpc()
       .catch((e) => {
