@@ -456,11 +456,7 @@ describe("Recreate markets", () => {
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         })
         .signers([newOperator])
-        .rpc()
-        .catch((e) => {
-          console.error(e);
-          throw e;
-        });
+        .rpc();
       fail("Should have thrown");
     } catch (e) {
       expect(e.error.errorCode.code).toMatch("MarketAuthorityMismatch");
