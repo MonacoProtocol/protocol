@@ -42,6 +42,9 @@ describe("Close market accounts (voided)", () => {
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
+    const orderRequestQueueRent = await monaco.provider.connection.getBalance(
+      market.orderRequestQueuePk,
+    );
 
     await monaco.program.methods
       .closeMarket()
@@ -49,8 +52,8 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
       })
       .rpc()
       .catch((e) => console.log(e));
@@ -64,6 +67,7 @@ describe("Close market accounts (voided)", () => {
       marketRent +
       escrowRent +
       paymentsQueueRent +
+      orderRequestQueueRent +
       outcomeARent +
       outcomeBRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
@@ -108,8 +112,8 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: marketOperator.publicKey,
-
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -141,8 +145,8 @@ describe("Close market accounts (voided)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         authority: monaco.operatorPk,
-
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -188,8 +192,8 @@ describe("Close market accounts (voided)", () => {
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
         authority: marketOperator.publicKey,
-
         commissionPaymentQueue: marketB.paymentsQueuePk,
+        orderRequestQueue: marketB.orderRequestQueuePk,
       })
       .rpc()
       .catch((e) => {

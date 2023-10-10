@@ -6,6 +6,7 @@ use crate::instructions::market::verify_market_authority;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
+use crate::state::market_order_request_queue::OrderRequestData;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
@@ -71,6 +72,31 @@ pub mod monaco_protocol {
             &ctx.accounts.market_outcome,
             &ctx.accounts.price_ladder,
             data,
+        )
+    }
+
+    pub fn create_order_request(
+        ctx: Context<CreateOrderRequest>,
+        data: OrderRequestData,
+    ) -> Result<()> {
+        let payment = instructions::order_request::create_order_request(
+            ctx.accounts.market.key(),
+            &mut ctx.accounts.market,
+            &ctx.accounts.purchaser,
+            &ctx.accounts.product,
+            &mut ctx.accounts.market_position,
+            &ctx.accounts.market_outcome,
+            &ctx.accounts.price_ladder,
+            &mut ctx.accounts.order_request_queue,
+            data,
+        )?;
+
+        transfer::order_creation_payment(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            payment,
         )
     }
 

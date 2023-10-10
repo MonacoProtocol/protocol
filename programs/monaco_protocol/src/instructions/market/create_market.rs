@@ -7,6 +7,7 @@ use crate::instructions::current_timestamp;
 use crate::monaco_protocol::PRICE_SCALE;
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
+use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestQueue};
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::order_account::Order;
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
@@ -140,6 +141,11 @@ pub fn create(
         &ctx.accounts.market.key(),
     )?;
 
+    intialize_order_request_queue(
+        &mut ctx.accounts.order_request_queue,
+        &ctx.accounts.market.key(),
+    )?;
+
     Ok(())
 }
 
@@ -234,6 +240,16 @@ fn intialize_commission_payments_queue(
 ) -> Result<()> {
     payments_queue.market = *market;
     payments_queue.payment_queue = PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH);
+    Ok(())
+}
+
+fn intialize_order_request_queue(
+    order_request_queue: &mut MarketOrderRequestQueue,
+    market: &Pubkey,
+) -> Result<()> {
+    order_request_queue.market = *market;
+    order_request_queue.order_requests =
+        OrderRequestQueue::new(MarketOrderRequestQueue::QUEUE_LENGTH);
     Ok(())
 }
 

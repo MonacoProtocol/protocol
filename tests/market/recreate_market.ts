@@ -3,6 +3,7 @@ import { findEscrowPda, findMarketPda } from "../../npm-client/src/";
 import { monaco } from "../util/wrappers";
 import {
   findCommissionPaymentsQueuePda,
+  findOrderRequestQueuePda,
   getOrCreateMarketType,
 } from "../../npm-admin-client";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
@@ -32,6 +33,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     await program.methods
       .createMarket(
@@ -53,6 +57,7 @@ describe("Recreate markets", () => {
         marketType: existingMarket.marketType,
         escrow: escrowPk,
         commissionPaymentQueue: paymentsQueuePk,
+        orderRequestQueue: orderRequestQueuePk,
         mint: existingMarket.mintAccount,
         marketOperator: monaco.operatorPk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -84,6 +89,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -106,6 +114,7 @@ describe("Recreate markets", () => {
           marketType: existingMarket.marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -143,6 +152,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -165,6 +177,7 @@ describe("Recreate markets", () => {
           marketType: marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -212,6 +225,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -234,6 +250,7 @@ describe("Recreate markets", () => {
           marketType: existingMarket.marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -281,6 +298,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -303,6 +323,7 @@ describe("Recreate markets", () => {
           marketType: existingMarket.marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -342,6 +363,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -364,6 +388,7 @@ describe("Recreate markets", () => {
           marketType: existingMarket.marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: mint,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -403,6 +428,9 @@ describe("Recreate markets", () => {
     const paymentsQueuePk = (
       await findCommissionPaymentsQueuePda(program, marketPk)
     ).data.pda;
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
 
     try {
       await program.methods
@@ -425,6 +453,7 @@ describe("Recreate markets", () => {
           marketType: existingMarket.marketType,
           escrow: escrowPk,
           commissionPaymentQueue: paymentsQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: existingMarket.mintAccount,
           marketOperator: newOperator.publicKey,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),

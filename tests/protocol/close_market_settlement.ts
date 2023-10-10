@@ -42,6 +42,9 @@ describe("Close market accounts (settled)", () => {
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
+    const orderRequestQueueRent = await monaco.provider.connection.getBalance(
+      market.orderRequestQueuePk,
+    );
 
     await monaco.program.methods
       .closeMarket()
@@ -49,6 +52,7 @@ describe("Close market accounts (settled)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,
       })
       .rpc()
@@ -63,6 +67,7 @@ describe("Close market accounts (settled)", () => {
       marketRent +
       escrowRent +
       paymentsQueueRent +
+      orderRequestQueueRent +
       outcomeARent +
       outcomeBRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
@@ -107,6 +112,7 @@ describe("Close market accounts (settled)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,
       })
       .rpc()
@@ -139,6 +145,7 @@ describe("Close market accounts (settled)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
         authority: monaco.operatorPk,
       })
       .rpc()
@@ -185,6 +192,7 @@ describe("Close market accounts (settled)", () => {
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
         commissionPaymentQueue: marketB.paymentsQueuePk,
+        orderRequestQueue: marketB.orderRequestQueuePk,
         authority: marketOperator.publicKey,
       })
       .rpc()
@@ -218,6 +226,7 @@ describe("Close market accounts (settled)", () => {
         market: market.pk,
         marketEscrow: market.escrowPk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,
       })
       .rpc()

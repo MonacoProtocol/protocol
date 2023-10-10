@@ -7,7 +7,10 @@ import assert from "assert";
 import { findEscrowPda, findMarketPda } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
-import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
+import {
+  findCommissionPaymentsQueuePda,
+  findOrderRequestQueuePda,
+} from "../../npm-admin-client";
 import { getOrCreateMarketType } from "../../npm-admin-client/src/market_type_create";
 
 describe("Create markets with inplay features", () => {
@@ -146,6 +149,10 @@ describe("Market: creation", () => {
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
     try {
       await monaco.program.methods
         .createMarket(
@@ -167,6 +174,7 @@ describe("Market: creation", () => {
           marketType: marketTypePk,
           escrow: marketEscrowPk,
           commissionPaymentQueue: marketPaymentQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -237,6 +245,10 @@ describe("Market: creation", () => {
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
     try {
       await monaco.program.methods
         .createMarket(
@@ -258,6 +270,7 @@ describe("Market: creation", () => {
           marketType: marketTypePk,
           escrow: marketEscrowPk,
           commissionPaymentQueue: marketPaymentQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -324,6 +337,10 @@ describe("Market: creation", () => {
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
     await monaco.program.methods
       .createMarket(
         event.publicKey,
@@ -344,6 +361,7 @@ describe("Market: creation", () => {
         marketType: marketTypePk,
         escrow: marketEscrowPk,
         commissionPaymentQueue: marketPaymentQueuePk,
+        orderRequestQueue: orderRequestQueuePk,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -490,6 +508,10 @@ async function createMarket(
     await findCommissionPaymentsQueuePda(protocol.program as Program, marketPk)
   ).data.pda;
 
+  const orderRequestQueuePk = (
+    await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+  ).data.pda;
+
   await protocol.program.methods
     .createMarket(
       event.publicKey,
@@ -510,6 +532,7 @@ async function createMarket(
       marketType: marketTypePk,
       escrow: marketEscrowPk,
       commissionPaymentQueue: marketPaymentQueuePk,
+      orderRequestQueue: orderRequestQueuePk,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,

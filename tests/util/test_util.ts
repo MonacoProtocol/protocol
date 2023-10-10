@@ -42,6 +42,7 @@ import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
   findCommissionPaymentsQueuePda,
+  findOrderRequestQueuePda,
   PaymentInfo,
 } from "../../npm-admin-client";
 import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
@@ -243,6 +244,10 @@ export async function createMarket(
     await findCommissionPaymentsQueuePda(protocolProgram as Program, marketPda)
   ).data.pda;
 
+  const orderRequestQueuePda = (
+    await findOrderRequestQueuePda(protocolProgram as Program, marketPda)
+  ).data.pda;
+
   await protocolProgram.methods
     .createMarket(
       eventAccount.publicKey,
@@ -269,6 +274,7 @@ export async function createMarket(
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
       commissionPaymentQueue: paymentsQueuePda,
+      orderRequestQueue: orderRequestQueuePda,
     })
     .signers([marketOperator])
     .rpc();
@@ -566,6 +572,71 @@ export async function createOrder(
       purchaserToken: purchaserTokenAccount,
       marketEscrow: marketEscrowPk,
       product: productPk == undefined ? null : productPk,
+    })
+    .signers(purchaser instanceof Keypair ? [purchaser] : [])
+    .rpc()
+    .catch((e) => {
+      console.error(e);
+      throw e;
+    });
+
+  return orderPk;
+}
+
+export async function createOrderRequest(
+  marketPk: PublicKey,
+  purchaser: Keypair | Wallet,
+  marketOutcomeIndex: number,
+  forOutcome: boolean,
+  marketOutcomePrice: number,
+  stake: number,
+  purchaserTokenAccount: PublicKey,
+  productPk?: PublicKey,
+) {
+  const protocolProgram = anchor.workspace
+    .MonacoProtocol as Program<MonacoProtocol>;
+
+  const { uiAmountToAmount, marketEscrowPk, marketOutcomePk } =
+    await findMarketPdas(
+      marketPk,
+      forOutcome,
+      marketOutcomeIndex,
+      marketOutcomePrice,
+      protocolProgram as Program<anchor.Idl>,
+    );
+
+  const { orderPk, marketPositionPk } = await findUserPdas(
+    marketPk,
+    purchaser.publicKey,
+    protocolProgram as Program<anchor.Idl>,
+  );
+
+  const stakeInteger = uiAmountToAmount(stake);
+
+  const orderRequestQueuePk = await findOrderRequestQueuePda(
+    protocolProgram as Program<anchor.Idl>,
+    marketPk,
+  );
+
+  await protocolProgram.methods
+    .createOrderRequest({
+      marketOutcomeIndex: marketOutcomeIndex,
+      forOutcome: forOutcome,
+      stake: new BN(stakeInteger),
+      price: marketOutcomePrice,
+    })
+    .accounts({
+      orderRequestQueue: orderRequestQueuePk.data.pda,
+      marketPosition: marketPositionPk.data.pda,
+      purchaser: purchaser.publicKey,
+      purchaserToken: purchaserTokenAccount,
+      market: marketPk,
+      marketOutcome: marketOutcomePk,
+      priceLadder: null,
+      marketEscrow: marketEscrowPk,
+      product: productPk == undefined ? null : productPk,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(purchaser instanceof Keypair ? [purchaser] : [])
     .rpc()

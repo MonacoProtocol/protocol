@@ -1,12 +1,15 @@
 use crate::error::CoreError;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_outcome_account::MarketOutcome;
-use crate::{AuthorisedOperators, Market, MarketPosition, Order, OrderData, Trade};
+use crate::{
+    AuthorisedOperators, Market, MarketPosition, Order, OrderData, OrderRequestData, Trade,
+};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
 
+use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 use crate::state::market_type::MarketType;
 use crate::state::payments_queue::MarketPaymentsQueue;
 use crate::state::price_ladder::PriceLadder;
@@ -160,6 +163,68 @@ pub struct CreateOrderV2<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    pub product: Option<Account<'info, Product>>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(data: OrderRequestData)]
+pub struct CreateOrderRequest<'info> {
+    #[account(
+        mut,
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+
+    #[account(
+        init_if_needed,
+        seeds = [
+            purchaser.key().as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+        payer = purchaser,
+        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
+    )]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+    #[account(mut)]
+    pub purchaser: Signer<'info>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub market: Box<Account<'info, Market>>,
+
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            data.market_outcome_index.to_string().as_ref(),
+        ],
+        bump,
+        constraint = market_outcome.prices.is_none() || (market_outcome.prices.is_some() && price_ladder.is_some() && market_outcome.prices.unwrap() == price_ladder.as_ref().unwrap().key()) @ CoreError::CreationInvalidPriceLadder
+    )]
+    pub market_outcome: Account<'info, MarketOutcome>,
+    pub price_ladder: Option<Account<'info, PriceLadder>>,
+
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
 
     pub product: Option<Account<'info, Product>>,
 
@@ -577,6 +642,17 @@ pub struct CreateMarket<'info> {
         space = MarketPaymentsQueue::SIZE
     )]
     pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+    #[account(
+        init,
+        seeds = [
+            b"order_request_queue".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketOrderRequestQueue::SIZE
+    )]
+    pub order_request_queue: Box<Account<'info, MarketOrderRequestQueue>>,
 
     pub market_type: Account<'info, MarketType>,
 
@@ -910,6 +986,14 @@ pub struct CloseMarket<'info> {
         close = authority,
     )]
     pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+        close = authority,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,

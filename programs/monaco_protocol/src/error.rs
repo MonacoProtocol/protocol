@@ -31,6 +31,9 @@ pub enum CoreError {
     #[msg("Order Creation: market is already inplay")]
     CreationMarketAlreadyInplay,
 
+    #[msg("Order Request Creation: request queue is full")]
+    RequestCreationQueueFull,
+
     /*
     Cancelation
      */

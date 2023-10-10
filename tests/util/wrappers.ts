@@ -27,12 +27,14 @@ import {
   processCommissionPayments,
   executeTransactionMaxCompute,
   getOrCreateMarketType,
+  createOrderRequest,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
   findCommissionPaymentsQueuePda,
+  findOrderRequestQueuePda,
   findPriceLadderPda,
 } from "../../npm-admin-client";
 
@@ -331,6 +333,11 @@ export class Monaco {
       marketPk,
     );
 
+    const orderRequestQueuePk = await findOrderRequestQueuePda(
+      this.program as Program,
+      marketPk,
+    );
+
     // invoke core program to call operations required for creating an order
     await this.program.methods
       .createMarket(
@@ -352,6 +359,7 @@ export class Monaco {
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
         commissionPaymentQueue: commissionQueuePk.data.pda,
+        orderRequestQueue: orderRequestQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -463,6 +471,7 @@ export class Monaco {
       marketPk,
       marketEscrowPk.data.pda,
       commissionQueuePk.data.pda,
+      orderRequestQueuePk.data.pda,
       outcomePks,
       matchingPools,
       eventPk,
@@ -522,6 +531,7 @@ export class MonacoMarket {
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
+  readonly orderRequestQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
   readonly matchingPools: {
     against: PublicKey;
@@ -546,6 +556,7 @@ export class MonacoMarket {
     pk: PublicKey,
     escrowPk: PublicKey,
     paymentsQueuePk: PublicKey,
+    orderRequestQueuePk: PublicKey,
     outcomePks: PublicKey[],
     matchingPools: {
       against: PublicKey;
@@ -562,6 +573,7 @@ export class MonacoMarket {
     this.pk = pk;
     this.escrowPk = escrowPk;
     this.paymentsQueuePk = paymentsQueuePk;
+    this.orderRequestQueuePk = orderRequestQueuePk;
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;
     this.eventPk = eventPk;
@@ -727,6 +739,54 @@ export class MonacoMarket {
       purchaser.publicKey,
     );
     const result = await createOrder(
+      this.pk,
+      purchaser,
+      outcome,
+      false,
+      price,
+      stake,
+      purchaserTokenPk,
+      productPk,
+    );
+    await new Promise((e) => setTimeout(e, 1000));
+    return result;
+  }
+
+  async forOrderRequest(
+    outcome: number,
+    stake: number,
+    price: number,
+    purchaser: Keypair,
+    productPk?: PublicKey,
+  ) {
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(
+      purchaser.publicKey,
+    );
+    const result = await createOrderRequest(
+      this.pk,
+      purchaser,
+      outcome,
+      true,
+      price,
+      stake,
+      purchaserTokenPk,
+      productPk,
+    );
+    await new Promise((e) => setTimeout(e, 1000));
+    return result;
+  }
+
+  async againstOrderRequest(
+    outcome: number,
+    stake: number,
+    price: number,
+    purchaser: Keypair,
+    productPk?: PublicKey,
+  ) {
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(
+      purchaser.publicKey,
+    );
+    const result = await createOrderRequest(
       this.pk,
       purchaser,
       outcome,

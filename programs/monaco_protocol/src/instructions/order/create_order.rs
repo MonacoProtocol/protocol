@@ -40,7 +40,7 @@ pub fn create_order<'info>(
 
     // initialize market position if needed
     if market_position.purchaser == Pubkey::default() {
-        market_position::create_market_position(purchaser, market, market_position)?;
+        market_position::create_market_position(purchaser, market.key(), market, market_position)?;
         market.increment_account_counts()?;
     }
 
@@ -154,7 +154,7 @@ fn initialize_order(
     Ok(())
 }
 
-fn validate_market_for_order(market: &Market, now: UnixTimestamp) -> Result<()> {
+pub fn validate_market_for_order(market: &Market, now: UnixTimestamp) -> Result<()> {
     let market_lock_timestamp = &market.market_lock_timestamp;
     let status = &market.market_status;
 
