@@ -39,6 +39,9 @@ describe("Close market accounts (settled)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const matchingQueueRent = await monaco.provider.connection.getBalance(
+      market.matchingQueuePk,
+    );
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
@@ -51,6 +54,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,
@@ -66,6 +70,7 @@ describe("Close market accounts (settled)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      matchingQueueRent +
       paymentsQueueRent +
       orderRequestQueueRent +
       outcomeARent +
@@ -111,6 +116,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,
@@ -144,6 +150,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         orderRequestQueue: market.orderRequestQueuePk,
         authority: monaco.operatorPk,
@@ -191,6 +198,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
+        matchingQueue: marketB.matchingQueuePk,
         commissionPaymentQueue: marketB.paymentsQueuePk,
         orderRequestQueue: marketB.orderRequestQueuePk,
         authority: marketOperator.publicKey,
@@ -225,6 +233,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         orderRequestQueue: market.orderRequestQueuePk,
         authority: marketOperator.publicKey,

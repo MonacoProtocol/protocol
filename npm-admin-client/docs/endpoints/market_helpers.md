@@ -14,21 +14,24 @@
 *   [findEscrowPda][10]
     *   [Parameters][11]
     *   [Examples][12]
-*   [findCommissionPaymentsQueuePda][13]
+*   [findMarketMatchingQueuePda][13]
     *   [Parameters][14]
     *   [Examples][15]
-*   [findOrderRequestQueuePda][16]
+*   [findCommissionPaymentsQueuePda][16]
     *   [Parameters][17]
     *   [Examples][18]
-*   [MarketOutcomes][19]
+*   [findOrderRequestQueuePda][19]
     *   [Parameters][20]
     *   [Examples][21]
-*   [getMarketOutcomesByMarket][22]
+*   [MarketOutcomes][22]
     *   [Parameters][23]
     *   [Examples][24]
-*   [getMarketOutcomeTitlesByMarket][25]
+*   [getMarketOutcomesByMarket][25]
     *   [Parameters][26]
     *   [Examples][27]
+*   [getMarketOutcomeTitlesByMarket][28]
+    *   [Parameters][29]
+    *   [Examples][30]
 
 ## findMarketPda
 
@@ -39,10 +42,10 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `eventPk` **PublicKey** {PublicKey} publicKey of an event
 *   `marketTypePk` **PublicKey** {PublicKey} publicKey of the market type
-*   `marketTypeDiscriminator` **[string][28]** {string} discriminator of the market type
-*   `marketTypeValue` **[string][28]** {string} value of the market type
+*   `marketTypeDiscriminator` **[string][31]** {string} discriminator of the market type
+*   `marketTypeValue` **[string][31]** {string} value of the market type
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the currency token
-*   `version` **[number][29]?** {number} (Optional) version of the market, defaults to 0
+*   `version` **[number][32]?** {number} (Optional) version of the market, defaults to 0
 
 ### Examples
 
@@ -110,6 +113,24 @@ const escrowPda = await findEscrowPda(program, marketPK)
 ```
 
 Returns **FindPdaResponse** PDA of the escrow account
+
+## findMarketMatchingQueuePda
+
+For the provided market publicKey, return the PDA (publicKey) of the market matching-queue account.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const marketMatchingQueuePk = await findMarketMatchingQueuePda(program, marketPK)
+```
+
+Returns **FindPdaResponse** PDA of the market matching-queue account
 
 ## findCommissionPaymentsQueuePda
 
@@ -231,36 +252,42 @@ Returns **MarketOutcomeTitlesResponse** fetched market outcome titles - ordered 
 
 [12]: #examples-3
 
-[13]: #findcommissionpaymentsqueuepda
+[13]: #findmarketmatchingqueuepda
 
 [14]: #parameters-4
 
 [15]: #examples-4
 
-[16]: #findorderrequestqueuepda
+[16]: #findcommissionpaymentsqueuepda
 
 [17]: #parameters-5
 
 [18]: #examples-5
 
-[19]: #marketoutcomes
+[19]: #findorderrequestqueuepda
 
 [20]: #parameters-6
 
 [21]: #examples-6
 
-[22]: #getmarketoutcomesbymarket
+[22]: #marketoutcomes
 
 [23]: #parameters-7
 
 [24]: #examples-7
 
-[25]: #getmarketoutcometitlesbymarket
+[25]: #getmarketoutcomesbymarket
 
 [26]: #parameters-8
 
 [27]: #examples-8
 
-[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[28]: #getmarketoutcometitlesbymarket
 
-[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[29]: #parameters-9
+
+[30]: #examples-9
+
+[31]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[32]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

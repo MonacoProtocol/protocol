@@ -43,6 +43,7 @@ import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
   findCommissionPaymentsQueuePda,
   findOrderRequestQueuePda,
+  findMarketMatchingQueuePda,
   PaymentInfo,
 } from "../../npm-admin-client";
 import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
@@ -240,7 +241,11 @@ export async function createMarket(
   const escrowPda = (await findEscrowPda(protocolProgram as Program, marketPda))
     .data.pda;
 
-  const paymentsQueuePda = (
+  const matchingQueuePda = (
+    await findMarketMatchingQueuePda(protocolProgram as Program, marketPda)
+  ).data.pda;
+
+  const commissionPaymentQueuePda = (
     await findCommissionPaymentsQueuePda(protocolProgram as Program, marketPda)
   ).data.pda;
 
@@ -273,7 +278,8 @@ export async function createMarket(
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
-      commissionPaymentQueue: paymentsQueuePda,
+      commissionPaymentQueue: commissionPaymentQueuePda,
+      matchingQueue: matchingQueuePda,
       orderRequestQueue: orderRequestQueuePda,
     })
     .signers([marketOperator])
@@ -371,7 +377,8 @@ export async function createMarket(
     outcomes,
     mintPk,
     escrowPda,
-    paymentsQueuePda,
+    matchingQueuePda,
+    paymentsQueuePda: commissionPaymentQueuePda,
     outcomePdas,
     matchingPools,
     authorisedMarketOperators,

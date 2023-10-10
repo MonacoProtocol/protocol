@@ -18,6 +18,7 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
+  findMarketMatchingQueuePda,
   findCommissionPaymentsQueuePda,
   findOrderRequestQueuePda,
 } from "./market_helpers";
@@ -267,12 +268,14 @@ export async function createMarket(
     escrowPda,
     authorisedOperators,
     mintInfo,
+    matchingQueuePda,
     paymentsQueuePda,
     orderRequestQueuePda,
   ] = await Promise.all([
     findEscrowPda(program, marketPda),
     findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
     getMintInfo(program, marketTokenPk),
+    findMarketMatchingQueuePda(program, marketPda),
     findCommissionPaymentsQueuePda(program, marketPda),
     findOrderRequestQueuePda(program, marketPda),
   ]);
@@ -305,6 +308,7 @@ export async function createMarket(
         rent: web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
+        matchingQueue: matchingQueuePda.data.pda,
         commissionPaymentQueue: paymentsQueuePda.data.pda,
         orderRequestQueue: orderRequestQueuePda.data.pda,
       })

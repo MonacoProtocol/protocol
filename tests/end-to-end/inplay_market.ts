@@ -291,6 +291,7 @@ describe("End to end test of", () => {
         market: market.pk,
         authority: monaco.operatorPk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         orderRequestQueue: market.orderRequestQueuePk,
       })
