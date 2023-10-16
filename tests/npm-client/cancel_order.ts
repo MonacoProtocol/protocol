@@ -28,9 +28,9 @@ describe("NPM client", () => {
       price,
       stake,
     );
-
-    const orderPk = orderResponse.data.orderPk;
     await confirmTransaction(monaco.getRawProgram(), orderResponse.data.tnxID);
+
+    const orderPk = await market.processNextOrderRequest();
 
     const cancelOrder = await cancelOrderNpm(
       monaco.program as Program,
@@ -54,32 +54,30 @@ describe("NPM client", () => {
     await market.airdropProvider(10_000.0);
 
     // use createOrderUiStake from npm client create order
-    const [orderResponse1, orderResponse2] = await Promise.all([
-      createOrderNpm(
-        monaco.getRawProgram(),
-        market.pk,
-        outcomeIndex,
-        true,
-        price,
-        stake,
-      ),
-      createOrderNpm(
-        monaco.getRawProgram(),
-        market.pk,
-        outcomeIndex,
-        true,
-        price,
-        stake,
-      ),
-    ]);
 
-    const order1Pk = orderResponse1.data.orderPk;
-    const order2Pk = orderResponse2.data.orderPk;
+    const orderResponse1 = await createOrderNpm(
+      monaco.getRawProgram(),
+      market.pk,
+      outcomeIndex,
+      true,
+      price,
+      stake,
+    );
+    const orderResponse2 = await createOrderNpm(
+      monaco.getRawProgram(),
+      market.pk,
+      outcomeIndex,
+      true,
+      price,
+      stake,
+    );
 
     await Promise.all([
       confirmTransaction(monaco.getRawProgram(), orderResponse1.data.tnxID),
       confirmTransaction(monaco.getRawProgram(), orderResponse2.data.tnxID),
     ]);
+
+    const [order1Pk, order2Pk] = await market.processOrderRequests();
 
     const cancelOrders = await cancelOrdersForMarket(
       monaco.program as Program,

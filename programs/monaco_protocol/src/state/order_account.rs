@@ -1,25 +1,5 @@
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
-use std::fmt;
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq)]
-pub struct OrderData {
-    pub market_outcome_index: u16,
-    pub for_outcome: bool,
-
-    pub stake: u64,
-    pub price: f64,
-}
-
-impl fmt::Display for OrderData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "OrderData market_outcome:{} for_outcome:{} stake:{} price:{}",
-            self.market_outcome_index, self.for_outcome, self.stake, self.price
-        )
-    }
-}
 
 #[account]
 pub struct Order {

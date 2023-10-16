@@ -4,9 +4,8 @@ use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
 use crate::error::CoreError::RequestCreationQueueFull;
-use crate::instructions::order::validate_market_for_order;
 use crate::instructions::{current_timestamp, market_position, stake_precision_is_within_range};
-use crate::state::market_account::Market;
+use crate::state::market_account::{Market, MarketStatus};
 use crate::state::market_order_request_queue::{
     MarketOrderRequestQueue, OrderRequest, OrderRequestData,
 };
@@ -86,7 +85,7 @@ fn validate_order_request(
     data: &OrderRequestData,
     now: UnixTimestamp,
 ) -> Result<()> {
-    validate_market_for_order(market, now)?;
+    validate_market_for_order_request(market, now)?;
 
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
@@ -119,4 +118,144 @@ fn validate_order_request(
         );
     }
     Ok(())
+}
+
+pub fn validate_market_for_order_request(market: &Market, now: UnixTimestamp) -> Result<()> {
+    let market_lock_timestamp = &market.market_lock_timestamp;
+    let status = &market.market_status;
+
+    require!(
+        status == &MarketStatus::Open,
+        CoreError::CreationMarketNotOpen
+    );
+
+    require!(
+        market.market_winning_outcome_index.is_none(),
+        CoreError::CreationMarketHasWinningOutcome
+    );
+
+    require!(!market.suspended, CoreError::CreationMarketSuspended);
+
+    require!(
+        *market_lock_timestamp > now,
+        CoreError::CreationMarketLocked
+    );
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+
+    #[test]
+    fn test_market_valid() {
+        let now: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_future, false, MarketStatus::Open, None);
+
+        let result = validate_market_for_order_request(&market, now);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn market_lock_time_in_past() {
+        let time_in_past: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_past, false, MarketStatus::Open, None);
+
+        let result = validate_market_for_order_request(&market, time_in_future);
+
+        assert!(result
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("CreationMarketLocked"));
+    }
+
+    #[test]
+    fn market_not_open() {
+        let now: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_future, false, MarketStatus::Settled, None);
+
+        let result = validate_market_for_order_request(&market, now);
+
+        assert!(result
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("CreationMarketNotOpen"));
+    }
+
+    #[test]
+    fn market_suspended() {
+        let now: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_future, true, MarketStatus::Open, None);
+
+        let result = validate_market_for_order_request(&market, now);
+
+        assert!(result
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("CreationMarketSuspended"));
+    }
+
+    #[test]
+    fn winning_outcome_set() {
+        let now: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_future, false, MarketStatus::Open, Some(1));
+
+        let result = validate_market_for_order_request(&market, now);
+
+        assert!(result
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("CreationMarketHasWinningOutcome"));
+    }
+
+    fn create_test_market(
+        market_lock_timestamp: UnixTimestamp,
+        suspended: bool,
+        market_status: MarketStatus,
+        market_winning_outcome_index: Option<u16>,
+    ) -> Market {
+        Market {
+            authority: Pubkey::new_unique(),
+            event_account: Pubkey::new_unique(),
+            mint_account: Default::default(),
+            decimal_limit: 2,
+            market_outcomes_count: 3_u16,
+            market_winning_outcome_index,
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
+            market_lock_timestamp,
+            market_settle_timestamp: None,
+            title: String::from("META"),
+            market_status,
+            escrow_account_bump: 0,
+            published: true,
+            suspended,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            unclosed_accounts_count: 0,
+            unsettled_accounts_count: 0,
+        }
+    }
 }

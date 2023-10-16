@@ -120,6 +120,7 @@ export type MarketOutcomeTitlesResponse = {
 
 export type MarketAccountsForCreateOrder = {
   escrowPda: PublicKey;
+  marketOrderRequestQueuePda: PublicKey;
   marketOutcomePda: PublicKey;
   marketOutcomePoolPda: PublicKey;
   marketPositionPda: PublicKey;

@@ -28,6 +28,8 @@ import {
   executeTransactionMaxCompute,
   getOrCreateMarketType,
   createOrderRequest,
+  processNextOrderRequest,
+  processOrderRequests,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
@@ -814,6 +816,20 @@ export class MonacoMarket {
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
+  }
+
+  async processNextOrderRequest(): Promise<PublicKey> {
+    return await processNextOrderRequest(
+      this.pk,
+      this.monaco.operatorWallet.payer,
+    );
+  }
+
+  async processOrderRequests(): Promise<PublicKey[]> {
+    return await processOrderRequests(
+      this.pk,
+      this.monaco.operatorWallet.payer,
+    );
   }
 
   async cancel(orderPk: PublicKey, purchaser: Keypair) {

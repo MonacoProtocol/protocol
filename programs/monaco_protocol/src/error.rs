@@ -33,6 +33,8 @@ pub enum CoreError {
 
     #[msg("Order Request Creation: request queue is full")]
     RequestCreationQueueFull,
+    #[msg("Order Request Processing: request queue is empty")]
+    RequestQueueEmpty,
 
     /*
     Cancelation

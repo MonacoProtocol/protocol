@@ -2,9 +2,7 @@ use crate::error::CoreError;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_outcome_account::MarketOutcome;
-use crate::{
-    AuthorisedOperators, Market, MarketPosition, Order, OrderData, OrderRequestData, Trade,
-};
+use crate::{AuthorisedOperators, Market, MarketPosition, Order, OrderRequestData, Trade};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -15,163 +13,6 @@ use crate::state::market_type::MarketType;
 use crate::state::payments_queue::MarketPaymentsQueue;
 use crate::state::price_ladder::PriceLadder;
 use protocol_product::state::product::Product;
-
-#[derive(Accounts)]
-#[instruction(_distinct_seed: String, data: OrderData)]
-pub struct CreateOrder<'info> {
-    #[account(
-        init,
-        seeds = [
-            market.key().as_ref(),
-            purchaser.key().as_ref(),
-            _distinct_seed.as_ref()
-        ],
-        bump,
-        payer = purchaser,
-        space = Order::SIZE,
-    )]
-    pub order: Account<'info, Order>,
-    #[account(
-        init_if_needed,
-        seeds = [
-            purchaser.key().as_ref(),
-            market.key().as_ref()
-        ],
-        bump,
-        payer = purchaser,
-        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
-    )]
-    pub market_position: Box<Account<'info, MarketPosition>>,
-    #[account(mut)]
-    pub purchaser: Signer<'info>,
-    #[account(
-        mut,
-        associated_token::mint = market.mint_account,
-        associated_token::authority = purchaser,
-    )]
-    pub purchaser_token: Account<'info, TokenAccount>,
-
-    #[account(mut)]
-    pub market: Box<Account<'info, Market>>,
-    #[account(
-        init_if_needed,
-        seeds = [
-            market.key().as_ref(),
-            market_outcome.index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{:.3}", data.price).as_ref(),
-            data.for_outcome.to_string().as_ref()
-        ],
-        payer = purchaser,
-        bump,
-        space = MarketMatchingPool::SIZE
-    )]
-    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
-    #[account(
-        mut,
-        seeds = [
-            market.key().as_ref(),
-            data.market_outcome_index.to_string().as_ref(),
-        ],
-        bump,
-    )]
-    pub market_outcome: Account<'info, MarketOutcome>,
-    #[account(
-        mut,
-        token::mint = market.mint_account,
-        token::authority = market_escrow,
-        seeds = [b"escrow".as_ref(), market.key().as_ref()],
-        bump,
-    )]
-    pub market_escrow: Box<Account<'info, TokenAccount>>,
-
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-    #[account(address = anchor_spl::token::ID)]
-    pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-#[instruction(_distinct_seed: String, data: OrderData)]
-pub struct CreateOrderV2<'info> {
-    #[account(
-        init,
-        seeds = [
-            market.key().as_ref(),
-            purchaser.key().as_ref(),
-            _distinct_seed.as_ref()
-        ],
-        bump,
-        payer = purchaser,
-        space = Order::SIZE,
-    )]
-    pub order: Account<'info, Order>,
-    #[account(
-        init_if_needed,
-        seeds = [
-            purchaser.key().as_ref(),
-            market.key().as_ref()
-        ],
-        bump,
-        payer = purchaser,
-        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
-    )]
-    pub market_position: Box<Account<'info, MarketPosition>>,
-    #[account(mut)]
-    pub purchaser: Signer<'info>,
-    #[account(
-        mut,
-        associated_token::mint = market.mint_account,
-        associated_token::authority = purchaser,
-    )]
-    pub purchaser_token: Account<'info, TokenAccount>,
-
-    #[account(mut)]
-    pub market: Box<Account<'info, Market>>,
-    #[account(
-        init_if_needed,
-        seeds = [
-            market.key().as_ref(),
-            market_outcome.index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{:.3}", data.price).as_ref(),
-            data.for_outcome.to_string().as_ref()
-        ],
-        payer = purchaser,
-        bump,
-        space = MarketMatchingPool::SIZE
-    )]
-    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
-
-    #[account(
-        mut,
-        seeds = [
-            market.key().as_ref(),
-            data.market_outcome_index.to_string().as_ref(),
-        ],
-        bump,
-        constraint = market_outcome.prices.is_none() || (market_outcome.prices.is_some() && price_ladder.is_some() && market_outcome.prices.unwrap() == price_ladder.as_ref().unwrap().key()) @ CoreError::CreationInvalidPriceLadder
-    )]
-    pub market_outcome: Account<'info, MarketOutcome>,
-
-    pub price_ladder: Option<Account<'info, PriceLadder>>,
-
-    #[account(
-        mut,
-        token::mint = market.mint_account,
-        token::authority = market_escrow,
-        seeds = [b"escrow".as_ref(), market.key().as_ref()],
-        bump,
-    )]
-    pub market_escrow: Box<Account<'info, TokenAccount>>,
-
-    pub product: Option<Account<'info, Product>>,
-
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-    #[account(address = anchor_spl::token::ID)]
-    pub token_program: Program<'info, Token>,
-}
 
 #[derive(Accounts)]
 #[instruction(data: OrderRequestData)]
@@ -233,6 +74,64 @@ pub struct CreateOrderRequest<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+#[instruction(_distinct_seed: String)]
+pub struct ProcessOrderRequest<'info> {
+    #[account(
+        init,
+        seeds = [
+            market.key().as_ref(),
+            crank_operator.key().as_ref(),
+            _distinct_seed.as_ref()
+        ],
+        bump,
+        payer = crank_operator,
+        space = Order::SIZE,
+    )]
+    pub order: Account<'info, Order>,
+
+    #[account(
+        init_if_needed,
+        seeds = [
+            market.key().as_ref(),
+            order_request_queue.order_requests
+                .peek_front()
+                .ok_or(CoreError::RequestQueueEmpty)?
+                .market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}",
+                order_request_queue.order_requests
+                    .peek_front()
+                    .ok_or(CoreError::RequestQueueEmpty)?
+                    .expected_price
+            ).as_ref(),
+            order_request_queue.order_requests
+                .peek_front()
+                .ok_or(CoreError::RequestQueueEmpty)?
+                .for_outcome.to_string().as_ref(),
+        ],
+        payer = crank_operator,
+        bump,
+        space = MarketMatchingPool::SIZE
+    )]
+    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+
+    #[account(
+        mut,
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+    #[account(mut)]
+    pub market: Box<Account<'info, Market>>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

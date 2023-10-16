@@ -53,6 +53,7 @@ pub fn cancel_preplay_order_post_event_start(
 mod test {
     use crate::state::market_account::MarketStatus;
     use crate::state::market_matching_pool_account::Cirque;
+    use crate::state::market_order_request_queue::OrderRequest;
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -65,6 +66,17 @@ mod test {
 
         let market_pk = Pubkey::new_unique();
         let market = mock_market();
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+        };
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -88,7 +100,7 @@ mod test {
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
         let update_on_order_creation =
-            market_position::update_on_order_creation(&mut market_position, &order);
+            market_position::update_on_order_request_creation(&mut market_position, &order_request);
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -120,6 +132,17 @@ mod test {
         let market_pk = Pubkey::new_unique();
         let market = mock_market();
 
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+        };
+
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: market_pk,
@@ -142,7 +165,7 @@ mod test {
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
         let update_on_order_creation =
-            market_position::update_on_order_creation(&mut market_position, &order);
+            market_position::update_on_order_request_creation(&mut market_position, &order_request);
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 

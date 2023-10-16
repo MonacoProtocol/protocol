@@ -23,20 +23,25 @@ describe("Trades Query", () => {
     await market.airdrop(purchaser, airdrop);
     await market.airdropProvider(airdrop);
 
-    const [forOrder, againstOrderPk] = await Promise.all([
-      createOrderNpm(
-        monaco.getRawProgram(),
-        market.pk,
-        outcomeIndex,
-        true,
-        price,
-        stake,
-      ),
-      market.againstOrder(outcomeIndex, 10.0, price, purchaser),
-    ]);
+    const forOrderTx = await createOrderNpm(
+      monaco.getRawProgram(),
+      market.pk,
+      outcomeIndex,
+      true,
+      price,
+      stake,
+    );
+    await confirmTransaction(monaco.getRawProgram(), forOrderTx.data.tnxID);
+    const forOrderPk = await market.processNextOrderRequest();
 
-    await confirmTransaction(monaco.getRawProgram(), forOrder.data.tnxID);
-    await market.match(forOrder.data.orderPk, againstOrderPk);
+    const againstOrderPk = await market.againstOrder(
+      outcomeIndex,
+      10.0,
+      price,
+      purchaser,
+    );
+
+    await market.match(forOrderPk, againstOrderPk);
     await new Promise((e) => setTimeout(e, 1000));
 
     const responseForProvider = await getTradesForProviderWallet(
@@ -60,7 +65,7 @@ describe("Trades Query", () => {
 
     const responseForOrder = await getTradesForOrder(
       monaco.getRawProgram(),
-      forOrder.data.orderPk,
+      forOrderPk,
     );
 
     assert(responseForOrder.success);

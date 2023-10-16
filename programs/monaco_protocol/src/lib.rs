@@ -10,7 +10,6 @@ use crate::state::market_order_request_queue::OrderRequestData;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
-use crate::state::order_account::OrderData;
 use crate::state::trade_account::Trade;
 
 pub mod context;
@@ -32,48 +31,6 @@ pub mod monaco_protocol {
     use crate::instructions::current_timestamp;
 
     pub const PRICE_SCALE: u8 = 3_u8;
-
-    pub fn create_order(
-        ctx: Context<CreateOrder>,
-        _distinct_seed: String,
-        data: OrderData,
-    ) -> Result<()> {
-        instructions::order::create_order(
-            &mut ctx.accounts.order,
-            &mut ctx.accounts.market,
-            &ctx.accounts.purchaser,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            &None,
-            &mut ctx.accounts.market_matching_pool,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.market_outcome,
-            &None,
-            data,
-        )
-    }
-
-    pub fn create_order_v2(
-        ctx: Context<CreateOrderV2>,
-        _distinct_seed: String,
-        data: OrderData,
-    ) -> Result<()> {
-        instructions::order::create_order(
-            &mut ctx.accounts.order,
-            &mut ctx.accounts.market,
-            &ctx.accounts.purchaser,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            &ctx.accounts.product,
-            &mut ctx.accounts.market_matching_pool,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.market_outcome,
-            &ctx.accounts.price_ladder,
-            data,
-        )
-    }
 
     pub fn create_order_request(
         ctx: Context<CreateOrderRequest>,
@@ -97,6 +54,19 @@ pub mod monaco_protocol {
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
             payment,
+        )
+    }
+
+    pub fn process_order_request(
+        ctx: Context<ProcessOrderRequest>,
+        _distinct_seed: String,
+    ) -> Result<()> {
+        instructions::order_request::process_order_request(
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market,
+            ctx.accounts.crank_operator.key(),
+            &mut ctx.accounts.market_matching_pool,
+            &mut ctx.accounts.order_request_queue,
         )
     }
 

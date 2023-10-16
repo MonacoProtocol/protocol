@@ -9,14 +9,14 @@ import {
 import { DEFAULT_PRICE_LADDER } from "../../npm-admin-client/types";
 
 describe("NPM Client - batch sign and send instructions", () => {
-  it("Batch create and cancel 50 orders", async () => {
+  it("Batch create and cancel 30 orders", async () => {
     const program = monaco.getRawProgram();
     const market = await monaco.create3WayMarket(
       DEFAULT_PRICE_LADDER.slice(0, 50),
     );
     await market.airdropProvider(10000);
 
-    const orders = 50;
+    const orders = 30;
     const builtInstructions = [];
     for (let i = 0; i < orders; i++) {
       const instruction = await buildOrderInstructionUIStake(
@@ -36,18 +36,17 @@ describe("NPM Client - batch sign and send instructions", () => {
 
     const batch = await signAndSendInstructionsBatch(program, instructions, 6);
     assert.equal(batch.success, true);
-    assert.equal(batch.data.signatures.length, 9);
+    assert.equal(batch.data.signatures.length, 5);
 
     for (const signature of batch.data.signatures) {
       await confirmTransaction(program, signature);
     }
 
+    const orderPks = await market.processOrderRequests();
+
     const builtCancelInstructions = [];
-    for (const instruction of builtInstructions) {
-      const cancelInstruction = await buildCancelOrderInstruction(
-        program,
-        instruction.data.orderPk,
-      );
+    for (const pk of orderPks) {
+      const cancelInstruction = await buildCancelOrderInstruction(program, pk);
       builtCancelInstructions.push(cancelInstruction);
     }
 
@@ -61,7 +60,7 @@ describe("NPM Client - batch sign and send instructions", () => {
       10,
     );
     assert.equal(cancelBatch.success, true);
-    assert.equal(cancelBatch.data.signatures.length, 5);
+    assert.equal(cancelBatch.data.signatures.length, 3);
   });
 
   it("Handles a failed batch", async () => {

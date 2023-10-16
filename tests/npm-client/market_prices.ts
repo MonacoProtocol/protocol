@@ -31,11 +31,10 @@ describe("Market Prices", () => {
 
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, stake);
-    await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.forOrder(1, stakeSimple, prices[0], purchaser),
-      market.forOrder(2, stakeSimple, prices[0], purchaser),
-    ]);
+
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.forOrder(1, stakeSimple, prices[0], purchaser);
+    await market.forOrder(2, stakeSimple, prices[0], purchaser);
 
     const response = await getMarketPrices(
       monaco.program as Program,
@@ -65,11 +64,9 @@ describe("Market Prices", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.forOrder(0, stakeSimple, prices[1], purchaser),
-      market.forOrder(0, stakeSimple, prices[0], purchaser2),
-    ]);
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.forOrder(0, stakeSimple, prices[1], purchaser);
+    await market.forOrder(0, stakeSimple, prices[0], purchaser2);
 
     const response = await getMarketPrices(
       monaco.program as Program,
@@ -93,10 +90,14 @@ describe("Market Prices", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const [order1, order2] = await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2),
-    ]);
+
+    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    const order2 = await market.againstOrder(
+      0,
+      stakeSimple + 1,
+      prices[0],
+      purchaser2,
+    );
 
     await market.match(order1, order2);
     await new Promise((e) => setTimeout(e, 1000));

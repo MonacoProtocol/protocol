@@ -9,8 +9,8 @@ import {
   ClientResponse,
   ResponseFactory,
   OrderInstructionResponse,
-  OrderInstructionsResponse,
   NoCancellableOrdersFound,
+  CancelOrderInstructionsResponse,
 } from "../types";
 import { findMarketPositionPda } from "./market_position";
 import { findMarketMatchingPoolPda } from "./market_matching_pools";
@@ -97,7 +97,7 @@ export async function buildCancelOrderInstruction(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
- * @returns {OrderInstructionsResponse} List of provided order publicKeys and the associated instruction to perform a cancel order transaction for that order
+ * @returns {CancelOrderInstructionsResponse} List of provided order publicKeys and the associated instruction to perform a cancel order transaction for that order
  *
  * @example
  *
@@ -107,7 +107,7 @@ export async function buildCancelOrderInstruction(
 export async function buildCancelOrdersForMarketInstructions(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<OrderInstructionsResponse>> {
+): Promise<ClientResponse<CancelOrderInstructionsResponse>> {
   const response = new ResponseFactory({});
 
   const provider = program.provider as AnchorProvider;

@@ -191,11 +191,12 @@ Type: {marketOutcomeTitles: [Array][39]<[string][37]>}
 
 ## MarketAccountsForCreateOrder
 
-Type: {escrowPda: PublicKey, marketOutcomePda: PublicKey, marketOutcomePoolPda: PublicKey, marketPositionPda: PublicKey, market: [MarketAccount][3]}
+Type: {escrowPda: PublicKey, marketOrderRequestQueuePda: PublicKey, marketOutcomePda: PublicKey, marketOutcomePoolPda: PublicKey, marketPositionPda: PublicKey, market: [MarketAccount][3]}
 
 ### Properties
 
 *   `escrowPda` **PublicKey**&#x20;
+*   `marketOrderRequestQueuePda` **PublicKey**&#x20;
 *   `marketOutcomePda` **PublicKey**&#x20;
 *   `marketOutcomePoolPda` **PublicKey**&#x20;
 *   `marketPositionPda` **PublicKey**&#x20;

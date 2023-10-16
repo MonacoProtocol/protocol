@@ -92,6 +92,7 @@ pub fn update_on_order_match(
 mod tests {
     use super::*;
     use crate::instructions::market_position;
+    use crate::state::market_order_request_queue::OrderRequest;
     use test_case::test_case;
 
     struct OrderData {
@@ -227,16 +228,17 @@ mod tests {
         let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3]);
 
         for order_data in orders.into_vec() {
-            let order = order(
+            let order_request = order_request(
                 order_data.outcome_index as u16,
                 order_data.for_outcome,
                 order_data.stake,
                 order_data.price,
             );
 
-            market_position::update_on_order_creation(&mut market_position, &order)
+            market_position::update_on_order_request_creation(&mut market_position, &order_request)
                 .expect("not expecting failure");
 
+            let order = order(order_request);
             update_on_order_match(
                 &mut market_position,
                 &order,
@@ -250,27 +252,40 @@ mod tests {
         assert_eq!(market_position.market_outcome_sums, expected_position);
     }
 
-    fn order(
-        market_outcome_index: u16,
-        for_outcome: bool,
-        stake: u64,
-        expected_price: f64,
-    ) -> Order {
+    fn order(order_request: OrderRequest) -> Order {
         Order {
             purchaser: Default::default(),
             market: Default::default(),
-            market_outcome_index,
-            for_outcome,
+            market_outcome_index: order_request.market_outcome_index,
+            for_outcome: order_request.for_outcome,
             order_status: OrderStatus::Open,
             product: None,
-            stake,
+            stake: order_request.stake,
             voided_stake: 0u64,
-            expected_price,
+            expected_price: order_request.expected_price,
             creation_timestamp: 0,
             delay_expiration_timestamp: 0,
             stake_unmatched: 0u64,
             payout: 0u64,
             payer: Pubkey::new_unique(),
+            product_commission_rate: 0f64,
+        }
+    }
+
+    fn order_request(
+        market_outcome_index: u16,
+        for_outcome: bool,
+        stake: u64,
+        expected_price: f64,
+    ) -> OrderRequest {
+        OrderRequest {
+            purchaser: Default::default(),
+            market_outcome_index,
+            for_outcome,
+            product: None,
+            stake,
+            expected_price,
+            delay_expiration_timestamp: 0,
             product_commission_rate: 0f64,
         }
     }

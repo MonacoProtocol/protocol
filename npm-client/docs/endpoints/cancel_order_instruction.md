@@ -44,7 +44,7 @@ const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const orderInstructions = await buildCancelOrdersForMarketInstructions(program, marketPk)
 ```
 
-Returns **OrderInstructionsResponse** List of provided order publicKeys and the associated instruction to perform a cancel order transaction for that order
+Returns **CancelOrderInstructionsResponse** List of provided order publicKeys and the associated instruction to perform a cancel order transaction for that order
 
 [1]: #buildcancelorderinstruction
 

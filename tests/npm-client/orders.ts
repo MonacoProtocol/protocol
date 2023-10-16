@@ -24,10 +24,13 @@ describe("Pending Orders", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const [order1, order2] = await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2),
-    ]);
+    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    const order2 = await market.againstOrder(
+      0,
+      stakeSimple + 1,
+      prices[0],
+      purchaser2,
+    );
 
     await Promise.all([
       market.match(order1, order2),
@@ -56,11 +59,9 @@ describe("Pending Orders by index", () => {
 
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, stake);
-    await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.forOrder(1, stakeSimple, prices[0], purchaser),
-      market.forOrder(2, stakeSimple, prices[0], purchaser),
-    ]);
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.forOrder(1, stakeSimple, prices[0], purchaser);
+    await market.forOrder(2, stakeSimple, prices[0], purchaser);
 
     const [response0, response1, response2] = await Promise.all([
       await getPendingOrdersForMarketByOutcomeIndex(
@@ -98,10 +99,13 @@ describe("Pending Orders by index", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const [order1, order2] = await Promise.all([
-      market.forOrder(0, stakeSimple, prices[0], purchaser),
-      market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2),
-    ]);
+    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    const order2 = await market.againstOrder(
+      0,
+      stakeSimple + 1,
+      prices[0],
+      purchaser2,
+    );
 
     // match orders and place an additional order
     await Promise.all([
@@ -139,10 +143,18 @@ describe("Pending Orders by index and for order", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const [order1, order2] = await Promise.all([
-      market.forOrder(outcomeIndex, stakeSimple, prices[0], purchaser),
-      market.againstOrder(outcomeIndex, stakeSimple + 1, prices[0], purchaser2),
-    ]);
+    const order1 = await market.forOrder(
+      outcomeIndex,
+      stakeSimple,
+      prices[0],
+      purchaser,
+    );
+    const order2 = await market.againstOrder(
+      outcomeIndex,
+      stakeSimple + 1,
+      prices[0],
+      purchaser2,
+    );
 
     const [preMatchResponseFor, preMatchResponseAgainst] = await Promise.all([
       filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(

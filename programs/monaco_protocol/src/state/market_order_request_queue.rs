@@ -94,12 +94,20 @@ impl OrderRequestQueue {
         self.items.len() as u32
     }
 
-    pub fn peek(&mut self, index: u32) -> Option<&mut OrderRequest> {
+    pub fn peek(&self, index: u32) -> Option<&OrderRequest> {
         if index >= self.len {
             None
         } else {
             let size = self.size();
-            Some(&mut self.items[((self.front + index) % size) as usize])
+            Some(&self.items[((self.front + index) % size) as usize])
+        }
+    }
+
+    pub fn peek_front(&self) -> Option<&OrderRequest> {
+        if self.len == 0 {
+            None
+        } else {
+            Some(&self.items[self.front as usize])
         }
     }
 
@@ -224,39 +232,5 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
-    }
-
-    #[test]
-    fn test_cirque_peek_edit_in_place_success() {
-        let mut queue = OrderRequestQueue::new(2);
-        queue.enqueue(OrderRequest {
-            purchaser: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            product: None,
-            stake: 1,
-            expected_price: 0.0,
-            delay_expiration_timestamp: 0,
-            product_commission_rate: 0.0,
-        });
-        queue.enqueue(OrderRequest {
-            purchaser: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            product: None,
-            stake: 2,
-            expected_price: 0.0,
-            delay_expiration_timestamp: 0,
-            product_commission_rate: 0.0,
-        });
-        assert_eq!(2, queue.len());
-
-        let result0 = queue.peek(0).unwrap();
-        result0.stake = 10;
-        assert_eq!(10, queue.items[0].stake);
-
-        let result1 = queue.peek(1).unwrap();
-        result1.stake = 20;
-        assert_eq!(20, queue.items[1].stake);
     }
 }

@@ -8,7 +8,6 @@ import {
   ClientResponse,
   ResponseFactory,
 } from "../types";
-import { findOrderPda } from "./order";
 
 /**
  * Constructs the instruction required to perform a create order transaction using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
@@ -108,25 +107,18 @@ export async function buildOrderInstruction(
 
   const marketTokenPk = new PublicKey(marketAccounts.data.market.mintAccount);
 
-  const [purchaserTokenAccount, orderPdaResponse] = await Promise.all([
-    getWalletTokenAccount(program, marketTokenPk),
-    findOrderPda(program, marketPk, provider.wallet.publicKey),
-  ]);
+  const purchaserTokenAccount = await getWalletTokenAccount(
+    program,
+    marketTokenPk,
+  );
 
   if (!purchaserTokenAccount.success) {
     response.addErrors(purchaserTokenAccount.errors);
     return response.body;
   }
 
-  if (!orderPdaResponse.success) {
-    response.addErrors(orderPdaResponse.errors);
-    return response.body;
-  }
-
-  const orderPk = orderPdaResponse.data.orderPk;
-  const distinctSeed = orderPdaResponse.data.distinctSeed;
   const instruction = await program.methods
-    .createOrderV2(distinctSeed, {
+    .createOrderRequest({
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: stake,
@@ -134,12 +126,10 @@ export async function buildOrderInstruction(
     })
     .accounts({
       purchaser: provider.wallet.publicKey,
-      order: orderPk,
       marketPosition: marketAccounts.data.marketPositionPda,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       market: marketPk,
-      marketMatchingPool: marketAccounts.data.marketOutcomePoolPda,
       marketOutcome: marketAccounts.data.marketOutcomePda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -149,8 +139,9 @@ export async function buildOrderInstruction(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       product: productPk == undefined ? null : productPk,
+      orderRequestQueue: marketAccounts.data.marketOrderRequestQueuePda,
     })
     .instruction();
-  response.addResponseData({ orderPk, instruction });
+  response.addResponseData({ instruction });
   return response.body;
 }
