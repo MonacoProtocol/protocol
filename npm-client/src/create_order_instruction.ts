@@ -8,6 +8,7 @@ import {
   ClientResponse,
   ResponseFactory,
 } from "../types";
+import { findOrderPda } from "./order";
 
 /**
  * Constructs the instruction required to perform a create order transaction using a UI stake value, the client calculates the actual stake value based on mintInfo.data.decimals using uiStakeToInteger().
@@ -107,22 +108,30 @@ export async function buildOrderInstruction(
 
   const marketTokenPk = new PublicKey(marketAccounts.data.market.mintAccount);
 
-  const purchaserTokenAccount = await getWalletTokenAccount(
-    program,
-    marketTokenPk,
-  );
+  const [purchaserTokenAccount, orderPdaResponse] = await Promise.all([
+    getWalletTokenAccount(program, marketTokenPk),
+    findOrderPda(program, marketPk, provider.wallet.publicKey),
+  ]);
 
   if (!purchaserTokenAccount.success) {
     response.addErrors(purchaserTokenAccount.errors);
     return response.body;
   }
 
+  if (!orderPdaResponse.success) {
+    response.addErrors(orderPdaResponse.errors);
+    return response.body;
+  }
+
+  const orderPk = orderPdaResponse.data.orderPk;
+  const distinctSeed = orderPdaResponse.data.distinctSeed;
   const instruction = await program.methods
     .createOrderRequest({
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: stake,
       price: price,
+      distinctSeed: distinctSeed,
     })
     .accounts({
       purchaser: provider.wallet.publicKey,
@@ -142,6 +151,6 @@ export async function buildOrderInstruction(
       orderRequestQueue: marketAccounts.data.marketOrderRequestQueuePda,
     })
     .instruction();
-  response.addResponseData({ instruction });
+  response.addResponseData({ orderPk, instruction });
   return response.body;
 }

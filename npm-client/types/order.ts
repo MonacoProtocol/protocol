@@ -35,20 +35,12 @@ export type Order = {
 };
 
 export type OrderInstructionResponse = {
+  orderPk: PublicKey;
   instruction: TransactionInstruction;
 };
 
 export type OrderInstructionsResponse = {
   orderInstructions: OrderInstructionResponse[];
-};
-
-export type CancelOrderInstructionsResponse = {
-  orderInstructions: CancelOrderInstructionResponse[];
-};
-
-export type CancelOrderInstructionResponse = {
-  orderPk: PublicKey;
-  instruction: TransactionInstruction;
 };
 
 export type PendingOrders = {
@@ -60,6 +52,7 @@ export type OrderAccounts = {
 };
 
 export type OrderTransactionResponse = {
+  orderPk: PublicKey;
   tnxID: string | void;
 };
 
@@ -70,7 +63,7 @@ export type CancelOrdersResponse = {
 
 export type orderPdaResponse = {
   orderPk: PublicKey;
-  distinctSeed: string;
+  distinctSeed: Uint8Array;
 };
 
 export type StakeInteger = {

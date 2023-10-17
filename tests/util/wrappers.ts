@@ -826,10 +826,7 @@ export class MonacoMarket {
   }
 
   async processOrderRequests(): Promise<PublicKey[]> {
-    return await processOrderRequests(
-      this.pk,
-      this.monaco.operatorWallet.payer,
-    );
+    return await processOrderRequests(this.pk);
   }
 
   async cancel(orderPk: PublicKey, purchaser: Keypair) {

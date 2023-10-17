@@ -5,6 +5,7 @@ pub const BOOL_SIZE: usize = 1;
 pub const ENUM_SIZE: usize = 1; // for data/field-less enums
 pub const I64_SIZE: usize = 8;
 pub const I128_SIZE: usize = 16;
+pub const U128_SIZE: usize = 16;
 pub const U8_SIZE: usize = 1;
 pub const U16_SIZE: usize = 2;
 pub const U64_SIZE: usize = 8;

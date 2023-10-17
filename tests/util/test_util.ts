@@ -32,6 +32,7 @@ import {
   findMarketOutcomePda,
   findMarketPda,
   findMarketPositionPda,
+  findOrderPda,
   findTradePda,
 } from "../../npm-client/src";
 import { findMarketPdas, findProductPda, findUserPdas } from "../util/pdas";
@@ -571,7 +572,7 @@ export async function createOrderRequest(
       protocolProgram as Program<anchor.Idl>,
     );
 
-  const { orderPk, marketPositionPk } = await findUserPdas(
+  const { orderPk, orderDistinctSeed, marketPositionPk } = await findUserPdas(
     marketPk,
     purchaser.publicKey,
     protocolProgram as Program<anchor.Idl>,
@@ -590,6 +591,7 @@ export async function createOrderRequest(
       forOutcome: forOutcome,
       stake: new BN(stakeInteger),
       price: marketOutcomePrice,
+      distinctSeed: Array.from(orderDistinctSeed),
     })
     .accounts({
       orderRequestQueue: orderRequestQueuePk.data.pda,
@@ -616,7 +618,7 @@ export async function createOrderRequest(
 
 export async function processNextOrderRequest(
   marketPk: PublicKey,
-  purchaser: Keypair | Wallet,
+  crankOperator?: Keypair | Wallet,
 ) {
   const protocolProgram = anchor.workspace
     .MonacoProtocol as Program<MonacoProtocol>;
@@ -643,22 +645,28 @@ export async function processNextOrderRequest(
     )
   ).data.pda;
 
-  const { orderPk, orderDistinctSeed } = await findUserPdas(
-    marketPk,
-    purchaser.publicKey,
-    protocolProgram as Program<anchor.Idl>,
-  );
+  const orderPk = (
+    await findOrderPda(
+      protocolProgram,
+      marketPk,
+      firstOrderRequest.purchaser,
+      Uint8Array.from(firstOrderRequest.distinctSeed),
+    )
+  ).data.orderPk;
 
   await protocolProgram.methods
-    .processOrderRequest(orderDistinctSeed)
+    .processOrderRequest()
     .accounts({
       order: orderPk,
       marketMatchingPool: marketMatchingPoolPk,
       orderRequestQueue: orderRequestQueuePk,
       market: marketPk,
-      crankOperator: purchaser.publicKey,
+      crankOperator:
+        crankOperator == null
+          ? protocolProgram.provider.publicKey
+          : crankOperator.publicKey,
     })
-    .signers(purchaser instanceof Keypair ? [purchaser] : [])
+    .signers(crankOperator instanceof Keypair ? [crankOperator] : [])
     .rpc()
     .catch((e) => {
       console.error(e);
@@ -670,7 +678,7 @@ export async function processNextOrderRequest(
 
 export async function processOrderRequests(
   marketPk: PublicKey,
-  purchaser: Keypair | Wallet,
+  purchaser?: Keypair | Wallet,
 ) {
   const protocolProgram = anchor.workspace
     .MonacoProtocol as Program<MonacoProtocol>;

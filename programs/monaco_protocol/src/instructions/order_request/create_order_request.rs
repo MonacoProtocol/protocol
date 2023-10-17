@@ -3,7 +3,6 @@ use protocol_product::state::product::Product;
 use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
-use crate::error::CoreError::RequestCreationQueueFull;
 use crate::instructions::{current_timestamp, market_position, stake_precision_is_within_range};
 use crate::state::market_account::{Market, MarketStatus};
 use crate::state::market_order_request_queue::{
@@ -35,10 +34,15 @@ pub fn create_order_request(
 
     // initialize and enqueue order request on to order_request_queue
     let order_request = initialize_order_request(market, purchaser, product, data, now)?;
+    require!(
+        !order_request_queue.order_requests.contains(&order_request),
+        CoreError::RequestCreationDuplicateRequest
+    );
+
     order_request_queue
         .order_requests
         .enqueue(order_request)
-        .ok_or(RequestCreationQueueFull)?;
+        .ok_or(CoreError::RequestCreationQueueFull)?;
 
     market_position::update_on_order_request_creation(market_position, &order_request)
 }
@@ -63,6 +67,7 @@ fn initialize_order_request(
             .ok_or(CoreError::ArithmeticError),
         false => Ok(0),
     }?;
+    order_request.distinct_seed = data.distinct_seed;
 
     match product {
         Some(product_account) => {
@@ -117,6 +122,7 @@ fn validate_order_request(
             CoreError::CreationInvalidPrice
         );
     }
+
     Ok(())
 }
 

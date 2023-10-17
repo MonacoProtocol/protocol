@@ -57,10 +57,7 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn process_order_request(
-        ctx: Context<ProcessOrderRequest>,
-        _distinct_seed: String,
-    ) -> Result<()> {
+    pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {
         instructions::order_request::process_order_request(
             &mut ctx.accounts.order,
             &mut ctx.accounts.market,

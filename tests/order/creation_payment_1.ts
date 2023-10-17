@@ -1,7 +1,6 @@
 import assert from "assert";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
-import console from "console";
 
 /*
  * Order Creation Payment 1
@@ -49,11 +48,8 @@ describe("Order Creation Payment 1", () => {
       ],
     );
 
-    console.log(3);
-
     // Create Against 10 @ 4.9 for Outcome A
     await market.againstOrder(outcome, 10.0, prices[1], purchaser);
-    console.log(4);
 
     assert.deepEqual(
       await Promise.all([

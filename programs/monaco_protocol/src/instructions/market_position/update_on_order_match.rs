@@ -287,6 +287,7 @@ mod tests {
             expected_price,
             delay_expiration_timestamp: 0,
             product_commission_rate: 0f64,
+            distinct_seed: [0; 16],
         }
     }
 

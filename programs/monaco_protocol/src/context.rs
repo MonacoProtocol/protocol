@@ -77,14 +77,19 @@ pub struct CreateOrderRequest<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(_distinct_seed: String)]
 pub struct ProcessOrderRequest<'info> {
     #[account(
         init,
         seeds = [
             market.key().as_ref(),
-            crank_operator.key().as_ref(),
-            _distinct_seed.as_ref()
+            order_request_queue.order_requests
+                .peek_front()
+                .ok_or(CoreError::RequestQueueEmpty)?
+                .purchaser.as_ref(),
+            &order_request_queue.order_requests
+                .peek_front()
+                .ok_or(CoreError::RequestQueueEmpty)?
+                .distinct_seed,
         ],
         bump,
         payer = crank_operator,

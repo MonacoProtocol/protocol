@@ -126,6 +126,10 @@ export async function createOrder(
     productPk,
   );
 
+  response.addResponseData({
+    orderPk: orderInstruction.data.orderPk,
+  });
+
   const transaction = await signAndSendInstructions(program, [
     orderInstruction.data.instruction,
   ]);

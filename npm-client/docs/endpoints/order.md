@@ -30,6 +30,7 @@ For the provided market publicKey and wallet publicKey: add a date seed and retu
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
 *   `purchaserPk` **PublicKey** {PublicKey} publicKey of the purchasing wallet
+*   `existingOrderSeed` **[Uint8Array][19]?** {Uint8Array} Optional: distinctSeed of an existing order
 
 ### Examples
 
@@ -66,7 +67,7 @@ For the provided order publicKeys, get the order accounts.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `orderPks` **[Array][19]\<PublicKey>** {PublicKey\[]} a list of publicKeys of orders
+*   `orderPks` **[Array][20]\<PublicKey>** {PublicKey\[]} a list of publicKeys of orders
 
 ### Examples
 
@@ -105,7 +106,7 @@ For the provided market publicKey and outcome index, return all pending orders m
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `outcomeIndex` **[number][20]**&#x20;
+*   `outcomeIndex` **[number][21]**&#x20;
 
 ### Examples
 
@@ -125,8 +126,8 @@ For the provided market publicKey, outcome index and forOrder bool, return all p
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `outcomeIndex` **[number][20]**&#x20;
-*   `forOutcome` **[boolean][21]** {boolean} filter for orders that are for or against the outcome
+*   `outcomeIndex` **[number][21]**&#x20;
+*   `forOutcome` **[boolean][22]** {boolean} filter for orders that are for or against the outcome
 
 ### Examples
 
@@ -175,8 +176,10 @@ Returns **PendingOrders** a list of all pending order accounts
 
 [18]: #examples-5
 
-[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
 
-[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
-[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

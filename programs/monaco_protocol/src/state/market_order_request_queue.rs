@@ -16,7 +16,7 @@ impl MarketOrderRequestQueue {
         OrderRequestQueue::size_for(MarketOrderRequestQueue::QUEUE_LENGTH); // order requests
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
 pub struct OrderRequest {
     pub purchaser: Pubkey, // wallet of user/intializer/ordertor who purchased the order
     pub market_outcome_index: u16, // market outcome on which order was made
@@ -26,6 +26,7 @@ pub struct OrderRequest {
     pub expected_price: f64, // expected price provided by purchaser
     pub delay_expiration_timestamp: i64,
     pub product_commission_rate: f64, // product commission rate at time of order creation
+    pub distinct_seed: [u8; 16],      // used as a seed for generating a unique order pda
 }
 
 impl OrderRequest {
@@ -35,7 +36,8 @@ impl OrderRequest {
     + option_size(PUB_KEY_SIZE) // product
     + U64_SIZE // stake
     + (F64_SIZE * 2) // expected_price & product_commission_rate
-    + I64_SIZE; // delay_expiration_timestamp
+    + I64_SIZE // delay_expiration_timestamp
+    + U128_SIZE; // distinct_seed
 
     pub fn new_unique() -> Self {
         OrderRequest {
@@ -47,6 +49,7 @@ impl OrderRequest {
             product: None,
             expected_price: 0.0,
             product_commission_rate: 0.0,
+            distinct_seed: [0; 16],
         }
     }
 }
@@ -57,6 +60,7 @@ pub struct OrderRequestData {
     pub for_outcome: bool,
     pub stake: u64,
     pub price: f64,
+    pub distinct_seed: [u8; 16],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -139,7 +143,30 @@ impl OrderRequestQueue {
             Some(&mut self.items[old_front as usize])
         }
     }
+
+    pub fn contains(&self, item: &OrderRequest) -> bool {
+        for i in 0..self.len {
+            let index = ((self.front + i) as usize) % self.items.len();
+            if &self.items[index] == item {
+                return true;
+            }
+        }
+        false
+    }
 }
+
+impl PartialEq for OrderRequest {
+    fn eq(&self, other: &Self) -> bool {
+        self.market_outcome_index == other.market_outcome_index
+            && self.for_outcome == other.for_outcome
+            && self.stake == other.stake
+            && self.expected_price == other.expected_price
+            && self.distinct_seed == other.distinct_seed
+            && self.purchaser == other.purchaser
+    }
+}
+
+impl Eq for OrderRequest {}
 
 #[cfg(test)]
 mod tests {
@@ -232,5 +259,57 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
+    }
+
+    #[test]
+    fn test_contains_success() {
+        let mut queue = OrderRequestQueue::new(3);
+        let item = OrderRequest::new_unique();
+        let item2 = OrderRequest::new_unique();
+        queue.enqueue(item);
+        queue.enqueue(item2);
+
+        assert!(queue.contains(&item));
+        assert!(queue.contains(&item2));
+    }
+
+    #[test]
+    fn test_contains_dequeued_items_not_contained() {
+        let mut queue = OrderRequestQueue::new(3);
+        let item = OrderRequest::new_unique();
+        let item2 = OrderRequest::new_unique();
+        queue.enqueue(item);
+        queue.enqueue(item2);
+
+        queue.dequeue();
+
+        assert!(!queue.contains(&item));
+        assert!(queue.contains(&item2));
+
+        queue.dequeue();
+
+        assert!(!queue.contains(&item));
+        assert!(!queue.contains(&item2));
+    }
+
+    #[test]
+    fn test_contains_success_circular_queue_back_before_front() {
+        let mut queue = OrderRequestQueue::new(3);
+        let item = OrderRequest::new_unique();
+        let item2 = OrderRequest::new_unique();
+        let item3 = OrderRequest::new_unique();
+        queue.enqueue(item);
+        queue.enqueue(item2);
+        queue.enqueue(item3);
+
+        queue.dequeue();
+
+        let item4 = OrderRequest::new_unique();
+        queue.enqueue(item4);
+
+        assert!(!queue.contains(&item));
+        assert!(queue.contains(&item2));
+        assert!(queue.contains(&item3));
+        assert!(queue.contains(&item4));
     }
 }

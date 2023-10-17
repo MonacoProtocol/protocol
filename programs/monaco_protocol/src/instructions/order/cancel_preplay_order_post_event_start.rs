@@ -76,6 +76,7 @@ mod test {
             expected_price: 2.4_f64,
             stake: 100_u64,
             delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
         };
 
         let mut order = Order {
@@ -141,6 +142,7 @@ mod test {
             expected_price: 2.4_f64,
             stake: 100_u64,
             delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
         };
 
         let mut order = Order {
