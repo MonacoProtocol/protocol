@@ -342,7 +342,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_against: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_against: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(
         mut,
@@ -382,7 +382,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_for: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_for: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(mut)]
     pub market: Box<Account<'info, Market>>,
