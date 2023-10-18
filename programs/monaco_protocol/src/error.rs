@@ -68,6 +68,8 @@ pub enum CoreError {
     SettlementMarketNotReadyForSettlement,
     #[msg("Core Settlement: market escrow is non zero")]
     SettlementMarketEscrowNonZero,
+    #[msg("Core Settlement: market matching queue not empty")]
+    SettlementMarketMatchingQueueNotEmpty,
     #[msg("Core Settlement: error calculating settlement payment.")]
     SettlementPaymentCalculation,
     #[msg("Core Settlement: failed to enqueue payment - queue full.")]

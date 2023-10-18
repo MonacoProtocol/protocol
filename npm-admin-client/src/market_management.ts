@@ -32,6 +32,7 @@ import { findEscrowPda } from "./market_helpers";
 export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
+  marketMatchingQueuePk: PublicKey,
   winningOutcomeIndex: number,
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
@@ -47,6 +48,7 @@ export async function settleMarket(
       .settleMarket(winningOutcomeIndex)
       .accounts({
         market: marketPk,
+        marketMatchingQueue: marketMatchingQueuePk,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
       })

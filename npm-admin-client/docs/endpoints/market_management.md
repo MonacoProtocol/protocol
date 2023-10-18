@@ -50,6 +50,7 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
+*   `marketMatchingQueuePk` **PublicKey**&#x20;
 *   `winningOutcomeIndex` **[number][40]** {number} index representing the winning outcome of the event associated with the market
 
 ### Examples
