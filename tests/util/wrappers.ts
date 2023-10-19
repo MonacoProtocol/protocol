@@ -226,6 +226,7 @@ export class Monaco {
     eventStartTimestamp?: number,
     marketLockTimestamp?: number,
     eventStartOrderBehaviour?: object,
+    marketLockOrderBehaviour?: object,
   ) {
     const market = await this.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
@@ -236,6 +237,7 @@ export class Monaco {
       eventStartTimestamp,
       marketLockTimestamp,
       eventStartOrderBehaviour,
+      marketLockOrderBehaviour,
     );
     await market.open();
     return market;
@@ -266,6 +268,7 @@ export class Monaco {
     inplayEnabled?: boolean;
     inplayOrderDelay?: number;
     eventStartOrderBehaviour?: object;
+    marketLockOrderBehaviour?: object;
     marketOperatorKeypair?: Keypair;
   }) {
     /* eslint-disable */
@@ -302,6 +305,9 @@ export class Monaco {
     const eventStartOrderBehaviour = options.eventStartOrderBehaviour
       ? options.eventStartOrderBehaviour
       : { cancelUnmatched: {} };
+    const marketLockOrderBehaviour = options.marketLockOrderBehaviour
+      ? options.marketLockOrderBehaviour
+      : { none: {} };
     // prettier-ignore-end
     /* eslint-enable */
 
@@ -355,7 +361,7 @@ export class Monaco {
         inplayEnabled,
         inplayOrderDelay,
         eventStartOrderBehaviour,
-        { none: {} },
+        marketLockOrderBehaviour,
       )
       .accounts({
         existingMarket: null,
@@ -496,6 +502,7 @@ export class Monaco {
     eventStartTimestamp = 1924254038,
     marketLockTimestamp = 1924254038,
     eventStartOrderBehaviour: object = { cancelUnmatched: {} },
+    marketLockOrderBehaviour: object = { none: {} },
   ) {
     return await this.createMarketWithOptions({
       outcomes,
@@ -506,6 +513,7 @@ export class Monaco {
       eventStartTimestamp,
       marketLockTimestamp,
       eventStartOrderBehaviour,
+      marketLockOrderBehaviour,
     });
   }
 
@@ -813,6 +821,33 @@ export class MonacoMarket {
       });
   }
 
+  async cancelOrderPostMarketLock(orderPk: PublicKey) {
+    const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
+    const matchingPoolPk = order.forOutcome
+      ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .forOutcome
+      : this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .against;
+    await this.monaco.program.methods
+      .cancelOrderPostMarketLock()
+      .accounts({
+        order: orderPk,
+        marketPosition: await this.cacheMarketPositionPk(order.purchaser),
+        purchaser: order.purchaser,
+        purchaserToken: purchaserTokenPk,
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketMatchingPool: matchingPoolPk,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async match(
     forOrderPk: PublicKey,
     againstOrderPk: PublicKey,
@@ -1029,6 +1064,25 @@ export class MonacoMarket {
   async open() {
     await this.monaco.program.methods
       .openMarket()
+      .accounts({
+        market: this.pk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async updateMarketLockTimeToNow() {
+    await this.monaco.program.methods
+      .updateMarketLocktimeToNow()
       .accounts({
         market: this.pk,
         authorisedOperators:

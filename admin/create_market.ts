@@ -1,6 +1,9 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { createMarketWithOutcomesAndPriceLadder as npmCreateMarket } from "../npm-admin-client/src/";
+import {
+  createMarketWithOutcomesAndPriceLadder as npmCreateMarket,
+  MarketOrderBehaviourValue,
+} from "../npm-admin-client/src/";
 import { getProtocolProgram } from "./util";
 import { Markets, MarketStatusFilter } from "../npm-client";
 
@@ -9,11 +12,19 @@ import { Markets, MarketStatusFilter } from "../npm-client";
  */
 export async function create_market() {
   const protocolProgram = await getProtocolProgram();
+  const marketTokenString =
+    process.argv.length > 3
+      ? process.argv[3]
+      : "2QqxXa2aNCx3DLQCHgiC4P7Xfbe3B4bULM5eKpyAirGY";
+  const priceLadderString =
+    process.argv.length > 4
+      ? process.argv[4]
+      : "94VCY4rWi3nvyNPHnsRV65n3JZxiPSvXbxfvJydYw9uA";
+
+  const marketTokenPk = new PublicKey(marketTokenString);
+  const priceLadderPk = new PublicKey(priceLadderString);
 
   const eventAccountKeyPair = Keypair.generate();
-  const marketToken = new PublicKey(
-    "2QqxXa2aNCx3DLQCHgiC4P7Xfbe3B4bULM5eKpyAirGY",
-  );
 
   const createMarketResponse = await npmCreateMarket(
     protocolProgram as Program,
@@ -21,12 +32,14 @@ export async function create_market() {
     "TEST",
     "",
     "",
-    marketToken,
+    marketTokenPk,
     1924254038,
     eventAccountKeyPair.publicKey,
     ["Aduana Stars", "Draw", "Bechem United"],
-    new PublicKey("94VCY4rWi3nvyNPHnsRV65n3JZxiPSvXbxfvJydYw9uA"),
+    priceLadderPk,
     {
+      eventStartOrderBehaviour: MarketOrderBehaviourValue.cancelUnmatched,
+      marketLockOrderBehaviour: MarketOrderBehaviourValue.cancelUnmatched,
       batchSize: 20,
     },
   );
