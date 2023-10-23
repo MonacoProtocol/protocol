@@ -1559,7 +1559,7 @@ dependencies = [
 [[package]]
 name = "protocol_product"
 version = "0.1.0"
-source = "git+ssh://git@github.com/BetDexLabs/protocol-product-private?rev=6fb68dd4f873efa40fcd661f17bd9f55e1b9a621#6fb68dd4f873efa40fcd661f17bd9f55e1b9a621"
+source = "git+https://github.com/BetDexLabs/protocol-product?rev=aa95db781e06774783b8bcf8f914ebe67c0d77ac#aa95db781e06774783b8bcf8f914ebe67c0d77ac"
 dependencies = [
  "anchor-lang",
  "rust_decimal",
