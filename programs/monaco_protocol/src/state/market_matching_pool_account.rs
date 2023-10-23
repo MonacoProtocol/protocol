@@ -44,34 +44,18 @@ impl MarketMatchingPool {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
 pub struct QueueItem {
     pub order: Pubkey,
-    pub delay_expiration_timestamp: i64,
-    pub liquidity_to_add: u64,
 }
 
 impl QueueItem {
-    pub const SIZE: usize = PUB_KEY_SIZE + I64_SIZE + U64_SIZE;
+    pub const SIZE: usize = PUB_KEY_SIZE;
 
     pub fn new(order: Pubkey) -> QueueItem {
-        QueueItem::new_inplay(order, 0, 0)
-    }
-
-    pub fn new_inplay(
-        order: Pubkey,
-        delay_expiration_timestamp: i64,
-        liquidity_to_add: u64,
-    ) -> QueueItem {
-        QueueItem {
-            order,
-            delay_expiration_timestamp,
-            liquidity_to_add,
-        }
+        QueueItem { order }
     }
 
     pub fn new_unique() -> Self {
         QueueItem {
             order: Pubkey::new_unique(),
-            delay_expiration_timestamp: 0,
-            liquidity_to_add: 0,
         }
     }
 }
@@ -119,12 +103,12 @@ impl Cirque {
         self.items.len() as u32
     }
 
-    pub fn peek(&mut self, index: u32) -> Option<&mut QueueItem> {
+    pub fn peek(&mut self, index: u32) -> Option<&QueueItem> {
         if index >= self.len {
             None
         } else {
             let size = self.size();
-            Some(&mut self.items[((self.front + index) % size) as usize])
+            Some(&self.items[((self.front + index) % size) as usize])
         }
     }
 
@@ -153,11 +137,7 @@ impl Cirque {
         }
     }
 
-    pub fn dequeue_pubkey(&mut self) -> Option<Pubkey> {
-        self.dequeue().map(|item| item.order)
-    }
-
-    pub fn dequeue(&mut self) -> Option<&mut QueueItem> {
+    pub fn dequeue(&mut self) -> Option<&QueueItem> {
         if self.len == 0 {
             None
         } else {
@@ -165,7 +145,7 @@ impl Cirque {
             self.front = (old_front + 1) % self.size();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
-            Some(&mut self.items[old_front as usize])
+            Some(&self.items[old_front as usize])
         }
     }
 
@@ -240,8 +220,6 @@ impl Cirque {
 
 #[cfg(test)]
 mod tests {
-    use anchor_lang::prelude::*;
-
     use crate::state::market_matching_pool_account::{Cirque, QueueItem};
 
     //
@@ -918,29 +896,5 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
-    }
-
-    #[test]
-    fn test_cirque_peek_edit_in_place_success() {
-        let mut queue = Cirque::new(2);
-        queue.enqueue(QueueItem {
-            order: Pubkey::new_unique(),
-            liquidity_to_add: 1,
-            delay_expiration_timestamp: 0,
-        });
-        queue.enqueue(QueueItem {
-            order: Pubkey::new_unique(),
-            liquidity_to_add: 2,
-            delay_expiration_timestamp: 0,
-        });
-        assert_eq!(2, queue.len());
-
-        let result0 = queue.peek(0).unwrap();
-        result0.liquidity_to_add = 10;
-        assert_eq!(10, queue.items[0].liquidity_to_add);
-
-        let result1 = queue.peek(1).unwrap();
-        result1.liquidity_to_add = 20;
-        assert_eq!(20, queue.items[1].liquidity_to_add);
     }
 }

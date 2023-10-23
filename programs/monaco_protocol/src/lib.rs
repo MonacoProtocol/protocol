@@ -6,6 +6,7 @@ use crate::instructions::market::verify_market_authority;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
+
 use crate::state::market_order_request_queue::OrderRequestData;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
@@ -71,13 +72,6 @@ pub mod monaco_protocol {
         ctx: Context<UpdateMarketMatchingPool>,
     ) -> Result<()> {
         instructions::matching::move_market_matching_pool_to_inplay(
-            &ctx.accounts.market,
-            &mut ctx.accounts.market_matching_pool,
-        )
-    }
-
-    pub fn process_delay_expired_orders(ctx: Context<UpdateMarketMatchingPool>) -> Result<()> {
-        instructions::matching::updated_liquidity_with_delay_expired_orders(
             &ctx.accounts.market,
             &mut ctx.accounts.market_matching_pool,
         )

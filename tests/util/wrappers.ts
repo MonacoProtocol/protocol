@@ -718,6 +718,12 @@ export class MonacoMarket {
     );
   }
 
+  async getOrderRequestQueue() {
+    return await this.monaco.program.account.marketOrderRequestQueue.fetch(
+      this.orderRequestQueuePk,
+    );
+  }
+
   async getMarketOutcome(outcome: number) {
     return await this.monaco.getMarketOutcome(this.outcomePks[outcome]);
   }
@@ -1266,29 +1272,6 @@ export class MonacoMarket {
       this.externalPrograms.protocolProduct as Program,
       this.pk,
     );
-  }
-
-  async processDelayExpiredOrders(
-    outcomeIndex: number,
-    price: number,
-    forOutcome: boolean,
-  ) {
-    const matchingPools = this.matchingPools[outcomeIndex][price];
-    const marketMatchingPool = forOutcome
-      ? matchingPools.forOutcome
-      : matchingPools.against;
-    try {
-      await this.monaco.program.methods
-        .processDelayExpiredOrders()
-        .accounts({
-          market: this.pk,
-          marketMatchingPool,
-        })
-        .rpc();
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
   }
 
   async voidMarketPositionForPurchaser(purchaser: PublicKey) {

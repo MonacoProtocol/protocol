@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
-use solana_program::clock::UnixTimestamp;
 
-use crate::instructions::current_timestamp;
 use crate::state::market_account::{Market, MarketStatus};
-use crate::state::market_matching_pool_account::{MarketMatchingPool, QueueItem};
+use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::{CoreError, Order};
 
@@ -61,31 +59,9 @@ pub fn update_matching_pool_with_new_order(
     market_matching_pool: &mut MarketMatchingPool,
     order_account: &Account<Order>,
 ) -> Result<()> {
-    if market.is_inplay() {
-        update_matching_pool_with_new_inplay_order(
-            market,
-            market_matching_pool,
-            order_account,
-            order_account.key(),
-        )
-    } else {
-        update_matching_pool_with_new_preplay_order(
-            market_matching_pool,
-            order_account,
-            order_account.key(),
-        )
+    if market.is_inplay() && !market_matching_pool.inplay {
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
-}
-
-fn update_matching_pool_with_new_preplay_order(
-    market_matching_pool: &mut MarketMatchingPool,
-    order_account: &Order,
-    order_pubkey: Pubkey,
-) -> Result<()> {
-    require!(
-        !market_matching_pool.inplay,
-        CoreError::CreationMarketAlreadyInplay
-    );
 
     market_matching_pool.liquidity_amount = market_matching_pool
         .liquidity_amount
@@ -94,29 +70,7 @@ fn update_matching_pool_with_new_preplay_order(
 
     market_matching_pool
         .orders
-        .enqueue_pubkey(order_pubkey)
-        .ok_or(CoreError::MatchingQueueIsFull)?;
-
-    Ok(())
-}
-
-fn update_matching_pool_with_new_inplay_order(
-    market: &Market,
-    market_matching_pool: &mut MarketMatchingPool,
-    order_account: &Order,
-    order_pubkey: Pubkey,
-) -> Result<()> {
-    if !market_matching_pool.inplay {
-        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
-    }
-
-    market_matching_pool
-        .orders
-        .enqueue(QueueItem::new_inplay(
-            order_pubkey,
-            order_account.delay_expiration_timestamp,
-            order_account.stake,
-        ))
+        .enqueue_pubkey(order_account.key())
         .ok_or(CoreError::MatchingQueueIsFull)?;
 
     Ok(())
@@ -145,36 +99,6 @@ pub fn move_market_matching_pool_to_inplay(
     Ok(())
 }
 
-pub fn updated_liquidity_with_delay_expired_orders(
-    market: &Market,
-    market_matching_pool: &mut MarketMatchingPool,
-) -> Result<()> {
-    require!(
-        market.market_status == MarketStatus::Open,
-        CoreError::MatchingMarketInvalidStatus
-    );
-    require!(
-        market.is_inplay() && market_matching_pool.inplay,
-        CoreError::MatchingMarketNotYetInplay
-    );
-
-    let now: UnixTimestamp = current_timestamp();
-    for i in 0..market_matching_pool.orders.len() {
-        if let Some(order) = market_matching_pool.orders.peek(i) {
-            if order.delay_expiration_timestamp > now {
-                break;
-            } else if order.liquidity_to_add > 0 {
-                market_matching_pool.liquidity_amount = market_matching_pool
-                    .liquidity_amount
-                    .checked_add(order.liquidity_to_add)
-                    .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-                order.liquidity_to_add = 0;
-            }
-        }
-    }
-    Ok(())
-}
-
 fn update_matching_pool_with_matched_order(
     matching_pool: &mut MarketMatchingPool,
     amount_matched: u64,
@@ -192,16 +116,6 @@ fn update_matching_pool_with_matched_order(
                 matched_order == pool_item.order,
                 CoreError::OrderNotAtFrontOfQueue
             );
-            if pool_item.liquidity_to_add > 0 {
-                let now: UnixTimestamp = current_timestamp();
-                if pool_item.delay_expiration_timestamp <= now {
-                    matching_pool.liquidity_amount = matching_pool
-                        .liquidity_amount
-                        .checked_add(pool_item.liquidity_to_add)
-                        .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-                    pool_item.liquidity_to_add = 0;
-                }
-            }
         }
         None => return Err(anchor_lang::error!(CoreError::MatchingQueueIsEmpty)),
     }
@@ -222,14 +136,12 @@ pub fn update_on_cancel(
     order: &Account<Order>,
     matching_pool: &mut MarketMatchingPool,
 ) -> Result<()> {
-    if let Some(removed_item) = matching_pool.orders.remove_pubkey(&order.key()) {
-        if removed_item.liquidity_to_add == 0 {
-            // TODO update market_outcome stake sums for partially matched orders
-            matching_pool.liquidity_amount = matching_pool
-                .liquidity_amount
-                .checked_sub(order.voided_stake)
-                .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-        }
+    if matching_pool.orders.remove_pubkey(&order.key()).is_some() {
+        matching_pool.liquidity_amount = matching_pool
+            .liquidity_amount
+            .checked_sub(order.voided_stake)
+            .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
     }
+
     Ok(())
 }

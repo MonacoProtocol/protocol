@@ -44,12 +44,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
         10000,
       ],
     );
-
-    const marketMatchingPool =
-      await monaco.program.account.marketMatchingPool.fetch(
-        market.matchingPools[outcomeIndex][price].forOutcome,
-      );
-    assert.ok(marketMatchingPool.inplay);
   });
 
   it("success: partially matched order", async () => {
@@ -210,7 +204,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     // Create market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarketWithInplay([price]),
+      monaco.create3WayMarket([price], true, 0),
     ]);
     await market.airdrop(purchaser, 10_000);
 

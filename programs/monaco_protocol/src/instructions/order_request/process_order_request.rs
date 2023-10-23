@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
+use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
 use crate::instructions::order::initialize_order;
-use crate::instructions::{market, matching};
+use crate::instructions::{current_timestamp, market, matching};
 use crate::state::market_account::*;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_order_request_queue::MarketOrderRequestQueue;
@@ -20,7 +21,14 @@ pub fn process_order_request(
         .dequeue()
         .ok_or(CoreError::RequestQueueEmpty)?;
 
-    // verify request is valid (delay has expired)
+    // if market is inplay, and order is delayed, check if delay has expired
+    if market.is_inplay() && order_request.delay_expiration_timestamp > 0 {
+        let now: UnixTimestamp = current_timestamp();
+        require!(
+            order_request.delay_expiration_timestamp <= now,
+            CoreError::InplayDelay
+        );
+    }
 
     initialize_order(order, market, fee_payer, *order_request)?;
 
