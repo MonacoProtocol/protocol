@@ -9,11 +9,8 @@ use anchor_lang::{Key, ToAccountInfo};
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 
-const TRANSFER_SURPLUS_ALLOWED_STATUSES: [MarketStatus; 3] = [
-    MarketStatus::Settled,
-    MarketStatus::ReadyToClose,
-    MarketStatus::Voided,
-];
+const TRANSFER_SURPLUS_ALLOWED_STATUSES: [MarketStatus; 2] =
+    [MarketStatus::Settled, MarketStatus::Voided];
 
 pub fn transfer_market_escrow_surplus<'info>(
     market: &Account<'info, Market>,
