@@ -543,9 +543,9 @@ pub struct CreateMarket<'info> {
             event_account.as_ref(),
             market_type.key().as_ref(),
             market_type_discriminator.as_ref(),
-            b"-".as_ref(),
+            b"\xE2\x90\x9E".as_ref(), // "␞"
             market_type_value.as_ref(),
-            b"-".as_ref(),
+            b"\xE2\x90\x9E".as_ref(), // "␞"
             get_create_market_version(&existing_market).to_string().as_ref(),
             mint.key().as_ref(),
         ],

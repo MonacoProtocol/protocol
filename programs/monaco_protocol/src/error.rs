@@ -192,6 +192,8 @@ pub enum CoreError {
     MarketTypeDiscriminatorUsageIncorrect,
     #[msg("Market type value usage is incorrect for this market type")]
     MarketTypeValueUsageIncorrect,
+    #[msg("Market type discriminator contains seed separator character")]
+    MarketTypeDiscriminatorContainsSeedSeparator,
 
     /*
     PriceLadder

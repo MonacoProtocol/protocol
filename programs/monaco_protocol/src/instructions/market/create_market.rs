@@ -59,6 +59,11 @@ pub fn create(
         CoreError::MarketTypeValueUsageIncorrect
     );
 
+    require!(
+        !ctx.accounts.market.market_type_discriminator.contains('␞'),
+        CoreError::MarketTypeDiscriminatorContainsSeedSeparator
+    );
+
     let mut version = 0;
     if let Some(existing_market) = &ctx.accounts.existing_market {
         // check market status is OK to recreate
