@@ -354,7 +354,7 @@ describe("Market: creation", () => {
       .rpc();
   });
 
-  it("failutre with market type discriminator containing the seed separator", async () => {
+  it("failure with market type discriminator containing the seed separator", async () => {
     const marketTypeDiscriminator = "a market ␞ discriminator";
     const marketTypeValue = "bar";
 
@@ -435,6 +435,7 @@ describe("Market: creation", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
+      assert.fail("Expected an exception to be thrown");
     } catch (err) {
       assert.equal(
         err.error.errorCode.code,
