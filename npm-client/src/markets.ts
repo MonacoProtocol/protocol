@@ -25,8 +25,8 @@ import {
  *
  * const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const marketTypePk =  new PublicKey('n2C9R4G6GaPwFAxaNWM33DoBWmZtBBDFZf9cWM3xaNW')
- * const marketTypeDiscriminator = "";
- * const marketTypeValue = "";
+ * const marketTypeDiscriminator = null;
+ * const marketTypeValue = null;
  * const mintPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
  * const marketPda = await findMarketPda(program, eventPk, marketTypePk, marketTypeDiscriminator, marketTypeValue, mintPk)
  */
@@ -34,8 +34,8 @@ export async function findMarketPda(
   program: Program,
   eventPk: PublicKey,
   marketTypePk: PublicKey,
-  marketTypeDiscriminator: string,
-  marketTypeValue: string,
+  marketTypeDiscriminator: string | null,
+  marketTypeValue: string | null,
   mintPk: PublicKey,
   version = 0,
 ): Promise<ClientResponse<FindPdaResponse>> {
@@ -46,9 +46,13 @@ export async function findMarketPda(
       [
         eventPk.toBuffer(),
         marketTypePk.toBuffer(),
-        Buffer.from(marketTypeDiscriminator),
+        marketTypeDiscriminator == null
+          ? Buffer.from([])
+          : Buffer.from(marketTypeDiscriminator),
         Buffer.from("␞"),
-        Buffer.from(marketTypeValue),
+        marketTypeValue == null
+          ? Buffer.from([])
+          : Buffer.from(marketTypeValue),
         Buffer.from("␞"),
         Buffer.from(version.toString()),
         mintPk.toBuffer(),

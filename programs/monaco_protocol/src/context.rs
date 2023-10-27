@@ -532,8 +532,8 @@ fn get_create_market_version(existing_market: &Option<Account<Market>>) -> u8 {
 #[derive(Accounts)]
 #[instruction(
     event_account: Pubkey,
-    market_type_discriminator: String,
-    market_type_value: String,
+    market_type_discriminator: Option<String>,
+    market_type_value: Option<String>,
 )]
 pub struct CreateMarket<'info> {
     pub existing_market: Option<Account<'info, Market>>,
@@ -543,9 +543,9 @@ pub struct CreateMarket<'info> {
         seeds = [
             event_account.as_ref(),
             market_type.key().as_ref(),
-            market_type_discriminator.as_ref(),
+            market_type_discriminator.as_ref().unwrap_or(&"".to_string()).as_ref(),
             SEED_SEPARATOR,
-            market_type_value.as_ref(),
+            market_type_value.as_ref().unwrap_or(&"".to_string()).as_ref(),
             SEED_SEPARATOR,
             get_create_market_version(&existing_market).to_string().as_ref(),
             mint.key().as_ref(),
