@@ -35,8 +35,6 @@ import { findMarketTypePda } from "./market_type_create";
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
  * @param marketType {string} type of the market being created
- * @param marketTypeDiscriminator {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
- * @param marketTypeValue {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
@@ -44,6 +42,8 @@ import { findMarketTypePda } from "./market_type_create";
  * @param priceLadder {number[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
  * @param options {object} optional parameters:
  *   <ul>
+ *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
+ *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
  *     <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
  *     <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
  *     <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
@@ -60,8 +60,8 @@ import { findMarketTypePda } from "./market_type_create";
  *
  * const name = "Full Time Result"
  * const marketType = "EventResultWinner"
- * const marketTypeDiscriminator = "";
- * const marketTypeValue = "";
+ * const marketTypeDiscriminator = null;
+ * const marketTypeValue = null;
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -74,14 +74,14 @@ export async function createMarketWithOutcomesAndPriceLadder(
   program: Program,
   marketName: string,
   marketType: string,
-  marketTypeDiscriminator: string,
-  marketTypeValue: string,
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   outcomes: string[],
   priceLadder?: number[] | PublicKey,
   options?: {
+    marketTypeDiscriminator?: string;
+    marketTypeValue?: string;
     existingMarketPk?: PublicKey;
     existingMarket?: MarketAccount;
     eventStartTimestamp?: EpochTimeStamp;
@@ -99,8 +99,6 @@ export async function createMarketWithOutcomesAndPriceLadder(
     program,
     marketName,
     marketType,
-    marketTypeDiscriminator,
-    marketTypeValue,
     marketTokenPk,
     marketLockTimestamp,
     eventAccountPk,
@@ -160,13 +158,13 @@ export async function createMarketWithOutcomesAndPriceLadder(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketName {string} title of the market being created
  * @param marketType {string} type of the market being created
- * @param marketTypeDiscriminator {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
- * @param marketTypeValue {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
  * @param options {object} optional parameters:
  *   <ul>
+ *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
+ *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
  *     <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
  *     <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
  *     <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
@@ -182,8 +180,8 @@ export async function createMarketWithOutcomesAndPriceLadder(
  *
  * const name = "Full Time Result"
  * const marketType = "EventResultWinner"
- * const marketTypeDiscriminator = "";
- * const marketTypeValue = "";
+ * const marketTypeDiscriminator = null;
+ * const marketTypeValue = null;
  * const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
  * const marketLock = 1633042800
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -193,12 +191,12 @@ export async function createMarket(
   program: Program,
   marketName: string,
   marketType: string,
-  marketTypeDiscriminator: string,
-  marketTypeValue: string,
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   options?: {
+    marketTypeDiscriminator?: string;
+    marketTypeValue?: string;
     existingMarketPk?: PublicKey;
     existingMarket?: MarketAccount;
     eventStartTimestamp?: EpochTimeStamp;
@@ -212,6 +210,12 @@ export async function createMarket(
 
   /* eslint-disable */
   // prettier-ignore-start
+  const marketTypeDiscriminator = options?.marketTypeDiscriminator
+    ? options.marketTypeDiscriminator
+    : null;
+  const marketTypeValue = options?.marketTypeValue
+    ? options.marketTypeValue
+    : null;
   const existingMarketPk = options?.existingMarketPk
     ? options.existingMarketPk
     : null;

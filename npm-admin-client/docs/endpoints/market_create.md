@@ -22,14 +22,14 @@ For the given parameters:
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketName` **[string][7]** {string} title of the market being created
 *   `marketType` **[string][7]** {string} type of the market being created
-*   `marketTypeDiscriminator` **[string][7]** {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
-*   `marketTypeValue` **[string][7]** {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
 *   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
 *   `priceLadder` **([Array][8]<[number][9]> | PublicKey)?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
-*   `options` **{existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][9]?}?** {object} optional parameters:  <ul>
+*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][9]?}?** {object} optional parameters:  <ul>
+        <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
+        <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
         <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
         <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
@@ -45,8 +45,8 @@ For the given parameters:
 ```javascript
 const name = "Full Time Result"
 const marketType = "EventResultWinner"
-const marketTypeDiscriminator = "";
-const marketTypeValue = "";
+const marketTypeDiscriminator = null;
+const marketTypeValue = null;
 const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const marketLock = 1633042800
 const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
@@ -67,12 +67,12 @@ For the given parameters, create a wagering market that accepts orders in the pr
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketName` **[string][7]** {string} title of the market being created
 *   `marketType` **[string][7]** {string} type of the market being created
-*   `marketTypeDiscriminator` **[string][7]** {string} discriminator for the type of the market being created, e.g., relevant event period. An empty string can be provided if no value is required
-*   `marketTypeValue` **[string][7]** {string} value for the type of the market being created, e.g., 100.5 for an over/under market type. An empty string can be provided if no value is required
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
-*   `options` **{existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?}?** {object} optional parameters:  <ul>
+*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?}?** {object} optional parameters:  <ul>
+        <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
+        <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
         <li> existingMarket - market account for existingMarketPk, will be fetched if not provided</li>
         <li> eventStartTimestamp - timestamp in seconds representing when the event starts (defaults to marketLockTimestamp)</li>
@@ -87,8 +87,8 @@ For the given parameters, create a wagering market that accepts orders in the pr
 ```javascript
 const name = "Full Time Result"
 const marketType = "EventResultWinner"
-const marketTypeDiscriminator = "";
-const marketTypeValue = "";
+const marketTypeDiscriminator = null;
+const marketTypeValue = null;
 const marketTokenPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const marketLock = 1633042800
 const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')

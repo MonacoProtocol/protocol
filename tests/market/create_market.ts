@@ -96,7 +96,7 @@ describe("Market: creation", () => {
 
   it("failure when type discriminator used but not required by market type", async () => {
     const marketTypeDiscriminator = "Foobar";
-    const marketTypeValue = "";
+    const marketTypeValue = null;
 
     const marketType = "EventResultWinner";
     const marketTypeResp = await getOrCreateMarketType(
@@ -186,7 +186,7 @@ describe("Market: creation", () => {
 
   it("failure when type value used but not required by market type", async () => {
     const marketTypeValue = "Foobar";
-    const marketTypeDiscriminator = "";
+    const marketTypeDiscriminator = null;
 
     const marketType = "EventResultWinner";
     const marketTypeResp = await getOrCreateMarketType(
@@ -449,8 +449,8 @@ async function createMarket(
 ) {
   const event = Keypair.generate();
   const marketType = "EventResultWinner";
-  const marketTypeDiscriminator = "";
-  const marketTypeValue = "";
+  const marketTypeDiscriminator = null;
+  const marketTypeValue = null;
   const marketTitle = "SOME TITLE";
 
   const [mintPk, authorisedOperatorsPk] = await Promise.all([

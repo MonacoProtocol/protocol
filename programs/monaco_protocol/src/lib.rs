@@ -281,8 +281,8 @@ pub mod monaco_protocol {
     pub fn create_market(
         ctx: Context<CreateMarket>,
         event_account: Pubkey,
-        market_type_discriminator: String,
-        market_type_value: String,
+        market_type_discriminator: Option<String>,
+        market_type_value: Option<String>,
         title: String,
         max_decimals: u8,
         market_lock_timestamp: i64,
