@@ -63,7 +63,11 @@ pub fn create(
     );
 
     require!(
-        market_type_discriminator.is_none() || !market_type_discriminator.as_ref().unwrap().contains(SEED_SEPARATOR_CHAR),
+        market_type_discriminator.is_none()
+            || !market_type_discriminator
+                .as_ref()
+                .unwrap()
+                .contains(SEED_SEPARATOR_CHAR),
         CoreError::MarketTypeDiscriminatorContainsSeedSeparator
     );
 
