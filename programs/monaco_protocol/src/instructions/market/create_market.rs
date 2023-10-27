@@ -4,7 +4,7 @@ use rust_decimal::Decimal;
 
 use crate::context::{CreateMarket, InitializeMarketOutcome};
 use crate::instructions::current_timestamp;
-use crate::monaco_protocol::PRICE_SCALE;
+use crate::monaco_protocol::{PRICE_SCALE, SEED_SEPARATOR_CHAR};
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
 use crate::state::market_outcome_account::MarketOutcome;
@@ -60,7 +60,7 @@ pub fn create(
     );
 
     require!(
-        !ctx.accounts.market.market_type_discriminator.contains('␞'),
+        !market_type_discriminator.contains(SEED_SEPARATOR_CHAR),
         CoreError::MarketTypeDiscriminatorContainsSeedSeparator
     );
 
