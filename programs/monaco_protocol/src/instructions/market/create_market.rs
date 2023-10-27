@@ -20,8 +20,8 @@ pub fn create(
     ctx: Context<CreateMarket>,
     event_account: Pubkey,
     market_type: Pubkey,
-    market_type_discriminator: String,
-    market_type_value: String,
+    market_type_discriminator: Option<String>,
+    market_type_value: Option<String>,
     title: String,
     max_decimals: u8,
     market_lock_timestamp: i64,
@@ -51,11 +51,14 @@ pub fn create(
     require!(PRICE_SCALE <= decimal_limit, CoreError::MaxDecimalsTooLarge);
 
     require!(
-        ctx.accounts.market_type.requires_discriminator != market_type_discriminator.is_empty(),
+        ctx.accounts.market_type.requires_discriminator
+            == (market_type_discriminator.is_some()
+                && !market_type_discriminator.as_ref().unwrap().is_empty()),
         CoreError::MarketTypeDiscriminatorUsageIncorrect
     );
     require!(
-        ctx.accounts.market_type.requires_value != market_type_value.is_empty(),
+        ctx.accounts.market_type.requires_value
+            == (market_type_value.is_some() && !market_type_value.as_ref().unwrap().is_empty()),
         CoreError::MarketTypeValueUsageIncorrect
     );
 
