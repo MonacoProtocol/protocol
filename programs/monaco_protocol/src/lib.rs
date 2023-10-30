@@ -31,6 +31,8 @@ pub mod monaco_protocol {
     use crate::instructions::current_timestamp;
 
     pub const PRICE_SCALE: u8 = 3_u8;
+    pub const SEED_SEPARATOR_CHAR: char = '␞';
+    pub const SEED_SEPARATOR: &[u8] = b"\xE2\x90\x9E"; // "␞"
 
     pub fn create_order(
         ctx: Context<CreateOrder>,

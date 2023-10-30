@@ -1,4 +1,5 @@
 use crate::error::CoreError;
+use crate::monaco_protocol::SEED_SEPARATOR;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::{AuthorisedOperators, Market, MarketPosition, Order, OrderData, Trade};
@@ -543,9 +544,9 @@ pub struct CreateMarket<'info> {
             event_account.as_ref(),
             market_type.key().as_ref(),
             market_type_discriminator.as_ref().unwrap_or(&"".to_string()).as_ref(),
-            b"-".as_ref(),
+            SEED_SEPARATOR,
             market_type_value.as_ref().unwrap_or(&"".to_string()).as_ref(),
-            b"-".as_ref(),
+            SEED_SEPARATOR,
             get_create_market_version(&existing_market).to_string().as_ref(),
             mint.key().as_ref(),
         ],

@@ -49,11 +49,11 @@ export async function findMarketPda(
         marketTypeDiscriminator == null
           ? Buffer.from([])
           : Buffer.from(marketTypeDiscriminator),
-        Buffer.from("-"),
+        Buffer.from("␞"),
         marketTypeValue == null
           ? Buffer.from([])
           : Buffer.from(marketTypeValue),
-        Buffer.from("-"),
+        Buffer.from("␞"),
         Buffer.from(version.toString()),
         mintPk.toBuffer(),
       ],
