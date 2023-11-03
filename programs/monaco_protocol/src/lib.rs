@@ -102,7 +102,7 @@ pub mod monaco_protocol {
         ctx: Context<CancelPreplayOrderPostEventStart>,
     ) -> Result<()> {
         let refund_amount = instructions::order::cancel_preplay_order_post_event_start(
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,

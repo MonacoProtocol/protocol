@@ -3,7 +3,7 @@ use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
-use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
+use crate::state::order_account::OrderStatus::{Cancelled, Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
@@ -16,6 +16,10 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
     );
 
     // exit early if already settled
+    if Cancelled.eq(&ctx.accounts.order.order_status) {
+        log::sol_log("order already cancelled");
+        return Ok(());
+    }
     if SettledLose.eq(&ctx.accounts.order.order_status) {
         log::sol_log("order already settled as loss");
         return Ok(());

@@ -9,7 +9,7 @@ use crate::state::order_account::Order;
 use crate::state::order_account::OrderStatus;
 
 pub fn cancel_preplay_order_post_event_start(
-    market: &Market,
+    market: &mut Market,
     market_matching_pool: &mut MarketMatchingPool,
     order: &mut Order,
     market_position: &mut MarketPosition,
@@ -46,6 +46,12 @@ pub fn cancel_preplay_order_post_event_start(
     order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
     let refund = market_position::update_on_order_cancellation(market_position, order)?;
 
+    // if never matched
+    if order.stake == order.voided_stake {
+        // no more settlement needed
+        market.decrement_unsettled_accounts_count()?;
+    }
+
     Ok(refund)
 }
 
@@ -64,7 +70,7 @@ mod test {
         let payer_pk = Pubkey::new_unique();
 
         let market_pk = Pubkey::new_unique();
-        let market = mock_market();
+        let mut market = mock_market();
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -97,7 +103,7 @@ mod test {
 
         // when
         let result = cancel_preplay_order_post_event_start(
-            &market,
+            &mut market,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
@@ -118,7 +124,7 @@ mod test {
         let payer_pk = Pubkey::new_unique();
 
         let market_pk = Pubkey::new_unique();
-        let market = mock_market();
+        let mut market = mock_market();
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -151,7 +157,7 @@ mod test {
 
         // when 1
         let result1 = cancel_preplay_order_post_event_start(
-            &market,
+            &mut market,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
@@ -164,7 +170,7 @@ mod test {
 
         // when 2
         let result2 = cancel_preplay_order_post_event_start(
-            &market,
+            &mut market,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
