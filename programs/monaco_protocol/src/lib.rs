@@ -55,7 +55,11 @@ pub mod monaco_protocol {
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
             payment,
-        )
+        )?;
+
+        ctx.accounts
+            .reserved_order
+            .close(ctx.accounts.purchaser.to_account_info())
     }
 
     pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {

@@ -23,6 +23,7 @@ import {
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
 import { findOrderRequestQueuePda } from "../../npm-admin-client";
+import { findUserPdas } from "../util/pdas";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -263,14 +264,22 @@ describe("Protocol - Create Order", () => {
       marketPda,
     );
 
+    const { orderPk, orderDistinctSeed } = await findUserPdas(
+      marketPda,
+      provider.wallet.publicKey,
+      protocolProgram as Program<anchor.Idl>,
+    );
+
     await protocolProgram.methods
       .createOrderRequest({
         marketOutcomeIndex: outOfBoundsIndex,
         forOutcome: true,
         stake: stake,
         price: price,
+        distinctSeed: Array.from(orderDistinctSeed),
       })
       .accounts({
+        reservedOrder: orderPk,
         purchaser: provider.wallet.publicKey,
         marketPosition: MarketAccounts.data.marketPositionPda,
         systemProgram: SystemProgram.programId,

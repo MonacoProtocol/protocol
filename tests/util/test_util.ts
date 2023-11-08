@@ -594,6 +594,7 @@ export async function createOrderRequest(
       distinctSeed: Array.from(orderDistinctSeed),
     })
     .accounts({
+      reservedOrder: orderPk,
       orderRequestQueue: orderRequestQueuePk.data.pda,
       marketPosition: marketPositionPk.data.pda,
       purchaser: purchaser.publicKey,

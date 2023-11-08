@@ -10,6 +10,7 @@ use solana_program::rent::Rent;
 
 use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 use crate::state::market_type::MarketType;
+use crate::state::order_account::ReservedOrder;
 use crate::state::payments_queue::MarketPaymentsQueue;
 use crate::state::price_ladder::PriceLadder;
 use protocol_product::state::product::Product;
@@ -17,6 +18,18 @@ use protocol_product::state::product::Product;
 #[derive(Accounts)]
 #[instruction(data: OrderRequestData)]
 pub struct CreateOrderRequest<'info> {
+    #[account(
+        init,
+        seeds = [
+            market.key().as_ref(),
+            purchaser.key().as_ref(),
+            &data.distinct_seed,
+        ],
+        bump,
+        payer = purchaser,
+        space = ReservedOrder::SIZE,
+    )]
+    pub reserved_order: Account<'info, ReservedOrder>,
     #[account(
         mut,
         seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],

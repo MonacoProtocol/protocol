@@ -2,12 +2,17 @@ import * as anchor from "@coral-xyz/anchor";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
+import { BN } from "@coral-xyz/anchor";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Keypair, SystemProgram } from "@solana/web3.js";
+import { findMarketPdas, findUserPdas } from "../util/pdas";
+import { findOrderRequestQueuePda } from "../../npm-admin-client";
 
 describe("Order Request Creation", () => {
   const provider = anchor.AnchorProvider.local();
   anchor.setProvider(provider);
 
-  it("create order request", async function () {
+  it("success - create order request", async function () {
     const prices = [3.0, 4.9];
 
     const [purchaser, market] = await Promise.all([
@@ -52,7 +57,7 @@ describe("Order Request Creation", () => {
     assert.equal(againstOrderRequest.delayExpirationTimestamp.toNumber(), 0);
   });
 
-  it("create order request for inplay market", async function () {
+  it("success - create order request for inplay market", async function () {
     const prices = [3.0, 4.9];
     const inplayDelay = 10;
 
@@ -97,5 +102,169 @@ describe("Order Request Creation", () => {
       againstOrderRequest.delayExpirationTimestamp.toNumber() >
         Math.floor(new Date().getTime() / 1000),
     );
+  });
+
+  it("failure - enqueue duplicate order request", async function () {
+    const price = 3.0;
+    const outcomeIndex = 0;
+    const forOutcome = true;
+    const stake = 10.0;
+
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    const marketPk = market.pk;
+    await market.airdrop(purchaser, 1000.0);
+
+    const orderPk = await market.forOrderRequest(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+
+    const orderRequestQueue =
+      await monaco.program.account.marketOrderRequestQueue.fetch(
+        market.orderRequestQueuePk,
+      );
+
+    assert.equal(orderRequestQueue.orderRequests.len, 1);
+
+    const duplicateDistinctSeed =
+      orderRequestQueue.orderRequests.items[0].distinctSeed;
+
+    try {
+      const { uiAmountToAmount, marketOutcomePk } = await findMarketPdas(
+        marketPk,
+        forOutcome,
+        outcomeIndex,
+        price,
+        monaco.program,
+      );
+      const { marketPositionPk } = await findUserPdas(
+        marketPk,
+        purchaser.publicKey,
+        monaco.program,
+      );
+
+      await monaco.program.methods
+        .createOrderRequest({
+          marketOutcomeIndex: outcomeIndex,
+          forOutcome: forOutcome,
+          stake: new BN(uiAmountToAmount(stake)),
+          price: price,
+          distinctSeed: duplicateDistinctSeed,
+        })
+        .accounts({
+          reservedOrder: orderPk,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.program, marketPk)
+          ).data.pda,
+          marketPosition: marketPositionPk.data.pda,
+          purchaser: purchaser.publicKey,
+          purchaserToken: await market.cachePurchaserTokenPk(
+            purchaser.publicKey,
+          ),
+          market: marketPk,
+          marketOutcome: marketOutcomePk,
+          priceLadder: null,
+          marketEscrow: market.escrowPk,
+          product: null,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers(purchaser instanceof Keypair ? [purchaser] : [])
+        .rpc();
+
+      assert.fail("expected RequestCreationDuplicateRequest");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "RequestCreationDuplicateRequest");
+    }
+  });
+
+  it("failure - enqueue order request which would create duplicate order", async function () {
+    const price = 3.0;
+    const outcomeIndex = 0;
+    const forOutcome = true;
+    const stake = 10.0;
+
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    const marketPk = market.pk;
+    await market.airdrop(purchaser, 1000.0);
+
+    const orderPk = await market.forOrderRequest(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
+
+    const orderRequestQueue =
+      await monaco.program.account.marketOrderRequestQueue.fetch(
+        market.orderRequestQueuePk,
+      );
+
+    assert.equal(orderRequestQueue.orderRequests.len, 1);
+
+    await market.processNextOrderRequest();
+
+    const duplicateDistinctSeed =
+      orderRequestQueue.orderRequests.items[0].distinctSeed;
+
+    try {
+      const { uiAmountToAmount, marketOutcomePk } = await findMarketPdas(
+        marketPk,
+        forOutcome,
+        outcomeIndex,
+        price,
+        monaco.program,
+      );
+      const { marketPositionPk } = await findUserPdas(
+        marketPk,
+        purchaser.publicKey,
+        monaco.program,
+      );
+
+      await monaco.program.methods
+        .createOrderRequest({
+          marketOutcomeIndex: outcomeIndex,
+          forOutcome: forOutcome,
+          stake: new BN(uiAmountToAmount(stake)),
+          price: price,
+          distinctSeed: duplicateDistinctSeed,
+        })
+        .accounts({
+          reservedOrder: orderPk,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.program, marketPk)
+          ).data.pda,
+          marketPosition: marketPositionPk.data.pda,
+          purchaser: purchaser.publicKey,
+          purchaserToken: await market.cachePurchaserTokenPk(
+            purchaser.publicKey,
+          ),
+          market: marketPk,
+          marketOutcome: marketOutcomePk,
+          priceLadder: null,
+          marketEscrow: market.escrowPk,
+          product: null,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers(purchaser instanceof Keypair ? [purchaser] : [])
+        .rpc();
+
+      assert.fail("expected Address already in use");
+    } catch (e) {
+      expect(e.logs).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(new RegExp(/.*Address.*already in use/)),
+        ]),
+      );
+    }
   });
 });

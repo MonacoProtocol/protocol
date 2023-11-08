@@ -134,6 +134,7 @@ export async function buildOrderInstruction(
       distinctSeed: distinctSeed,
     })
     .accounts({
+      reservedOrder: orderPk,
       purchaser: provider.wallet.publicKey,
       marketPosition: marketAccounts.data.marketPositionPda,
       systemProgram: SystemProgram.programId,

@@ -2,6 +2,13 @@ use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 
 #[account]
+pub struct ReservedOrder {}
+
+impl ReservedOrder {
+    pub const SIZE: usize = DISCRIMINATOR_SIZE;
+}
+
+#[account]
 pub struct Order {
     pub purchaser: Pubkey, // wallet of user/intializer/ordertor who purchased the order
     pub market: Pubkey,    // market on which order was made
