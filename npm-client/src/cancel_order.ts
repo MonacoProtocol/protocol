@@ -11,6 +11,7 @@ import {
   buildCancelOrderInstruction,
   buildCancelOrdersForMarketInstructions,
 } from "./cancel_order_instruction";
+import { MarketPosition, Order } from "../types";
 
 /**
  * For the provided order publicKey, cancel the order if the program provider owns the order.Orders can be cancelled if they:
@@ -114,4 +115,57 @@ export async function cancelOrdersForMarket(
     tnxIDs,
   });
   return response.body;
+}
+
+/**
+ */
+export function cancelOrderRefund(
+  order: Order,
+  marketPosition: MarketPosition,
+): number {
+  const unmatchedExposures = marketPosition.unmatchedExposures.map((value) =>
+    value.toNumber(),
+  );
+  const matchedExposures = marketPosition.marketOutcomeSums.map(
+    (value) => -Math.min(value.toNumber(), 0),
+  );
+
+  const totalExposureBefore = totalExposure(
+    unmatchedExposures,
+    matchedExposures,
+  );
+
+  if (order.forOutcome) {
+    for (let i = 0; i < unmatchedExposures.length; i++) {
+      if (i == order.marketOutcomeIndex) {
+        continue;
+      }
+      unmatchedExposures[i] -= order.stakeUnmatched;
+    }
+  } else {
+    const orderExposure =
+      order.stakeUnmatched * order.expectedPrice - order.stakeUnmatched;
+    unmatchedExposures[order.marketOutcomeIndex] -= orderExposure;
+  }
+
+  return (
+    totalExposureBefore - totalExposure(unmatchedExposures, matchedExposures)
+  );
+}
+
+function totalExposure(
+  unmatchedExposures: number[],
+  matchedExposures: number[],
+): number {
+  const minLength = Math.min(
+    matchedExposures.length,
+    unmatchedExposures.length,
+  );
+
+  const totalExposures = Array.from(
+    { length: minLength },
+    (_, index) => matchedExposures[index] + unmatchedExposures[index],
+  );
+
+  return Math.max(...totalExposures);
 }

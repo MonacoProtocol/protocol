@@ -3,10 +3,15 @@ import assert from "assert";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   cancelOrder as cancelOrderNpm,
+  cancelOrderRefund,
   cancelOrdersForMarket,
 } from "../../npm-client/src/cancel_order";
 import { monaco } from "../util/wrappers";
-import { confirmTransaction, getOrder } from "../../npm-client/src";
+import {
+  confirmTransaction,
+  getMarketPosition,
+  getOrder,
+} from "../../npm-client/src";
 
 // Order parameters
 const outcomeIndex = 1;
@@ -103,6 +108,85 @@ describe("NPM client", () => {
     assert(
       orderCheck2.errors[0] as unknown as string,
       "Account does not exist or has no data " + order2Pk,
+    );
+  });
+
+  it("cancel: refund check", async () => {
+    // Create market, purchaser
+    const market = await monaco.create3WayMarket([price]);
+    await market.airdropProvider(20_000);
+
+    assert.equal(
+      await market.getTokenBalance(monaco.provider.wallet.publicKey),
+      20_000,
+    );
+
+    // use createOrderUiStake from npm client create order
+    const order1Response = await createOrderNpm(
+      monaco.getRawProgram(),
+      market.pk,
+      outcomeIndex,
+      true,
+      price,
+      stake,
+    );
+    await confirmTransaction(monaco.getRawProgram(), order1Response.data.tnxID);
+    assert.equal(
+      await market.getTokenBalance(monaco.provider.wallet.publicKey),
+      18_000, // risk was 2000
+    );
+
+    const order2Response = await createOrderNpm(
+      monaco.getRawProgram(),
+      market.pk,
+      outcomeIndex,
+      false,
+      price,
+      stake,
+    );
+    await confirmTransaction(monaco.getRawProgram(), order2Response.data.tnxID);
+    assert.equal(
+      await market.getTokenBalance(monaco.provider.wallet.publicKey),
+      10_000, // risk was 10,000 but previous payment 2,000 is taken into account
+    );
+
+    const [
+      order1AccountResponse,
+      order2AccountResponse,
+      marketPositionResponse,
+    ] = await Promise.all([
+      getOrder(monaco.getRawProgram(), order1Response.data.orderPk),
+      getOrder(monaco.getRawProgram(), order2Response.data.orderPk),
+      getMarketPosition(
+        monaco.getRawProgram(),
+        market.pk,
+        monaco.provider.wallet.publicKey,
+      ),
+    ]);
+    assert.equal(
+      cancelOrderRefund(
+        order1AccountResponse.data.account,
+        marketPositionResponse.data,
+      ),
+      0, // cancelation does not refund due to risk of 2nd order
+    );
+    assert.equal(
+      cancelOrderRefund(
+        order2AccountResponse.data.account,
+        marketPositionResponse.data,
+      ),
+      8_000_000_000, // cancelation does refund some due to risk of 1nd order
+    );
+
+    const orderResponse3 = await cancelOrderNpm(
+      monaco.program as Program,
+      order1Response.data.orderPk,
+    );
+    await confirmTransaction(monaco.getRawProgram(), orderResponse3.data.tnxID);
+
+    assert.equal(
+      await market.getTokenBalance(monaco.provider.wallet.publicKey),
+      10_000, // cancelation does not refund due to risk of 2nd order
     );
   });
 });

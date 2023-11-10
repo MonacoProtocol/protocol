@@ -8,6 +8,8 @@
 *   [cancelOrdersForMarket][4]
     *   [Parameters][5]
     *   [Examples][6]
+*   [cancelOrderRefund][7]
+    *   [Parameters][8]
 
 ## cancelOrder
 
@@ -59,6 +61,15 @@ const cancelledOrders = await cancelOrdersForMarket(program, marketPk)
 
 Returns **CancelOrdersResponse** list of all the successfully submitted transactionIDs, list of all the failed-to-cancel order publicKeys
 
+## cancelOrderRefund
+
+### Parameters
+
+*   `order` **Order**&#x20;
+*   `marketPosition` **MarketPosition**&#x20;
+
+Returns **[number][9]**&#x20;
+
 [1]: #cancelorder
 
 [2]: #parameters
@@ -70,3 +81,9 @@ Returns **CancelOrdersResponse** list of all the successfully submitted transact
 [5]: #parameters-1
 
 [6]: #examples-1
+
+[7]: #cancelorderrefund
+
+[8]: #parameters-2
+
+[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
