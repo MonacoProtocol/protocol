@@ -51,14 +51,11 @@ pub fn create(
     require!(PRICE_SCALE <= decimal_limit, CoreError::MaxDecimalsTooLarge);
 
     require!(
-        ctx.accounts.market_type.requires_discriminator
-            == (market_type_discriminator.is_some()
-                && !market_type_discriminator.as_ref().unwrap().is_empty()),
+        ctx.accounts.market_type.requires_discriminator == market_type_discriminator.is_some(),
         CoreError::MarketTypeDiscriminatorUsageIncorrect
     );
     require!(
-        ctx.accounts.market_type.requires_value
-            == (market_type_value.is_some() && !market_type_value.as_ref().unwrap().is_empty()),
+        ctx.accounts.market_type.requires_value == market_type_value.is_some(),
         CoreError::MarketTypeValueUsageIncorrect
     );
 
