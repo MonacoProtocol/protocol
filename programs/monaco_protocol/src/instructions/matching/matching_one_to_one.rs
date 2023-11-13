@@ -190,5 +190,6 @@ fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
 }
 
 fn copy_product_commission_contributions(from: &MarketPosition, to: &mut MarketPosition) {
+    to.matched_risk = from.matched_risk;
     to.matched_risk_per_product = from.matched_risk_per_product.clone();
 }

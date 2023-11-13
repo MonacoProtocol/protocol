@@ -610,6 +610,7 @@ describe("Product commissions", () => {
     );
     const expectedMatchedStake = stake * 10 ** market.mintInfo.decimals;
 
+    assert.equal(marketPosition.matchedRisk.toNumber(), stake * 2 * 1_000_000); // two stakes of 20
     assert.equal(marketPosition.matchedRiskPerProduct.length, 2);
 
     const matchedStakeForProduct = marketPosition.matchedRiskPerProduct[0];
