@@ -118,6 +118,16 @@ export async function cancelOrdersForMarket(
 }
 
 /**
+ * For the provided order and market position calculate amount that will be refunded if order gets canceled.
+
+ * @param order {Order} order to be canceled
+ * @param marketPosition {MarketPosition} market position of the order's owner
+ * @returns the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const cancelledOrders = await cancelOrdersForMarket(program, marketPk)
  */
 export function cancelOrderRefund(
   order: Order,
