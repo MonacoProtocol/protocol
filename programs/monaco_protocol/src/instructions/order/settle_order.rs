@@ -3,7 +3,7 @@ use solana_program::log;
 
 use crate::context::SettleOrder;
 use crate::error::CoreError;
-use crate::state::order_account::OrderStatus::{Open, SettledLose, SettledWin};
+use crate::state::order_account::OrderStatus::{Cancelled, Open, SettledLose, SettledWin};
 use crate::{Market, Order};
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
@@ -16,6 +16,10 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
     );
 
     // exit early if already settled
+    if Cancelled.eq(&ctx.accounts.order.order_status) {
+        log::sol_log("order already cancelled");
+        return Ok(());
+    }
     if SettledLose.eq(&ctx.accounts.order.order_status) {
         log::sol_log("order already settled as loss");
         return Ok(());
@@ -96,8 +100,8 @@ mod tests {
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
             market_type: Default::default(),
-            market_type_discriminator: "".to_string(),
-            market_type_value: "".to_string(),
+            market_type_discriminator: None,
+            market_type_value: None,
             version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
@@ -149,8 +153,8 @@ mod tests {
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(2),
             market_type: Default::default(),
-            market_type_discriminator: "".to_string(),
-            market_type_value: "".to_string(),
+            market_type_discriminator: None,
+            market_type_value: None,
             version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
@@ -202,8 +206,8 @@ mod tests {
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(0),
             market_type: Default::default(),
-            market_type_discriminator: "".to_string(),
-            market_type_value: "".to_string(),
+            market_type_discriminator: None,
+            market_type_value: None,
             version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,
@@ -255,8 +259,8 @@ mod tests {
             market_outcomes_count: 3_u16,
             market_winning_outcome_index: Some(1),
             market_type: Default::default(),
-            market_type_discriminator: "".to_string(),
-            market_type_value: "".to_string(),
+            market_type_discriminator: None,
+            market_type_value: None,
             version: 0,
             market_lock_timestamp: UnixTimestamp::default(),
             market_settle_timestamp: None,

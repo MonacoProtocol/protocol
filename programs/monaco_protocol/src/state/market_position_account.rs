@@ -15,7 +15,7 @@ pub struct MarketPosition {
     pub matched_risk_per_product: Vec<ProductMatchedRiskAndRate>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq)]
 pub struct ProductMatchedRiskAndRate {
     pub product: Pubkey,
     pub risk: u64,
