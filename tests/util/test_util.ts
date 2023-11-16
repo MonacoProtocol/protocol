@@ -209,8 +209,8 @@ export async function createMarket(
 
   const eventAccount = anchor.web3.Keypair.generate();
   const marketType = "EventResultWinner";
-  const marketTypeDiscriminator = "";
-  const marketTypeValue = "";
+  const marketTypeDiscriminator = null;
+  const marketTypeValue = null;
   const wallet = provider.wallet as NodeWallet;
 
   if (mintPk == null) {
