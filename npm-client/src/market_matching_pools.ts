@@ -2,14 +2,15 @@ import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
   ClientResponse,
-  ResponseFactory,
+  GetAccount,
+  MarketAccount,
   MarketMatchingPoolAccount,
   MarketMatchingPoolAccounts,
-  GetAccount,
   MarketMatchingPoolPublicKeysWithSeeds,
   MarketMatchingPoolPublicKeyWithSeeds,
   MarketMatchingPoolsWithSeeds,
   MarketMatchingPoolWithSeeds,
+  ResponseFactory,
 } from "../types";
 import { FindPdaResponse } from "../types";
 import { getMarketOutcomesByMarket } from "./market_outcome_query";
@@ -126,7 +127,9 @@ export async function getAllMarketMatchingPools(
         marketPk,
       );
 
-    const market = await program.account.market.fetch(marketPk);
+    const market = (await program.account.market.fetch(
+      marketPk,
+    )) as MarketAccount;
 
     for (let i = 0; i < market.marketOutcomesCount; i++) {
       const perOutcomeResponse = await query

@@ -11,7 +11,7 @@ pub fn add_prices_to_price_ladder(
     validate_prices(&prices_to_add)?;
 
     let mut prices = price_ladder.prices.clone();
-    prices.extend(prices_to_add.into_iter());
+    prices.extend(prices_to_add);
     prices.sort_by(|a, b| a.partial_cmp(b).unwrap());
     prices.dedup();
 

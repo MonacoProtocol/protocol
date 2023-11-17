@@ -126,7 +126,7 @@ pub fn create(
     ctx.accounts.market.title = title;
     ctx.accounts.market.mint_account = ctx.accounts.mint.key();
     ctx.accounts.market.decimal_limit = decimal_limit;
-    ctx.accounts.market.escrow_account_bump = *ctx.bumps.get("escrow").unwrap();
+    ctx.accounts.market.escrow_account_bump = ctx.bumps.escrow;
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
@@ -226,7 +226,7 @@ pub fn add_prices_to_market_outcome(
 
     let mut ladder = market_outcome.price_ladder.clone();
 
-    ladder.extend(new_prices.into_iter());
+    ladder.extend(new_prices);
     ladder.sort_by(|a, b| a.partial_cmp(b).unwrap());
     ladder.dedup();
 
