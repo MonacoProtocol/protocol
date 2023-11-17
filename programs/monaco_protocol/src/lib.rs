@@ -101,7 +101,7 @@ pub mod monaco_protocol {
     pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
         // TODO pass through the order request queue and matching queue
         let refund_amount = instructions::order::cancel_order_post_market_lock(
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
         )?;
