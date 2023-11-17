@@ -12,6 +12,7 @@ export type MarketOutcomeAccount = {
   market: PublicKey;
   latestMatchedPrice: number;
   matchedTotal: BN;
+  prices: PublicKey;
   priceLadder: number[];
 };
 

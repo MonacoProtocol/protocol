@@ -30,8 +30,6 @@ export async function create_market() {
     protocolProgram as Program,
     "Aduana Stars-Bechem United",
     "TEST",
-    "",
-    "",
     marketTokenPk,
     1924254038,
     eventAccountKeyPair.publicKey,

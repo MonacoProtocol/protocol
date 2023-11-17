@@ -23,8 +23,8 @@ describe("Admin Client Create Market", () => {
   const marketLockTimestamp = new BN(1924254038);
   const marketTitle = "Test Market";
   const marketType = "aMarketType";
-  const marketTypeDiscriminator = "";
-  const marketTypeValue = "";
+  const marketTypeDiscriminator = null;
+  const marketTypeValue = null;
 
   it("Creates a market", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
@@ -42,11 +42,13 @@ describe("Admin Client Create Market", () => {
       protocolProgram,
       marketTitle,
       marketType,
-      marketTypeDiscriminator,
-      marketTypeValue,
       newMintPk,
       marketLockTimestamp,
       event.publicKey,
+      {
+        marketTypeDiscriminator,
+        marketTypeValue,
+      },
     );
 
     assert.deepEqual(market.errors, []);
@@ -66,8 +68,8 @@ describe("Admin Client Create Full Market", () => {
   const marketTitle = "Test Market";
   const marketOutcomes = ["TEAM_1", "TEAM_2"];
   const marketType = "AnotherMarketType";
-  const marketTypeDiscriminator = "";
-  const marketTypeValue = "";
+  const marketTypeDiscriminator = null;
+  const marketTypeValue = null;
 
   it("Creates a market with outcomes and ladder", async () => {
     const protocolProgram = workspace.MonacoProtocol as Program;
@@ -84,13 +86,15 @@ describe("Admin Client Create Full Market", () => {
       protocolProgram,
       marketTitle,
       marketType,
-      marketTypeDiscriminator,
-      marketTypeValue,
       newMintPk,
       marketLockTimestamp,
       event.publicKey,
       marketOutcomes,
       [1.001],
+      {
+        marketTypeDiscriminator,
+        marketTypeValue,
+      },
     );
 
     assert.deepEqual(market.errors, []);

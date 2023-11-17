@@ -7,6 +7,7 @@ import {
   ClientResponse,
   ResponseFactory,
   FindPdaResponse,
+  MarketAccount,
 } from "../types";
 import { confirmTransaction } from "./utils";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
@@ -106,10 +107,11 @@ export async function initialiseOutcomes(
 ): Promise<ClientResponse<OutcomeInitialisationsResponse>> {
   const response = new ResponseFactory({} as OutcomeInitialisationsResponse);
   const provider = program.provider as AnchorProvider;
-  const [authorisedOperatorsPda, market] = await Promise.all([
+  const [authorisedOperatorsPda, marketAccount] = await Promise.all([
     findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
     program.account.market.fetch(marketPk),
   ]);
+  const market = marketAccount as MarketAccount;
 
   if (!authorisedOperatorsPda.success) {
     response.addErrors(authorisedOperatorsPda.errors);
@@ -207,7 +209,9 @@ export async function findNextOutcomePda(
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
-    const market = await program.account.market.fetch(marketPk);
+    const market = (await program.account.market.fetch(
+      marketPk,
+    )) as MarketAccount;
     try {
       const nextOutcomePda = await findMarketOutcomePda(
         program,

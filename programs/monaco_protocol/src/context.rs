@@ -1,4 +1,5 @@
 use crate::error::CoreError;
+use crate::monaco_protocol::SEED_SEPARATOR;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_outcome_account::MarketOutcome;
@@ -391,7 +392,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_against: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_against: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(
         mut,
@@ -431,7 +432,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_for: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_for: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(mut)]
     pub market: Box<Account<'info, Market>>,
@@ -581,8 +582,8 @@ fn get_create_market_version(existing_market: &Option<Account<Market>>) -> u8 {
 #[derive(Accounts)]
 #[instruction(
     event_account: Pubkey,
-    market_type_discriminator: String,
-    market_type_value: String,
+    market_type_discriminator: Option<String>,
+    market_type_value: Option<String>,
 )]
 pub struct CreateMarket<'info> {
     pub existing_market: Option<Account<'info, Market>>,
@@ -592,10 +593,10 @@ pub struct CreateMarket<'info> {
         seeds = [
             event_account.as_ref(),
             market_type.key().as_ref(),
-            market_type_discriminator.as_ref(),
-            b"-".as_ref(),
-            market_type_value.as_ref(),
-            b"-".as_ref(),
+            market_type_discriminator.as_ref().unwrap_or(&"".to_string()).as_ref(),
+            SEED_SEPARATOR,
+            market_type_value.as_ref().unwrap_or(&"".to_string()).as_ref(),
+            SEED_SEPARATOR,
             get_create_market_version(&existing_market).to_string().as_ref(),
             mint.key().as_ref(),
         ],
