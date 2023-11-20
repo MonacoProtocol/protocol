@@ -70,7 +70,7 @@ describe("Order Settlement Payment 10", () => {
 
     // Settlement
     await market.settle(0);
-    market.settleMarketPositionForPurchaser(purchaser.publicKey);
+    await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     await market.settleOrder(againstOrderPk);
     await market.settleOrder(forOrderPk);
 

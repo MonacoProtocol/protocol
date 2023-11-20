@@ -39,8 +39,8 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `eventPk` **PublicKey** {PublicKey} publicKey of an event
 *   `marketTypePk` **PublicKey** {PublicKey} publicKey of the market type
-*   `marketTypeDiscriminator` **[string][28]** {string} discriminator of the market type
-*   `marketTypeValue` **[string][28]** {string} value of the market type
+*   `marketTypeDiscriminator` **([string][28] | null)** {string} discriminator of the market type
+*   `marketTypeValue` **([string][28] | null)** {string} value of the market type
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the currency token
 *   `version` **[number][29]?** {number} (Optional) version of the market, defaults to 0
 
@@ -49,8 +49,8 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 ```javascript
 const eventPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketTypePk = new PublicKey('f9cEhHopn2C9R4G6GaGakmUkCoBWmJ6c4YEArr83hYBWk')
-const marketTypeDiscriminator = "";
-const marketTypeValue = "";
+const marketTypeDiscriminator = null;
+const marketTypeValue = null;
 const mintPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
 const marketPda = await findMarketPda(program, eventPk, marketTypePk, marketTypeDiscriminator, marketTypeValue, mintPk)
 ```
