@@ -285,10 +285,10 @@ export class Monaco {
         );
     const marketTypeDiscriminator = options.marketTypeDiscriminator
       ? options.marketTypeDiscriminator
-      : "";
+      : null;
     const marketTypeValue = options.marketTypeValue
       ? options.marketTypeValue
-      : "";
+      : null;
     const eventStartTimestamp = options.eventStartTimestamp
       ? options.eventStartTimestamp
       : 1924254038;

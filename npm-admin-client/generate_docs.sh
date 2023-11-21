@@ -1,7 +1,6 @@
 #!/bin/bash
 
 cd $(dirname $0)
-PATH=$(npm bin):$PATH
 
 declare -a endpoints=(
     "market_create"
@@ -31,7 +30,7 @@ wait
 createDocs(){
     rm -R -f docs/${1}/${3}.md &&
     echo "Generating docs for ${2}/${3}" &&
-    documentation build --document-exported ${2}/${3}.d.ts -f md >> docs/${1}/${3}.md
+    npm exec -- documentation build --document-exported ${2}/${3}.d.ts -f md >> docs/${1}/${3}.md
 }
 
 mkdir -p docs/endpoints
