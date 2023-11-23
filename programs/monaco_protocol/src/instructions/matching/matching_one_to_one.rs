@@ -110,11 +110,17 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
 
     // update product commission tracking for matched risk
     update_product_commission_contributions(market_position_for, order_for, stake_matched)?;
+    if market_position_identical {
+        copy_product_commission_contributions(market_position_for, market_position_against);
+    }
     update_product_commission_contributions(
         market_position_against,
         order_against,
         calculate_risk_from_stake(stake_matched, selected_price),
     )?;
+    if market_position_identical {
+        copy_product_commission_contributions(market_position_against, market_position_for);
+    }
 
     // 3. market update
     // -----------------------------
@@ -181,4 +187,9 @@ fn copy_market_position(from: &MarketPosition, to: &mut MarketPosition) {
         to.market_outcome_sums[index] = from.market_outcome_sums[index];
         to.unmatched_exposures[index] = from.unmatched_exposures[index];
     }
+}
+
+fn copy_product_commission_contributions(from: &MarketPosition, to: &mut MarketPosition) {
+    to.matched_risk = from.matched_risk;
+    to.matched_risk_per_product = from.matched_risk_per_product.clone();
 }

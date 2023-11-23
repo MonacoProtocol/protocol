@@ -95,9 +95,187 @@ describe("Market: creation", () => {
     );
   });
 
-  it("failure when type discriminator used but not required by market type", async () => {
+  it("success when market type discriminator and value are provided appropriately", async () => {
+    const marketTypeDiscriminator = "foo";
+    const marketTypeValue = "bar";
+
+    const marketType = "TypeWithDiscrimAndValue";
+    const marketTypeResp = await getOrCreateMarketType(
+      monaco.program as Program,
+      marketType,
+      true,
+      true,
+    );
+    if (!marketTypeResp.success) {
+      throw new Error(marketTypeResp.errors[0].toString());
+    }
+    const marketTypePk = marketTypeResp.data.publicKey;
+
+    const mintDecimals = 6;
+    const marketDecimals = 3;
+    const event = Keypair.generate();
+    const marketTitle = "SOME TITLE";
+    const now = Math.floor(new Date().getTime() / 1000);
+    const marketLockTimestamp = now + 1000;
+    const eventStartTimestamp = marketLockTimestamp;
+
+    const [mintPk, authorisedOperatorsPk] = await Promise.all([
+      createNewMint(
+        monaco.provider,
+        monaco.provider.wallet as NodeWallet,
+        mintDecimals,
+      ),
+      monaco.findMarketAuthorisedOperatorsPda(),
+    ]);
+
+    const marketPk = (
+      await findMarketPda(
+        monaco.program as Program,
+        event.publicKey,
+        marketTypePk,
+        marketTypeDiscriminator,
+        marketTypeValue,
+        mintPk,
+      )
+    ).data.pda;
+
+    const marketEscrowPk = (
+      await findEscrowPda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const marketPaymentQueuePk = (
+      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
+    await monaco.program.methods
+      .createMarket(
+        event.publicKey,
+        marketTypeDiscriminator,
+        marketTypeValue,
+        marketTitle,
+        marketDecimals,
+        new anchor.BN(marketLockTimestamp),
+        new anchor.BN(eventStartTimestamp),
+        false,
+        0,
+        { none: {} },
+        { none: {} },
+      )
+      .accounts({
+        existingMarket: null,
+        market: marketPk,
+        marketType: marketTypePk,
+        escrow: marketEscrowPk,
+        matchingQueue: matchingQueuePk,
+        commissionPaymentQueue: marketPaymentQueuePk,
+        mint: mintPk,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        authorisedOperators: authorisedOperatorsPk,
+        marketOperator: monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+  });
+
+  it("failure when market type discriminator contains the seed separator", async () => {
+    const marketTypeDiscriminator = "a market ␞ discriminator";
+    const marketTypeValue = "bar";
+
+    const marketType = "TypeWithDiscrimAndValue";
+    const marketTypeResp = await getOrCreateMarketType(
+      monaco.program as Program,
+      marketType,
+      true,
+      true,
+    );
+    if (!marketTypeResp.success) {
+      throw new Error(marketTypeResp.errors[0].toString());
+    }
+    const marketTypePk = marketTypeResp.data.publicKey;
+
+    const mintDecimals = 6;
+    const marketDecimals = 3;
+    const event = Keypair.generate();
+    const marketTitle = "SOME TITLE";
+    const now = Math.floor(new Date().getTime() / 1000);
+    const marketLockTimestamp = now + 1000;
+    const eventStartTimestamp = marketLockTimestamp;
+
+    const [mintPk, authorisedOperatorsPk] = await Promise.all([
+      createNewMint(
+        monaco.provider,
+        monaco.provider.wallet as NodeWallet,
+        mintDecimals,
+      ),
+      monaco.findMarketAuthorisedOperatorsPda(),
+    ]);
+
+    const marketPk = (
+      await findMarketPda(
+        monaco.program as Program,
+        event.publicKey,
+        marketTypePk,
+        marketTypeDiscriminator,
+        marketTypeValue,
+        mintPk,
+      )
+    ).data.pda;
+
+    const marketEscrowPk = (
+      await findEscrowPda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const marketPaymentQueuePk = (
+      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
+    try {
+      await monaco.program.methods
+        .createMarket(
+          event.publicKey,
+          marketTypeDiscriminator,
+          marketTypeValue,
+          marketTitle,
+          marketDecimals,
+          new anchor.BN(marketLockTimestamp),
+          new anchor.BN(eventStartTimestamp),
+          false,
+          0,
+          { none: {} },
+          { none: {} },
+        )
+        .accounts({
+          existingMarket: null,
+          market: marketPk,
+          marketType: marketTypePk,
+          escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
+          commissionPaymentQueue: marketPaymentQueuePk,
+          mint: mintPk,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          authorisedOperators: authorisedOperatorsPk,
+          marketOperator: monaco.operatorPk,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      assert.fail("Expected an exception to be thrown");
+    } catch (err) {
+      assert.equal(
+        err.error.errorCode.code,
+        "MarketTypeDiscriminatorContainsSeedSeparator",
+      );
+    }
+  });
+
+  it("failure when type discriminator provided but not required by market type", async () => {
     const marketTypeDiscriminator = "Foobar";
-    const marketTypeValue = "";
+    const marketTypeValue = null;
 
     const marketType = "EventResultWinner";
     const marketTypeResp = await getOrCreateMarketType(
@@ -193,9 +371,102 @@ describe("Market: creation", () => {
     }
   });
 
-  it("failure when type value used but not required by market type", async () => {
+  it("failure when type discriminator not provided but is required by market type", async () => {
+    const marketTypeDiscriminator = null;
+    const marketTypeValue = null;
+
+    const marketType = "DiscrimOnly";
+    const marketTypeResp = await getOrCreateMarketType(
+      monaco.program as Program,
+      marketType,
+      true,
+      false,
+    );
+    if (!marketTypeResp.success) {
+      throw new Error(marketTypeResp.errors[0].toString());
+    }
+    const marketTypePk = marketTypeResp.data.publicKey;
+
+    const mintDecimals = 6;
+    const marketDecimals = 3;
+    const event = Keypair.generate();
+    const marketTitle = "SOME TITLE";
+    const now = Math.floor(new Date().getTime() / 1000);
+    const marketLockTimestamp = now + 1000;
+    const eventStartTimestamp = marketLockTimestamp;
+
+    const [mintPk, authorisedOperatorsPk] = await Promise.all([
+      createNewMint(
+        monaco.provider,
+        monaco.provider.wallet as NodeWallet,
+        mintDecimals,
+      ),
+      monaco.findMarketAuthorisedOperatorsPda(),
+    ]);
+
+    const marketPk = (
+      await findMarketPda(
+        monaco.program as Program,
+        event.publicKey,
+        marketTypePk,
+        marketTypeDiscriminator,
+        marketTypeValue,
+        mintPk,
+      )
+    ).data.pda;
+
+    const marketEscrowPk = (
+      await findEscrowPda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+    const marketPaymentQueuePk = (
+      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
+
+    try {
+      await monaco.program.methods
+        .createMarket(
+          event.publicKey,
+          marketTypeDiscriminator,
+          marketTypeValue,
+          marketTitle,
+          marketDecimals,
+          new anchor.BN(marketLockTimestamp),
+          new anchor.BN(eventStartTimestamp),
+          false,
+          0,
+          { none: {} },
+          { none: {} },
+        )
+        .accounts({
+          existingMarket: null,
+          market: marketPk,
+          marketType: marketTypePk,
+          escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
+          commissionPaymentQueue: marketPaymentQueuePk,
+          mint: mintPk,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          authorisedOperators: authorisedOperatorsPk,
+          marketOperator: monaco.operatorPk,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      assert.fail("Expected to fail");
+    } catch (err) {
+      assert.equal(
+        err.error.errorCode.code,
+        "MarketTypeDiscriminatorUsageIncorrect",
+      );
+    }
+  });
+
+  it("failure when type value provided but not required by market type", async () => {
     const marketTypeValue = "Foobar";
-    const marketTypeDiscriminator = "";
+    const marketTypeDiscriminator = null;
 
     const marketType = "EventResultWinner";
     const marketTypeResp = await getOrCreateMarketType(
@@ -289,15 +560,15 @@ describe("Market: creation", () => {
     }
   });
 
-  it("success with market type discriminator and value provided appropriately", async () => {
-    const marketTypeDiscriminator = "foo";
-    const marketTypeValue = "bar";
+  it("failure when type value not provided but is required by market type", async () => {
+    const marketTypeDiscriminator = null;
+    const marketTypeValue = null;
 
-    const marketType = "TypeWithDiscrimAndValue";
+    const marketType = "ValueOnly";
     const marketTypeResp = await getOrCreateMarketType(
       monaco.program as Program,
       marketType,
-      true,
+      false,
       true,
     );
     if (!marketTypeResp.success) {
@@ -342,41 +613,44 @@ describe("Market: creation", () => {
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-
-    await monaco.program.methods
-      .createMarket(
-        event.publicKey,
-        marketTypeDiscriminator,
-        marketTypeValue,
-        marketTitle,
-        marketDecimals,
-        new anchor.BN(marketLockTimestamp),
-        new anchor.BN(eventStartTimestamp),
-        false,
-        0,
-        { none: {} },
-        { none: {} },
-      )
-      .accounts({
-        existingMarket: null,
-        market: marketPk,
-        marketType: marketTypePk,
-        escrow: marketEscrowPk,
-        matchingQueue: matchingQueuePk,
-        commissionPaymentQueue: marketPaymentQueuePk,
-        orderRequestQueue: orderRequestQueuePk,
-        mint: mintPk,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        authorisedOperators: authorisedOperatorsPk,
-        marketOperator: monaco.operatorPk,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
+    try {
+      await monaco.program.methods
+        .createMarket(
+          event.publicKey,
+          marketTypeDiscriminator,
+          marketTypeValue,
+          marketTitle,
+          marketDecimals,
+          new anchor.BN(marketLockTimestamp),
+          new anchor.BN(eventStartTimestamp),
+          false,
+          0,
+          { none: {} },
+          { none: {} },
+        )
+        .accounts({
+          existingMarket: null,
+          market: marketPk,
+          marketType: marketTypePk,
+          escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
+          commissionPaymentQueue: marketPaymentQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
+          mint: mintPk,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          authorisedOperators: authorisedOperatorsPk,
+          marketOperator: monaco.operatorPk,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      assert.fail("Expected to fail");
+    } catch (err) {
+      assert.equal(err.error.errorCode.code, "MarketTypeValueUsageIncorrect");
+    }
   });
 
   it("failure when lock time is after event start time", async () => {
@@ -474,8 +748,8 @@ async function createMarket(
 ) {
   const event = Keypair.generate();
   const marketType = "EventResultWinner";
-  const marketTypeDiscriminator = "";
-  const marketTypeValue = "";
+  const marketTypeDiscriminator = null;
+  const marketTypeValue = null;
   const marketTitle = "SOME TITLE";
 
   const [mintPk, authorisedOperatorsPk] = await Promise.all([

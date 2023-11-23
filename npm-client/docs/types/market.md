@@ -162,7 +162,7 @@ Type: {outcomeIndex: [string][37], price: [string][37], forOutcome: [string][37]
 
 ## MarketOutcomeAccount
 
-Type: {index: [number][36], title: [string][37], market: PublicKey, latestMatchedPrice: [number][36], matchedTotal: BN, priceLadder: [Array][39]<[number][36]>}
+Type: {index: [number][36], title: [string][37], market: PublicKey, latestMatchedPrice: [number][36], matchedTotal: BN, prices: PublicKey, priceLadder: [Array][39]<[number][36]>}
 
 ### Properties
 
@@ -171,6 +171,7 @@ Type: {index: [number][36], title: [string][37], market: PublicKey, latestMatche
 *   `market` **PublicKey**&#x20;
 *   `latestMatchedPrice` **[number][36]**&#x20;
 *   `matchedTotal` **BN**&#x20;
+*   `prices` **PublicKey**&#x20;
 *   `priceLadder` **[Array][39]<[number][36]>**&#x20;
 
 ## MarketOutcomeAccounts

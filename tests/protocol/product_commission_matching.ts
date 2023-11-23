@@ -566,4 +566,67 @@ describe("Product commissions", () => {
       match2ExpectedRisk,
     );
   });
+
+  it("matched orders - single match for the same user with different products", async () => {
+    const market = await monaco.create3WayMarket([2.0]);
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 1000);
+
+    const product1Commission = 5;
+    const product1Pk = await externalPrograms.createProduct(
+      "MONACO_EXCHANGE_9A",
+      product1Commission,
+    );
+    const product2Commission = 10;
+    const product2Pk = await externalPrograms.createProduct(
+      "MONACO_EXCHANGE_9B",
+      product2Commission,
+    );
+
+    const stake = 20;
+    const forOrderPk = await market.forOrder(
+      0,
+      stake,
+      2.0,
+      purchaser,
+      product1Pk,
+    );
+    const againstOrderPk = await market.againstOrder(
+      0,
+      stake,
+      2.0,
+      purchaser,
+      product2Pk,
+    );
+    await market.match(forOrderPk, againstOrderPk);
+
+    const marketPositionPk = await findMarketPositionPda(
+      monaco.getRawProgram(),
+      market.pk,
+      purchaser.publicKey,
+    );
+    const marketPosition = await monaco.fetchMarketPosition(
+      marketPositionPk.data.pda,
+    );
+    const expectedMatchedStake = stake * 10 ** market.mintInfo.decimals;
+
+    assert.equal(marketPosition.matchedRisk.toNumber(), stake * 2 * 1_000_000); // two stakes of 20
+    assert.equal(marketPosition.matchedRiskPerProduct.length, 2);
+
+    const matchedStakeForProduct = marketPosition.matchedRiskPerProduct[0];
+    assert.equal(
+      matchedStakeForProduct.product.toBase58(),
+      product1Pk.toBase58(),
+    );
+    assert.equal(matchedStakeForProduct.risk.toNumber(), expectedMatchedStake);
+    assert.equal(matchedStakeForProduct.rate, product1Commission);
+
+    const matchedStakeForProduct2 = marketPosition.matchedRiskPerProduct[1];
+    assert.equal(
+      matchedStakeForProduct2.product.toBase58(),
+      product2Pk.toBase58(),
+    );
+    assert.equal(matchedStakeForProduct2.risk.toNumber(), expectedMatchedStake);
+    assert.equal(matchedStakeForProduct2.rate, product2Commission);
+  });
 });

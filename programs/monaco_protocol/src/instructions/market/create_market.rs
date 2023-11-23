@@ -4,7 +4,7 @@ use rust_decimal::Decimal;
 
 use crate::context::{CreateMarket, InitializeMarketOutcome};
 use crate::instructions::current_timestamp;
-use crate::monaco_protocol::PRICE_SCALE;
+use crate::monaco_protocol::{PRICE_SCALE, SEED_SEPARATOR_CHAR};
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
 use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
@@ -22,8 +22,8 @@ pub fn create(
     ctx: Context<CreateMarket>,
     event_account: Pubkey,
     market_type: Pubkey,
-    market_type_discriminator: String,
-    market_type_value: String,
+    market_type_discriminator: Option<String>,
+    market_type_value: Option<String>,
     title: String,
     max_decimals: u8,
     market_lock_timestamp: i64,
@@ -53,12 +53,21 @@ pub fn create(
     require!(PRICE_SCALE <= decimal_limit, CoreError::MaxDecimalsTooLarge);
 
     require!(
-        ctx.accounts.market_type.requires_discriminator != market_type_discriminator.is_empty(),
+        ctx.accounts.market_type.requires_discriminator == market_type_discriminator.is_some(),
         CoreError::MarketTypeDiscriminatorUsageIncorrect
     );
     require!(
-        ctx.accounts.market_type.requires_value != market_type_value.is_empty(),
+        ctx.accounts.market_type.requires_value == market_type_value.is_some(),
         CoreError::MarketTypeValueUsageIncorrect
+    );
+
+    require!(
+        market_type_discriminator.is_none()
+            || !market_type_discriminator
+                .as_ref()
+                .unwrap()
+                .contains(SEED_SEPARATOR_CHAR),
+        CoreError::MarketTypeDiscriminatorContainsSeedSeparator
     );
 
     let mut version = 0;
@@ -118,7 +127,7 @@ pub fn create(
     ctx.accounts.market.title = title;
     ctx.accounts.market.mint_account = ctx.accounts.mint.key();
     ctx.accounts.market.decimal_limit = decimal_limit;
-    ctx.accounts.market.escrow_account_bump = *ctx.bumps.get("escrow").unwrap();
+    ctx.accounts.market.escrow_account_bump = ctx.bumps.escrow;
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
@@ -223,7 +232,7 @@ pub fn add_prices_to_market_outcome(
 
     let mut ladder = market_outcome.price_ladder.clone();
 
-    ladder.extend(new_prices.into_iter());
+    ladder.extend(new_prices);
     ladder.sort_by(|a, b| a.partial_cmp(b).unwrap());
     ladder.dedup();
 

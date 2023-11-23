@@ -153,9 +153,11 @@ describe("End to end test of", () => {
     assert.equal(order.stakeUnmatched, 0);
 
     // Close orders due to event start
+    assert.deepEqual((await market.getAccount()).unsettledAccountsCount, 13);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder03);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder10);
     await market.cancelPreplayOrderPostEventStart(prePlayOrder11);
+    assert.deepEqual((await market.getAccount()).unsettledAccountsCount, 10);
 
     order = await monaco.getOrder(prePlayOrder01);
     assert.equal(order.stakeUnmatched, 0);
@@ -178,6 +180,9 @@ describe("End to end test of", () => {
         }
       });
     await market.completeSettlement();
+    const marketAccount = await market.getAccount();
+    assert.equal(marketAccount.unsettledAccountsCount, 0);
+    assert.equal(marketAccount.unclosedAccountsCount, 22);
 
     // Close accounts
     await market.readyToClose();

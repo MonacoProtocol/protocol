@@ -32,6 +32,8 @@ pub mod monaco_protocol {
     use crate::instructions::current_timestamp;
 
     pub const PRICE_SCALE: u8 = 3_u8;
+    pub const SEED_SEPARATOR_CHAR: char = '␞';
+    pub const SEED_SEPARATOR: &[u8] = b"\xE2\x90\x9E"; // "␞"
 
     pub fn create_order_request(
         ctx: Context<CreateOrderRequest>,
@@ -91,7 +93,7 @@ pub mod monaco_protocol {
         ctx: Context<CancelPreplayOrderPostEventStart>,
     ) -> Result<()> {
         let refund_amount = instructions::order::cancel_preplay_order_post_event_start(
-            &ctx.accounts.market,
+            &mut ctx.accounts.market,
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
@@ -273,8 +275,8 @@ pub mod monaco_protocol {
     pub fn create_market(
         ctx: Context<CreateMarket>,
         event_account: Pubkey,
-        market_type_discriminator: String,
-        market_type_value: String,
+        market_type_discriminator: Option<String>,
+        market_type_value: Option<String>,
         title: String,
         max_decimals: u8,
         market_lock_timestamp: i64,
