@@ -101,6 +101,7 @@ mod tests {
 
         let result = close_market_queues(market, &payment_queue, &matching_queue);
         assert!(result.is_ok());
+        assert_eq!(market.unclosed_accounts_count, 0);
     }
 
     #[test]
@@ -159,6 +160,7 @@ mod tests {
 
         let result = close_market_queues(market, &payment_queue, &matching_queue);
         assert!(result.is_ok());
+        assert_eq!(market.unclosed_accounts_count, 0);
     }
 
     // close order validation

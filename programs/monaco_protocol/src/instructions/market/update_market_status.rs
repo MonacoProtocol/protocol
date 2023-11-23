@@ -310,18 +310,30 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
         let matching_queue = &mut MarketMatchingQueue {
-            market: market_pk,
+            market: Pubkey::default(),
             matches: MatchingQueue::new(1),
         };
         let payments_queue = &mut MarketPaymentsQueue {
-            market: market_pk,
+            market: Pubkey::default(),
             payment_queue: PaymentQueue::new(1),
         };
 
         let result = open(&market_pk, &mut market, matching_queue, payments_queue);
 
         assert!(result.is_ok());
-        assert_eq!(MarketStatus::Open, market.market_status)
+        assert_eq!(MarketStatus::Open, market.market_status);
+
+        assert_eq!(matching_queue.market, market_pk);
+        assert_eq!(payments_queue.market, market_pk);
+
+        assert_eq!(
+            matching_queue.matches.size(),
+            MarketMatchingQueue::QUEUE_LENGTH as u32
+        );
+        assert_eq!(
+            payments_queue.payment_queue.size(),
+            MarketPaymentsQueue::QUEUE_LENGTH as u32
+        );
     }
 
     #[test]

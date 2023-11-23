@@ -717,7 +717,7 @@ pub struct OpenMarket<'info> {
         payer = market_operator,
         space = MarketMatchingQueue::SIZE
     )]
-    pub matching_queue: Box<Account<'info, MarketMatchingQueue>>,
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
     #[account(
         init,
         seeds = [
