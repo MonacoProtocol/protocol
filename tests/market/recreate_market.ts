@@ -198,7 +198,6 @@ describe("Recreate markets", () => {
       true,
       false,
     );
-    console.log(JSON.stringify(marketTypeResp, null, 2));
     const marketTypePk = marketTypeResp.data.publicKey;
 
     const existingMarketWrapper = await monaco.createMarketWithOptions({

@@ -1,6 +1,7 @@
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
+import { authoriseMarketOperator } from "../../npm-admin-client";
 
 describe("Void order", () => {
   it("success", async () => {
@@ -67,6 +68,41 @@ describe("Void order", () => {
       assert.fail("expected VoidOrderIsVoided");
     } catch (e) {
       assert.equal(e.error.errorCode.code, "VoidOrderIsVoided");
+    }
+  });
+
+  it("complete void: unsettled accounts", async () => {
+    const price = 2.0;
+    const marketOperator = await createWalletWithBalance(monaco.provider);
+    await authoriseMarketOperator(
+      monaco.getRawProgram(),
+      marketOperator.publicKey,
+    );
+    const market = await monaco.createMarket(
+      ["A", "B"],
+      [price],
+      marketOperator,
+    );
+
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+    await market.open();
+    await market.forOrder(0, 10, price, purchaser);
+    await market.voidMarket();
+
+    try {
+      await monaco.program.methods
+        .completeMarketVoid()
+        .accounts({
+          market: market.pk,
+        })
+        .rpc();
+      assert.fail("MarketUnsettledAccountsCountNonZero expected");
+    } catch (e) {
+      assert.equal(
+        e.error.errorCode.code,
+        "MarketUnsettledAccountsCountNonZero",
+      );
     }
   });
 });
