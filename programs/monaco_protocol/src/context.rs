@@ -240,6 +240,12 @@ pub struct CancelPreplayOrderPostEventStart<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
 
     // market_position needs to be here so market validation happens first
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
@@ -709,6 +715,23 @@ pub struct UpdateMarketOutcome<'info> {
 pub struct UpdateMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateMarketWithRequestQueue<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
 
     #[account(mut)]
     pub market_operator: Signer<'info>,

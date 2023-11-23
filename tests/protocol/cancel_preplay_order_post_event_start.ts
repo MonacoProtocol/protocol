@@ -8,6 +8,7 @@ import {
   createNewMint,
 } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
+import { findOrderRequestQueuePda } from "../../npm-admin-client";
 
 // Order parameters
 const outcomeIndex = 1;
@@ -275,6 +276,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -336,6 +340,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -392,6 +399,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -453,6 +463,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -517,6 +530,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected ConstraintAssociated");
@@ -580,6 +596,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected CancelationMarketMismatch");
@@ -643,6 +662,9 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.getRawProgram(), market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("expected ConstraintSeeds");

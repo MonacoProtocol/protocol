@@ -884,6 +884,9 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         marketMatchingPool: matchingPoolPk,
         tokenProgram: TOKEN_PROGRAM_ID,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -981,6 +984,10 @@ export class MonacoMarket {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+    ).data.pda;
+
     await this.monaco.program.methods
       .settleMarket(outcome)
       .accounts({
@@ -989,6 +996,7 @@ export class MonacoMarket {
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
+        orderRequestQueue: orderRequestQueuePk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
@@ -1002,6 +1010,10 @@ export class MonacoMarket {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+    ).data.pda;
+
     await this.monaco.program.methods
       .voidMarket()
       .accounts({
@@ -1010,6 +1022,7 @@ export class MonacoMarket {
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
+        orderRequestQueue: orderRequestQueuePk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()

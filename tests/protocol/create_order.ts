@@ -325,6 +325,9 @@ describe("Protocol - Create Order", () => {
         market: marketPda,
         authorisedOperators: authorisedMarketOperators,
         marketOperator: marketOperator.publicKey,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(protocolProgram, marketPda)
+        ).data.pda,
       })
       .signers([marketOperator])
       .rpc();

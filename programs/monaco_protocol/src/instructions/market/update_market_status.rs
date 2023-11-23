@@ -7,6 +7,7 @@ use solana_program::clock::UnixTimestamp;
 use crate::error::CoreError;
 use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
+use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 
 pub fn open(market: &mut Market) -> Result<()> {
     require!(
@@ -21,11 +22,20 @@ pub fn open(market: &mut Market) -> Result<()> {
     Ok(())
 }
 
-pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
+pub fn void(
+    market: &mut Market,
+    void_time: UnixTimestamp,
+    order_request_queue: &MarketOrderRequestQueue,
+) -> Result<()> {
     require!(
         Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
         CoreError::VoidMarketNotInitializingOrOpen
     );
+    require!(
+        order_request_queue.order_requests.len() == 0,
+        CoreError::RequestQueueNotEmpty
+    );
+
     market.market_settle_timestamp = Option::from(void_time);
     market.market_status = ReadyToVoid;
     Ok(())
@@ -41,6 +51,7 @@ pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
         market.unsettled_accounts_count == 0_u32,
         CoreError::MarketUnsettledAccountsCountNonZero,
     );
+
     market.market_status = Voided;
     Ok(())
 }
@@ -49,6 +60,7 @@ pub fn settle(
     market: &mut Market,
     winning_outcome_index: u16,
     settle_time: UnixTimestamp,
+    order_request_queue: &MarketOrderRequestQueue,
 ) -> Result<()> {
     require!(
         Open.eq(&market.market_status),
@@ -57,6 +69,10 @@ pub fn settle(
     require!(
         winning_outcome_index < market.market_outcomes_count,
         CoreError::SettlementInvalidMarketOutcomeIndex
+    );
+    require!(
+        order_request_queue.order_requests.len() == 0,
+        CoreError::RequestQueueNotEmpty
     );
 
     market.market_winning_outcome_index = Some(winning_outcome_index);
@@ -123,8 +139,12 @@ mod tests {
     use crate::error::CoreError;
     use crate::instructions::market::{open, settle, void};
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_order_request_queue::{
+        MarketOrderRequestQueue, OrderRequest, OrderRequestQueue,
+    };
     use crate::Market;
     use anchor_lang::error;
+    use solana_program::pubkey::Pubkey;
 
     #[test]
     fn settle_market_ok_result() {
@@ -155,10 +175,14 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let order_request_queue = MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 0, settle_time);
+        let result = settle(&mut market, 0, settle_time, &order_request_queue);
 
         assert!(result.is_ok());
         assert_eq!(market.market_status, MarketStatus::ReadyForSettlement)
@@ -193,10 +217,14 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let order_request_queue = MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 0, settle_time);
+        let result = settle(&mut market, 0, settle_time, &order_request_queue);
 
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::SettlementMarketNotOpen)), result);
@@ -231,16 +259,63 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let order_request_queue = MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 4, settle_time);
+        let result = settle(&mut market, 4, settle_time, &order_request_queue);
 
         assert!(result.is_err());
         assert_eq!(
             Err(error!(CoreError::SettlementInvalidMarketOutcomeIndex)),
             result
         );
+    }
+
+    #[test]
+    fn settle_market_request_queue_not_empty() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 3,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+        let order_request_queue = &mut MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
+        order_request_queue
+            .order_requests
+            .enqueue(OrderRequest::new_unique());
+
+        let result = settle(&mut market, 0, 1665483869, &order_request_queue);
+
+        assert!(result.is_err());
+        assert_eq!(Err(error!(CoreError::RequestQueueNotEmpty)), result);
     }
 
     #[test]
@@ -382,10 +457,14 @@ mod tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
+        let order_request_queue = &mut MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time);
+        let result = void(&mut market, settle_time, &order_request_queue);
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
@@ -420,10 +499,14 @@ mod tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
+        let order_request_queue = &mut MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time);
+        let result = void(&mut market, settle_time, &order_request_queue);
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
@@ -458,13 +541,63 @@ mod tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
+        let order_request_queue = &mut MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time);
+        let result = void(&mut market, settle_time, &order_request_queue);
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn void_market_request_queue_not_empty() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            inplay_enabled: false,
+            market_type: Default::default(),
+            market_type_discriminator: "".to_string(),
+            market_type_value: "".to_string(),
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        };
+        let order_request_queue = &mut MarketOrderRequestQueue {
+            market: Pubkey::new_unique(),
+            order_requests: OrderRequestQueue::new(10),
+        };
+        order_request_queue
+            .order_requests
+            .enqueue(OrderRequest::new_unique());
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time, &order_request_queue);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::RequestQueueNotEmpty));
         assert_eq!(expected_error, result)
     }
 }

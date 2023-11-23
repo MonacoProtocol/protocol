@@ -5,6 +5,7 @@ import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { findOrderRequestQueuePda } from "../../npm-admin-client";
 
 describe("Market: update status", () => {
   it("Settle market", async () => {
@@ -17,6 +18,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -41,6 +45,9 @@ describe("Market: update status", () => {
           market: market.pk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
           marketOperator: monaco.operatorPk,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(monaco.program, market.pk)
+          ).data.pda,
         })
         .rpc();
       assert.fail("Error expected");
@@ -65,6 +72,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -101,6 +111,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -139,6 +152,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -201,6 +217,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -264,6 +283,9 @@ describe("Market: update status", () => {
         market: market.pk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(monaco.program, market.pk)
+        ).data.pda,
       })
       .rpc()
       .catch((e) => {

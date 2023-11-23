@@ -95,6 +95,7 @@ pub mod monaco_protocol {
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
+            &ctx.accounts.order_request_queue,
         )?;
 
         transfer::transfer_from_market_escrow(
@@ -417,7 +418,10 @@ pub mod monaco_protocol {
         instructions::market::open(&mut ctx.accounts.market)
     }
 
-    pub fn settle_market(ctx: Context<UpdateMarket>, winning_outcome_index: u16) -> Result<()> {
+    pub fn settle_market(
+        ctx: Context<UpdateMarketWithRequestQueue>,
+        winning_outcome_index: u16,
+    ) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -428,14 +432,19 @@ pub mod monaco_protocol {
         )?;
 
         let settle_time = current_timestamp();
-        instructions::market::settle(&mut ctx.accounts.market, winning_outcome_index, settle_time)
+        instructions::market::settle(
+            &mut ctx.accounts.market,
+            winning_outcome_index,
+            settle_time,
+            &ctx.accounts.order_request_queue,
+        )
     }
 
     pub fn complete_market_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
         instructions::market::complete_settlement(ctx)
     }
 
-    pub fn void_market(ctx: Context<UpdateMarket>) -> Result<()> {
+    pub fn void_market(ctx: Context<UpdateMarketWithRequestQueue>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -446,7 +455,11 @@ pub mod monaco_protocol {
         )?;
 
         let void_time = current_timestamp();
-        instructions::market::void(&mut ctx.accounts.market, void_time)
+        instructions::market::void(
+            &mut ctx.accounts.market,
+            void_time,
+            &ctx.accounts.order_request_queue,
+        )
     }
 
     pub fn complete_market_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {

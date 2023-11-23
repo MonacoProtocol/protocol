@@ -27,6 +27,7 @@ pub struct OrderRequest {
     pub delay_expiration_timestamp: i64,
     pub product_commission_rate: f64, // product commission rate at time of order creation
     pub distinct_seed: [u8; 16],      // used as a seed for generating a unique order pda
+    pub creation_timestamp: i64,      // timestamp when request was created
 }
 
 impl OrderRequest {
@@ -37,7 +38,8 @@ impl OrderRequest {
     + U64_SIZE // stake
     + (F64_SIZE * 2) // expected_price & product_commission_rate
     + I64_SIZE // delay_expiration_timestamp
-    + U128_SIZE; // distinct_seed
+    + U128_SIZE // distinct_seed
+    + I64_SIZE; // creation_timestamp
 
     pub fn new_unique() -> Self {
         OrderRequest {
@@ -50,6 +52,7 @@ impl OrderRequest {
             expected_price: 0.0,
             product_commission_rate: 0.0,
             distinct_seed: [0; 16],
+            creation_timestamp: 0,
         }
     }
 }

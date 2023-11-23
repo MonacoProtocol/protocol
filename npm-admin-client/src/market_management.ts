@@ -13,7 +13,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { findEscrowPda } from "./market_helpers";
+import { findEscrowPda, findOrderRequestQueuePda } from "./market_helpers";
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -49,6 +49,9 @@ export async function settleMarket(
         market: marketPk,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(program, marketPk)
+        ).data.pda,
       })
       .rpc();
     response.addResponseData({
@@ -551,6 +554,9 @@ export async function voidMarket(
         marketEscrow: marketEscrow.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(program, marketPk)
+        ).data.pda,
       })
       .rpc();
     response.addResponseData({

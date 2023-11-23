@@ -37,6 +37,8 @@ pub enum CoreError {
     RequestCreationDuplicateRequest,
     #[msg("Order Request Processing: request queue is empty")]
     RequestQueueEmpty,
+    #[msg("Order Request Processing: request queue is not empty")]
+    RequestQueueNotEmpty,
 
     /*
     Cancelation
@@ -57,6 +59,8 @@ pub enum CoreError {
     CancelationOrderStatusInvalid,
     #[msg("Order Cancelation: order created after market event started")]
     CancelationOrderCreatedAfterMarketEventStarted,
+    #[msg("Order Cancelation: cannot cancel preplay orders until all preplay order requests are processed")]
+    CancelationPreplayOrderRequestsExist,
 
     /*
     Settlement

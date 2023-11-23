@@ -288,6 +288,7 @@ mod tests {
             delay_expiration_timestamp: 0,
             product_commission_rate: 0f64,
             distinct_seed: [0; 16],
+            creation_timestamp: 0,
         }
     }
 

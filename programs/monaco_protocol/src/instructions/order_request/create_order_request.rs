@@ -68,6 +68,7 @@ fn initialize_order_request(
         false => Ok(0),
     }?;
     order_request.distinct_seed = data.distinct_seed;
+    order_request.creation_timestamp = now;
 
     match product {
         Some(product_account) => {
