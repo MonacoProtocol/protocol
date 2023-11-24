@@ -7,7 +7,7 @@ use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
 
-use crate::state::market_order_request_queue::OrderRequestData;
+use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
@@ -452,7 +452,7 @@ pub mod monaco_protocol {
         instructions::market::complete_settlement(ctx)
     }
 
-    pub fn void_market(ctx: Context<UpdateMarketWithRequestQueue>) -> Result<()> {
+    pub fn void_market(ctx: Context<VoidMarket>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -466,7 +466,10 @@ pub mod monaco_protocol {
         instructions::market::void(
             &mut ctx.accounts.market,
             void_time,
-            &ctx.accounts.order_request_queue,
+            &ctx.accounts
+                .order_request_queue
+                .clone()
+                .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
         )
     }
 

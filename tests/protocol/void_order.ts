@@ -105,4 +105,25 @@ describe("Void order", () => {
       );
     }
   });
+
+  it("void market: initializing market", async () => {
+    const market = await monaco.createMarket(["A", "B"], [2.0]);
+
+    try {
+      await monaco.program.account.marketOrderRequestQueue.fetch(
+        market.orderRequestQueuePk,
+      );
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + market.orderRequestQueuePk,
+      );
+    }
+
+    await market.voidMarket();
+
+    const voidedMarket = await monaco.fetchMarket(market.pk);
+    assert.ok(voidedMarket.marketStatus.readyToVoid);
+  });
 });

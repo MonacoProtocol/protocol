@@ -711,6 +711,26 @@ pub struct UpdateMarketWithRequestQueue<'info> {
 }
 
 #[derive(Accounts)]
+pub struct VoidMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        seeds = [
+            b"order_request_queue".as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+    )]
+    pub order_request_queue: Option<Account<'info, MarketOrderRequestQueue>>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 pub struct OpenMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,

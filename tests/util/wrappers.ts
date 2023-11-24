@@ -39,6 +39,7 @@ import {
   findOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
+  MarketAccount,
 } from "../../npm-admin-client";
 import console from "console";
 
@@ -1008,9 +1009,14 @@ export class MonacoMarket {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
-    const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
-    ).data.pda;
+    const market = (await this.monaco
+      .getRawProgram()
+      .account.market.fetch(this.pk)) as MarketAccount;
+
+    const orderRequestQueuePk = market.marketStatus.initializing
+      ? null
+      : (await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk))
+          .data.pda;
 
     await this.monaco.program.methods
       .voidMarket()

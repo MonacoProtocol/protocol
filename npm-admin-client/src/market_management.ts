@@ -6,6 +6,7 @@ import {
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
+  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -563,6 +564,13 @@ export async function voidMarket(
     return response.body;
   }
 
+  const market = (await program.account.market.fetch(
+    marketPk,
+  )) as MarketAccount;
+  const orderRequestQueuePk = market.marketStatus.initializing
+    ? null
+    : (await findOrderRequestQueuePda(program, marketPk)).data.pda;
+
   try {
     const tnxId = await program.methods
       .voidMarket()
@@ -571,9 +579,9 @@ export async function voidMarket(
         marketEscrow: marketEscrow.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
-        orderRequestQueue: (
-          await findOrderRequestQueuePda(program, marketPk)
-        ).data.pda,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        orderRequestQueue: orderRequestQueuePk,
       })
       .rpc();
     response.addResponseData({

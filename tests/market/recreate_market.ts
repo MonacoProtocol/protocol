@@ -219,7 +219,6 @@ describe("Recreate markets", () => {
       marketTypePk,
       marketTypeDiscriminator: "a",
     });
-    await existingMarketWrapper.open();
     await existingMarketWrapper.voidMarket();
     const existingMarket = await monaco.fetchMarket(existingMarketWrapper.pk);
 
@@ -297,7 +296,6 @@ describe("Recreate markets", () => {
       marketTypePk,
       marketTypeValue: "a",
     });
-    await existingMarketWrapper.open();
     await existingMarketWrapper.voidMarket();
     const existingMarket = await monaco.fetchMarket(existingMarketWrapper.pk);
 
