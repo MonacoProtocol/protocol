@@ -15,7 +15,6 @@ import {
   unpublish_market,
   unsuspend_market,
 } from "./update_market_status";
-import { print_market_liquidity } from "./market_liquidity";
 import { print_order } from "./orders";
 import { getAll, getAllMarkets, getAllOrders } from "./get_all";
 import {
@@ -98,9 +97,6 @@ switch (script) {
     break;
   case "unsuspend_market":
     unsuspend_market();
-    break;
-  case "print_market_liquidity":
-    print_market_liquidity();
     break;
   case "getAllOrders":
     getAllOrders();

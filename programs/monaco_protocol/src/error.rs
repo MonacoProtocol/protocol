@@ -294,6 +294,10 @@ pub enum CoreError {
     CloseAccountPayerMismatch,
     #[msg("CloseAccount: Market does not match")]
     CloseAccountMarketMismatch,
-    #[msg("CloseAccount: Market payment queue is not empty.")]
+    #[msg("CloseAccount: Market payment queue is not empty")]
     CloseAccountMarketPaymentQueueNotEmpty,
+    #[msg("CloseAccount: Market matching queue is not empty")]
+    CloseAccountMarketMatchingQueueNotEmpty,
+    #[msg("CloseAccount: Market order request queue is not empty")]
+    CloseAccountOrderRequestQueueNotEmpty,
 }

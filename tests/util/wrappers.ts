@@ -40,6 +40,7 @@ import {
   findMarketMatchingQueuePda,
   findPriceLadderPda,
 } from "../../npm-admin-client";
+import console from "console";
 
 const { SystemProgram } = anchor.web3;
 
@@ -336,21 +337,6 @@ export class Monaco {
       marketPk,
     );
 
-    const matchingQueuePk = await findMarketMatchingQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const commissionQueuePk = await findCommissionPaymentsQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const orderRequestQueuePk = await findOrderRequestQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
     // invoke core program to call operations required for creating an order
     await this.program.methods
       .createMarket(
@@ -371,9 +357,6 @@ export class Monaco {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
-        matchingQueue: matchingQueuePk.data.pda,
-        commissionPaymentQueue: commissionQueuePk.data.pda,
-        orderRequestQueue: orderRequestQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -477,6 +460,21 @@ export class Monaco {
           options.priceLadder,
         );
       }),
+    );
+
+    const matchingQueuePk = await findMarketMatchingQueuePda(
+      this.program as Program,
+      marketPk,
+    );
+
+    const commissionQueuePk = await findCommissionPaymentsQueuePda(
+      this.program as Program,
+      marketPk,
+    );
+
+    const orderRequestQueuePk = await findOrderRequestQueuePda(
+      this.program as Program,
+      marketPk,
     );
 
     const bmarket = new MonacoMarket(
@@ -1123,11 +1121,15 @@ export class MonacoMarket {
       .openMarket()
       .accounts({
         market: this.pk,
+        matchingQueue: this.matchingQueuePk,
+        commissionPaymentQueue: this.paymentsQueuePk,
+        orderRequestQueue: this.orderRequestQueuePk,
         authorisedOperators:
           await this.monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
@@ -1249,6 +1251,20 @@ export class MonacoMarket {
             outcomeIndex,
           )
         ).data.pda,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async closeMarketQueues() {
+    await this.monaco.program.methods
+      .closeMarketQueues()
+      .accounts({
+        market: this.pk,
+        matchingQueue: this.matchingQueuePk,
+        commissionPaymentQueue: this.paymentsQueuePk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        authority: this.marketAuthority.publicKey,
       })
       .rpc()
       .catch((e) => console.log(e));

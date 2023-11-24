@@ -12,6 +12,7 @@ import {
   Orders,
   Trades,
 } from "../../npm-client/src/";
+import console from "console";
 
 describe("End to end test of", () => {
   it("basic lifecycle of inplay market", async () => {
@@ -182,7 +183,7 @@ describe("End to end test of", () => {
     await market.completeSettlement();
     const marketAccount = await market.getAccount();
     assert.equal(marketAccount.unsettledAccountsCount, 0);
-    assert.equal(marketAccount.unclosedAccountsCount, 22);
+    assert.equal(marketAccount.unclosedAccountsCount, 25);
 
     // Close accounts
     await market.readyToClose();
@@ -288,14 +289,23 @@ describe("End to end test of", () => {
       });
 
     await monaco.program.methods
+      .closeMarketQueues()
+      .accounts({
+        market: market.pk,
+        matchingQueue: market.matchingQueuePk,
+        commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
+        authority: monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+
+    await monaco.program.methods
       .closeMarket()
       .accounts({
         market: market.pk,
         authority: monaco.operatorPk,
         marketEscrow: market.escrowPk,
-        matchingQueue: market.matchingQueuePk,
-        commissionPaymentQueue: market.paymentsQueuePk,
-        orderRequestQueue: market.orderRequestQueuePk,
       })
       .rpc()
       .catch((e) => {

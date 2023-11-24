@@ -13,7 +13,12 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { findEscrowPda, findOrderRequestQueuePda } from "./market_helpers";
+import {
+  findCommissionPaymentsQueuePda,
+  findEscrowPda,
+  findMarketMatchingQueuePda,
+  findOrderRequestQueuePda,
+} from "./market_helpers";
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -447,11 +452,23 @@ export async function openMarket(
     return response.body;
   }
 
+  const matchingQueue = await findMarketMatchingQueuePda(program, marketPk);
+
+  const commissionQueue = await findCommissionPaymentsQueuePda(
+    program,
+    marketPk,
+  );
+
+  const orderRequestQueue = await findOrderRequestQueuePda(program, marketPk);
+
   try {
     const tnxId = await program.methods
       .openMarket()
       .accounts({
         market: marketPk,
+        matchingQueue: matchingQueue.data.pda,
+        commissionPaymentQueue: commissionQueue.data.pda,
+        orderRequestQueue: orderRequestQueue.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
       })
