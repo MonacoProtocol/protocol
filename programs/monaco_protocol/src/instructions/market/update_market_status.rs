@@ -1,15 +1,21 @@
-use crate::context::UpdateMarket;
-use crate::state::market_matching_queue_account::MarketMatchingQueue;
-use crate::CompleteMarketSettlement;
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 use solana_program::clock::UnixTimestamp;
 
+use crate::context::UpdateMarket;
 use crate::error::CoreError;
 use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
+use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
+use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
+use crate::CompleteMarketSettlement;
 
-pub fn open(market: &mut Market) -> Result<()> {
+pub fn open(
+    market_pk: &Pubkey,
+    market: &mut Market,
+    matching_queue: &mut MarketMatchingQueue,
+    commission_payment_queue: &mut MarketPaymentsQueue,
+) -> Result<()> {
     require!(
         Initializing.eq(&market.market_status),
         CoreError::OpenMarketNotInitializing
@@ -18,7 +24,32 @@ pub fn open(market: &mut Market) -> Result<()> {
         market.market_outcomes_count > 1,
         CoreError::OpenMarketNotEnoughOutcomes
     );
+
+    intialize_matching_queue(matching_queue, market_pk)?;
+    market.increment_unclosed_accounts_count()?;
+
+    intialize_commission_payments_queue(commission_payment_queue, market_pk)?;
+    market.increment_unclosed_accounts_count()?;
+
     market.market_status = Open;
+    Ok(())
+}
+
+fn intialize_matching_queue(
+    matching_queue: &mut MarketMatchingQueue,
+    market_pk: &Pubkey,
+) -> Result<()> {
+    matching_queue.market = *market_pk;
+    matching_queue.matches = MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
+    Ok(())
+}
+
+fn intialize_commission_payments_queue(
+    payments_queue: &mut MarketPaymentsQueue,
+    market_pk: &Pubkey,
+) -> Result<()> {
+    payments_queue.market = *market_pk;
+    payments_queue.payment_queue = PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH);
     Ok(())
 }
 
@@ -27,6 +58,7 @@ pub fn void(market: &mut Market, void_time: UnixTimestamp) -> Result<()> {
         Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
         CoreError::VoidMarketNotInitializingOrOpen
     );
+
     market.market_settle_timestamp = Option::from(void_time);
     market.market_status = ReadyToVoid;
     Ok(())
@@ -132,9 +164,10 @@ mod tests {
     use crate::state::market_matching_queue_account::{
         MarketMatchingQueue, MatchingQueue, OrderMatched,
     };
+    use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
     use crate::Market;
     use anchor_lang::error;
-    use anchor_lang::prelude::Pubkey;
+    use solana_program::pubkey::Pubkey;
 
     #[test]
     fn settle_market_ok_result() {
@@ -268,8 +301,8 @@ mod tests {
             mint_account: Default::default(),
             market_status: MarketStatus::Open,
             market_type: Default::default(),
-            market_type_discriminator: "".to_string(),
-            market_type_value: "".to_string(),
+            market_type_discriminator: None,
+            market_type_value: None,
             version: 0,
             decimal_limit: 0,
             published: false,
@@ -307,6 +340,7 @@ mod tests {
 
     #[test]
     fn open_market_ok_result() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -334,15 +368,36 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let matching_queue = &mut MarketMatchingQueue {
+            market: Pubkey::default(),
+            matches: MatchingQueue::new(1),
+        };
+        let payments_queue = &mut MarketPaymentsQueue {
+            market: Pubkey::default(),
+            payment_queue: PaymentQueue::new(1),
+        };
 
-        let result = open(&mut market);
+        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
 
         assert!(result.is_ok());
-        assert_eq!(MarketStatus::Open, market.market_status)
+        assert_eq!(MarketStatus::Open, market.market_status);
+
+        assert_eq!(matching_queue.market, market_pk);
+        assert_eq!(payments_queue.market, market_pk);
+
+        assert_eq!(
+            matching_queue.matches.size(),
+            MarketMatchingQueue::QUEUE_LENGTH as u32
+        );
+        assert_eq!(
+            payments_queue.payment_queue.size(),
+            MarketPaymentsQueue::QUEUE_LENGTH as u32
+        );
     }
 
     #[test]
     fn open_market_not_intializing() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -370,8 +425,16 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let matching_queue = &mut MarketMatchingQueue {
+            market: market_pk,
+            matches: MatchingQueue::new(1),
+        };
+        let payments_queue = &mut MarketPaymentsQueue {
+            market: market_pk,
+            payment_queue: PaymentQueue::new(1),
+        };
 
-        let result = open(&mut market);
+        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotInitializing));
@@ -380,6 +443,7 @@ mod tests {
 
     #[test]
     fn open_market_not_enough_outcomes() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -407,8 +471,16 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let matching_queue = &mut MarketMatchingQueue {
+            market: market_pk,
+            matches: MatchingQueue::new(1),
+        };
+        let payments_queue = &mut MarketPaymentsQueue {
+            market: market_pk,
+            payment_queue: PaymentQueue::new(1),
+        };
 
-        let result = open(&mut market);
+        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotEnoughOutcomes));

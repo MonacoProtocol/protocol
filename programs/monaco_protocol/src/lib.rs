@@ -415,7 +415,7 @@ pub mod monaco_protocol {
         instructions::market::move_market_to_inplay(market)
     }
 
-    pub fn open_market(ctx: Context<UpdateMarket>) -> Result<()> {
+    pub fn open_market(ctx: Context<OpenMarket>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -425,7 +425,12 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::open(&mut ctx.accounts.market)
+        instructions::market::open(
+            &ctx.accounts.market.key(),
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.matching_queue,
+            &mut ctx.accounts.commission_payment_queue,
+        )
     }
 
     pub fn settle_market(ctx: Context<SettleMarket>, winning_outcome_index: u16) -> Result<()> {
@@ -587,10 +592,17 @@ pub mod monaco_protocol {
         instructions::close::close_market_child_account(&mut ctx.accounts.market)
     }
 
+    pub fn close_market_queues(ctx: Context<CloseMarketQueues>) -> Result<()> {
+        instructions::close::close_market_queues(
+            &mut ctx.accounts.market,
+            &ctx.accounts.commission_payment_queue.payment_queue,
+            &ctx.accounts.matching_queue.matches,
+        )
+    }
+
     pub fn close_market(ctx: Context<CloseMarket>) -> Result<()> {
         instructions::close::close_market(
             &ctx.accounts.market.market_status,
-            ctx.accounts.commission_payment_queue.payment_queue.len(),
             ctx.accounts.market.unclosed_accounts_count,
         )?;
 

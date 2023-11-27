@@ -568,28 +568,6 @@ pub struct CreateMarket<'info> {
         token::authority = escrow
     )]
     pub escrow: Account<'info, TokenAccount>,
-    #[account(
-        init,
-        seeds = [
-            b"matching".as_ref(),
-            market.key().as_ref(),
-        ],
-        bump,
-        payer = market_operator,
-        space = MarketMatchingQueue::SIZE
-    )]
-    pub matching_queue: Box<Account<'info, MarketMatchingQueue>>,
-    #[account(
-        init,
-        seeds = [
-            b"commission_payments".as_ref(),
-            market.key().as_ref(),
-        ],
-        bump,
-        payer = market_operator,
-        space = MarketPaymentsQueue::SIZE
-    )]
-    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
 
     pub market_type: Account<'info, MarketType>,
 
@@ -722,6 +700,42 @@ pub struct UpdateMarket<'info> {
     pub market_operator: Signer<'info>,
     #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
     pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct OpenMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+
+    #[account(
+        init,
+        seeds = [
+            b"matching".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketMatchingQueue::SIZE
+    )]
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
+    #[account(
+        init,
+        seeds = [
+            b"commission_payments".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketPaymentsQueue::SIZE
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -915,6 +929,29 @@ pub struct CloseMarketOutcome<'info> {
 }
 
 #[derive(Accounts)]
+pub struct CloseMarketQueues<'info> {
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+    #[account(
+        mut,
+        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+    )]
+    pub market: Account<'info, Market>,
+    #[account(mut)]
+    pub authority: SystemAccount<'info>,
+}
+
+#[derive(Accounts)]
 pub struct CloseMarket<'info> {
     #[account(
         mut,
@@ -930,22 +967,6 @@ pub struct CloseMarket<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        has_one = market @ CoreError::CloseAccountMarketMismatch,
-        seeds = [b"matching".as_ref(), market.key().as_ref()],
-        bump,
-        close = authority,
-    )]
-    pub matching_queue: Account<'info, MarketMatchingQueue>,
-    #[account(
-        mut,
-        has_one = market @ CoreError::CloseAccountMarketMismatch,
-        seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
-        bump,
-        close = authority,
-    )]
-    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,
