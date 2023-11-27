@@ -3,7 +3,7 @@ import assert from "assert";
 import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   cancelOrder as cancelOrderNpm,
-  cancelOrderRefund,
+  calculateOrderCancellationRefund,
   cancelOrdersForMarket,
 } from "../../npm-client/src/cancel_order";
 import { monaco } from "../util/wrappers";
@@ -164,14 +164,14 @@ describe("NPM client", () => {
       ),
     ]);
     assert.equal(
-      cancelOrderRefund(
+      calculateOrderCancellationRefund(
         order1AccountResponse.data.account,
         marketPositionResponse.data,
       ),
       0, // cancelation does not refund due to risk of 2nd order
     );
     assert.equal(
-      cancelOrderRefund(
+      calculateOrderCancellationRefund(
         order2AccountResponse.data.account,
         marketPositionResponse.data,
       ),

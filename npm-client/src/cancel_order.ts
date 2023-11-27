@@ -117,19 +117,22 @@ export async function cancelOrdersForMarket(
   return response.body;
 }
 
-/**
- * For the provided order and market position calculate amount that will be refunded if order gets canceled.
+export function calculateOrderCancellationRefund(
+  /**
+   * For the provided order and market position calculate amount that will be refunded if order gets canceled.
 
- * @param order {Order} order to be canceled
- * @param marketPosition {MarketPosition} market position of the order's owner
- * @returns the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
- *
- * @example
- *
- * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const cancelledOrders = await cancelOrdersForMarket(program, marketPk)
- */
-export function cancelOrderRefund(
+   * @param order {Order} order to be canceled
+   * @param marketPosition {MarketPosition} market position of the order's owner
+   * @returns the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
+   *
+   * @example
+   *
+   * const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+   * const order = await getOrder(program, orderPk);
+   * const marketPositionPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+   * const marketPosition = await getMarketPosition(program, marketPositionPk);
+   * const refundAmount = await calculateOrderCancellationRefund(order, marketPosition);
+   */
   order: Order,
   marketPosition: MarketPosition,
 ): number {
