@@ -264,7 +264,6 @@ mod tests {
             voided_stake: 0u64,
             expected_price: order_request.expected_price,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0u64,
             payout: 0u64,
             payer: Pubkey::new_unique(),

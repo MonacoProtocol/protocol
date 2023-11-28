@@ -27,7 +27,6 @@ export type Order = {
   voidedStake: BN;
   expectedPrice: number;
   creationTimestamp: BN;
-  delayExpirationTimestamp: BN;
   stakeUnmatched: BN;
   payout: BN;
   payer: PublicKey;

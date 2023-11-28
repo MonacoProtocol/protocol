@@ -6,7 +6,6 @@ use crate::instructions::market::verify_market_authority;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
-
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;

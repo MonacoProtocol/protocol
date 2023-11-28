@@ -51,18 +51,12 @@ export type MarketAccounts = {
   markets: GetAccount<MarketAccount>[];
 };
 
-export type MatchingQueueItem = {
-  order: PublicKey;
-  delayExpirationTimestamp: BN;
-  liquidityToAdd: BN;
-};
-
 export type MarketMatchingPoolAccount = {
   market: PublicKey;
   orders: {
     front: number;
     len: number;
-    items: MatchingQueueItem[];
+    items: PublicKey[];
   };
   inplay: boolean;
   liquidityAmount: BN;

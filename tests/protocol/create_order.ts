@@ -108,7 +108,7 @@ describe("Protocol - Create Order", () => {
     );
     assert.equal(marketMatchingPool.matchedAmount.toNumber(), 0);
     assert.equal(
-      marketMatchingPool.orders.items[0].order.toBase58(),
+      marketMatchingPool.orders.items[0].toBase58(),
       orderPk.toBase58(),
     );
 
@@ -489,7 +489,7 @@ describe("Protocol - Create Order", () => {
     const matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
       matchingPoolPda.data.pda,
     );
-    assert.equal(matchingPool.orders.items[0].order.toBase58(), orderPk);
+    assert.equal(matchingPool.orders.items[0].toBase58(), orderPk);
     assert.equal(
       matchingPool.liquidityAmount.toNumber(),
       stakeInteger.toNumber(),

@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
-use crate::error::CoreError;
 use crate::instructions::current_timestamp;
 use crate::state::market_account::*;
 use crate::state::market_order_request_queue::OrderRequest;
@@ -31,14 +30,6 @@ pub fn initialize_order(
 
     order.product = order_request.product;
     order.product_commission_rate = order_request.product_commission_rate;
-
-    // TODO refactor out inplay logic from orders (MP-247)
-    order.delay_expiration_timestamp = match market.is_inplay() {
-        true => now
-            .checked_add(market.inplay_order_delay as i64)
-            .ok_or(CoreError::ArithmeticError),
-        false => Ok(0),
-    }?;
 
     Ok(())
 }

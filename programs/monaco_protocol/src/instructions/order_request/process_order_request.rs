@@ -31,6 +31,7 @@ pub fn process_order_request(
     }
 
     initialize_order(order, market, fee_payer, *order_request)?;
+    market.increment_account_counts()?;
 
     // pools are always initialized with default items, so if this pool is new, initialize it
     if matching_pool.orders.size() == 0 {
@@ -39,8 +40,6 @@ pub fn process_order_request(
     }
 
     matching::update_matching_pool_with_new_order(market, matching_pool, order)?;
-
-    market.increment_account_counts()?;
 
     Ok(())
 }

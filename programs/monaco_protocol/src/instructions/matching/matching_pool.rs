@@ -70,7 +70,7 @@ pub fn update_matching_pool_with_new_order(
 
     market_matching_pool
         .orders
-        .enqueue_pubkey(order_account.key())
+        .enqueue(order_account.key())
         .ok_or(CoreError::MatchingQueueIsFull)?;
 
     Ok(())
@@ -113,7 +113,7 @@ fn update_matching_pool_with_matched_order(
     match front_of_pool {
         Some(pool_item) => {
             require!(
-                matched_order == pool_item.order,
+                &matched_order == pool_item,
                 CoreError::OrderNotAtFrontOfQueue
             );
         }
@@ -136,7 +136,7 @@ pub fn update_on_cancel(
     order: &Account<Order>,
     matching_pool: &mut MarketMatchingPool,
 ) -> Result<()> {
-    if matching_pool.orders.remove_pubkey(&order.key()).is_some() {
+    if matching_pool.orders.remove(&order.key()).is_some() {
         matching_pool.liquidity_amount = matching_pool
             .liquidity_amount
             .checked_sub(order.voided_stake)

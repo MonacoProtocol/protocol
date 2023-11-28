@@ -268,7 +268,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),

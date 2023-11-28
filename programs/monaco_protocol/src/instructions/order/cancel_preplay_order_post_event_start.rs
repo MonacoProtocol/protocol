@@ -43,7 +43,7 @@ pub fn cancel_preplay_order_post_event_start(
 
     if let Some(order_request) = request_queue.order_requests.peek_front() {
         require!(
-            market.event_start_timestamp < order_request.creation_timestamp,
+            market.event_start_timestamp <= order_request.creation_timestamp,
             CoreError::CancelationPreplayOrderRequestsExist
         );
     }
@@ -109,7 +109,6 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
         let order_request_queue = MarketOrderRequestQueue {
@@ -181,7 +180,6 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
         let order_request_queue = &mut MarketOrderRequestQueue {
@@ -267,7 +265,6 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
         let order_request_queue = &mut MarketOrderRequestQueue {
@@ -336,7 +333,6 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
         let order_request_queue = &mut MarketOrderRequestQueue {
