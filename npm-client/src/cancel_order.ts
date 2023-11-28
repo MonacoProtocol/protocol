@@ -176,9 +176,9 @@ function totalExposure(
   );
 
   const totalExposures = Array.from(
-    { length: minLength },
-    (_, index) => matchedExposures[index] + unmatchedExposures[index],
+    new Array(minLength), (_, index) => matchedExposures[index] + unmatchedExposures[index]
   );
+
 
   return Math.max(...totalExposures);
 }
