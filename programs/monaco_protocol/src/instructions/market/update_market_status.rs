@@ -441,7 +441,7 @@ mod tests {
             MarketPaymentsQueue::QUEUE_LENGTH as u32
         );
         assert_eq!(
-            order_request_queue.order_requests.size(),
+            order_request_queue.order_requests.capacity(),
             MarketOrderRequestQueue::QUEUE_LENGTH as u32
         );
     }

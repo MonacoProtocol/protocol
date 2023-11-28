@@ -45,20 +45,22 @@ impl MarketMatchingPool {
 pub struct Cirque {
     front: u32,
     len: u32,
+    capacity: u32,
     items: Vec<Pubkey>,
 }
 
 impl Cirque {
     pub const fn size_for(length: u32) -> usize {
-        (U32_SIZE  * 2) + // front and len
+        (U32_SIZE  * 3) + // front, len & capacity
         vec_size(PUB_KEY_SIZE, length as usize) // items
     }
 
-    pub fn new(size: u32) -> Cirque {
+    pub fn new(capacity: u32) -> Cirque {
         Cirque {
             front: 0,
             len: 0,
-            items: vec![Pubkey::default(); size as usize],
+            capacity,
+            items: Vec::with_capacity(capacity as usize),
         }
     }
 
@@ -72,22 +74,22 @@ impl Cirque {
     /*
     Capacity of the queue
      */
-    pub fn size(&self) -> u32 {
-        self.items.len() as u32
+    pub fn capacity(&self) -> u32 {
+        self.capacity
     }
 
     pub fn peek(&mut self, index: u32) -> Option<&Pubkey> {
         if index >= self.len {
             None
         } else {
-            let size = self.size();
-            Some(&self.items[((self.front + index) % size) as usize])
+            let capacity = self.capacity();
+            Some(&self.items[((self.front + index) % capacity) as usize])
         }
     }
 
     fn back(&self) -> u32 {
-        // #[soteria(ignore)] 0 <= front < size() AND 0 <= len < size() AND size() == QUEUE_LENGTH << u32::MAX
-        (self.front + self.len) % self.size()
+        // #[soteria(ignore)] 0 <= front < capacity() AND 0 <= len < capacity() AND capacity() == QUEUE_LENGTH << u32::MAX
+        (self.front + self.len) % self.capacity()
     }
 
     pub fn set_length_to_zero(&mut self) {
@@ -95,13 +97,17 @@ impl Cirque {
     }
 
     pub fn enqueue(&mut self, item: Pubkey) -> Option<u32> {
-        if self.len == self.size() {
+        if self.len == self.capacity() {
             None
         } else {
             let old_back = self.back();
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
-            self.items[old_back as usize] = item;
+            if self.items.len() < self.capacity() as usize {
+                self.items.push(item);
+            } else {
+                self.items[old_back as usize] = item;
+            }
             Some(old_back)
         }
     }
@@ -111,7 +117,7 @@ impl Cirque {
             None
         } else {
             let old_front = self.front;
-            self.front = (old_front + 1) % self.size();
+            self.front = (old_front + 1) % self.capacity();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
             Some(&self.items[old_front as usize])
@@ -124,7 +130,7 @@ impl Cirque {
         }
 
         let front_index = self.front as usize;
-        let last_index = ((self.front + self.len - 1) % self.size()) as usize;
+        let last_index = ((self.front + self.len - 1) % self.capacity()) as usize;
 
         // if the queue can be treated as a regular array
         if last_index >= front_index {
@@ -135,7 +141,7 @@ impl Cirque {
                 let index = front_index + relative_index;
                 let item = self.items[index];
                 if index == front_index {
-                    self.front = (front_index + 1) as u32 % self.size();
+                    self.front = (front_index + 1) as u32 % self.capacity();
                 } else if index < last_index {
                     self.items.copy_within((index + 1)..=last_index, index);
                 }
@@ -165,7 +171,7 @@ impl Cirque {
 
                 // No need to move any data around, just move front one to the right and decrement len
                 if index == front_index {
-                    self.front = (front_index + 1) as u32 % self.size();
+                    self.front = (front_index + 1) as u32 % self.capacity();
                 } else {
                     let items = &mut self.items;
                     let length = items.len();

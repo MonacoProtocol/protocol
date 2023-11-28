@@ -70,20 +70,22 @@ pub struct OrderRequestData {
 pub struct OrderRequestQueue {
     front: u32,
     len: u32,
+    capacity: u32,
     items: Vec<OrderRequest>,
 }
 
 impl OrderRequestQueue {
     pub const fn size_for(length: u32) -> usize {
-        (U32_SIZE  * 2) + // front and len
+        (U32_SIZE  * 3) + // front, len & capacity
         vec_size(OrderRequest::SIZE, length as usize) // items
     }
 
-    pub fn new(size: u32) -> OrderRequestQueue {
+    pub fn new(capacity: u32) -> OrderRequestQueue {
         OrderRequestQueue {
             front: 0,
             len: 0,
-            items: vec![OrderRequest::default(); size as usize],
+            capacity,
+            items: Vec::with_capacity(capacity as usize),
         }
     }
 
@@ -97,16 +99,16 @@ impl OrderRequestQueue {
     /*
     Capacity of the queue
      */
-    pub fn size(&self) -> u32 {
-        self.items.len() as u32
+    pub fn capacity(&self) -> u32 {
+        self.capacity
     }
 
     pub fn peek(&self, index: u32) -> Option<&OrderRequest> {
         if index >= self.len {
             None
         } else {
-            let size = self.size();
-            Some(&self.items[((self.front + index) % size) as usize])
+            let capacity = self.capacity();
+            Some(&self.items[((self.front + index) % capacity) as usize])
         }
     }
 
@@ -119,18 +121,22 @@ impl OrderRequestQueue {
     }
 
     fn back(&self) -> u32 {
-        // #[soteria(ignore)] 0 <= front < size() AND 0 <= len < size() AND size() == QUEUE_LENGTH << u32::MAX
-        (self.front + self.len) % self.size()
+        // #[soteria(ignore)] 0 <= front < capacity() AND 0 <= len < capacity() AND capacity() == QUEUE_LENGTH << u32::MAX
+        (self.front + self.len) % self.capacity()
     }
 
     pub fn enqueue(&mut self, item: OrderRequest) -> Option<u32> {
-        if self.len == self.size() {
+        if self.len == self.capacity() {
             None
         } else {
             let old_back = self.back();
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
-            self.items[old_back as usize] = item;
+            if self.items.len() < self.capacity() as usize {
+                self.items.push(item);
+            } else {
+                self.items[old_back as usize] = item;
+            }
             Some(old_back)
         }
     }
@@ -140,7 +146,7 @@ impl OrderRequestQueue {
             None
         } else {
             let old_front = self.front;
-            self.front = (old_front + 1) % self.size();
+            self.front = (old_front + 1) % self.capacity();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
             Some(&mut self.items[old_front as usize])

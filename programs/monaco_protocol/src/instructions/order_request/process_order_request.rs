@@ -34,7 +34,7 @@ pub fn process_order_request(
     market.increment_account_counts()?;
 
     // pools are always initialized with default items, so if this pool is new, initialize it
-    if matching_pool.orders.size() == 0 {
+    if matching_pool.orders.capacity() == 0 {
         market::initialize_market_matching_pool(matching_pool, market, order)?;
         market.increment_unclosed_accounts_count()?;
     }
