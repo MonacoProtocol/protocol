@@ -32,6 +32,7 @@ import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
+  findMarketLiquiditiesPda,
   findCommissionPaymentsQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
@@ -458,6 +459,11 @@ export class Monaco {
       }),
     );
 
+    const liquiditiesPk = await findMarketLiquiditiesPda(
+      this.program as Program,
+      marketPk,
+    );
+
     const matchingQueuePk = await findMarketMatchingQueuePda(
       this.program as Program,
       marketPk,
@@ -473,6 +479,7 @@ export class Monaco {
       externalPrograms,
       marketPk,
       marketEscrowPk.data.pda,
+      liquiditiesPk.data.pda,
       matchingQueuePk.data.pda,
       commissionQueuePk.data.pda,
       outcomePks,
@@ -533,6 +540,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly liquiditiesPk: PublicKey;
   readonly matchingQueuePk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
@@ -558,6 +566,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    liquiditiesPk: PublicKey,
     matchingQueuePk: PublicKey,
     paymentsQueuePk: PublicKey,
     outcomePks: PublicKey[],
@@ -575,6 +584,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.liquiditiesPk = liquiditiesPk;
     this.matchingQueuePk = matchingQueuePk;
     this.paymentsQueuePk = paymentsQueuePk;
     this.outcomePks = outcomePks;
@@ -1030,6 +1040,7 @@ export class MonacoMarket {
       .openMarket()
       .accounts({
         market: this.pk,
+        liquidities: this.liquiditiesPk,
         matchingQueue: this.matchingQueuePk,
         commissionPaymentQueue: this.paymentsQueuePk,
         authorisedOperators:
@@ -1169,6 +1180,7 @@ export class MonacoMarket {
       .closeMarketQueues()
       .accounts({
         market: this.pk,
+        liquidities: this.liquiditiesPk,
         matchingQueue: this.matchingQueuePk,
         commissionPaymentQueue: this.paymentsQueuePk,
         authority: this.marketAuthority.publicKey,

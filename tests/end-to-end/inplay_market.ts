@@ -186,7 +186,7 @@ describe("End to end test of", () => {
     await market.completeSettlement();
     const marketAccount = await market.getAccount();
     assert.equal(marketAccount.unsettledAccountsCount, 0);
-    assert.equal(marketAccount.unclosedAccountsCount, 24);
+    assert.equal(marketAccount.unclosedAccountsCount, 25);
 
     // Close accounts
     await market.readyToClose();
@@ -295,6 +295,7 @@ describe("End to end test of", () => {
       .closeMarketQueues()
       .accounts({
         market: market.pk,
+        liquidities: market.liquiditiesPk,
         matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: monaco.operatorPk,

@@ -709,7 +709,7 @@ pub struct OpenMarket<'info> {
     pub market: Account<'info, Market>,
 
     #[account(
-    init,
+        init,
         seeds = [
             b"liquidities".as_ref(),
             market.key().as_ref(),

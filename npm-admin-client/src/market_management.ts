@@ -16,6 +16,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   findCommissionPaymentsQueuePda,
   findEscrowPda,
+  findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
 } from "./market_helpers";
 
@@ -448,6 +449,7 @@ export async function openMarket(
     return response.body;
   }
 
+  const liquidities = await findMarketLiquiditiesPda(program, marketPk);
   const matchingQueue = await findMarketMatchingQueuePda(program, marketPk);
 
   const commissionQueue = await findCommissionPaymentsQueuePda(
@@ -460,6 +462,7 @@ export async function openMarket(
       .openMarket()
       .accounts({
         market: marketPk,
+        liquidities: liquidities.data.pda,
         matchingQueue: matchingQueue.data.pda,
         commissionPaymentQueue: commissionQueue.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
