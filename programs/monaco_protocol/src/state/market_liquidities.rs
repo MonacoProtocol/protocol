@@ -205,11 +205,7 @@ mod total_exposure_tests {
 
     #[test]
     fn test_add_liquidity() {
-        let mut market_liquidities: MarketLiquidities = MarketLiquidities {
-            market: Pubkey::default(),
-            liquidities_for: vec![],
-            liquidities_against: vec![],
-        };
+        let mut market_liquidities = mock_market_liquidities(Pubkey::default());
 
         market_liquidities.add_liquidity_for(0, 2.111, 501).unwrap();
         market_liquidities.add_liquidity_for(0, 2.111, 500).unwrap();
