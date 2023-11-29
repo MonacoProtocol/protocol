@@ -58,7 +58,10 @@ export async function buildOrderInstructionUIStake(
 }
 
 /**
- * Constructs the instruction required to perform a create order transaction using the raw token value for the order stake.
+ * Constructs a create order request instruction using the raw token value for the order stake.
+ *
+ * No order account will be created until the order request is sent as part of a transaction, and then processed by the protocol,
+ * but the orderPk returned by this function will match the PDA of the order account to be created.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for

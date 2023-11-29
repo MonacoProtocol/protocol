@@ -174,7 +174,6 @@ pub struct DequeueOrderRequest<'info> {
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
-    #[account(mut)]
     pub market: Account<'info, Market>,
 
     #[account(
