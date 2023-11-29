@@ -834,6 +834,40 @@ export class MonacoMarket {
     return await processOrderRequests(this.pk);
   }
 
+  async dequeueOrderRequest() {
+    const orderRequestQueue =
+      await this.monaco.program.account.marketOrderRequestQueue.fetch(
+        this.orderRequestQueuePk,
+      );
+    const firstOrderRequest =
+      orderRequestQueue.orderRequests.items[
+        orderRequestQueue.orderRequests.front
+      ];
+
+    await monaco.program.methods
+      .dequeueOrderRequest()
+      .accounts({
+        orderRequestQueue: this.orderRequestQueuePk,
+        marketPosition: await this.cacheMarketPositionPk(
+          firstOrderRequest.purchaser,
+        ),
+        purchaserToken: await this.cachePurchaserTokenPk(
+          firstOrderRequest.purchaser,
+        ),
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async cancel(orderPk: PublicKey, purchaser: Keypair) {
     const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(

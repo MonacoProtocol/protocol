@@ -1,5 +1,6 @@
 use crate::error::CoreError;
 use crate::instructions::calculate_risk_from_stake;
+use crate::state::market_order_request_queue::OrderRequest;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 use anchor_lang::prelude::*;
@@ -15,6 +16,34 @@ pub fn update_on_order_cancellation(
         false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
     };
 
+    get_exposure_change(market_position, outcome_index, for_outcome, order_exposure)
+}
+
+pub fn update_on_order_request_cancellation(
+    market_position: &mut MarketPosition,
+    order_request: &OrderRequest,
+) -> Result<u64> {
+    let outcome_index = order_request.market_outcome_index as usize;
+    let for_outcome = order_request.for_outcome;
+    let order_request_exposure = match for_outcome {
+        true => order_request.stake,
+        false => calculate_risk_from_stake(order_request.stake, order_request.expected_price),
+    };
+
+    get_exposure_change(
+        market_position,
+        outcome_index,
+        for_outcome,
+        order_request_exposure,
+    )
+}
+
+fn get_exposure_change(
+    market_position: &mut MarketPosition,
+    outcome_index: usize,
+    for_outcome: bool,
+    order_exposure: u64,
+) -> Result<u64> {
     let total_exposure_before = market_position.total_exposure();
 
     // update unmatched_exposures

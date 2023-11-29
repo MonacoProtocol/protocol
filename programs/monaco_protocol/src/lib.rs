@@ -73,6 +73,30 @@ pub mod monaco_protocol {
         )
     }
 
+    pub fn dequeue_order_request(ctx: Context<DequeueOrderRequest>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let refund_amount = instructions::order_request::dequeue_order_request(
+            &mut ctx.accounts.order_request_queue,
+            &mut ctx.accounts.market_position,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )
+    }
+
     pub fn move_market_matching_pool_to_inplay(
         ctx: Context<UpdateMarketMatchingPool>,
     ) -> Result<()> {
