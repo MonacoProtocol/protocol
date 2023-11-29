@@ -9,6 +9,7 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::rent::Rent;
 
+use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_type::MarketType;
 use crate::state::payments_queue::MarketPaymentsQueue;
 use crate::state::price_ladder::PriceLadder;
@@ -708,6 +709,17 @@ pub struct OpenMarket<'info> {
     pub market: Account<'info, Market>,
 
     #[account(
+    init,
+        seeds = [
+            b"liquidities".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketLiquidities::SIZE
+    )]
+    pub liquidities: Account<'info, MarketLiquidities>,
+    #[account(
         init,
         seeds = [
             b"matching".as_ref(),
@@ -915,6 +927,12 @@ pub struct CloseMarketOutcome<'info> {
 
 #[derive(Accounts)]
 pub struct CloseMarketQueues<'info> {
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub liquidities: Account<'info, MarketLiquidities>,
     #[account(
         mut,
         has_one = market @ CoreError::CloseAccountMarketMismatch,

@@ -7,12 +7,14 @@ use solana_program::clock::UnixTimestamp;
 use crate::error::CoreError;
 use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
+use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 
 pub fn open(
     market_pk: &Pubkey,
     market: &mut Market,
+    liquidities: &mut MarketLiquidities,
     matching_queue: &mut MarketMatchingQueue,
     commission_payment_queue: &mut MarketPaymentsQueue,
 ) -> Result<()> {
@@ -25,6 +27,9 @@ pub fn open(
         CoreError::OpenMarketNotEnoughOutcomes
     );
 
+    intialize_liquidities(liquidities, market_pk)?;
+    market.increment_unclosed_accounts_count()?;
+
     intialize_matching_queue(matching_queue, market_pk)?;
     market.increment_unclosed_accounts_count()?;
 
@@ -32,6 +37,13 @@ pub fn open(
     market.increment_unclosed_accounts_count()?;
 
     market.market_status = Open;
+    Ok(())
+}
+
+fn intialize_liquidities(liquidities: &mut MarketLiquidities, market_pk: &Pubkey) -> Result<()> {
+    liquidities.market = *market_pk;
+    liquidities.liquidities_for = Vec::new();
+    liquidities.liquidities_against = Vec::new();
     Ok(())
 }
 
@@ -156,6 +168,7 @@ mod tests {
     use crate::error::CoreError;
     use crate::instructions::market::{open, settle, void};
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
     use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
     use crate::Market;
@@ -309,6 +322,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let liquidities = &mut mock_market_liquidities(market_pk);
         let matching_queue = &mut MarketMatchingQueue {
             market: Pubkey::default(),
             matches: MatchingQueue::new(1),
@@ -318,7 +332,13 @@ mod tests {
             payment_queue: PaymentQueue::new(1),
         };
 
-        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
+        let result = open(
+            &market_pk,
+            &mut market,
+            liquidities,
+            matching_queue,
+            payments_queue,
+        );
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::Open, market.market_status);
@@ -366,6 +386,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let liquidities = &mut mock_market_liquidities(market_pk);
         let matching_queue = &mut MarketMatchingQueue {
             market: market_pk,
             matches: MatchingQueue::new(1),
@@ -375,7 +396,13 @@ mod tests {
             payment_queue: PaymentQueue::new(1),
         };
 
-        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
+        let result = open(
+            &market_pk,
+            &mut market,
+            liquidities,
+            matching_queue,
+            payments_queue,
+        );
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotInitializing));
@@ -412,6 +439,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let liquidities = &mut mock_market_liquidities(market_pk);
         let matching_queue = &mut MarketMatchingQueue {
             market: market_pk,
             matches: MatchingQueue::new(1),
@@ -421,7 +449,13 @@ mod tests {
             payment_queue: PaymentQueue::new(1),
         };
 
-        let result = open(&market_pk, &mut market, matching_queue, payments_queue);
+        let result = open(
+            &market_pk,
+            &mut market,
+            liquidities,
+            matching_queue,
+            payments_queue,
+        );
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OpenMarketNotEnoughOutcomes));

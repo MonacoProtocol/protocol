@@ -428,6 +428,7 @@ pub mod monaco_protocol {
         instructions::market::open(
             &ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            &mut ctx.accounts.liquidities,
             &mut ctx.accounts.matching_queue,
             &mut ctx.accounts.commission_payment_queue,
         )
@@ -590,6 +591,7 @@ pub mod monaco_protocol {
     pub fn close_market_queues(ctx: Context<CloseMarketQueues>) -> Result<()> {
         instructions::close::close_market_queues(
             &mut ctx.accounts.market,
+            &ctx.accounts.liquidities,
             &ctx.accounts.commission_payment_queue.payment_queue,
             &ctx.accounts.matching_queue.matches,
         )
