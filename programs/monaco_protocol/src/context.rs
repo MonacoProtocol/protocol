@@ -751,6 +751,21 @@ pub struct OpenMarket<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SettleMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        has_one = market @ CoreError::SettlementMarketMismatch,
+    )]
+    pub market_matching_queue: Account<'info, MarketMatchingQueue>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 pub struct UpdateMarketUnauthorized<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,

@@ -15,6 +15,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -39,6 +40,7 @@ describe("Market: update status", () => {
         .settleMarket(winningIndex)
         .accounts({
           market: market.pk,
+          marketMatchingQueue: market.matchingQueuePk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
           marketOperator: monaco.operatorPk,
         })
@@ -63,6 +65,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -99,6 +102,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -137,6 +141,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -199,6 +204,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -262,6 +268,7 @@ describe("Market: update status", () => {
       .settleMarket(1)
       .accounts({
         market: market.pk,
+        marketMatchingQueue: market.matchingQueuePk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
