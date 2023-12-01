@@ -940,6 +940,7 @@ export class MonacoMarket {
       .settleMarket(outcome)
       .accounts({
         market: this.pk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,

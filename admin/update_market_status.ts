@@ -8,6 +8,7 @@ import {
   voidMarket as setMarketReadyToVoidClient,
   setMarketReadyToClose as setMarketReadyToCloseClient,
   updateMarketLocktimeToNow,
+  findMarketMatchingQueuePda,
 } from "../npm-admin-client/src";
 import { checkResponse, getProtocolProgram } from "./util";
 import { PublicKey } from "@solana/web3.js";
@@ -42,8 +43,17 @@ export async function settle_market() {
   const marketPk = new PublicKey(marketID);
 
   const protocolProgram = await getProtocolProgram();
+  const marketMatchingQueuePdaResponse = await findMarketMatchingQueuePda(
+    protocolProgram,
+    marketPk,
+  );
   checkResponse(
-    await settleMarket(protocolProgram, marketPk, winningOutcomeIndex),
+    await settleMarket(
+      protocolProgram,
+      marketPk,
+      marketMatchingQueuePdaResponse.data.pda,
+      winningOutcomeIndex,
+    ),
   );
 }
 

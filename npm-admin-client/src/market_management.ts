@@ -24,18 +24,21 @@ import {
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
+ * @param marketMatchingQueuePk {PublicKey} publicKey of the market's matching queue
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const winningOutcomeIndex = 0
- * const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
+ * const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
  */
 export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
+  marketMatchingQueuePk: PublicKey,
   winningOutcomeIndex: number,
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
@@ -51,6 +54,7 @@ export async function settleMarket(
       .settleMarket(winningOutcomeIndex)
       .accounts({
         market: marketPk,
+        marketMatchingQueue: marketMatchingQueuePk,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
       })

@@ -53,14 +53,16 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
+*   `marketMatchingQueuePk` **PublicKey** {PublicKey} publicKey of the market's matching queue
 *   `winningOutcomeIndex` **[number][43]** {number} index representing the winning outcome of the event associated with the market
 
 ### Examples
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
 const winningOutcomeIndex = 0
-const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
+const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
