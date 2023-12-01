@@ -6,6 +6,7 @@ pub enum CoreError {
     ArithmeticError,
     #[msg("MarketOutcome: update failed")]
     MarketOutcomeUpdateError,
+
     /*
     Order Creation
      */
