@@ -18,11 +18,12 @@ describe("Close market outcome accounts", () => {
       marketOperator,
     );
 
+    await market.open();
+
     const balanceOutcomeCreated = await monaco.provider.connection.getBalance(
       marketOperator.publicKey,
     );
 
-    await market.open();
     await market.settle(0);
     await market.completeSettlement();
     await market.readyToClose();

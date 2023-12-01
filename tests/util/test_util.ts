@@ -273,8 +273,6 @@ export async function createMarket(
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
-      matchingQueue: matchingQueuePda,
-      commissionPaymentQueue: commissionPaymentQueuePda,
     })
     .signers([marketOperator])
     .rpc();
@@ -356,10 +354,20 @@ export async function createMarket(
     );
   }
 
+  const matchingQueuePk = (
+    await findMarketMatchingQueuePda(protocolProgram, marketPda)
+  ).data.pda;
+
+  const commissionQueuePk = (
+    await findCommissionPaymentsQueuePda(protocolProgram, marketPda)
+  ).data.pda;
+
   await protocolProgram.methods
     .openMarket()
     .accounts({
       market: marketPda,
+      matchingQueue: matchingQueuePk,
+      commissionPaymentQueue: commissionQueuePk,
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
     })
