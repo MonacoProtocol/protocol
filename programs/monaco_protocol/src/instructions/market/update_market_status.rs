@@ -1,14 +1,14 @@
-use crate::context::UpdateMarket;
-use crate::CompleteMarketSettlement;
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 use solana_program::clock::UnixTimestamp;
 
+use crate::context::UpdateMarket;
 use crate::error::CoreError;
 use crate::state::market_account::Market;
 use crate::state::market_account::MarketStatus::*;
 use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
+use crate::CompleteMarketSettlement;
 
 pub fn open(
     market_pk: &Pubkey,
@@ -80,6 +80,7 @@ pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
 
 pub fn settle(
     market: &mut Market,
+    market_matching_queue: &MarketMatchingQueue,
     winning_outcome_index: u16,
     settle_time: UnixTimestamp,
 ) -> Result<()> {
@@ -90,6 +91,10 @@ pub fn settle(
     require!(
         winning_outcome_index < market.market_outcomes_count,
         CoreError::SettlementInvalidMarketOutcomeIndex
+    );
+    require!(
+        market_matching_queue.matches.len() == 0_u32,
+        CoreError::SettlementMarketMatchingQueueNotEmpty
     );
 
     market.market_winning_outcome_index = Some(winning_outcome_index);
@@ -156,7 +161,9 @@ mod tests {
     use crate::error::CoreError;
     use crate::instructions::market::{open, settle, void};
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
-    use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
+    use crate::state::market_matching_queue_account::{
+        MarketMatchingQueue, MatchingQueue, OrderMatched,
+    };
     use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
     use crate::Market;
     use anchor_lang::error;
@@ -164,6 +171,7 @@ mod tests {
 
     #[test]
     fn settle_market_ok_result() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -191,10 +199,11 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let market_matching_queue = mock_market_matching_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 0, settle_time);
+        let result = settle(&mut market, &market_matching_queue, 0, settle_time);
 
         assert!(result.is_ok());
         assert_eq!(market.market_status, MarketStatus::ReadyForSettlement)
@@ -202,6 +211,7 @@ mod tests {
 
     #[test]
     fn settle_market_not_open() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -229,10 +239,11 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let market_matching_queue = mock_market_matching_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 0, settle_time);
+        let result = settle(&mut market, &market_matching_queue, 0, settle_time);
 
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::SettlementMarketNotOpen)), result);
@@ -240,6 +251,7 @@ mod tests {
 
     #[test]
     fn settle_market_invalid_outcome_index() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -267,14 +279,61 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
         };
+        let market_matching_queue = mock_market_matching_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = settle(&mut market, 4, settle_time);
+        let result = settle(&mut market, &market_matching_queue, 4, settle_time);
 
         assert!(result.is_err());
         assert_eq!(
             Err(error!(CoreError::SettlementInvalidMarketOutcomeIndex)),
+            result
+        );
+    }
+
+    #[test]
+    fn settle_market_matching_queue_not_empty() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            market_type: Default::default(),
+            market_type_discriminator: None,
+            market_type_value: None,
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 3,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+            inplay_enabled: false,
+            inplay: false,
+            inplay_order_delay: 0,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+        };
+        let mut market_matching_queue = mock_market_matching_queue(market_pk);
+        market_matching_queue
+            .matches
+            .enqueue(OrderMatched::default());
+
+        let settle_time = 1665483869;
+
+        let result = settle(&mut market, &market_matching_queue, 0, settle_time);
+
+        assert!(result.is_err());
+        assert_eq!(
+            Err(error!(CoreError::SettlementMarketMatchingQueueNotEmpty)),
             result
         );
     }
@@ -541,5 +600,12 @@ mod tests {
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
         assert_eq!(expected_error, result)
+    }
+
+    fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
+        MarketMatchingQueue {
+            market: market_pk,
+            matches: MatchingQueue::new(1),
+        }
     }
 }

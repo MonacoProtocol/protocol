@@ -433,7 +433,7 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn settle_market(ctx: Context<UpdateMarket>, winning_outcome_index: u16) -> Result<()> {
+    pub fn settle_market(ctx: Context<SettleMarket>, winning_outcome_index: u16) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -444,7 +444,12 @@ pub mod monaco_protocol {
         )?;
 
         let settle_time = current_timestamp();
-        instructions::market::settle(&mut ctx.accounts.market, winning_outcome_index, settle_time)
+        instructions::market::settle(
+            &mut ctx.accounts.market,
+            &ctx.accounts.market_matching_queue,
+            winning_outcome_index,
+            settle_time,
+        )
     }
 
     pub fn complete_market_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
