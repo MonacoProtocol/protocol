@@ -225,6 +225,55 @@ pub struct CancelOrder<'info> {
 }
 
 #[derive(Accounts)]
+pub struct CancelOrderPostMarketLock<'info> {
+    // TODO add order request queue and matching queue here when available
+    #[account(mut)]
+    pub order: Account<'info, Order>,
+
+    #[account(mut, address = order.purchaser @ CoreError::CancelationPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
+    pub market: Box<Account<'info, Market>>,
+
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            order.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", order.expected_price).as_ref(),
+            order.for_outcome.to_string().as_ref(),
+        ],
+        bump,
+    )]
+    pub market_matching_pool: Account<'info, MarketMatchingPool>,
+
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    // market_position needs to be here so market validation happens first
+    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
 pub struct CancelPreplayOrderPostEventStart<'info> {
     #[account(mut)]
     pub order: Account<'info, Order>,

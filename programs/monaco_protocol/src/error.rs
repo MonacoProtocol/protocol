@@ -46,6 +46,8 @@ pub enum CoreError {
     CancelationMarketStatusInvalid,
     #[msg("Order Cancelation: market not inplay")]
     CancelationMarketNotInplay,
+    #[msg("Order Cancelation: market not locked")]
+    CancelationMarketNotLocked,
     #[msg("Order Cancelation: market behaviour not valid for cancellation")]
     CancelationMarketOrderBehaviourInvalid,
     #[msg("Order Cancelation: order status invalid")]

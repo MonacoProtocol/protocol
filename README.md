@@ -20,12 +20,12 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 # Mainnet upgrades :satellite:
 
-Current version of the protocol on mainnet-beta: [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0).
+Current version of the protocol on mainnet-beta: [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0).
 
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
 | TBC        | [0.13.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.13.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| TBC        | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2023-11-30 | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-08-01 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-07-06 | [0.10.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-06-26 | [0.10.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.10.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
