@@ -1,4 +1,5 @@
 pub(crate) mod market_account;
+pub(crate) mod market_liquidities;
 pub(crate) mod market_matching_pool_account;
 pub(crate) mod market_matching_queue_account;
 pub(crate) mod market_order_request_queue;

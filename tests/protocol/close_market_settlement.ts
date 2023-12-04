@@ -28,6 +28,9 @@ describe("Close market accounts (settled)", () => {
     const outcomeBRent = await monaco.provider.connection.getBalance(
       market.outcomePks[0],
     );
+    const liquiditiesRent = await monaco.provider.connection.getBalance(
+      market.liquiditiesPk,
+    );
     const matchingQueueRent = await monaco.provider.connection.getBalance(
       market.matchingQueuePk,
     );
@@ -68,6 +71,7 @@ describe("Close market accounts (settled)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      liquiditiesRent +
       matchingQueueRent +
       paymentsQueueRent +
       orderRequestQueueRent +
@@ -194,6 +198,7 @@ describe("Close market accounts (settled)", () => {
         .closeMarketQueues()
         .accounts({
           market: marketB.pk,
+          liquidities: marketB.liquiditiesPk,
           matchingQueue: marketB.matchingQueuePk,
           commissionPaymentQueue: marketA.paymentsQueuePk,
           orderRequestQueue: marketB.orderRequestQueuePk,

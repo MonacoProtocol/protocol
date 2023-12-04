@@ -112,6 +112,25 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
+        // TODO pass through the order request queue and matching queue
+        let refund_amount = instructions::order::cancel_order_post_market_lock(
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
+
+        Ok(())
+    }
+
     pub fn cancel_preplay_order_post_event_start(
         ctx: Context<CancelPreplayOrderPostEventStart>,
     ) -> Result<()> {
@@ -391,7 +410,22 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::update_locktime(ctx, lock_time)
+        let market = &mut ctx.accounts.market;
+        instructions::market::update_locktime(market, lock_time)
+    }
+
+    pub fn update_market_locktime_to_now(ctx: Context<UpdateMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let market = &mut ctx.accounts.market;
+        instructions::market::update_locktime_to_now(market)
     }
 
     pub fn update_market_event_start_time(
@@ -443,16 +477,14 @@ pub mod monaco_protocol {
         instructions::market::open(
             &ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            &mut ctx.accounts.liquidities,
             &mut ctx.accounts.matching_queue,
             &mut ctx.accounts.commission_payment_queue,
             &mut ctx.accounts.order_request_queue,
         )
     }
 
-    pub fn settle_market(
-        ctx: Context<UpdateMarketWithRequestQueue>,
-        winning_outcome_index: u16,
-    ) -> Result<()> {
+    pub fn settle_market(ctx: Context<SettleMarket>, winning_outcome_index: u16) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -465,9 +497,10 @@ pub mod monaco_protocol {
         let settle_time = current_timestamp();
         instructions::market::settle(
             &mut ctx.accounts.market,
+            &ctx.accounts.market_matching_queue,
+            &ctx.accounts.order_request_queue,
             winning_outcome_index,
             settle_time,
-            &ctx.accounts.order_request_queue,
         )
     }
 
@@ -621,6 +654,7 @@ pub mod monaco_protocol {
     pub fn close_market_queues(ctx: Context<CloseMarketQueues>) -> Result<()> {
         instructions::close::close_market_queues(
             &mut ctx.accounts.market,
+            &ctx.accounts.liquidities,
             &ctx.accounts.commission_payment_queue.payment_queue,
             &ctx.accounts.matching_queue.matches,
             &ctx.accounts.order_request_queue.order_requests,

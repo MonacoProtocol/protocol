@@ -17,6 +17,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   findCommissionPaymentsQueuePda,
   findEscrowPda,
+  findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
 } from "./market_helpers";
@@ -26,18 +27,21 @@ import {
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
+ * @param marketMatchingQueuePk {PublicKey} publicKey of the market's matching queue
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const winningOutcomeIndex = 0
- * const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
+ * const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
  */
 export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
+  marketMatchingQueuePk: PublicKey,
   winningOutcomeIndex: number,
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
@@ -53,6 +57,7 @@ export async function settleMarket(
       .settleMarket(winningOutcomeIndex)
       .accounts({
         market: marketPk,
+        marketMatchingQueue: marketMatchingQueuePk,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
         orderRequestQueue: (
@@ -428,6 +433,51 @@ export async function updateMarketLocktime(
 }
 
 /**
+ * For the given market, update the lock time to now
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const update = await updateMarketLocktimeToNow(program, marketPk)
+ */
+export async function updateMarketLocktimeToNow(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .updateMarketLocktimeToNow()
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+
+  return response.body;
+}
+
+/**
  * Open a Market, moving it from Intializing to Open status.
  *
  * Once Open, outcomes can no longer be added to a market.
@@ -453,6 +503,7 @@ export async function openMarket(
     return response.body;
   }
 
+  const liquidities = await findMarketLiquiditiesPda(program, marketPk);
   const matchingQueue = await findMarketMatchingQueuePda(program, marketPk);
 
   const commissionQueue = await findCommissionPaymentsQueuePda(
@@ -467,6 +518,7 @@ export async function openMarket(
       .openMarket()
       .accounts({
         market: marketPk,
+        liquidities: liquidities.data.pda,
         matchingQueue: matchingQueue.data.pda,
         commissionPaymentQueue: commissionQueue.data.pda,
         orderRequestQueue: orderRequestQueue.data.pda,

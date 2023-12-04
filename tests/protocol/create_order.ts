@@ -309,8 +309,13 @@ describe("Protocol - Create Order", () => {
     const stake = 2000;
 
     // Set up Market and related accounts
-    const { mintPk, marketPda, authorisedMarketOperators, marketOperator } =
-      await createMarket(protocolProgram, provider, [price]);
+    const {
+      mintPk,
+      marketPda,
+      matchingQueuePda,
+      authorisedMarketOperators,
+      marketOperator,
+    } = await createMarket(protocolProgram, provider, [price]);
 
     await createAssociatedTokenAccountWithBalance(
       mintPk,
@@ -323,6 +328,7 @@ describe("Protocol - Create Order", () => {
       .settleMarket(outcomeIndex)
       .accounts({
         market: marketPda,
+        marketMatchingQueue: matchingQueuePda,
         authorisedOperators: authorisedMarketOperators,
         marketOperator: marketOperator.publicKey,
         orderRequestQueue: (

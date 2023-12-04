@@ -43,6 +43,7 @@ import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
   findCommissionPaymentsQueuePda,
+  findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
   PaymentInfo,
@@ -360,6 +361,10 @@ export async function createMarket(
     );
   }
 
+  const liquiditiesPk = (
+    await findMarketLiquiditiesPda(protocolProgram, marketPda)
+  ).data.pda;
+
   const matchingQueuePk = (
     await findMarketMatchingQueuePda(protocolProgram, marketPda)
   ).data.pda;
@@ -372,6 +377,7 @@ export async function createMarket(
     .openMarket()
     .accounts({
       market: marketPda,
+      liquidities: liquiditiesPk,
       matchingQueue: matchingQueuePk,
       commissionPaymentQueue: commissionQueuePk,
       orderRequestQueue: orderRequestQueuePda,

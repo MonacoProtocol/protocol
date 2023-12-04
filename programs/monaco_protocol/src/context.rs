@@ -6,6 +6,7 @@ use solana_program::rent::Rent;
 
 use crate::error::CoreError;
 use crate::monaco_protocol::SEED_SEPARATOR;
+use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_order_request_queue::MarketOrderRequestQueue;
@@ -229,6 +230,55 @@ pub struct CancelOrder<'info> {
         bump,
     )]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    // market_position needs to be here so market validation happens first
+    #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct CancelOrderPostMarketLock<'info> {
+    // TODO add order request queue and matching queue here when available
+    #[account(mut)]
+    pub order: Account<'info, Order>,
+
+    #[account(mut, address = order.purchaser @ CoreError::CancelationPurchaserMismatch)]
+    pub purchaser: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = purchaser,
+    )]
+    pub purchaser_token: Account<'info, TokenAccount>,
+
+    #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
+    pub market: Box<Account<'info, Market>>,
+
+    #[account(
+        mut,
+        seeds = [
+            market.key().as_ref(),
+            order.market_outcome_index.to_string().as_ref(),
+            b"-".as_ref(),
+            format!("{:.3}", order.expected_price).as_ref(),
+            order.for_outcome.to_string().as_ref(),
+        ],
+        bump,
+    )]
+    pub market_matching_pool: Account<'info, MarketMatchingPool>,
+
     #[account(
         mut,
         token::mint = market.mint_account,
@@ -732,26 +782,6 @@ pub struct UpdateMarket<'info> {
 }
 
 #[derive(Accounts)]
-pub struct UpdateMarketWithRequestQueue<'info> {
-    #[account(mut)]
-    pub market: Account<'info, Market>,
-    #[account(
-        mut,
-        seeds = [
-            b"order_request_queue".as_ref(),
-            market.key().as_ref()
-        ],
-        bump,
-    )]
-    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
-
-    #[account(mut)]
-    pub market_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-}
-
-#[derive(Accounts)]
 pub struct VoidMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
@@ -776,6 +806,17 @@ pub struct OpenMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
 
+    #[account(
+        init,
+        seeds = [
+            b"liquidities".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketLiquidities::SIZE
+    )]
+    pub liquidities: Account<'info, MarketLiquidities>,
     #[account(
         init,
         seeds = [
@@ -816,6 +857,25 @@ pub struct OpenMarket<'info> {
     pub authorised_operators: Account<'info, AuthorisedOperators>,
 
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct SettleMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        has_one = market @ CoreError::SettlementMarketMismatch,
+    )]
+    pub market_matching_queue: Account<'info, MarketMatchingQueue>,
+    #[account(
+        has_one = market @ CoreError::SettlementMarketMismatch,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
 }
 
 #[derive(Accounts)]
@@ -995,6 +1055,12 @@ pub struct CloseMarketOutcome<'info> {
 
 #[derive(Accounts)]
 pub struct CloseMarketQueues<'info> {
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        close = authority,
+    )]
+    pub liquidities: Account<'info, MarketLiquidities>,
     #[account(
         mut,
         has_one = market @ CoreError::CloseAccountMarketMismatch,

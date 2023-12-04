@@ -28,6 +28,9 @@ describe("Close market accounts (voided)", () => {
     const outcomeBRent = await monaco.provider.connection.getBalance(
       market.outcomePks[1],
     );
+    const liquiditiesRent = await monaco.provider.connection.getBalance(
+      market.liquiditiesPk,
+    );
     const matchingQueueRent = await monaco.provider.connection.getBalance(
       market.matchingQueuePk,
     );
@@ -68,6 +71,7 @@ describe("Close market accounts (voided)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      liquiditiesRent +
       matchingQueueRent +
       paymentsQueueRent +
       orderRequestQueueRent +

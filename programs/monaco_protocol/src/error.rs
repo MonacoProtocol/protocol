@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
+    #[msg("MarketOutcome: update failed")]
+    MarketOutcomeUpdateError,
 
     /*
     Order Creation
@@ -53,6 +55,8 @@ pub enum CoreError {
     CancelationMarketStatusInvalid,
     #[msg("Order Cancelation: market not inplay")]
     CancelationMarketNotInplay,
+    #[msg("Order Cancelation: market not locked")]
+    CancelationMarketNotLocked,
     #[msg("Order Cancelation: market behaviour not valid for cancellation")]
     CancelationMarketOrderBehaviourInvalid,
     #[msg("Order Cancelation: order status invalid")]
@@ -79,6 +83,8 @@ pub enum CoreError {
     SettlementMarketNotReadyForSettlement,
     #[msg("Core Settlement: market escrow is non zero")]
     SettlementMarketEscrowNonZero,
+    #[msg("Core Settlement: market matching queue not empty")]
+    SettlementMarketMatchingQueueNotEmpty,
     #[msg("Core Settlement: error calculating settlement payment.")]
     SettlementPaymentCalculation,
     #[msg("Core Settlement: failed to enqueue payment - queue full.")]
