@@ -935,9 +935,8 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         marketMatchingPool: matchingPoolPk,
         tokenProgram: TOKEN_PROGRAM_ID,
-        orderRequestQueue: (
-          await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
-        ).data.pda,
+        orderRequestQueue: this.orderRequestQueuePk,
+        matchingQueue: this.matchingQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -964,6 +963,8 @@ export class MonacoMarket {
         market: this.pk,
         marketEscrow: this.escrowPk,
         marketMatchingPool: matchingPoolPk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        matchingQueue: this.matchingQueuePk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc()

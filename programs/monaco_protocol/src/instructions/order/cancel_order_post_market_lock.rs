@@ -4,6 +4,8 @@ use crate::error::CoreError;
 use crate::instructions::clock::current_timestamp;
 use crate::instructions::market_position;
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
+use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderStatus;
@@ -12,6 +14,8 @@ pub fn cancel_order_post_market_lock(
     market: &mut Market,
     order: &mut Order,
     market_position: &mut MarketPosition,
+    matching_queue: &MarketMatchingQueue,
+    request_queue: &MarketOrderRequestQueue,
 ) -> Result<u64> {
     // market is open + should be locked and cancellation is the intended behaviour
     require!(
@@ -26,8 +30,14 @@ pub fn cancel_order_post_market_lock(
         MarketOrderBehaviour::CancelUnmatched.eq(&market.market_lock_order_behaviour),
         CoreError::CancelationMarketOrderBehaviourInvalid
     );
-
-    // TODO check that there are no order requests in the queue nor matches in the queue yet to be processed
+    require!(
+        matching_queue.matches.is_empty(),
+        CoreError::MatchingQueueIsNotEmpty
+    );
+    require!(
+        request_queue.order_requests.is_empty(),
+        CoreError::RequestQueueIsNotEmpty
+    );
 
     // order is (open or matched) + there is remaining stake to be refunded
     require!(
@@ -52,10 +62,101 @@ pub fn cancel_order_post_market_lock(
 #[cfg(test)]
 mod test {
     use crate::state::market_account::MarketStatus;
-    use crate::state::market_order_request_queue::OrderRequest;
+    use crate::state::market_matching_queue_account::{MatchingQueue, OrderMatched};
+    use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
+
+    #[test]
+    fn error_market_queues_not_empty() {
+        let mut market = mock_market();
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: 0,
+        };
+        let mut order = Order {
+            purchaser: Pubkey::new_unique(),
+            market: Pubkey::new_unique(),
+            market_outcome_index: 1,
+            for_outcome: false,
+            order_status: OrderStatus::Matched,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            stake_unmatched: 10_u64,
+            voided_stake: 0_u64,
+            payout: 0_u64,
+            creation_timestamp: 0,
+            payer: Pubkey::new_unique(),
+        };
+        let matching_queue = &mut mock_market_matching_queue(order.market);
+        matching_queue.matches.enqueue(OrderMatched {
+            pk: Default::default(),
+            purchaser: Default::default(),
+            for_outcome: false,
+            outcome_index: 0,
+            price: 0.0,
+            stake: 0,
+        });
+
+        let request_queue = &mut mock_order_request_queue(order.market);
+        request_queue.order_requests.enqueue(order_request);
+
+        let mut market_position = MarketPosition::default();
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        let _ =
+            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::MatchingQueueIsNotEmpty)
+        );
+
+        matching_queue.matches.dequeue();
+
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::RequestQueueIsNotEmpty)
+        );
+
+        request_queue.order_requests.dequeue();
+
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn error_market_status_invalid() {
@@ -88,6 +189,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -99,7 +202,13 @@ mod test {
 
         market.market_status = MarketStatus::Settled;
 
-        let result = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
@@ -138,6 +247,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -149,7 +260,13 @@ mod test {
 
         market.market_lock_timestamp = current_timestamp() + 1000;
 
-        let result = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
@@ -188,6 +305,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -199,7 +318,13 @@ mod test {
 
         market.market_lock_order_behaviour = MarketOrderBehaviour::None;
 
-        let result = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
@@ -238,6 +363,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -248,7 +375,13 @@ mod test {
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
         // when
-        let result = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
 
         // then
         assert!(result.is_err());
@@ -290,6 +423,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -300,7 +435,13 @@ mod test {
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
         // when 1
-        let result1 = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result1 = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
 
         // then 1
         assert!(result1.is_ok());
@@ -310,7 +451,13 @@ mod test {
         assert_eq!(1, market.unsettled_accounts_count);
 
         // when 2
-        let result2 = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result2 = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
 
         // then 2
         assert!(result2.is_err());
@@ -352,6 +499,8 @@ mod test {
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
         };
+        let matching_queue = mock_market_matching_queue(order.market);
+        let request_queue = mock_order_request_queue(order.market);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
@@ -362,7 +511,13 @@ mod test {
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
         // when 1
-        let result1 = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result1 = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
 
         // then 1
         assert!(result1.is_ok());
@@ -372,7 +527,13 @@ mod test {
         assert_eq!(0, market.unsettled_accounts_count); // <-- decremented
 
         // when 2
-        let result2 = cancel_order_post_market_lock(&mut market, &mut order, &mut market_position);
+        let result2 = cancel_order_post_market_lock(
+            &mut market,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &request_queue,
+        );
 
         // then 2
         assert!(result2.is_err());
@@ -409,6 +570,20 @@ mod test {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             market_lock_timestamp: 100,
+        }
+    }
+
+    fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
+        MarketMatchingQueue {
+            market: market_pk,
+            matches: MatchingQueue::new(1),
+        }
+    }
+
+    fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
+        MarketOrderRequestQueue {
+            market: market_pk,
+            order_requests: OrderRequestQueue::new(1),
         }
     }
 }

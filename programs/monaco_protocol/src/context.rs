@@ -99,11 +99,11 @@ pub struct ProcessOrderRequest<'info> {
             market.key().as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueEmpty)?
+                .ok_or(CoreError::RequestQueueIsEmpty)?
                 .purchaser.as_ref(),
             &order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueEmpty)?
+                .ok_or(CoreError::RequestQueueIsEmpty)?
                 .distinct_seed,
         ],
         bump,
@@ -118,18 +118,18 @@ pub struct ProcessOrderRequest<'info> {
             market.key().as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueEmpty)?
+                .ok_or(CoreError::RequestQueueIsEmpty)?
                 .market_outcome_index.to_string().as_ref(),
             b"-".as_ref(),
             format!("{:.3}",
                 order_request_queue.order_requests
                     .peek_front()
-                    .ok_or(CoreError::RequestQueueEmpty)?
+                    .ok_or(CoreError::RequestQueueIsEmpty)?
                     .expected_price
             ).as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueEmpty)?
+                .ok_or(CoreError::RequestQueueIsEmpty)?
                 .for_outcome.to_string().as_ref(),
         ],
         payer = crank_operator,
@@ -249,7 +249,6 @@ pub struct CancelOrder<'info> {
 
 #[derive(Accounts)]
 pub struct CancelOrderPostMarketLock<'info> {
-    // TODO add order request queue and matching queue here when available
     #[account(mut)]
     pub order: Account<'info, Order>,
 
@@ -287,6 +286,17 @@ pub struct CancelOrderPostMarketLock<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+    #[account(
+        seeds = [b"matching".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
 
     // market_position needs to be here so market validation happens first
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]
@@ -338,6 +348,11 @@ pub struct CancelPreplayOrderPostEventStart<'info> {
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+    #[account(
+        seeds = [b"matching".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
 
     // market_position needs to be here so market validation happens first
     #[account(mut, seeds = [purchaser.key().as_ref(), market.key().as_ref()], bump)]

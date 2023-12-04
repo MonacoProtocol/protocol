@@ -19,7 +19,7 @@ pub fn process_order_request(
     let order_request = order_request_queue
         .order_requests
         .dequeue()
-        .ok_or(CoreError::RequestQueueEmpty)?;
+        .ok_or(CoreError::RequestQueueIsEmpty)?;
 
     // if market is inplay, and order is delayed, check if delay has expired
     if market.is_inplay() && order_request.delay_expiration_timestamp > 0 {

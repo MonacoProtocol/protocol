@@ -38,15 +38,15 @@ pub fn close_market_queues(
         CoreError::MarketNotReadyToClose
     );
     require!(
-        payment_queue.len() == 0,
+        payment_queue.is_empty(),
         CoreError::CloseAccountMarketPaymentQueueNotEmpty
     );
     require!(
-        matching_queue.len() == 0,
+        matching_queue.is_empty(),
         CoreError::CloseAccountMarketMatchingQueueNotEmpty
     );
     require!(
-        order_requests.len() == 0,
+        order_requests.is_empty(),
         CoreError::CloseAccountOrderRequestQueueNotEmpty
     );
 

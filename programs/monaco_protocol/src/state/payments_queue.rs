@@ -59,6 +59,10 @@ impl PaymentQueue {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn size(&self) -> u32 {
         self.items.len() as u32
     }

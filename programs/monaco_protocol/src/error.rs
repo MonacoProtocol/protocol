@@ -38,9 +38,9 @@ pub enum CoreError {
     #[msg("Order Request Creation: duplicate request already queued")]
     RequestCreationDuplicateRequest,
     #[msg("Order Request Processing: request queue is empty")]
-    RequestQueueEmpty,
+    RequestQueueIsEmpty,
     #[msg("Order Request Processing: request queue is not empty")]
-    RequestQueueNotEmpty,
+    RequestQueueIsNotEmpty,
 
     /*
     Cancelation
@@ -162,6 +162,8 @@ pub enum CoreError {
     MatchingQueueIsFull,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the queue was empty.")]
     MatchingQueueIsEmpty,
+    #[msg("Matching queue is not empty.")]
+    MatchingQueueIsNotEmpty,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the item at the front of the queue was incorrect.")]
     IncorrectOrderDequeueAttempt,
     #[msg("The order to be matched is not at the front of the matching pool queue")]
