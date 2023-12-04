@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
+    #[msg("MarketOutcome: update failed")]
+    MarketOutcomeUpdateError,
 
     /*
     Order Creation
