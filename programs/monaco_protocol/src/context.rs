@@ -69,7 +69,9 @@ pub struct CreateOrderRequest<'info> {
             data.market_outcome_index.to_string().as_ref(),
         ],
         bump,
-        constraint = market_outcome.prices.is_none() || (market_outcome.prices.is_some() && price_ladder.is_some() && market_outcome.prices.unwrap() == price_ladder.as_ref().unwrap().key()) @ CoreError::CreationInvalidPriceLadder
+        constraint = market_outcome.prices.is_none() ||
+        (market_outcome.prices.is_some() && price_ladder.is_some() && market_outcome.prices.unwrap() == price_ladder.as_ref().unwrap().key())
+        @ CoreError::CreationInvalidPriceLadder
     )]
     pub market_outcome: Account<'info, MarketOutcome>,
     pub price_ladder: Option<Account<'info, PriceLadder>>,
