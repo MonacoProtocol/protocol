@@ -36,13 +36,13 @@ pub fn create_order_request(
     let order_request = initialize_order_request(market, purchaser, product, data, now)?;
     require!(
         !order_request_queue.order_requests.contains(&order_request),
-        CoreError::RequestCreationDuplicateRequest
+        CoreError::OrderRequestCreationDuplicateRequest
     );
 
     order_request_queue
         .order_requests
         .enqueue(order_request)
-        .ok_or(CoreError::RequestCreationQueueFull)?;
+        .ok_or(CoreError::OrderRequestCreationQueueFull)?;
 
     market_position::update_on_order_request_creation(market_position, &order_request)
 }

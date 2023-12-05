@@ -15,7 +15,7 @@ pub fn cancel_order_post_market_lock(
     order: &mut Order,
     market_position: &mut MarketPosition,
     matching_queue: &MarketMatchingQueue,
-    request_queue: &MarketOrderRequestQueue,
+    order_request_queue: &MarketOrderRequestQueue,
 ) -> Result<u64> {
     // market is open + should be locked and cancellation is the intended behaviour
     require!(
@@ -35,8 +35,8 @@ pub fn cancel_order_post_market_lock(
         CoreError::MatchingQueueIsNotEmpty
     );
     require!(
-        request_queue.order_requests.is_empty(),
-        CoreError::RequestQueueIsNotEmpty
+        order_request_queue.order_requests.is_empty(),
+        CoreError::OrderRequestQueueIsNotEmpty
     );
 
     // order is (open or matched) + there is remaining stake to be refunded
@@ -143,7 +143,7 @@ mod test {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            error!(CoreError::RequestQueueIsNotEmpty)
+            error!(CoreError::OrderRequestQueueIsNotEmpty)
         );
 
         request_queue.order_requests.dequeue();

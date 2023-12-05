@@ -177,9 +177,12 @@ describe("Order Request Creation", () => {
         .signers(purchaser instanceof Keypair ? [purchaser] : [])
         .rpc();
 
-      assert.fail("expected RequestCreationDuplicateRequest");
+      assert.fail("expected OrderRequestCreationDuplicateRequest");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "RequestCreationDuplicateRequest");
+      assert.equal(
+        e.error.errorCode.code,
+        "OrderRequestCreationDuplicateRequest",
+      );
     }
   });
 

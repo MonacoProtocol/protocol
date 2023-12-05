@@ -11,7 +11,7 @@ pub fn dequeue_order_request(
     let order_request = order_request_queue
         .order_requests
         .dequeue()
-        .ok_or(CoreError::RequestQueueIsEmpty)?;
+        .ok_or(CoreError::OrderRequestQueueIsEmpty)?;
 
     require!(
         order_request.purchaser == market_position.purchaser,
@@ -126,6 +126,9 @@ mod tests {
 
         let result = dequeue_order_request(order_request_queue, market_position);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), error!(CoreError::RequestQueueIsEmpty));
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::OrderRequestQueueIsEmpty)
+        );
     }
 }

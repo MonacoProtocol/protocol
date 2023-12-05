@@ -16,7 +16,7 @@ pub fn cancel_preplay_order_post_event_start(
     order: &mut Order,
     market_position: &mut MarketPosition,
     matching_queue: &MarketMatchingQueue,
-    request_queue: &MarketOrderRequestQueue,
+    order_request_queue: &MarketOrderRequestQueue,
 ) -> Result<u64> {
     // market is open + in inplay mode + and cancellation is the intended behaviour
     require!(
@@ -43,7 +43,7 @@ pub fn cancel_preplay_order_post_event_start(
         CoreError::CancelationOrderCreatedAfterMarketEventStarted
     );
 
-    if let Some(order_request) = request_queue.order_requests.peek_front() {
+    if let Some(order_request) = order_request_queue.order_requests.peek_front() {
         require!(
             market.event_start_timestamp <= order_request.creation_timestamp,
             CoreError::CancelationPreplayOrderRequestsExist

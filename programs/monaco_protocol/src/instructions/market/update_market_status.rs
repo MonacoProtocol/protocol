@@ -101,7 +101,7 @@ pub fn void(
                 .unwrap()
                 .order_requests
                 .is_empty(),
-            CoreError::RequestQueueIsNotEmpty
+            CoreError::OrderRequestQueueIsNotEmpty
         );
     }
 
@@ -145,7 +145,7 @@ pub fn settle(
     );
     require!(
         order_request_queue.order_requests.is_empty(),
-        CoreError::RequestQueueIsNotEmpty
+        CoreError::OrderRequestQueueIsNotEmpty
     );
 
     market.market_winning_outcome_index = Some(winning_outcome_index);
@@ -467,7 +467,7 @@ mod tests {
         );
 
         assert!(result.is_err());
-        assert_eq!(Err(error!(CoreError::RequestQueueIsNotEmpty)), result);
+        assert_eq!(Err(error!(CoreError::OrderRequestQueueIsNotEmpty)), result);
     }
 
     #[test]
@@ -818,7 +818,7 @@ mod tests {
         );
 
         assert!(result.is_err());
-        let expected_error = Err(error!(CoreError::RequestQueueIsNotEmpty));
+        let expected_error = Err(error!(CoreError::OrderRequestQueueIsNotEmpty));
         assert_eq!(expected_error, result)
     }
 

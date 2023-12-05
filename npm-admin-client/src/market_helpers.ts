@@ -284,7 +284,7 @@ export async function findOrderRequestQueuePda(
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
     const [pda, _] = PublicKey.findProgramAddressSync(
-      [Buffer.from("order_request_queue"), marketPk.toBuffer()],
+      [Buffer.from("order_request"), marketPk.toBuffer()],
       program.programId,
     );
     response.addResponseData({

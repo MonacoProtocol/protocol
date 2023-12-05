@@ -16,7 +16,7 @@ pub fn update_on_order_cancellation(
         false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
     };
 
-    get_exposure_change(market_position, outcome_index, for_outcome, order_exposure)
+    update_exposures(market_position, outcome_index, for_outcome, order_exposure)
 }
 
 pub fn update_on_order_request_cancellation(
@@ -30,7 +30,7 @@ pub fn update_on_order_request_cancellation(
         false => calculate_risk_from_stake(order_request.stake, order_request.expected_price),
     };
 
-    get_exposure_change(
+    update_exposures(
         market_position,
         outcome_index,
         for_outcome,
@@ -38,7 +38,7 @@ pub fn update_on_order_request_cancellation(
     )
 }
 
-fn get_exposure_change(
+fn update_exposures(
     market_position: &mut MarketPosition,
     outcome_index: usize,
     for_outcome: bool,

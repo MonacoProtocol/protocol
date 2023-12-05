@@ -34,7 +34,7 @@ pub struct CreateOrderRequest<'info> {
     pub reserved_order: Account<'info, ReservedOrder>,
     #[account(
         mut,
-        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
@@ -99,11 +99,11 @@ pub struct ProcessOrderRequest<'info> {
             market.key().as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueIsEmpty)?
+                .ok_or(CoreError::OrderRequestQueueIsEmpty)?
                 .purchaser.as_ref(),
             &order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueIsEmpty)?
+                .ok_or(CoreError::OrderRequestQueueIsEmpty)?
                 .distinct_seed,
         ],
         bump,
@@ -118,18 +118,18 @@ pub struct ProcessOrderRequest<'info> {
             market.key().as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueIsEmpty)?
+                .ok_or(CoreError::OrderRequestQueueIsEmpty)?
                 .market_outcome_index.to_string().as_ref(),
             b"-".as_ref(),
             format!("{:.3}",
                 order_request_queue.order_requests
                     .peek_front()
-                    .ok_or(CoreError::RequestQueueIsEmpty)?
+                    .ok_or(CoreError::OrderRequestQueueIsEmpty)?
                     .expected_price
             ).as_ref(),
             order_request_queue.order_requests
                 .peek_front()
-                .ok_or(CoreError::RequestQueueIsEmpty)?
+                .ok_or(CoreError::OrderRequestQueueIsEmpty)?
                 .for_outcome.to_string().as_ref(),
         ],
         payer = crank_operator,
@@ -140,7 +140,7 @@ pub struct ProcessOrderRequest<'info> {
 
     #[account(
         mut,
-        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
@@ -158,7 +158,7 @@ pub struct ProcessOrderRequest<'info> {
 pub struct DequeueOrderRequest<'info> {
     #[account(
         mut,
-        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
@@ -288,7 +288,7 @@ pub struct CancelOrderPostMarketLock<'info> {
     pub market_escrow: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
@@ -344,7 +344,7 @@ pub struct CancelPreplayOrderPostEventStart<'info> {
     pub market_escrow: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        seeds = [b"order_request_queue".as_ref(), market.key().as_ref()],
+        seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
@@ -803,7 +803,7 @@ pub struct VoidMarket<'info> {
     #[account(
         mut,
         seeds = [
-            b"order_request_queue".as_ref(),
+            b"order_request".as_ref(),
             market.key().as_ref()
         ],
         bump,
@@ -857,7 +857,7 @@ pub struct OpenMarket<'info> {
     #[account(
         init,
         seeds = [
-            b"order_request_queue".as_ref(),
+            b"order_request".as_ref(),
             market.key().as_ref(),
         ],
         bump,
