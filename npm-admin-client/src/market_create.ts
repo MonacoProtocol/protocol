@@ -20,7 +20,6 @@ import {
   findEscrowPda,
   findMarketMatchingQueuePda,
   findCommissionPaymentsQueuePda,
-  findOrderRequestQueuePda,
 } from "./market_helpers";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
@@ -274,14 +273,12 @@ export async function createMarket(
     mintInfo,
     matchingQueuePda,
     paymentsQueuePda,
-    orderRequestQueuePda,
   ] = await Promise.all([
     findEscrowPda(program, marketPda),
     findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
     getMintInfo(program, marketTokenPk),
     findMarketMatchingQueuePda(program, marketPda),
     findCommissionPaymentsQueuePda(program, marketPda),
-    findOrderRequestQueuePda(program, marketPda),
   ]);
 
   try {
@@ -314,7 +311,6 @@ export async function createMarket(
         marketOperator: provider.wallet.publicKey,
         matchingQueue: matchingQueuePda.data.pda,
         commissionPaymentQueue: paymentsQueuePda.data.pda,
-        orderRequestQueue: orderRequestQueuePda.data.pda,
       })
       .rpc();
 
