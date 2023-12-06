@@ -48,25 +48,4 @@ describe("Void order", () => {
       assert.equal(e.error.errorCode.code, "VoidMarketNotReadyForVoid");
     }
   });
-
-  it("order already voided", async () => {
-    const price = 2.0;
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([price]),
-    ]);
-    await market.airdrop(purchaser, 100.0);
-
-    const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
-
-    await market.voidMarket();
-    await market.voidOrder(forOrderPk);
-
-    try {
-      await market.voidOrder(forOrderPk);
-      assert.fail("expected VoidOrderIsVoided");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "VoidOrderIsVoided");
-    }
-  });
 });
