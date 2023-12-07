@@ -35,11 +35,12 @@ describe("Order Query", () => {
     );
 
     assert(createOrderResponse.success);
-
     await confirmTransaction(
       monaco.getRawProgram(),
       createOrderResponse.data.tnxID,
     );
+
+    await market.processNextOrderRequest();
 
     const responseByMarket = await getOrdersByMarketForProviderWallet(
       monaco.getRawProgram(),

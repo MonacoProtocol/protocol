@@ -27,7 +27,6 @@ export type Order = {
   voidedStake: BN;
   expectedPrice: number;
   creationTimestamp: BN;
-  delayExpirationTimestamp: BN;
   stakeUnmatched: BN;
   payout: BN;
   payer: PublicKey;
@@ -63,7 +62,7 @@ export type CancelOrdersResponse = {
 
 export type orderPdaResponse = {
   orderPk: PublicKey;
-  distinctSeed: string;
+  distinctSeed: Uint8Array;
 };
 
 export type StakeInteger = {

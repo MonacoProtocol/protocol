@@ -50,20 +50,18 @@ describe("Order", () => {
     for (const market of [market1, market2]) {
       let index = 0;
       for (const orderMarketOutcomePrice of orderMarketOutcomePriceList) {
-        const [forOrderPK, againstOrderPK] = await Promise.all([
-          market.forOrder(
-            orderMarketOutcomeIndex,
-            orderStake,
-            orderMarketOutcomePrice,
-            wallet1,
-          ),
-          market.againstOrder(
-            orderMarketOutcomeIndex,
-            orderStake,
-            orderMarketOutcomePrice,
-            wallet2,
-          ),
-        ]);
+        const forOrderPK = await market.forOrder(
+          orderMarketOutcomeIndex,
+          orderStake,
+          orderMarketOutcomePrice,
+          wallet1,
+        );
+        const againstOrderPK = await market.againstOrder(
+          orderMarketOutcomeIndex,
+          orderStake,
+          orderMarketOutcomePrice,
+          wallet2,
+        );
 
         orderPKs.get(wallet1.publicKey.toBase58()).add(forOrderPK.toBase58());
         orderPKs

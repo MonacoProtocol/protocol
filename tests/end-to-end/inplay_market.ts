@@ -1,5 +1,8 @@
 import { monaco } from "../util/wrappers";
-import { createWalletWithBalance } from "../util/test_util";
+import {
+  createWalletWithBalance,
+  processOrderRequests,
+} from "../util/test_util";
 import assert from "assert";
 import { Program } from "@coral-xyz/anchor";
 import {
@@ -51,14 +54,15 @@ describe("End to end test of", () => {
     // Move start time up to now
     await market.updateMarketEventStartTimeToNow();
 
-    // Create an inplay order before the market inplay flag has been updated
+    // Create an inplay order request before the market inplay flag has been updated
     let matchingPool;
+    let orderRequestQueue;
     try {
-      matchingPool = await market.getForMatchingPool(1, 3.0);
-      assert.deepEqual(matchingPool, { len: 1, liquidity: 1, matched: 0 });
-      await market.forOrder(1, 4.2, 3.0, purchaser);
-      matchingPool = await market.getForMatchingPool(1, 3.0);
-      assert.deepEqual(matchingPool, { len: 1, liquidity: 0, matched: 0 });
+      orderRequestQueue = await market.getOrderRequestQueue();
+      assert.equal(orderRequestQueue.orderRequests.len, 0);
+      await market.forOrderRequest(1, 4.2, 3.0, purchaser);
+      orderRequestQueue = await market.getOrderRequestQueue();
+      assert.equal(orderRequestQueue.orderRequests.len, 1);
     } catch (e) {
       console.log(e);
       throw e;
@@ -71,15 +75,15 @@ describe("End to end test of", () => {
     matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
 
-    await market.forOrder(0, 1, 2.0, purchaser);
+    await market.forOrderRequest(0, 1, 2.0, purchaser);
     matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
+    assert.equal(matchingPool.liquidity, 1);
 
     // Without existing liquidity
     matchingPool = await market.getAgainstMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
-    await market.againstOrder(0, 1, 2.0, purchaser);
+    await market.againstOrderRequest(0, 1, 2.0, purchaser);
     matchingPool = await market.getAgainstMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
@@ -93,7 +97,7 @@ describe("End to end test of", () => {
     matchingPool = await market.getForMatchingPool(1, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
-    await market.forOrder(1, 1, 2.0, purchaser);
+    await market.forOrderRequest(1, 1, 2.0, purchaser);
     matchingPool = await market.getForMatchingPool(1, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
@@ -104,28 +108,21 @@ describe("End to end test of", () => {
       expect(e.message).toMatch(/^Account does not exist or has no data/);
     }
 
-    const inPlayOrder21 = await market.forOrder(2, 1, 2.0, purchaser);
-    matchingPool = await market.getForMatchingPool(2, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-    const inPlayOrder22 = await market.againstOrder(2, 1, 2.0, purchaser);
-    matchingPool = await market.getAgainstMatchingPool(2, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-
     // 4. Inplay order creates a new matching pool but is never used
-    await market.forOrder(2, 1, 3.0, purchaser);
-    matchingPool = await market.getForMatchingPool(2, 3.0);
-    assert.equal(matchingPool.liquidity, 0);
+    await market.forOrderRequest(2, 1, 3.0, purchaser);
+
+    const inPlayOrder21 = await market.forOrderRequest(2, 1, 2.0, purchaser);
+    const inPlayOrder22 = await market.againstOrderRequest(
+      2,
+      1,
+      2.0,
+      purchaser,
+    );
 
     // Wait for delay to expire and process orders
     await new Promise((resolve) => setTimeout(resolve, inplayDelay * 1000));
 
-    await market.processDelayExpiredOrders(0, 2.0, true);
-    await market.processDelayExpiredOrders(0, 2.0, false);
-    await market.processDelayExpiredOrders(1, 2.0, true);
-    await market.processDelayExpiredOrders(1, 3.0, true);
-    await market.processDelayExpiredOrders(2, 2.0, true);
-    // Skip processing this matching pool and allow matching to use the delay expired order
-    // await market.processDelayExpiredOrders(2, 2.0, false);
+    await processOrderRequests(market.pk, purchaser);
 
     // Check liquidity that should be visible is visible
     matchingPool = await market.getForMatchingPool(0, 2.0);
@@ -142,7 +139,7 @@ describe("End to end test of", () => {
     matchingPool = await market.getForMatchingPool(2, 2.0);
     assert.equal(matchingPool.liquidity, 1);
     matchingPool = await market.getAgainstMatchingPool(2, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
+    assert.equal(matchingPool.liquidity, 1);
 
     // Match order with liquidity that is not yet visible (but should be)
     await market.match(inPlayOrder21, inPlayOrder22);
@@ -186,7 +183,7 @@ describe("End to end test of", () => {
     await market.completeSettlement();
     const marketAccount = await market.getAccount();
     assert.equal(marketAccount.unsettledAccountsCount, 0);
-    assert.equal(marketAccount.unclosedAccountsCount, 25);
+    assert.equal(marketAccount.unclosedAccountsCount, 26);
 
     // Close accounts
     await market.readyToClose();
@@ -298,6 +295,7 @@ describe("End to end test of", () => {
         liquidities: market.liquiditiesPk,
         matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
+        orderRequestQueue: market.orderRequestQueuePk,
         authority: monaco.operatorPk,
       })
       .rpc()

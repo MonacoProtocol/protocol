@@ -58,7 +58,10 @@ export async function buildOrderInstructionUIStake(
 }
 
 /**
- * Constructs the instruction required to perform a create order transaction using the raw token value for the order stake.
+ * Constructs a create order request instruction using the raw token value for the order stake.
+ *
+ * No order account will be created until the order request is sent as part of a transaction, and then processed by the protocol,
+ * but the orderPk returned by this function will match the PDA of the order account to be created.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to create the order for
@@ -126,20 +129,20 @@ export async function buildOrderInstruction(
   const orderPk = orderPdaResponse.data.orderPk;
   const distinctSeed = orderPdaResponse.data.distinctSeed;
   const instruction = await program.methods
-    .createOrderV2(distinctSeed, {
+    .createOrderRequest({
       marketOutcomeIndex: marketOutcomeIndex,
       forOutcome: forOutcome,
       stake: stake,
       price: price,
+      distinctSeed: distinctSeed,
     })
     .accounts({
+      reservedOrder: orderPk,
       purchaser: provider.wallet.publicKey,
-      order: orderPk,
       marketPosition: marketAccounts.data.marketPositionPda,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
       market: marketPk,
-      marketMatchingPool: marketAccounts.data.marketOutcomePoolPda,
       marketOutcome: marketAccounts.data.marketOutcomePda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -149,6 +152,7 @@ export async function buildOrderInstruction(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       product: productPk == undefined ? null : productPk,
+      orderRequestQueue: marketAccounts.data.marketOrderRequestQueuePda,
     })
     .instruction();
   response.addResponseData({ orderPk, instruction });

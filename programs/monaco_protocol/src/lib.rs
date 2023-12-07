@@ -6,10 +6,10 @@ use crate::instructions::market::verify_market_authority;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
+use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
 use crate::state::order_account::Order;
-use crate::state::order_account::OrderData;
 use crate::state::trade_account::Trade;
 
 pub mod context;
@@ -34,45 +34,66 @@ pub mod monaco_protocol {
     pub const SEED_SEPARATOR_CHAR: char = '␞';
     pub const SEED_SEPARATOR: &[u8] = b"\xE2\x90\x9E"; // "␞"
 
-    pub fn create_order(
-        ctx: Context<CreateOrder>,
-        _distinct_seed: String,
-        data: OrderData,
+    pub fn create_order_request(
+        ctx: Context<CreateOrderRequest>,
+        data: OrderRequestData,
     ) -> Result<()> {
-        instructions::order::create_order(
-            &mut ctx.accounts.order,
+        let payment = instructions::order_request::create_order_request(
+            ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            &ctx.accounts.purchaser,
+            &ctx.accounts.product,
+            &mut ctx.accounts.market_position,
+            &ctx.accounts.market_outcome,
+            &ctx.accounts.price_ladder,
+            &mut ctx.accounts.order_request_queue,
+            data,
+        )?;
+
+        transfer::order_creation_payment(
+            &ctx.accounts.market_escrow,
             &ctx.accounts.purchaser,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
-            &None,
+            payment,
+        )?;
+
+        ctx.accounts
+            .reserved_order
+            .close(ctx.accounts.purchaser.to_account_info())
+    }
+
+    pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {
+        instructions::order_request::process_order_request(
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market,
+            ctx.accounts.crank_operator.key(),
             &mut ctx.accounts.market_matching_pool,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.market_outcome,
-            &None,
-            data,
+            &mut ctx.accounts.order_request_queue,
         )
     }
 
-    pub fn create_order_v2(
-        ctx: Context<CreateOrderV2>,
-        _distinct_seed: String,
-        data: OrderData,
-    ) -> Result<()> {
-        instructions::order::create_order(
-            &mut ctx.accounts.order,
-            &mut ctx.accounts.market,
-            &ctx.accounts.purchaser,
+    pub fn dequeue_order_request(ctx: Context<DequeueOrderRequest>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let refund_amount = instructions::order_request::dequeue_order_request(
+            &mut ctx.accounts.order_request_queue,
+            &mut ctx.accounts.market_position,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
             &ctx.accounts.purchaser_token,
             &ctx.accounts.token_program,
-            &ctx.accounts.product,
-            &mut ctx.accounts.market_matching_pool,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.market_outcome,
-            &ctx.accounts.price_ladder,
-            data,
+            &ctx.accounts.market,
+            refund_amount,
         )
     }
 
@@ -85,13 +106,6 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn process_delay_expired_orders(ctx: Context<UpdateMarketMatchingPool>) -> Result<()> {
-        instructions::matching::updated_liquidity_with_delay_expired_orders(
-            &ctx.accounts.market,
-            &mut ctx.accounts.market_matching_pool,
-        )
-    }
-
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         instructions::order::cancel_order(ctx)?;
 
@@ -99,11 +113,12 @@ pub mod monaco_protocol {
     }
 
     pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
-        // TODO pass through the order request queue and matching queue
         let refund_amount = instructions::order::cancel_order_post_market_lock(
             &mut ctx.accounts.market,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
+            &ctx.accounts.matching_queue,
+            &ctx.accounts.order_request_queue,
         )?;
 
         transfer::transfer_from_market_escrow(
@@ -125,6 +140,8 @@ pub mod monaco_protocol {
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
+            &ctx.accounts.matching_queue,
+            &ctx.accounts.order_request_queue,
         )?;
 
         transfer::transfer_from_market_escrow(
@@ -465,6 +482,7 @@ pub mod monaco_protocol {
             &mut ctx.accounts.liquidities,
             &mut ctx.accounts.matching_queue,
             &mut ctx.accounts.commission_payment_queue,
+            &mut ctx.accounts.order_request_queue,
         )
     }
 
@@ -482,6 +500,7 @@ pub mod monaco_protocol {
         instructions::market::settle(
             &mut ctx.accounts.market,
             &ctx.accounts.market_matching_queue,
+            &ctx.accounts.order_request_queue,
             winning_outcome_index,
             settle_time,
         )
@@ -491,7 +510,7 @@ pub mod monaco_protocol {
         instructions::market::complete_settlement(ctx)
     }
 
-    pub fn void_market(ctx: Context<UpdateMarket>) -> Result<()> {
+    pub fn void_market(ctx: Context<VoidMarket>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -502,7 +521,14 @@ pub mod monaco_protocol {
         )?;
 
         let void_time = current_timestamp();
-        instructions::market::void(&mut ctx.accounts.market, void_time)
+        instructions::market::void(
+            &mut ctx.accounts.market,
+            void_time,
+            &ctx.accounts
+                .order_request_queue
+                .clone()
+                .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
+        )
     }
 
     pub fn complete_market_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
@@ -633,6 +659,7 @@ pub mod monaco_protocol {
             &ctx.accounts.liquidities,
             &ctx.accounts.commission_payment_queue.payment_queue,
             &ctx.accounts.matching_queue.matches,
+            &ctx.accounts.order_request_queue.order_requests,
         )
     }
 

@@ -8,22 +8,22 @@ import {
   createNewMint,
   createWalletWithBalance,
   OperatorType,
+  processNextOrderRequest,
 } from "../util/test_util";
 import assert from "assert";
 import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { Keypair, SendTransactionError, SystemProgram } from "@solana/web3.js";
+import { SendTransactionError, SystemProgram } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
-  findOrderPda,
   findMarketMatchingPoolPda,
   getMarketAccounts,
-  findMarketPositionPda,
   confirmTransaction,
 } from "../../npm-client/src";
 import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
-import { findMarketPdas } from "../util/pdas";
+import { findOrderRequestQueuePda } from "../../npm-admin-client";
+import { findUserPdas } from "../util/pdas";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -108,7 +108,7 @@ describe("Protocol - Create Order", () => {
     );
     assert.equal(marketMatchingPool.matchedAmount.toNumber(), 0);
     assert.equal(
-      marketMatchingPool.orders.items[0].order.toBase58(),
+      marketMatchingPool.orders.items[0].toBase58(),
       orderPk.toBase58(),
     );
 
@@ -164,10 +164,14 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const orderPk = orderResponse.data.orderPk;
     await confirmTransaction(
       protocolProgram as Program<anchor.Idl>,
       orderResponse.data.tnxID,
+    );
+
+    const orderPk = await processNextOrderRequest(
+      marketPda,
+      monaco.operatorWallet,
     );
 
     // check the state of the newly created account
@@ -232,7 +236,7 @@ describe("Protocol - Create Order", () => {
     const outOfBoundsIndex = 10;
 
     // Set up Market and related accounts
-    const { marketPda, matchingPools, mintPk } = await createMarket(
+    const { marketPda, mintPk } = await createMarket(
       protocolProgram,
       provider,
       [price],
@@ -245,9 +249,6 @@ describe("Protocol - Create Order", () => {
       price,
     );
 
-    const marketMatchingPools = matchingPools[0][price];
-    const marketMatchingPool = marketMatchingPools.forOutcome;
-
     const purchaserTokenAccount = await createAssociatedTokenAccountWithBalance(
       mintPk,
       provider.wallet.publicKey,
@@ -258,34 +259,38 @@ describe("Protocol - Create Order", () => {
       10 ** (await getMint(provider.connection, mintPk)).decimals,
     );
 
-    const orderPdaResponse = await findOrderPda(
+    const orderRequestQueuePk = await findOrderRequestQueuePda(
       protocolProgram,
       marketPda,
-      provider.wallet.publicKey,
     );
-    const orderPk = orderPdaResponse.data.orderPk;
-    const distinctSeed = orderPdaResponse.data.distinctSeed;
+
+    const { orderPk, orderDistinctSeed } = await findUserPdas(
+      marketPda,
+      provider.wallet.publicKey,
+      protocolProgram as Program<anchor.Idl>,
+    );
 
     await protocolProgram.methods
-      .createOrderV2(distinctSeed, {
+      .createOrderRequest({
         marketOutcomeIndex: outOfBoundsIndex,
         forOutcome: true,
         stake: stake,
         price: price,
+        distinctSeed: Array.from(orderDistinctSeed),
       })
       .accounts({
+        reservedOrder: orderPk,
         purchaser: provider.wallet.publicKey,
-        order: orderPk,
         marketPosition: MarketAccounts.data.marketPositionPda,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         market: marketPda,
-        marketMatchingPool: marketMatchingPool,
         marketOutcome: MarketAccounts.data.marketOutcomePda,
         priceLadder: null,
         purchaserToken: purchaserTokenAccount,
         marketEscrow: MarketAccounts.data.escrowPda,
         product: null,
+        orderRequestQueue: orderRequestQueuePk.data.pda,
       })
       .rpc()
       .catch((e) => {
@@ -326,6 +331,9 @@ describe("Protocol - Create Order", () => {
         marketMatchingQueue: matchingQueuePda,
         authorisedOperators: authorisedMarketOperators,
         marketOperator: marketOperator.publicKey,
+        orderRequestQueue: (
+          await findOrderRequestQueuePda(protocolProgram, marketPda)
+        ).data.pda,
       })
       .signers([marketOperator])
       .rpc();
@@ -474,16 +482,20 @@ describe("Protocol - Create Order", () => {
       stakeInteger,
     );
 
-    const orderPk = orderResponse.data.orderPk;
     await confirmTransaction(
       protocolProgram as Program<anchor.Idl>,
       orderResponse.data.tnxID,
     );
 
+    const orderPk = await processNextOrderRequest(
+      marketPda,
+      monaco.operatorWallet,
+    );
+
     const matchingPool = await protocolProgram.account.marketMatchingPool.fetch(
       matchingPoolPda.data.pda,
     );
-    assert.equal(matchingPool.orders.items[0].order.toBase58(), orderPk);
+    assert.equal(matchingPool.orders.items[0].toBase58(), orderPk);
     assert.equal(
       matchingPool.liquidityAmount.toNumber(),
       stakeInteger.toNumber(),
@@ -888,119 +900,6 @@ describe("Protocol - Create Order", () => {
     );
   });
 
-  it("Create order using create_order (v1) instruction", async () => {
-    const stake = 10000000;
-    const outcomeIndex = 0;
-    const price = 2.0;
-    const forOutcome = true;
-
-    const market = await monaco.create3WayMarket([price]);
-    const purchaser = await createWalletWithBalance(monaco.provider);
-    const purchaserTokenPk = await market.airdrop(purchaser, 100.0);
-
-    const { marketEscrowPk, marketOutcomePk, marketMatchingPoolPk } =
-      await findMarketPdas(
-        market.pk,
-        forOutcome,
-        outcomeIndex,
-        price,
-        monaco.getRawProgram(),
-      );
-
-    const [order, marketPositionPk] = await Promise.all([
-      findOrderPda(monaco.getRawProgram(), market.pk, purchaser.publicKey),
-      findMarketPositionPda(
-        monaco.getRawProgram(),
-        market.pk,
-        purchaser.publicKey,
-      ),
-    ]);
-
-    await monaco.program.methods
-      .createOrder(order.data.distinctSeed, {
-        marketOutcomeIndex: outcomeIndex,
-        forOutcome: true,
-        stake: new BN(stake),
-        price: price,
-      })
-      .accounts({
-        purchaser: purchaser.publicKey,
-        order: order.data.orderPk,
-        marketPosition: marketPositionPk.data.pda,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        market: market.pk,
-        marketMatchingPool: marketMatchingPoolPk,
-        marketOutcome: marketOutcomePk,
-        purchaserToken: purchaserTokenPk,
-        marketEscrow: marketEscrowPk,
-      })
-      .signers(purchaser instanceof Keypair ? [purchaser] : [])
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-
-    const createdOrder = await monaco.program.account.order.fetch(
-      order.data.orderPk,
-    );
-    assert.equal(createdOrder.product, null);
-  });
-
-  it("Create order while market is inplay", async () => {
-    const inplayDelay = 7;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    const market = await monaco.create3WayMarket(
-      [2.0],
-      true,
-      inplayDelay,
-      eventStartTimestamp,
-      marketLockTimestamp,
-    );
-    const purchaser = await createWalletWithBalance(monaco.provider);
-    await market.airdrop(purchaser, 100.0);
-
-    const orderPk = await market.forOrder(0, 1, 2.0, purchaser);
-    const order = await monaco.program.account.order.fetch(orderPk);
-    assert.equal(
-      order.delayExpirationTimestamp.toNumber(),
-      order.creationTimestamp.toNumber() + inplayDelay,
-    );
-  });
-
-  it("Create order while market is inplay and liquidity isn't added to matching pool during delay", async () => {
-    const inplayDelay = 100;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    const market = await monaco.create3WayMarket(
-      [2.0],
-      true,
-      inplayDelay,
-      eventStartTimestamp,
-      marketLockTimestamp,
-    );
-    const purchaser = await createWalletWithBalance(monaco.provider);
-    await market.airdrop(purchaser, 100.0);
-
-    await market.forOrder(0, 1, 2.0, purchaser);
-
-    let matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-
-    await market.processDelayExpiredOrders(0, 2.0, true);
-
-    matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-  });
-
   it("Create order while market is inplay and add liquidity to matching pool after delay", async () => {
     const inplayDelay = 0;
 
@@ -1020,47 +919,7 @@ describe("Protocol - Create Order", () => {
 
     await market.forOrder(0, 1, 2.0, purchaser);
 
-    let matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-
-    await market.processDelayExpiredOrders(0, 2.0, true);
-
-    matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 1);
-  });
-
-  it("Create first order after market goes inplay and liquidity is zerod", async () => {
-    const inplayDelay = 0;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now + 100;
-    const marketLockTimestamp = now + 1000;
-
-    const market = await monaco.create3WayMarket(
-      [2.0],
-      true,
-      inplayDelay,
-      eventStartTimestamp,
-      marketLockTimestamp,
-    );
-    const purchaser = await createWalletWithBalance(monaco.provider);
-    await market.airdrop(purchaser, 100.0);
-    await market.forOrder(0, 10, 2.0, purchaser);
-
-    let matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 10);
-
-    await market.updateMarketEventStartTimeToNow();
-    await market.moveMarketToInplay();
-
-    await market.forOrder(0, 1, 2.0, purchaser);
-
-    matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
-
-    await market.processDelayExpiredOrders(0, 2.0, true);
-
-    matchingPool = await market.getForMatchingPool(0, 2.0);
+    const matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
   });
 
@@ -1090,11 +949,6 @@ describe("Protocol - Create Order", () => {
     await market.moveMarketToInplay();
 
     await market.forOrder(0, 1, 2.0, purchaser);
-
-    matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 10);
-
-    await market.processDelayExpiredOrders(0, 2.0, true);
 
     matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 11);

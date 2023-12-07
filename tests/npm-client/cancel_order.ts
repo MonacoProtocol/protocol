@@ -33,10 +33,10 @@ describe("NPM client", () => {
       price,
       stake,
     );
-
     const orderPk = orderResponse.data.orderPk;
     await confirmTransaction(monaco.getRawProgram(), orderResponse.data.tnxID);
 
+    await market.processNextOrderRequest();
     const cancelOrder = await cancelOrderNpm(
       monaco.program as Program,
       orderPk,
@@ -86,6 +86,7 @@ describe("NPM client", () => {
       confirmTransaction(monaco.getRawProgram(), orderResponse2.data.tnxID),
     ]);
 
+    await market.processOrderRequests();
     const cancelOrders = await cancelOrdersForMarket(
       monaco.program as Program,
       market.pk,
@@ -149,6 +150,8 @@ describe("NPM client", () => {
       await market.getTokenBalance(monaco.provider.wallet.publicKey),
       10_000, // risk was 10,000 but previous payment 2,000 is taken into account
     );
+
+    await market.processOrderRequests();
 
     const [
       order1AccountResponse,

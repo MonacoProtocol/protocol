@@ -37,7 +37,7 @@ Type: {price: [number][22], stake: [number][22]}
 
 ## Order
 
-Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][22], forOutcome: [boolean][23], orderStatus: [OrderStatus][1], product: (PublicKey | null), stake: BN, voidedStake: BN, expectedPrice: [number][22], creationTimestamp: BN, delayExpirationTimestamp: BN, stakeUnmatched: BN, payout: BN, payer: PublicKey, productCommissionRate: [number][22]}
+Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][22], forOutcome: [boolean][23], orderStatus: [OrderStatus][1], product: (PublicKey | null), stake: BN, voidedStake: BN, expectedPrice: [number][22], creationTimestamp: BN, stakeUnmatched: BN, payout: BN, payer: PublicKey, productCommissionRate: [number][22]}
 
 ### Properties
 
@@ -51,7 +51,6 @@ Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][22]
 *   `voidedStake` **BN**&#x20;
 *   `expectedPrice` **[number][22]**&#x20;
 *   `creationTimestamp` **BN**&#x20;
-*   `delayExpirationTimestamp` **BN**&#x20;
 *   `stakeUnmatched` **BN**&#x20;
 *   `payout` **BN**&#x20;
 *   `payer` **PublicKey**&#x20;
@@ -110,12 +109,12 @@ Type: {failedCancellationOrders: [Array][24]\<PublicKey>, tnxIDs: [Array][24]<[s
 
 ## orderPdaResponse
 
-Type: {orderPk: PublicKey, distinctSeed: [string][25]}
+Type: {orderPk: PublicKey, distinctSeed: [Uint8Array][26]}
 
 ### Properties
 
 *   `orderPk` **PublicKey**&#x20;
-*   `distinctSeed` **[string][25]**&#x20;
+*   `distinctSeed` **[Uint8Array][26]**&#x20;
 
 ## StakeInteger
 
@@ -174,3 +173,5 @@ Type: {stakeInteger: BN}
 [24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
 [25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array

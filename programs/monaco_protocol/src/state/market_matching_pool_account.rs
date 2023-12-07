@@ -18,7 +18,7 @@ pub struct MarketMatchingPool {
 }
 
 impl MarketMatchingPool {
-    pub const QUEUE_LENGTH: u32 = 80;
+    pub const QUEUE_LENGTH: u32 = 50;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
@@ -41,67 +41,26 @@ impl MarketMatchingPool {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
-pub struct QueueItem {
-    pub order: Pubkey,
-    pub delay_expiration_timestamp: i64,
-    pub liquidity_to_add: u64,
-}
-
-impl QueueItem {
-    pub const SIZE: usize = PUB_KEY_SIZE + I64_SIZE + U64_SIZE;
-
-    pub fn new(order: Pubkey) -> QueueItem {
-        QueueItem::new_inplay(order, 0, 0)
-    }
-
-    pub fn new_inplay(
-        order: Pubkey,
-        delay_expiration_timestamp: i64,
-        liquidity_to_add: u64,
-    ) -> QueueItem {
-        QueueItem {
-            order,
-            delay_expiration_timestamp,
-            liquidity_to_add,
-        }
-    }
-
-    pub fn new_unique() -> Self {
-        QueueItem {
-            order: Pubkey::new_unique(),
-            delay_expiration_timestamp: 0,
-            liquidity_to_add: 0,
-        }
-    }
-}
-
-impl PartialEq for QueueItem {
-    fn eq(&self, other: &Self) -> bool {
-        self.order.eq(&other.order)
-    }
-}
-
-impl Eq for QueueItem {}
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Cirque {
     front: u32,
     len: u32,
-    items: Vec<QueueItem>,
+    capacity: u32,
+    items: Vec<Pubkey>,
 }
 
 impl Cirque {
     pub const fn size_for(length: u32) -> usize {
-        (U32_SIZE  * 2) + // front and len
-        vec_size(QueueItem::SIZE, length as usize) // items
+        (U32_SIZE  * 3) + // front, len & capacity
+        vec_size(PUB_KEY_SIZE, length as usize) // items
     }
 
-    pub fn new(size: u32) -> Cirque {
+    pub fn new(capacity: u32) -> Cirque {
         Cirque {
             front: 0,
             len: 0,
-            items: vec![QueueItem::default(); size as usize],
+            capacity,
+            items: Vec::with_capacity(capacity as usize),
         }
     }
 
@@ -115,82 +74,74 @@ impl Cirque {
     /*
     Capacity of the queue
      */
-    pub fn size(&self) -> u32 {
-        self.items.len() as u32
+    pub fn capacity(&self) -> u32 {
+        self.capacity
     }
 
-    pub fn peek(&mut self, index: u32) -> Option<&mut QueueItem> {
+    pub fn peek(&mut self, index: u32) -> Option<&Pubkey> {
         if index >= self.len {
             None
         } else {
-            let size = self.size();
-            Some(&mut self.items[((self.front + index) % size) as usize])
+            let capacity = self.capacity();
+            Some(&self.items[((self.front + index) % capacity) as usize])
         }
     }
 
     fn back(&self) -> u32 {
-        // #[soteria(ignore)] 0 <= front < size() AND 0 <= len < size() AND size() == QUEUE_LENGTH << u32::MAX
-        (self.front + self.len) % self.size()
+        // #[soteria(ignore)] 0 <= front < capacity() AND 0 <= len < capacity() AND capacity() == QUEUE_LENGTH << u32::MAX
+        (self.front + self.len) % self.capacity()
     }
 
     pub fn set_length_to_zero(&mut self) {
         self.len = 0
     }
 
-    pub fn enqueue_pubkey(&mut self, item: Pubkey) -> Option<u32> {
-        self.enqueue(QueueItem::new(item))
-    }
-
-    pub fn enqueue(&mut self, item: QueueItem) -> Option<u32> {
-        if self.len == self.size() {
+    pub fn enqueue(&mut self, item: Pubkey) -> Option<u32> {
+        if self.len == self.capacity() {
             None
         } else {
             let old_back = self.back();
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
-            self.items[old_back as usize] = item;
+            if self.items.len() < self.capacity() as usize {
+                self.items.push(item);
+            } else {
+                self.items[old_back as usize] = item;
+            }
             Some(old_back)
         }
     }
 
-    pub fn dequeue_pubkey(&mut self) -> Option<Pubkey> {
-        self.dequeue().map(|item| item.order)
-    }
-
-    pub fn dequeue(&mut self) -> Option<&mut QueueItem> {
+    pub fn dequeue(&mut self) -> Option<&Pubkey> {
         if self.len == 0 {
             None
         } else {
             let old_front = self.front;
-            self.front = (old_front + 1) % self.size();
+            self.front = (old_front + 1) % self.capacity();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
-            Some(&mut self.items[old_front as usize])
+            Some(&self.items[old_front as usize])
         }
     }
 
-    pub fn remove_pubkey(&mut self, to_remove: &Pubkey) -> Option<QueueItem> {
-        self.remove(&QueueItem::new(*to_remove))
-    }
-
-    pub fn remove(&mut self, to_remove: &QueueItem) -> Option<QueueItem> {
+    pub fn remove(&mut self, to_remove: &Pubkey) -> Option<Pubkey> {
         if self.len == 0 {
             return None;
         }
 
         let front_index = self.front as usize;
-        let last_index = ((self.front + self.len - 1) % self.size()) as usize;
+        let last_index = ((self.front + self.len - 1) % self.capacity()) as usize;
 
         // if the queue can be treated as a regular array
         if last_index >= front_index {
             if let Some(relative_index) = self.items[front_index..=last_index]
                 .iter()
-                .position(|x: &QueueItem| x.eq(to_remove))
+                .position(|x: &Pubkey| x.eq(to_remove))
             {
                 let index = front_index + relative_index;
                 let item = self.items[index];
                 if index == front_index {
-                    self.front = (front_index + 1) as u32 % self.size();
+                    self.front = (front_index + 1) as u32 % self.capacity();
                 } else if index < last_index {
                     self.items.copy_within((index + 1)..=last_index, index);
                 }
@@ -220,7 +171,7 @@ impl Cirque {
 
                 // No need to move any data around, just move front one to the right and decrement len
                 if index == front_index {
-                    self.front = (front_index + 1) as u32 % self.size();
+                    self.front = (front_index + 1) as u32 % self.capacity();
                 } else {
                     let items = &mut self.items;
                     let length = items.len();
@@ -240,9 +191,8 @@ impl Cirque {
 
 #[cfg(test)]
 mod tests {
-    use anchor_lang::prelude::*;
-
-    use crate::state::market_matching_pool_account::{Cirque, QueueItem};
+    use crate::state::market_matching_pool_account::Cirque;
+    use solana_program::pubkey::Pubkey;
 
     //
     // Cirque tests
@@ -257,7 +207,7 @@ mod tests {
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(2, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(1, queue.front);
@@ -272,7 +222,7 @@ mod tests {
         let to_remove = queue.items[1];
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(1, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(2, queue.front);
@@ -286,7 +236,7 @@ mod tests {
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(2, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(0, queue.front);
@@ -300,7 +250,7 @@ mod tests {
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(2, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(0, queue.front);
@@ -328,7 +278,7 @@ mod tests {
 
             let result = queue.remove(&item_to_remove);
 
-            assert_eq!(item_to_remove.order, result.unwrap().order);
+            assert_eq!(item_to_remove, result.unwrap());
             assert_eq!(4, queue.len());
             assert_eq!(i, queue.back());
             assert_eq!((i + 1) % queue_size, queue.front);
@@ -354,7 +304,7 @@ mod tests {
         queue.dequeue();
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(3, queue.len());
         assert_eq!(0, queue.back());
         assert_eq!(2, queue.front);
@@ -374,7 +324,7 @@ mod tests {
         queue.dequeue();
         let result = queue.remove(&key_2_to_remove);
 
-        assert_eq!(key_2_to_remove.order, result.unwrap().order);
+        assert_eq!(key_2_to_remove, result.unwrap());
         assert_eq!(3, queue.len());
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
@@ -406,7 +356,7 @@ mod tests {
         queue.dequeue();
         let result2 = queue.remove(&key2_to_remove);
 
-        assert_eq!(key2_to_remove.order, result2.unwrap().order);
+        assert_eq!(key2_to_remove, result2.unwrap());
         assert_eq!(3, queue.len());
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
@@ -416,7 +366,7 @@ mod tests {
         );
 
         let result3 = queue.remove(&key3_to_remove);
-        assert_eq!(key3_to_remove.order, result3.unwrap().order);
+        assert_eq!(key3_to_remove, result3.unwrap());
         assert_eq!(2, queue.len());
         assert_eq!(3, queue.front);
         assert_eq!(0, queue.back());
@@ -437,35 +387,35 @@ mod tests {
         let key5 = queue.items[4];
 
         let result1 = queue.remove(&key1);
-        assert_eq!(key1.order, result1.unwrap().order);
+        assert_eq!(key1, result1.unwrap());
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(4, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result2 = queue.remove(&key2);
-        assert_eq!(key2.order, result2.unwrap().order);
+        assert_eq!(key2, result2.unwrap());
         assert_eq!(2, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(3, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result3 = queue.remove(&key3);
-        assert_eq!(key3.order, result3.unwrap().order);
+        assert_eq!(key3, result3.unwrap());
         assert_eq!(3, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(2, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result4 = queue.remove(&key4);
-        assert_eq!(key4.order, result4.unwrap().order);
+        assert_eq!(key4, result4.unwrap());
         assert_eq!(4, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(1, queue.len());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result5 = queue.remove(&key5);
-        assert_eq!(key5.order, result5.unwrap().order);
+        assert_eq!(key5, result5.unwrap());
         assert_eq!(0, queue.front);
         assert_eq!(0, queue.back());
         assert_eq!(0, queue.len());
@@ -481,7 +431,7 @@ mod tests {
         let key3 = queue.items[2];
 
         let result1 = queue.remove(&key1);
-        assert_eq!(key1.order, result1.unwrap().order);
+        assert_eq!(key1, result1.unwrap());
         assert_eq!(vec![key1, key2, key3], queue.items);
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
@@ -531,35 +481,35 @@ mod tests {
         let key5 = queue.items[4];
 
         let result = queue.remove(&key5);
-        assert_eq!(key5.order, result.unwrap().order);
+        assert_eq!(key5, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(4, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result4 = queue.remove(&key4);
-        assert_eq!(key4.order, result4.unwrap().order);
+        assert_eq!(key4, result4.unwrap());
         assert_eq!(3, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(3, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result3 = queue.remove(&key3);
-        assert_eq!(key3.order, result3.unwrap().order);
+        assert_eq!(key3, result3.unwrap());
         assert_eq!(2, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(2, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result2 = queue.remove(&key2);
-        assert_eq!(key2.order, result2.unwrap().order);
+        assert_eq!(key2, result2.unwrap());
         assert_eq!(1, queue.len());
         assert_eq!(0, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(vec![key1, key2, key3, key4, key5], queue.items);
 
         let result1 = queue.remove(&key1);
-        assert_eq!(key1.order, result1.unwrap().order);
+        assert_eq!(key1, result1.unwrap());
         assert_eq!(0, queue.len());
         assert_eq!(1, queue.front);
         assert_eq!(1, queue.back());
@@ -584,38 +534,38 @@ mod tests {
         assert_eq!(0, queue.back());
         assert_eq!(4, queue.len());
 
-        let key6 = QueueItem::new_unique();
+        let key6 = Pubkey::new_unique();
         queue.enqueue(key6);
         assert_eq!(1, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(5, queue.len());
 
         let result2 = queue.remove(&key2);
-        assert_eq!(key2.order, result2.unwrap().order);
+        assert_eq!(key2, result2.unwrap());
         assert_eq!(2, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(4, queue.len());
 
         let result3 = queue.remove(&key3);
-        assert_eq!(key3.order, result3.unwrap().order);
+        assert_eq!(key3, result3.unwrap());
         assert_eq!(3, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(3, queue.len());
 
         let result4 = queue.remove(&key4);
-        assert_eq!(key4.order, result4.unwrap().order);
+        assert_eq!(key4, result4.unwrap());
         assert_eq!(4, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(2, queue.len());
 
         let result5 = queue.remove(&key5);
-        assert_eq!(key5.order, result5.unwrap().order);
+        assert_eq!(key5, result5.unwrap());
         assert_eq!(0, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(1, queue.len());
 
         let result6 = queue.remove(&key6);
-        assert_eq!(key6.order, result6.unwrap().order);
+        assert_eq!(key6, result6.unwrap());
         assert_eq!(1, queue.front);
         assert_eq!(1, queue.back());
         assert_eq!(0, queue.len());
@@ -641,7 +591,7 @@ mod tests {
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(0, queue.front);
         assert_eq!(0, queue.len());
         assert_eq!(0, queue.back());
@@ -659,14 +609,14 @@ mod tests {
         let to_remove = queue.items[4];
 
         queue.dequeue();
-        let key6 = QueueItem::new_unique();
+        let key6 = Pubkey::new_unique();
         queue.enqueue(key6);
 
         assert!(queue.items.eq(&vec![key6, key2, key3, key4, to_remove]));
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(1, queue.front);
         assert_eq!(0, queue.back());
@@ -684,12 +634,12 @@ mod tests {
         let key4 = queue.items[3];
         let key5 = queue.items[4];
 
-        let to_remove = QueueItem::new_unique();
+        let to_remove = Pubkey::new_unique();
         queue.enqueue(to_remove);
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(0, queue.back());
         assert_eq!(1, queue.front);
@@ -707,14 +657,14 @@ mod tests {
         let key4 = queue.items[3];
         let key5 = queue.items[4];
 
-        let to_remove = QueueItem::new_unique();
-        let key7 = QueueItem::new_unique();
+        let to_remove = Pubkey::new_unique();
+        let key7 = Pubkey::new_unique();
         queue.enqueue(to_remove);
         queue.enqueue(key7);
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(to_remove.order, result.unwrap().order);
+        assert_eq!(to_remove, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(1, queue.back());
         assert_eq!(2, queue.front);
@@ -731,20 +681,20 @@ mod tests {
 
         let key5 = queue.items[4];
 
-        let key6 = QueueItem::new_unique();
-        let key7 = QueueItem::new_unique();
-        let to_remove = QueueItem::new_unique();
-        let key9 = QueueItem::new_unique();
+        let key6 = Pubkey::new_unique();
+        let key7 = Pubkey::new_unique();
+        let to_remove = Pubkey::new_unique();
+        let key9 = Pubkey::new_unique();
         queue.enqueue(key6);
         queue.enqueue(key7);
         queue.enqueue(to_remove);
         queue.enqueue(key9);
 
-        let expected_removed_pubkey = to_remove.order;
+        let expected_removed_pubkey = to_remove;
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(expected_removed_pubkey, result.unwrap().order);
+        assert_eq!(expected_removed_pubkey, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(3, queue.back());
         assert_eq!(4, queue.front);
@@ -763,18 +713,18 @@ mod tests {
         queue.dequeue();
         queue.dequeue();
 
-        let key6 = QueueItem::new_unique(); // key 6
-        let to_remove = QueueItem::new_unique(); // key 6
-        let key8 = QueueItem::new_unique(); // key 6
+        let key6 = Pubkey::new_unique(); // key 6
+        let to_remove = Pubkey::new_unique(); // key 6
+        let key8 = Pubkey::new_unique(); // key 6
         queue.enqueue(key6);
         queue.enqueue(to_remove);
         queue.enqueue(key8);
 
-        let expected_removed_pubkey = to_remove.order;
+        let expected_removed_pubkey = to_remove;
 
         let result = queue.remove(&to_remove);
 
-        assert_eq!(expected_removed_pubkey, result.unwrap().order);
+        assert_eq!(expected_removed_pubkey, result.unwrap());
         assert_eq!(4, queue.len());
         assert_eq!(2, queue.back());
         assert_eq!(3, queue.front);
@@ -797,7 +747,7 @@ mod tests {
         let key9 = queue.items[8];
         let key10 = queue.items[9];
 
-        let expected_removed_pubkey = key8.order;
+        let expected_removed_pubkey = key8;
         let expected_items = vec![key2, key3, key4, key5, key5, key6, key7, key9, key10, key1];
 
         queue.dequeue();
@@ -818,7 +768,7 @@ mod tests {
 
         let result = queue.remove(&key8);
 
-        assert_eq!(expected_removed_pubkey, result.unwrap().order);
+        assert_eq!(expected_removed_pubkey, result.unwrap());
         assert_eq!(5, queue.front);
         assert_eq!(4, queue.back());
         assert_eq!(9, queue.len);
@@ -828,7 +778,7 @@ mod tests {
     fn generate_populated_queue(size: u32, enqueued_items: u32) -> Cirque {
         let mut queue = Cirque::new(size);
         for _ in 0..enqueued_items {
-            queue.enqueue(QueueItem::new_unique());
+            queue.enqueue(Pubkey::new_unique());
         }
 
         queue
@@ -839,7 +789,7 @@ mod tests {
         let mut queue = Cirque::new(1);
         assert_eq!(0, queue.len());
 
-        let result = queue.enqueue(QueueItem::new_unique());
+        let result = queue.enqueue(Pubkey::new_unique());
         assert!(result.is_some());
         assert_eq!(0, result.unwrap());
         assert_eq!(1, queue.len());
@@ -848,10 +798,10 @@ mod tests {
     #[test]
     fn test_cirque_enqueue_size_n_success() {
         let mut queue = Cirque::new(3);
-        queue.enqueue(QueueItem::new_unique());
-        queue.enqueue(QueueItem::new_unique());
+        queue.enqueue(Pubkey::new_unique());
+        queue.enqueue(Pubkey::new_unique());
 
-        let result = queue.enqueue(QueueItem::new_unique());
+        let result = queue.enqueue(Pubkey::new_unique());
         assert!(result.is_some());
         assert_eq!(2, result.unwrap());
         assert_eq!(3, queue.len());
@@ -860,7 +810,7 @@ mod tests {
     #[test]
     fn test_cirque_dequeue_success() {
         let mut queue = Cirque::new(1);
-        let item = QueueItem::new_unique();
+        let item = Pubkey::new_unique();
         queue.enqueue(item);
         assert_eq!(1, queue.len());
 
@@ -883,10 +833,10 @@ mod tests {
     #[test]
     fn test_cirque_dequeue_full_queue() {
         let mut queue = Cirque::new(3);
-        let expected = QueueItem::new_unique();
+        let expected = Pubkey::new_unique();
         queue.enqueue(expected);
-        queue.enqueue(QueueItem::new_unique());
-        queue.enqueue(QueueItem::new_unique());
+        queue.enqueue(Pubkey::new_unique());
+        queue.enqueue(Pubkey::new_unique());
         assert_eq!(3, queue.len());
 
         let result = queue.dequeue();
@@ -897,12 +847,12 @@ mod tests {
     #[test]
     fn test_cirque_enqueue_full_queue() {
         let mut queue = Cirque::new(3);
-        queue.enqueue(QueueItem::new_unique());
-        queue.enqueue(QueueItem::new_unique());
-        queue.enqueue(QueueItem::new_unique());
+        queue.enqueue(Pubkey::new_unique());
+        queue.enqueue(Pubkey::new_unique());
+        queue.enqueue(Pubkey::new_unique());
         assert_eq!(3, queue.len());
 
-        let result = queue.enqueue(QueueItem::new_unique());
+        let result = queue.enqueue(Pubkey::new_unique());
         assert!(result.is_none());
         assert_eq!(3, queue.len());
     }
@@ -910,7 +860,7 @@ mod tests {
     #[test]
     fn test_cirque_peek_success() {
         let mut queue = Cirque::new(1);
-        let item = QueueItem::new_unique();
+        let item = Pubkey::new_unique();
         queue.enqueue(item);
         assert_eq!(1, queue.len());
 
@@ -918,29 +868,5 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
-    }
-
-    #[test]
-    fn test_cirque_peek_edit_in_place_success() {
-        let mut queue = Cirque::new(2);
-        queue.enqueue(QueueItem {
-            order: Pubkey::new_unique(),
-            liquidity_to_add: 1,
-            delay_expiration_timestamp: 0,
-        });
-        queue.enqueue(QueueItem {
-            order: Pubkey::new_unique(),
-            liquidity_to_add: 2,
-            delay_expiration_timestamp: 0,
-        });
-        assert_eq!(2, queue.len());
-
-        let result0 = queue.peek(0).unwrap();
-        result0.liquidity_to_add = 10;
-        assert_eq!(10, queue.items[0].liquidity_to_add);
-
-        let result1 = queue.peek(1).unwrap();
-        result1.liquidity_to_add = 20;
-        assert_eq!(20, queue.items[1].liquidity_to_add);
     }
 }

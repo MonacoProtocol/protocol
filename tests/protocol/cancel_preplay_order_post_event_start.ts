@@ -44,12 +44,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
         10000,
       ],
     );
-
-    const marketMatchingPool =
-      await monaco.program.account.marketMatchingPool.fetch(
-        market.matchingPools[outcomeIndex][price].forOutcome,
-      );
-    assert.ok(marketMatchingPool.inplay);
   });
 
   it("success: partially matched order", async () => {
@@ -210,7 +204,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     // Create market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarketWithInplay([price]),
+      monaco.create3WayMarket([price], true, 0),
     ]);
     await market.airdrop(purchaser, 10_000);
 
@@ -281,6 +275,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -342,6 +338,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -398,6 +396,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -459,6 +459,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -523,6 +525,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintAssociated");
@@ -586,6 +590,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationMarketMismatch");
@@ -649,6 +655,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintSeeds");

@@ -13,14 +13,8 @@ export type MarketMatchingPool = {
   orders: Cirque;
 };
 
-export type QueueItem = {
-  order: PublicKey;
-  delayExpirationTimestamp: BN;
-  liquidityToAdd: BN;
-};
-
 export type Cirque = {
   front: number;
   len: number;
-  items: QueueItem[];
+  items: PublicKey[];
 };

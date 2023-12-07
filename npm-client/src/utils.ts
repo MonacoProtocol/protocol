@@ -6,7 +6,7 @@ import {
 import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 import { Big } from "big.js";
-import { getMarket } from "./markets";
+import { findOrderRequestQueuePda, getMarket } from "./markets";
 import { findMarketPositionPda } from "./market_position";
 import { findMarketMatchingPoolPda } from "./market_matching_pools";
 import { findMarketOutcomePda } from "./market_outcomes";
@@ -55,22 +55,29 @@ export async function getMarketAccounts(
 
   const provider = program.provider as AnchorProvider;
 
-  const [marketOutcomePda, marketOutcomePoolPda, marketPositionPda, escrowPda] =
-    await Promise.all([
-      findMarketOutcomePda(program, marketPk, marketOutcomeIndex),
-      findMarketMatchingPoolPda(
-        program,
-        marketPk,
-        marketOutcomeIndex,
-        price,
-        forOutcome,
-      ),
-      findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
-      findEscrowPda(program, marketPk),
-    ]);
+  const [
+    marketOutcomePda,
+    marketOutcomePoolPda,
+    marketPositionPda,
+    escrowPda,
+    marketOrderRequestQueuePda,
+  ] = await Promise.all([
+    findMarketOutcomePda(program, marketPk, marketOutcomeIndex),
+    findMarketMatchingPoolPda(
+      program,
+      marketPk,
+      marketOutcomeIndex,
+      price,
+      forOutcome,
+    ),
+    findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
+    findEscrowPda(program, marketPk),
+    findOrderRequestQueuePda(program, marketPk),
+  ]);
 
   const responseData = {
     escrowPda: escrowPda.data.pda,
+    marketOrderRequestQueuePda: marketOrderRequestQueuePda.data.pda,
     marketOutcomePda: marketOutcomePda.data.pda,
     marketOutcomePoolPda: marketOutcomePoolPda.data.pda,
     marketPositionPda: marketPositionPda.data.pda,

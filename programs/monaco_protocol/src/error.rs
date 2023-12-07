@@ -33,6 +33,15 @@ pub enum CoreError {
     #[msg("Order Creation: market is already inplay")]
     CreationMarketAlreadyInplay,
 
+    #[msg("Order Request Creation: request queue is full")]
+    OrderRequestCreationQueueFull,
+    #[msg("Order Request Creation: duplicate request already queued")]
+    OrderRequestCreationDuplicateRequest,
+    #[msg("Order Request Processing: request queue is empty")]
+    OrderRequestQueueIsEmpty,
+    #[msg("Order Request Processing: request queue is not empty")]
+    OrderRequestQueueIsNotEmpty,
+
     /*
     Cancelation
      */
@@ -54,6 +63,8 @@ pub enum CoreError {
     CancelationOrderStatusInvalid,
     #[msg("Order Cancelation: order created after market event started")]
     CancelationOrderCreatedAfterMarketEventStarted,
+    #[msg("Order Cancelation: cannot cancel preplay orders until all preplay order requests are processed")]
+    CancelationPreplayOrderRequestsExist,
 
     /*
     Settlement
@@ -98,6 +109,8 @@ pub enum CoreError {
     VoidPaymentCalculation,
     #[msg("Void: order is already voided.")]
     VoidOrderIsVoided,
+    #[msg("Void: request queue must be provided for non Initializing markets")]
+    VoidMarketRequestQueueNotProvided,
 
     /*
     Account counts
@@ -149,6 +162,8 @@ pub enum CoreError {
     MatchingQueueIsFull,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the queue was empty.")]
     MatchingQueueIsEmpty,
+    #[msg("Matching queue is not empty.")]
+    MatchingQueueIsNotEmpty,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the item at the front of the queue was incorrect.")]
     IncorrectOrderDequeueAttempt,
     #[msg("The order to be matched is not at the front of the matching pool queue")]
@@ -293,4 +308,6 @@ pub enum CoreError {
     CloseAccountMarketPaymentQueueNotEmpty,
     #[msg("CloseAccount: Market matching queue is not empty")]
     CloseAccountMarketMatchingQueueNotEmpty,
+    #[msg("CloseAccount: Market order request queue is not empty")]
+    CloseAccountOrderRequestQueueNotEmpty,
 }

@@ -37,6 +37,9 @@ describe("Close market accounts (voided)", () => {
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
+    const orderRequestQueueRent = await monaco.provider.connection.getBalance(
+      market.orderRequestQueuePk,
+    );
 
     await market.voidMarket();
     await market.completeVoid();
@@ -71,6 +74,7 @@ describe("Close market accounts (voided)", () => {
       liquiditiesRent +
       matchingQueueRent +
       paymentsQueueRent +
+      orderRequestQueueRent +
       outcomeARent +
       outcomeBRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);

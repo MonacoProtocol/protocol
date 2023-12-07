@@ -86,12 +86,10 @@ describe("Void market position accounts", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk, CforPk, DAgainstPk] = await Promise.all([
-      market.forOrder(0, stake, price, purchaserA),
-      market.againstOrder(0, stake, price, purchaserB),
-      market.forOrder(1, stake, price, purchaserC),
-      market.againstOrder(1, stake, price, purchaserD),
-    ]);
+    const AforPk = await market.forOrder(0, stake, price, purchaserA);
+    const BAgainstPk = await market.againstOrder(0, stake, price, purchaserB);
+    const CforPk = await market.forOrder(1, stake, price, purchaserC);
+    const DAgainstPk = await market.againstOrder(1, stake, price, purchaserD);
 
     await Promise.all([
       market.match(AforPk, BAgainstPk),
@@ -153,12 +151,10 @@ describe("Void market position accounts", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk, CforPk, DAgainstPk] = await Promise.all([
-      market.forOrder(0, stake, price, purchaserA),
-      market.againstOrder(0, stake, price, purchaserB),
-      market.forOrder(1, stake, price, purchaserC),
-      market.againstOrder(1, stake, price, purchaserD),
-    ]);
+    const AforPk = await market.forOrder(0, stake, price, purchaserA);
+    const BAgainstPk = await market.againstOrder(0, stake, price, purchaserB);
+    const CforPk = await market.forOrder(1, stake, price, purchaserC);
+    const DAgainstPk = await market.againstOrder(1, stake, price, purchaserD);
 
     await Promise.all([
       market.cancel(AforPk, purchaserA),

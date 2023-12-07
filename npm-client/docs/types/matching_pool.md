@@ -4,61 +4,45 @@
 
 *   [MarketMatchingPool][1]
     *   [Properties][2]
-*   [QueueItem][3]
+*   [Cirque][3]
     *   [Properties][4]
-*   [Cirque][5]
-    *   [Properties][6]
 
 ## MarketMatchingPool
 
-Type: {market: PublicKey, marketOutcomeIndex: [number][7], forOutcome: [boolean][8], price: [number][7], payer: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][8], orders: [Cirque][5]}
+Type: {market: PublicKey, marketOutcomeIndex: [number][5], forOutcome: [boolean][6], price: [number][5], payer: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][6], orders: [Cirque][3]}
 
 ### Properties
 
 *   `market` **PublicKey**&#x20;
-*   `marketOutcomeIndex` **[number][7]**&#x20;
-*   `forOutcome` **[boolean][8]**&#x20;
-*   `price` **[number][7]**&#x20;
+*   `marketOutcomeIndex` **[number][5]**&#x20;
+*   `forOutcome` **[boolean][6]**&#x20;
+*   `price` **[number][5]**&#x20;
 *   `payer` **PublicKey**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
-*   `inplay` **[boolean][8]**&#x20;
-*   `orders` **[Cirque][5]**&#x20;
-
-## QueueItem
-
-Type: {order: PublicKey, delayExpirationTimestamp: BN, liquidityToAdd: BN}
-
-### Properties
-
-*   `order` **PublicKey**&#x20;
-*   `delayExpirationTimestamp` **BN**&#x20;
-*   `liquidityToAdd` **BN**&#x20;
+*   `inplay` **[boolean][6]**&#x20;
+*   `orders` **[Cirque][3]**&#x20;
 
 ## Cirque
 
-Type: {front: [number][7], len: [number][7], items: [Array][9]<[QueueItem][3]>}
+Type: {front: [number][5], len: [number][5], items: [Array][7]\<PublicKey>}
 
 ### Properties
 
-*   `front` **[number][7]**&#x20;
-*   `len` **[number][7]**&#x20;
-*   `items` **[Array][9]<[QueueItem][3]>**&#x20;
+*   `front` **[number][5]**&#x20;
+*   `len` **[number][5]**&#x20;
+*   `items` **[Array][7]\<PublicKey>**&#x20;
 
 [1]: #marketmatchingpool
 
 [2]: #properties
 
-[3]: #queueitem
+[3]: #cirque
 
 [4]: #properties-1
 
-[5]: #cirque
+[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[6]: #properties-2
+[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
-
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

@@ -26,10 +26,13 @@ describe("Order Matching Market State", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk] = await Promise.all([
-      market.forOrder(outcome, stake, price, purchaserA),
-      market.againstOrder(outcome, stake, price, purchaserB),
-    ]);
+    const AforPk = await market.forOrder(outcome, stake, price, purchaserA);
+    const BAgainstPk = await market.againstOrder(
+      outcome,
+      stake,
+      price,
+      purchaserB,
+    );
 
     // MATCH --------------------------------------------------------------------
 
@@ -77,10 +80,13 @@ describe("Order Matching Market State", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk] = await Promise.all([
-      market.forOrder(outcome, stake, price, purchaserA),
-      market.againstOrder(outcome, stake, price, purchaserB),
-    ]);
+    const AforPk = await market.forOrder(outcome, stake, price, purchaserA);
+    const BAgainstPk = await market.againstOrder(
+      outcome,
+      stake,
+      price,
+      purchaserB,
+    );
 
     await market.settle(0);
 
@@ -109,10 +115,8 @@ describe("Order Matching Market State", () => {
       market.airdrop(purchaserB, 50.0),
     ]);
 
-    const [AforPk, BAgainstPk] = await Promise.all([
-      market.forOrder(1, 10, price, purchaserA),
-      market.againstOrder(1, 10, price, purchaserB),
-    ]);
+    const AforPk = await market.forOrder(1, 10, price, purchaserA);
+    const BAgainstPk = await market.againstOrder(1, 10, price, purchaserB);
 
     // wait for market lock
     await new Promise((e) => setTimeout(e, 10000));
