@@ -126,6 +126,14 @@ impl PartialEq for OrderMatched {
 impl Eq for OrderMatched {}
 
 #[cfg(test)]
+pub fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
+    MarketMatchingQueue {
+        market: market_pk,
+        matches: MatchingQueue::new(1),
+    }
+}
+
+#[cfg(test)]
 mod tests_matching_queue {
     use super::*;
 
