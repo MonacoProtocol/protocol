@@ -243,18 +243,6 @@ export async function createMarket(
   const escrowPda = (await findEscrowPda(protocolProgram as Program, marketPda))
     .data.pda;
 
-  const matchingQueuePda = (
-    await findMarketMatchingQueuePda(protocolProgram as Program, marketPda)
-  ).data.pda;
-
-  const commissionPaymentQueuePda = (
-    await findCommissionPaymentsQueuePda(protocolProgram as Program, marketPda)
-  ).data.pda;
-
-  const orderRequestQueuePda = (
-    await findOrderRequestQueuePda(protocolProgram as Program, marketPda)
-  ).data.pda;
-
   await protocolProgram.methods
     .createMarket(
       eventAccount.publicKey,
@@ -361,26 +349,26 @@ export async function createMarket(
     );
   }
 
-  const liquiditiesPk = (
-    await findMarketLiquiditiesPda(protocolProgram, marketPda)
-  ).data.pda;
-
-  const matchingQueuePk = (
-    await findMarketMatchingQueuePda(protocolProgram, marketPda)
-  ).data.pda;
-
-  const commissionQueuePk = (
-    await findCommissionPaymentsQueuePda(protocolProgram, marketPda)
-  ).data.pda;
+  const [
+    liquiditiesPk,
+    matchingQueuePk,
+    commissionQueuePk,
+    orderRequestQueuePk,
+  ] = await Promise.all([
+    findMarketLiquiditiesPda(protocolProgram, marketPda),
+    findMarketMatchingQueuePda(protocolProgram, marketPda),
+    findCommissionPaymentsQueuePda(protocolProgram, marketPda),
+    findOrderRequestQueuePda(protocolProgram as Program, marketPda),
+  ]);
 
   await protocolProgram.methods
     .openMarket()
     .accounts({
       market: marketPda,
-      liquidities: liquiditiesPk,
-      matchingQueue: matchingQueuePk,
-      commissionPaymentQueue: commissionQueuePk,
-      orderRequestQueue: orderRequestQueuePda,
+      liquidities: liquiditiesPk.data.pda,
+      matchingQueue: matchingQueuePk.data.pda,
+      commissionPaymentQueue: commissionQueuePk.data.pda,
+      orderRequestQueue: orderRequestQueuePk.data.pda,
       authorisedOperators: authorisedMarketOperators,
       marketOperator: marketOperator.publicKey,
     })
@@ -392,8 +380,8 @@ export async function createMarket(
     outcomes,
     mintPk,
     escrowPda,
-    matchingQueuePda,
-    paymentsQueuePda: commissionPaymentQueuePda,
+    matchingQueuePda: matchingQueuePk.data.pda,
+    paymentsQueuePda: commissionQueuePk.data.pda,
     outcomePdas,
     matchingPools,
     authorisedMarketOperators,

@@ -784,16 +784,6 @@ async function createMarket(
   const marketEscrowPk = (
     await findEscrowPda(protocol.program as Program, marketPk)
   ).data.pda;
-  const matchingQueuePk = (
-    await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-  ).data.pda;
-  const marketPaymentQueuePk = (
-    await findCommissionPaymentsQueuePda(protocol.program as Program, marketPk)
-  ).data.pda;
-
-  const orderRequestQueuePk = (
-    await findOrderRequestQueuePda(monaco.program as Program, marketPk)
-  ).data.pda;
 
   await protocol.program.methods
     .createMarket(
@@ -814,13 +804,10 @@ async function createMarket(
       market: marketPk,
       marketType: marketTypePk,
       escrow: marketEscrowPk,
-      matchingQueue: matchingQueuePk,
-      commissionPaymentQueue: marketPaymentQueuePk,
-      orderRequestQueue: orderRequestQueuePk,
-      mint: mintPk,
-      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       authorisedOperators: authorisedOperatorsPk,
       marketOperator: protocol.operatorPk,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      mint: mintPk,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
