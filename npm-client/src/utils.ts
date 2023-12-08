@@ -95,7 +95,7 @@ export async function getMarketAccounts(
  * @param program {program} anchor program initialized by the consuming client
  * @param stake {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
  * @param marketPk {PublicKey} publicKey of a market
- * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
+ * @param mintDecimals {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {BN} ui stake adjusted for the market token decimal places
  *
  * @example
@@ -156,7 +156,7 @@ export async function findEscrowPda(
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
-    const [pda, _] = await PublicKey.findProgramAddress(
+    const [pda, _] = PublicKey.findProgramAddressSync(
       [Buffer.from("escrow"), marketPk.toBuffer()],
       program.programId,
     );
@@ -174,7 +174,7 @@ export async function findEscrowPda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param mintPK {PublicKey} publicKey of an spl-token
- * @returns {MintInfo} mint information including mint authority and decimals
+ * @returns {Mint} mint information including mint authority and decimals
  *
  * @example
  *
