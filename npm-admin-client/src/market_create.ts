@@ -18,8 +18,6 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
-  findMarketMatchingQueuePda,
-  findCommissionPaymentsQueuePda,
 } from "./market_helpers";
 import { initialiseOutcomes } from "./market_outcome";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
@@ -267,18 +265,10 @@ export async function createMarket(
     )
   ).data.pda;
 
-  const [
-    escrowPda,
-    authorisedOperators,
-    mintInfo,
-    matchingQueuePda,
-    paymentsQueuePda,
-  ] = await Promise.all([
+  const [escrowPda, authorisedOperators, mintInfo] = await Promise.all([
     findEscrowPda(program, marketPda),
     findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
     getMintInfo(program, marketTokenPk),
-    findMarketMatchingQueuePda(program, marketPda),
-    findCommissionPaymentsQueuePda(program, marketPda),
   ]);
 
   try {
@@ -302,15 +292,15 @@ export async function createMarket(
         existingMarket: existingMarketPk,
         market: marketPda,
         marketType: marketTypePk,
-        systemProgram: SystemProgram.programId,
         escrow: escrowPda.data.pda,
-        mint: marketTokenPk,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
+
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
-        matchingQueue: matchingQueuePda.data.pda,
-        commissionPaymentQueue: paymentsQueuePda.data.pda,
+
+        rent: web3.SYSVAR_RENT_PUBKEY,
+        mint: marketTokenPk,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
 

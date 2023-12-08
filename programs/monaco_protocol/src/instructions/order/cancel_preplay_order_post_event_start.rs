@@ -74,8 +74,8 @@ pub fn cancel_preplay_order_post_event_start(
 mod test {
     use crate::state::market_account::MarketStatus;
     use crate::state::market_matching_pool_account::Cirque;
-    use crate::state::market_matching_queue_account::{MatchingQueue, OrderMatched};
-    use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatched};
+    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -497,20 +497,6 @@ mod test {
             inplay: false,
             orders: Cirque::new(1),
             payer: Pubkey::new_unique(),
-        }
-    }
-
-    fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
-        MarketMatchingQueue {
-            market: market_pk,
-            matches: MatchingQueue::new(1),
-        }
-    }
-
-    fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
-        MarketOrderRequestQueue {
-            market: market_pk,
-            order_requests: OrderRequestQueue::new(1),
         }
     }
 }

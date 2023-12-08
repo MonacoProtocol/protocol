@@ -470,27 +470,19 @@ export class Monaco {
       }),
     );
 
-    const liquiditiesPk = await findMarketLiquiditiesPda(
-      this.program as Program,
-      marketPk,
-    );
+    const [
+      liquiditiesPk,
+      matchingQueuePk,
+      commissionQueuePk,
+      orderRequestQueuePk,
+    ] = await Promise.all([
+      findMarketLiquiditiesPda(this.program as Program, marketPk),
+      findMarketMatchingQueuePda(this.program as Program, marketPk),
+      findCommissionPaymentsQueuePda(this.program as Program, marketPk),
+      findOrderRequestQueuePda(this.program as Program as Program, marketPk),
+    ]);
 
-    const matchingQueuePk = await findMarketMatchingQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const commissionQueuePk = await findCommissionPaymentsQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const orderRequestQueuePk = await findOrderRequestQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const bmarket = new MonacoMarket(
+    return new MonacoMarket(
       this,
       externalPrograms,
       marketPk,
@@ -507,7 +499,6 @@ export class Monaco {
       mintInfo,
       options.marketOperatorKeypair,
     );
-    return bmarket;
   }
 
   async createMarket(

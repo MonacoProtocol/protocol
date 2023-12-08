@@ -62,8 +62,8 @@ pub fn cancel_order_post_market_lock(
 #[cfg(test)]
 mod test {
     use crate::state::market_account::MarketStatus;
-    use crate::state::market_matching_queue_account::{MatchingQueue, OrderMatched};
-    use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatched};
+    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -570,20 +570,6 @@ mod test {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
             market_lock_timestamp: 100,
-        }
-    }
-
-    fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
-        MarketMatchingQueue {
-            market: market_pk,
-            matches: MatchingQueue::new(1),
-        }
-    }
-
-    fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
-        MarketOrderRequestQueue {
-            market: market_pk,
-            order_requests: OrderRequestQueue::new(1),
         }
     }
 }

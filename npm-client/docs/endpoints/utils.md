@@ -60,8 +60,7 @@ For the provided stake and market, get a BN representation of the stake adjusted
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `stake` **[number][26]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `mintDecimals` **[number][26]?**&#x20;
-*   `mintDecimal`  {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
+*   `mintDecimals` **[number][26]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
 
@@ -106,7 +105,7 @@ const mintPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const getMintInfo = await findEscrowPda(program, mintPk)
 ```
 
-Returns **MintInfo** mint information including mint authority and decimals
+Returns **Mint** mint information including mint authority and decimals
 
 ## findProductPda
 

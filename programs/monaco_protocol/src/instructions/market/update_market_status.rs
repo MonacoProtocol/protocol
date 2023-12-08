@@ -214,10 +214,10 @@ mod tests {
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
     use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_queue_account::{
-        MarketMatchingQueue, MatchingQueue, OrderMatched,
+        mock_market_matching_queue, MarketMatchingQueue, MatchingQueue, OrderMatched,
     };
     use crate::state::market_order_request_queue::{
-        MarketOrderRequestQueue, OrderRequest, OrderRequestQueue,
+        mock_order_request_queue, MarketOrderRequestQueue, OrderRequest, OrderRequestQueue,
     };
     use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
     use crate::Market;
@@ -859,19 +859,5 @@ mod tests {
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketRequestQueueNotProvided));
         assert_eq!(expected_error, result)
-    }
-
-    fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
-        MarketMatchingQueue {
-            market: market_pk,
-            matches: MatchingQueue::new(1),
-        }
-    }
-
-    fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
-        MarketOrderRequestQueue {
-            market: market_pk,
-            order_requests: OrderRequestQueue::new(1),
-        }
     }
 }

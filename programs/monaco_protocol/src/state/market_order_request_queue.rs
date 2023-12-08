@@ -182,6 +182,14 @@ impl PartialEq for OrderRequest {
 impl Eq for OrderRequest {}
 
 #[cfg(test)]
+pub fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
+    MarketOrderRequestQueue {
+        market: market_pk,
+        order_requests: OrderRequestQueue::new(1),
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
 

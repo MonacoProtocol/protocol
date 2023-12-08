@@ -503,25 +503,27 @@ export async function openMarket(
     return response.body;
   }
 
-  const liquidities = await findMarketLiquiditiesPda(program, marketPk);
-  const matchingQueue = await findMarketMatchingQueuePda(program, marketPk);
-
-  const commissionQueue = await findCommissionPaymentsQueuePda(
-    program,
-    marketPk,
-  );
-
-  const orderRequestQueue = await findOrderRequestQueuePda(program, marketPk);
+  const [
+    liquiditiesPk,
+    matchingQueuePk,
+    commissionQueuePk,
+    orderRequestQueuePk,
+  ] = await Promise.all([
+    findMarketLiquiditiesPda(program, marketPk),
+    findMarketMatchingQueuePda(program, marketPk),
+    findCommissionPaymentsQueuePda(program, marketPk),
+    findOrderRequestQueuePda(program, marketPk),
+  ]);
 
   try {
     const tnxId = await program.methods
       .openMarket()
       .accounts({
         market: marketPk,
-        liquidities: liquidities.data.pda,
-        matchingQueue: matchingQueue.data.pda,
-        commissionPaymentQueue: commissionQueue.data.pda,
-        orderRequestQueue: orderRequestQueue.data.pda,
+        liquidities: liquiditiesPk.data.pda,
+        matchingQueue: matchingQueuePk.data.pda,
+        commissionPaymentQueue: commissionQueuePk.data.pda,
+        orderRequestQueue: orderRequestQueuePk.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
       })
