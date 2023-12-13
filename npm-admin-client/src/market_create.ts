@@ -1,29 +1,18 @@
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Program, web3, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 import {
-  Operator,
   CreateMarketResponse,
   CreateMarketWithOutcomesAndPriceLadderResponse,
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
   MarketOrderBehaviour,
-  MarketOrderBehaviourValue,
   MarketAccount,
 } from "../types";
-import { findAuthorisedOperatorsAccountPda } from "./operators";
-import {
-  findMarketPda,
-  getMarket,
-  getMintInfo,
-  findEscrowPda,
-  findCommissionPaymentsQueuePda,
-} from "./market_helpers";
-import { initialiseOutcomes } from "./market_outcome";
-import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
-import { confirmTransaction } from "./utils";
-import { findMarketTypePda } from "./market_type_create";
+import { getMarket } from "./market_helpers";
+import { confirmTransaction, signAndSendInstructions } from "./utils";
+import { buildCreateMarketInstruction } from "./market_create_instruction";
+import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
 
 /**
  * For the given parameters:
@@ -91,63 +80,59 @@ export async function createMarketWithOutcomesAndPriceLadder(
     marketLockOrderBehaviour?: MarketOrderBehaviour;
     batchSize?: number;
   },
+  computeUnitLimit?: number,
+  computeUnitPrice?: number,
 ): Promise<ClientResponse<CreateMarketWithOutcomesAndPriceLadderResponse>> {
   const response = new ResponseFactory({});
-  const batchSize = options?.batchSize ? options.batchSize : 50;
 
-  const marketResponse = await createMarket(
+  const instructionCreateMarket = await buildCreateMarketInstruction(
     program,
     marketName,
     marketType,
     marketTokenPk,
     marketLockTimestamp,
     eventAccountPk,
-    options,
+    {
+      marketTypeDiscriminator: options?.marketTypeDiscriminator,
+      marketTypeValue: options?.marketTypeValue,
+      existingMarketPk: options?.existingMarketPk,
+      eventStartTimestamp: options?.eventStartTimestamp,
+      inplayEnabled: options?.inplayEnabled,
+      inplayOrderDelay: options?.inplayOrderDelay,
+      eventStartOrderBehaviour: options?.eventStartOrderBehaviour,
+      marketLockOrderBehaviour: options?.marketLockOrderBehaviour,
+    },
   );
 
-  if (!marketResponse.success) {
-    response.addErrors(marketResponse.errors);
-    return response.body;
-  }
-
-  const marketPk = marketResponse.data.marketPk;
-
-  const initialiseOutcomePoolsResponse = await initialiseOutcomes(
-    program,
-    marketPk,
-    outcomes,
-    priceLadder instanceof Array<number>
-      ? undefined
-      : (priceLadder as PublicKey),
-  );
-
-  if (!initialiseOutcomePoolsResponse.success) {
-    response.addErrors(initialiseOutcomePoolsResponse.errors);
-    return response.body;
-  }
-
-  if (priceLadder instanceof Array<number>) {
-    const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
+  const instructionInitialiseOutcomes =
+    await buildInitialiseOutcomesInstructions(
       program,
-      marketPk,
-      priceLadder,
-      batchSize,
+      instructionCreateMarket.data.marketPk,
+      outcomes,
+      priceLadder instanceof PublicKey ? priceLadder : undefined,
     );
 
-    if (!addPriceLaddersResponse.success) {
-      response.addErrors(addPriceLaddersResponse.errors);
-    }
-    response.addResponseData({
-      priceLadderResults: addPriceLaddersResponse.data.results,
-    });
-  }
+  const market = await getMarket(
+    program,
+    instructionCreateMarket.data.marketPk,
+  );
 
-  const market = await getMarket(program, marketPk);
+  const signAndSendResponse = await signAndSendInstructions(
+    program,
+    [
+      instructionCreateMarket.data.instruction,
+      ...instructionInitialiseOutcomes.data.instructions.map(
+        (i) => i.instruction,
+      ),
+    ],
+    computeUnitLimit,
+    computeUnitPrice,
+  );
 
   response.addResponseData({
-    marketPk: marketPk,
+    marketPk: instructionCreateMarket.data.marketPk,
     market: market.data.account,
-    tnxId: marketResponse.data.tnxId,
+    tnxId: signAndSendResponse.data.signature,
   });
   return response.body;
 }
@@ -205,113 +190,42 @@ export async function createMarket(
     eventStartOrderBehaviour?: MarketOrderBehaviour;
     marketLockOrderBehaviour?: MarketOrderBehaviour;
   },
+  computeUnitLimit?: number,
+  computeUnitPrice?: number,
 ): Promise<ClientResponse<CreateMarketResponse>> {
   const response = new ResponseFactory({});
-
-  /* eslint-disable */
-  // prettier-ignore-start
-  const marketTypeDiscriminator = options?.marketTypeDiscriminator
-    ? options.marketTypeDiscriminator
-    : null;
-  const marketTypeValue = options?.marketTypeValue
-    ? options.marketTypeValue
-    : null;
-  const existingMarketPk = options?.existingMarketPk
-    ? options.existingMarketPk
-    : null;
-  const eventStartTimestamp = options?.eventStartTimestamp
-    ? options.eventStartTimestamp
-    : marketLockTimestamp;
-  const inplayEnabled = options?.inplayEnabled ? options.inplayEnabled : false;
-  const inplayOrderDelay = options?.inplayOrderDelay
-    ? options.inplayOrderDelay
-    : 0;
-  const eventStartOrderBehaviour = options?.eventStartOrderBehaviour
-    ? options.eventStartOrderBehaviour
-    : MarketOrderBehaviourValue.none;
-  const marketLockOrderBehaviour = options?.marketLockOrderBehaviour
-    ? options.marketLockOrderBehaviour
-    : MarketOrderBehaviourValue.none;
-  // prettier-ignore-end
-  /* eslint-enable */
-
-  const provider = program.provider as AnchorProvider;
-  const mintDecimalOffset = 3;
-
-  const marketTypePk = findMarketTypePda(program, marketType).data.pda;
-
-  let version = 0;
-  if (existingMarketPk) {
-    let existingMarket = options?.existingMarket;
-    if (!existingMarket) {
-      const existingMarketResponse = await getMarket(program, existingMarketPk);
-      if (!existingMarketResponse.success) {
-        response.addErrors(existingMarketResponse.errors);
-        return response.body;
-      }
-      existingMarket = existingMarketResponse.data.account;
-    }
-    version = existingMarket.version + 1;
-  }
-
-  const marketPda = (
-    await findMarketPda(
-      program,
-      eventAccountPk,
-      marketTypePk,
-      marketTypeDiscriminator,
-      marketTypeValue,
-      marketTokenPk,
-      version,
-    )
-  ).data.pda;
-
-  const [escrowPda, authorisedOperators, mintInfo, paymentsQueuePda] =
-    await Promise.all([
-      findEscrowPda(program, marketPda),
-      findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
-      getMintInfo(program, marketTokenPk),
-      findCommissionPaymentsQueuePda(program, marketPda),
-    ]);
-
   try {
-    const tnxId = await program.methods
-      .createMarket(
-        eventAccountPk,
-        marketTypeDiscriminator,
-        marketTypeValue,
-        marketName,
-        mintInfo.data.decimals - mintDecimalOffset,
-        new BN(marketLockTimestamp),
-        new BN(eventStartTimestamp),
-        inplayEnabled,
-        inplayOrderDelay,
-        eventStartOrderBehaviour,
-        marketLockOrderBehaviour,
-      )
-      .accounts({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        existingMarket: existingMarketPk,
-        market: marketPda,
-        marketType: marketTypePk,
-        systemProgram: SystemProgram.programId,
-        escrow: escrowPda.data.pda,
-        mint: marketTokenPk,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-        commissionPaymentQueue: paymentsQueuePda.data.pda,
-      })
-      .rpc();
+    const instruction = await buildCreateMarketInstruction(
+      program,
+      marketName,
+      marketType,
+      marketTokenPk,
+      marketLockTimestamp,
+      eventAccountPk,
+      {
+        marketTypeDiscriminator: options?.marketTypeDiscriminator,
+        marketTypeValue: options?.marketTypeValue,
+        existingMarketPk: options?.existingMarketPk,
+        eventStartTimestamp: options?.eventStartTimestamp,
+        inplayEnabled: options?.inplayEnabled,
+        inplayOrderDelay: options?.inplayOrderDelay,
+        eventStartOrderBehaviour: options?.eventStartOrderBehaviour,
+        marketLockOrderBehaviour: options?.marketLockOrderBehaviour,
+      },
+    );
 
-    await confirmTransaction(program, tnxId);
-    const market = await getMarket(program, marketPda);
+    const transaction = await signAndSendInstructions(
+      program,
+      [instruction.data.instruction],
+      computeUnitLimit,
+      computeUnitPrice,
+    );
+    await confirmTransaction(program, transaction.data.signature);
+    const market = await getMarket(program, instruction.data.marketPk);
 
     response.addResponseData({
-      marketPk: marketPda,
-      tnxId: tnxId,
+      marketPk: instruction.data.marketPk,
+      tnxId: transaction.data.signature,
       market: market.data.account,
     });
   } catch (e) {
