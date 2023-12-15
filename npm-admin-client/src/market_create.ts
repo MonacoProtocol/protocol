@@ -67,7 +67,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   outcomes: string[],
-  priceLadder?: number[] | PublicKey,
+  priceLadder?: PublicKey,
   options?: {
     marketTypeDiscriminator?: string;
     marketTypeValue?: string;
@@ -112,11 +112,6 @@ export async function createMarketWithOutcomesAndPriceLadder(
       priceLadder instanceof PublicKey ? priceLadder : undefined,
     );
 
-  const market = await getMarket(
-    program,
-    instructionCreateMarket.data.marketPk,
-  );
-
   const signAndSendResponse = await signAndSendInstructions(
     program,
     [
@@ -127,6 +122,13 @@ export async function createMarketWithOutcomesAndPriceLadder(
     ],
     computeUnitLimit,
     computeUnitPrice,
+  );
+
+  await confirmTransaction(program, signAndSendResponse.data.signature);
+
+  const market = await getMarket(
+    program,
+    instructionCreateMarket.data.marketPk,
   );
 
   response.addResponseData({

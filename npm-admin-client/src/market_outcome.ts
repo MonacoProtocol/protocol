@@ -1,9 +1,9 @@
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import {
-  OutcomeInitialisationsResponse,
   ClientResponse,
   ResponseFactory,
+  SignAndSendInstructionsResponse,
 } from "../types";
 import { signAndSendInstructions } from "./utils";
 import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
@@ -31,8 +31,8 @@ export async function initialiseOutcomes(
   priceLadderPk?: PublicKey,
   computeUnitLimit?: number,
   computeUnitPrice?: number,
-): Promise<ClientResponse<OutcomeInitialisationsResponse>> {
-  const response = new ResponseFactory({} as OutcomeInitialisationsResponse);
+): Promise<ClientResponse<SignAndSendInstructionsResponse>> {
+  const response = new ResponseFactory({} as SignAndSendInstructionsResponse);
 
   const instructions = await buildInitialiseOutcomesInstructions(
     program,

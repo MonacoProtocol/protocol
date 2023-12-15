@@ -8,6 +8,12 @@
 *   [confirmTransaction][4]
     *   [Parameters][5]
     *   [Examples][6]
+*   [signAndSendInstructions][7]
+    *   [Parameters][8]
+    *   [Examples][9]
+*   [signAndSendInstructionsBatch][10]
+    *   [Parameters][11]
+    *   [Examples][12]
 
 ## findPdaWithSeeds
 
@@ -16,7 +22,7 @@ Helper function to return a pda from the supplied seeds
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `seeds` **[Array][7]<([Buffer][8] | [Uint8Array][9])>** {(Buffer | Uint8Array)\[]} list of seeds to generate the pda from
+*   `seeds` **[Array][13]<([Buffer][14] | [Uint8Array][15])>** {(Buffer | Uint8Array)\[]} list of seeds to generate the pda from
 
 ### Examples
 
@@ -30,21 +36,72 @@ Returns **publicKey** pda constructed from the supplied seeds for the given prog
 
 ## confirmTransaction
 
-Helper function to wait for the confirmation of a transaction
+For the provided transaction signature, confirm the transaction.
 
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `transactionId` **[string][10]** {string} string representation of the transaction ID to confirm
+*   `signature` **([string][16] | void)** {string | void} signature of the transaction
 
 ### Examples
 
 ```javascript
-const tnxId = "4aaXfPEgc6hcMiKMJAxZLv3QcjTAWPXrsyAswBJzXhoMn8bvViX8DMmmUx7gaNGWwnBnaky8SyJJrszyGZGAQjKC"
-await confirmTransaction(program, tnxId)
+const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const transaction = await signAndSendInstruction(program, orderInstruction.data.instruction)
+const confirmation = await confirmTransaction(program, transaction.data.signature);
 ```
 
-Returns **[Promise][11]\<any>** (SignatureResult) null or error
+Returns **ClientResponse\<unknown>** empty client response containing no data, only success state and errors
+
+## signAndSendInstructions
+
+Sign and send, as the provider authority, the given transaction instructions.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `instructions` **[Array][13]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `computeUnitLimit` **[number][17]?** {number} optional limit on the number of compute units to be used by the transaction
+*   `computeUnitPrice` **[number][17]?**&#x20;
+
+### Examples
+
+```javascript
+const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const computeUnitLimit = 1400000
+const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computeUnitLimit)
+```
+
+Returns **SignAndSendInstructionsResponse** containing the signature of the transaction
+
+## signAndSendInstructionsBatch
+
+Sign and send, as the provider authority, the given transaction instructions in the provided batch sizes.
+
+Note: batches can be optimised for size by ensuring that instructions have commonality among accounts (same walletPk, same marketPk, same marketMatchingPoolPk, etc.)
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `instructions` **[Array][13]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `batchSize` **[number][17]** {number} number of instructions to be included in each transaction
+*   `computeUnitLimit` **[number][17]?** {number} optional limit on the number of compute units to be used by the transaction
+*   `computeUnitPrice` **[number][17]?**&#x20;
+
+### Examples
+
+```javascript
+const orderInstruction1 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+...
+const orderInstruction20 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
+const batchSize = 5
+const computeUnitLimit = 1400000
+const transactions = await signAndSendInstructionsBatch(program, [orderInstruction1.data.instruction, ..., orderInstruction20.data.instruction], batchSize, computeUnitLimit)
+```
+
+Returns **SignAndSendInstructionsBatchResponse** containing the signature of the transaction
+
+Returns **any**&#x20;
 
 [1]: #findpdawithseeds
 
@@ -58,12 +115,24 @@ Returns **[Promise][11]\<any>** (SignatureResult) null or error
 
 [6]: #examples-1
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[7]: #signandsendinstructions
 
-[8]: https://nodejs.org/api/buffer.html
+[8]: #parameters-2
 
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
+[9]: #examples-2
 
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[10]: #signandsendinstructionsbatch
 
-[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[11]: #parameters-3
+
+[12]: #examples-3
+
+[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[14]: https://nodejs.org/api/buffer.html
+
+[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
+
+[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

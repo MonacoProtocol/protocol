@@ -2,7 +2,10 @@ import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
-import { initialiseOutcome } from "../../npm-admin-client/src";
+import {
+  confirmTransaction,
+  initialiseOutcomes,
+} from "../../npm-admin-client/src";
 
 describe("Initialise outcome on market", () => {
   it("Initialises additional outcome", async () => {
@@ -23,19 +26,22 @@ describe("Initialise outcome on market", () => {
       monaco.program.programId,
     );
 
-    const response = await initialiseOutcome(
+    const response = await initialiseOutcomes(
       monaco.program as Program,
       market.pk,
-      "EXTRA",
+      ["EXTRA"],
     );
+    await confirmTransaction(
+      monaco.program as Program,
+      response.data.signature,
+    );
+
+    await new Promise((e) => setTimeout(e, 1000));
 
     const marketAccount = await monaco.fetchMarket(market.pk);
     assert.deepEqual(marketAccount.marketOutcomesCount, 4);
 
-    assert.deepEqual(response.data.outcomePda, marketOutcomePk);
-    const marketOutcome = await monaco.fetchMarketOutcome(
-      response.data.outcomePda,
-    );
+    const marketOutcome = await monaco.fetchMarketOutcome(marketOutcomePk);
     assert.deepEqual(marketOutcome.index, 3);
     assert.deepEqual(marketOutcome.title, "EXTRA");
     assert.deepEqual(marketOutcome.priceLadder, []);

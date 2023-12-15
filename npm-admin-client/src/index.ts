@@ -1,5 +1,6 @@
 export * from "./market_create";
 export * from "./market_create_instruction";
+export * from "./market_management_instructions";
 export * from "./market_management";
 export * from "./operators";
 export * from "./market_outcome";
