@@ -1558,8 +1558,8 @@ dependencies = [
 
 [[package]]
 name = "protocol_product"
-version = "0.1.0"
-source = "git+https://github.com/BetDexLabs/protocol-product?rev=aa95db781e06774783b8bcf8f914ebe67c0d77ac#aa95db781e06774783b8bcf8f914ebe67c0d77ac"
+version = "0.2.0"
+source = "git+https://github.com/MonacoProtocol/protocol-product?rev=v0.2.0#10b312aa6db7402f31f6fcf5324379196ee85a31"
 dependencies = [
  "anchor-lang",
  "rust_decimal",
