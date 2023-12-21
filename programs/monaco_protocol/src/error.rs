@@ -277,6 +277,8 @@ pub enum CoreError {
      */
     #[msg("CloseAccount: Order not complete")]
     CloseAccountOrderNotComplete,
+    #[msg("CloseAccount: MarketPosition not paid")]
+    CloseAccountMarketPositionNotPaid,
     #[msg("CloseAccount: Purchaser does not match")]
     CloseAccountPurchaserMismatch,
     #[msg("CloseAccount: Payer does not match")]
