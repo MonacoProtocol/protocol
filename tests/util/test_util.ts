@@ -703,49 +703,6 @@ export async function processOrderRequests(
   return orderPks;
 }
 
-export async function cancelOrderSmart(orderPk: PublicKey, purchaser: Keypair) {
-  const protocolProgram = anchor.workspace
-    .MonacoProtocol as Program<MonacoProtocol>;
-
-  const order = await protocolProgram.account.order.fetch(orderPk);
-  const { market, marketEscrowPk, marketMatchingPoolPk } = await findMarketPdas(
-    order.market,
-    order.forOutcome,
-    order.marketOutcomeIndex,
-    order.expectedPrice,
-    protocolProgram as Program<anchor.Idl>,
-  );
-
-  const purchaserTokenPk = await getAssociatedTokenAddress(
-    market.mintAccount,
-    purchaser.publicKey,
-  );
-  const marketPositionPk = await findMarketPositionPda(
-    protocolProgram as Program,
-    order.market,
-    order.purchaser,
-  );
-
-  await protocolProgram.methods
-    .cancelOrder()
-    .accounts({
-      order: orderPk,
-      marketPosition: marketPositionPk.data.pda,
-      purchaser: purchaser.publicKey,
-      purchaserTokenAccount: purchaserTokenPk,
-      marketMatchingPool: marketMatchingPoolPk,
-      market: order.market,
-      marketEscrow: marketEscrowPk,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .signers([purchaser])
-    .rpc()
-    .catch((e) => {
-      console.error(e);
-      throw e;
-    });
-}
-
 export async function retryOnException(
   promise: () => Promise<void>,
   timesToRetry = 10,
