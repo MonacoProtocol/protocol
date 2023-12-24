@@ -21,6 +21,7 @@ import { getCancellableOrdersByMarketForProviderWallet } from "./order_query";
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param orderPk {PublicKey} publicKey of the order to cancel
+ * @param mintPk {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
  * @returns {OrderInstructionResponse} provided order publicKey and the instruction to perform a cancel order transaction
  *
  * @example

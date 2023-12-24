@@ -1,5 +1,5 @@
 import assert from "assert";
-import { cancelOrderSmart, createWalletWithBalance } from "../util/test_util";
+import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
 /*
@@ -97,7 +97,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched against order
-    await cancelOrderSmart(againstOrderPk, purchaser);
+    await market.cancel(againstOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -189,7 +189,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched against order
-    await cancelOrderSmart(againstOrderPk, purchaser);
+    await market.cancel(againstOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -281,7 +281,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched for order
-    await cancelOrderSmart(forOrderPk, purchaser);
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -373,7 +373,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched for order
-    await cancelOrderSmart(forOrderPk, purchaser);
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
