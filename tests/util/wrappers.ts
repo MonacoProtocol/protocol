@@ -1295,6 +1295,7 @@ export class MonacoMarket {
       .completeMarketSettlement()
       .accounts({
         market: this.pk,
+        commissionPaymentsQueue: this.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {

@@ -10,7 +10,6 @@ use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestQueue};
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
-use crate::CompleteMarketSettlement;
 
 pub fn open(
     market_pk: &Pubkey,
@@ -110,8 +109,7 @@ pub fn void(
     Ok(())
 }
 
-pub fn complete_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-    let market = &mut ctx.accounts.market;
+pub fn complete_void(market: &mut Market) -> Result<()> {
     require!(
         ReadyToVoid.eq(&market.market_status),
         CoreError::VoidMarketNotReadyForVoid
@@ -154,8 +152,10 @@ pub fn settle(
     Ok(())
 }
 
-pub fn complete_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-    let market = &mut ctx.accounts.market;
+pub fn complete_settlement(
+    market: &mut Market,
+    commission_payments_queue: &MarketPaymentsQueue,
+) -> Result<()> {
     require!(
         ReadyForSettlement.eq(&market.market_status),
         CoreError::SettlementMarketNotReadyForSettlement
@@ -163,6 +163,10 @@ pub fn complete_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()>
     require!(
         market.unsettled_accounts_count == 0_u32,
         CoreError::MarketUnsettledAccountsCountNonZero,
+    );
+    require!(
+        commission_payments_queue.payment_queue.is_empty(),
+        CoreError::SettlementMarketPaymentsQueueNotEmpty
     );
     market.market_status = Settled;
     Ok(())
@@ -208,52 +212,20 @@ pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Resu
 }
 
 #[cfg(test)]
-mod tests {
+mod settle_market_tests {
     use crate::error::CoreError;
-    use crate::instructions::market::{open, settle, void};
-    use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
-    use crate::state::market_liquidities::mock_market_liquidities;
-    use crate::state::market_matching_queue_account::{
-        mock_market_matching_queue, MarketMatchingQueue, MatchingQueue, OrderMatched,
-    };
-    use crate::state::market_order_request_queue::{
-        mock_order_request_queue, MarketOrderRequestQueue, OrderRequest, OrderRequestQueue,
-    };
-    use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
-    use crate::Market;
+    use crate::instructions::market::settle;
+    use crate::state::market_account::{mock_market, MarketStatus};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatched};
+    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use anchor_lang::error;
     use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn settle_market_ok_result() {
+    fn success() {
         let market_pk = Pubkey::new_unique();
-        let mut market = Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::Open,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 3,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-            inplay_enabled: false,
-            inplay: false,
-            inplay_order_delay: 0,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-        };
+        let mut market = mock_market(MarketStatus::Open);
+        market.market_outcomes_count = 3;
         let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
         let market_matching_queue = mock_market_matching_queue(market_pk);
 
@@ -266,41 +238,15 @@ mod tests {
             0,
             settle_time,
         );
-
         assert!(result.is_ok());
         assert_eq!(market.market_status, MarketStatus::ReadyForSettlement)
     }
 
     #[test]
-    fn settle_market_not_open() {
+    fn not_open() {
         let market_pk = Pubkey::new_unique();
-        let mut market = Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::ReadyToClose,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 3,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-            inplay_enabled: false,
-            inplay: false,
-            inplay_order_delay: 0,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-        };
+        let mut market = mock_market(MarketStatus::ReadyForSettlement);
+        market.market_outcomes_count = 3;
         let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
         let market_matching_queue = mock_market_matching_queue(market_pk);
 
@@ -319,35 +265,10 @@ mod tests {
     }
 
     #[test]
-    fn settle_market_invalid_outcome_index() {
+    fn invalid_outcome_index() {
         let market_pk = Pubkey::new_unique();
-        let mut market = Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::Open,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 3,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-            inplay_enabled: false,
-            inplay: false,
-            inplay_order_delay: 0,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-        };
+        let mut market = mock_market(MarketStatus::Open);
+        market.market_outcomes_count = 3;
         let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
         let market_matching_queue = mock_market_matching_queue(market_pk);
 
@@ -369,35 +290,10 @@ mod tests {
     }
 
     #[test]
-    fn settle_market_matching_queue_not_empty() {
+    fn matching_queue_not_empty() {
         let market_pk = Pubkey::new_unique();
-        let mut market = Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::Open,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 3,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-            inplay_enabled: false,
-            inplay: false,
-            inplay_order_delay: 0,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-        };
+        let mut market = mock_market(MarketStatus::Open);
+        market.market_outcomes_count = 3;
         let order_request_queue = &mut mock_order_request_queue(Pubkey::new_unique());
         let mut market_matching_queue = mock_market_matching_queue(market_pk);
         market_matching_queue
@@ -422,35 +318,10 @@ mod tests {
     }
 
     #[test]
-    fn settle_market_request_queue_not_empty() {
+    fn request_queue_not_empty() {
         let market_pk = Pubkey::new_unique();
-        let mut market = Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::Open,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 3,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-            inplay_enabled: false,
-            inplay: false,
-            inplay_order_delay: 0,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-        };
+        let mut market = mock_market(MarketStatus::Open);
+        market.market_outcomes_count = 3;
         let order_request_queue = &mut mock_order_request_queue(Pubkey::new_unique());
         order_request_queue
             .order_requests
@@ -469,9 +340,93 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::OrderRequestQueueIsNotEmpty)), result);
     }
+}
+
+#[cfg(test)]
+mod complete_settlement_tests {
+    use crate::error::CoreError;
+    use crate::instructions::market::complete_settlement;
+    use crate::state::market_account::{mock_market, MarketStatus};
+    use crate::state::payments_queue::{mock_market_payments_queue, PaymentInfo};
+    use anchor_lang::error;
+    use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn open_market_ok_result() {
+    fn success() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::ReadyForSettlement);
+        let market_payment_queue = mock_market_payments_queue(market_pk);
+
+        let result = complete_settlement(&mut market, &market_payment_queue);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn not_ready_for_settlement() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::Settled);
+        let market_payment_queue = mock_market_payments_queue(market_pk);
+
+        let result = complete_settlement(&mut market, &market_payment_queue);
+        assert!(result.is_err());
+        assert_eq!(
+            error!(CoreError::SettlementMarketNotReadyForSettlement),
+            result.err().unwrap()
+        );
+    }
+
+    #[test]
+    fn unsettled_account_count_non_zero() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::ReadyForSettlement);
+        market.unsettled_accounts_count = 1;
+        let market_payment_queue = mock_market_payments_queue(market_pk);
+
+        let result = complete_settlement(&mut market, &market_payment_queue);
+        assert!(result.is_err());
+        assert_eq!(
+            error!(CoreError::MarketUnsettledAccountsCountNonZero),
+            result.err().unwrap()
+        );
+    }
+
+    #[test]
+    fn payments_queue_not_empty() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::ReadyForSettlement);
+        let mut market_payment_queue = mock_market_payments_queue(market_pk);
+        market_payment_queue.payment_queue.enqueue(PaymentInfo {
+            to: Default::default(),
+            from: Default::default(),
+            amount: 1,
+        });
+
+        let result = complete_settlement(&mut market, &market_payment_queue);
+        assert!(result.is_err());
+        assert_eq!(
+            error!(CoreError::SettlementMarketPaymentsQueueNotEmpty),
+            result.err().unwrap()
+        );
+    }
+}
+
+#[cfg(test)]
+mod open_market_tests {
+    use crate::error::CoreError;
+    use crate::instructions::market::open;
+    use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_liquidities::mock_market_liquidities;
+    use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
+    use crate::state::market_order_request_queue::{
+        mock_order_request_queue, MarketOrderRequestQueue, OrderRequestQueue,
+    };
+    use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
+    use crate::Market;
+    use anchor_lang::error;
+    use solana_program::pubkey::Pubkey;
+
+    #[test]
+    fn success() {
         let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
@@ -545,7 +500,7 @@ mod tests {
     }
 
     #[test]
-    fn open_market_not_intializing() {
+    fn not_intializing() {
         let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
@@ -603,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn open_market_not_enough_outcomes() {
+    fn not_enough_outcomes() {
         let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
@@ -656,9 +611,20 @@ mod tests {
         let expected_error = Err(error!(CoreError::OpenMarketNotEnoughOutcomes));
         assert_eq!(expected_error, result)
     }
+}
+
+#[cfg(test)]
+mod void_market_tests {
+    use crate::error::CoreError;
+    use crate::instructions::market::void;
+    use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
+    use crate::Market;
+    use anchor_lang::error;
+    use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn void_market_initializing_ok_result() {
+    fn status_initializing() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -697,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn void_market_open_ok_result() {
+    fn status_open() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -736,7 +702,7 @@ mod tests {
     }
 
     #[test]
-    fn void_market_not_open_or_initializing() {
+    fn not_open_or_initializing() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -776,7 +742,7 @@ mod tests {
     }
 
     #[test]
-    fn void_market_request_queue_not_empty() {
+    fn request_queue_not_empty() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -823,7 +789,7 @@ mod tests {
     }
 
     #[test]
-    fn void_market_open_market_request_queue_not_provided() {
+    fn open_market_request_queue_not_provided() {
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),

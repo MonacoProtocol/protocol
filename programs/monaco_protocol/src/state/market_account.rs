@@ -150,9 +150,8 @@ pub enum MarketOrderBehaviour {
 
 #[cfg(test)]
 mod tests {
+    use crate::state::market_account::{mock_market, Market, MarketOrderBehaviour, MarketStatus};
     use anchor_lang::prelude::*;
-
-    use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     // Market account tests
@@ -309,7 +308,7 @@ mod tests {
 
     #[test]
     fn test_increment_unsettled_accounts_count() {
-        let mut market = test_market();
+        let mut market = mock_market(MarketStatus::Initializing);
 
         let result = market.increment_unsettled_accounts_count();
         assert!(result.is_ok());
@@ -322,7 +321,7 @@ mod tests {
 
     #[test]
     fn test_decrement_unsettled_accounts_count() {
-        let mut market = test_market();
+        let mut market = mock_market(MarketStatus::Initializing);
 
         let result = market.increment_unsettled_accounts_count();
         assert!(result.is_ok());
@@ -335,7 +334,7 @@ mod tests {
 
     #[test]
     fn test_increment_unclosed_accounts_count() {
-        let mut market = test_market();
+        let mut market = mock_market(MarketStatus::Initializing);
 
         let result = market.increment_unclosed_accounts_count();
         assert!(result.is_ok());
@@ -348,7 +347,7 @@ mod tests {
 
     #[test]
     fn test_decrement_unclosed_accounts_count() {
-        let mut market = test_market();
+        let mut market = mock_market(MarketStatus::Initializing);
 
         let result = market.increment_unclosed_accounts_count();
         assert!(result.is_ok());
@@ -358,34 +357,35 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(0, market.unclosed_accounts_count);
     }
+}
 
-    fn test_market() -> Market {
-        Market {
-            authority: Default::default(),
-            event_account: Default::default(),
-            mint_account: Default::default(),
-            market_status: MarketStatus::Initializing,
-            inplay_enabled: false,
-            inplay: false,
-            market_type: Default::default(),
-            market_type_discriminator: None,
-            market_type_value: None,
-            version: 0,
-            decimal_limit: 0,
-            published: false,
-            suspended: false,
-            market_outcomes_count: 0,
-            market_winning_outcome_index: None,
-            market_lock_timestamp: 0,
-            market_settle_timestamp: None,
-            event_start_order_behaviour: MarketOrderBehaviour::None,
-            market_lock_order_behaviour: MarketOrderBehaviour::None,
-            inplay_order_delay: 0,
-            title: "".to_string(),
-            unsettled_accounts_count: 0,
-            unclosed_accounts_count: 0,
-            escrow_account_bump: 0,
-            event_start_timestamp: 0,
-        }
+#[cfg(test)]
+pub fn mock_market(market_status: MarketStatus) -> Market {
+    Market {
+        market_status,
+        authority: Default::default(),
+        event_account: Default::default(),
+        mint_account: Default::default(),
+        inplay_enabled: false,
+        inplay: false,
+        market_type: Default::default(),
+        market_type_discriminator: None,
+        market_type_value: None,
+        version: 0,
+        decimal_limit: 0,
+        published: false,
+        suspended: false,
+        market_outcomes_count: 0,
+        market_winning_outcome_index: None,
+        market_lock_timestamp: 0,
+        market_settle_timestamp: None,
+        event_start_order_behaviour: MarketOrderBehaviour::None,
+        market_lock_order_behaviour: MarketOrderBehaviour::None,
+        inplay_order_delay: 0,
+        title: "".to_string(),
+        unsettled_accounts_count: 0,
+        unclosed_accounts_count: 0,
+        escrow_account_bump: 0,
+        event_start_timestamp: 0,
     }
 }
