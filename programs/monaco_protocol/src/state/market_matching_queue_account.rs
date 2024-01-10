@@ -55,7 +55,15 @@ impl MatchingQueue {
         (self.front + self.len) % self.size()
     }
 
-    pub fn peek(&mut self) -> Option<&mut OrderMatched> {
+    pub fn peek(&self) -> Option<&OrderMatched> {
+        if self.len == 0 {
+            None
+        } else {
+            Some(&self.items[self.front as usize])
+        }
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&mut OrderMatched> {
         if self.len == 0 {
             None
         } else {
@@ -211,6 +219,10 @@ mod tests_matching_queue {
         let result = queue.peek();
         assert!(result.is_none());
         assert_eq!(0, queue.len());
+
+        let result_mut = queue.peek_mut();
+        assert!(result_mut.is_none());
+        assert_eq!(0, queue.len());
     }
 
     #[test]
@@ -224,6 +236,11 @@ mod tests_matching_queue {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
+
+        let result_mut = queue.peek_mut();
+        assert!(result_mut.is_some());
+        assert_eq!(item, *result_mut.unwrap());
+        assert_eq!(1, queue.len());
     }
 
     #[test]
@@ -233,8 +250,7 @@ mod tests_matching_queue {
         queue.enqueue(OrderMatched::default());
         assert_eq!(2, queue.len());
 
-        let result0 = queue.peek().unwrap();
-        result0.stake = 10;
-        assert_eq!(10, queue.items[0].stake);
+        queue.peek_mut().unwrap().stake = 10;
+        assert_eq!(10, queue.peek().unwrap().stake);
     }
 }

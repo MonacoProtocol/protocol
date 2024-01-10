@@ -78,15 +78,6 @@ impl Cirque {
         self.capacity
     }
 
-    pub fn peek(&mut self, index: u32) -> Option<&Pubkey> {
-        if index >= self.len {
-            None
-        } else {
-            let capacity = self.capacity();
-            Some(&self.items[((self.front + index) % capacity) as usize])
-        }
-    }
-
     fn back(&self) -> u32 {
         // #[soteria(ignore)] 0 <= front < capacity() AND 0 <= len < capacity() AND capacity() == QUEUE_LENGTH << u32::MAX
         (self.front + self.len) % self.capacity()
@@ -94,6 +85,15 @@ impl Cirque {
 
     pub fn set_length_to_zero(&mut self) {
         self.len = 0
+    }
+
+    pub fn peek(&self, index: u32) -> Option<&Pubkey> {
+        if index >= self.len {
+            None
+        } else {
+            let items_index = ((self.front + index) % self.capacity()) as usize;
+            Some(&self.items[items_index])
+        }
     }
 
     pub fn enqueue(&mut self, item: Pubkey) -> Option<u32> {
