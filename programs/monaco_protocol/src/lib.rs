@@ -645,7 +645,10 @@ pub mod monaco_protocol {
     }
 
     pub fn close_market_position(ctx: Context<CloseMarketPosition>) -> Result<()> {
-        instructions::close::close_market_child_account(&mut ctx.accounts.market)
+        instructions::close::close_market_position(
+            &mut ctx.accounts.market,
+            &ctx.accounts.market_position,
+        )
     }
 
     pub fn close_market_matching_pool(ctx: Context<CloseMarketMatchingPool>) -> Result<()> {

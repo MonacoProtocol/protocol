@@ -1,4 +1,5 @@
 use crate::instructions::{calculate_commission, calculate_post_commission_remainder, transfer};
+use crate::state::market_account::MarketStatus::ReadyForSettlement;
 use crate::SettleMarketPosition;
 use anchor_lang::prelude::*;
 use rust_decimal::prelude::ToPrimitive;
@@ -12,18 +13,18 @@ use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAn
 use crate::state::payments_queue::{PaymentInfo, PaymentQueue};
 
 pub fn settle_market_position(ctx: Context<SettleMarketPosition>) -> Result<()> {
+    let market_account = &mut ctx.accounts.market;
+    // validate the market is ready for settlement
+    require!(
+        ReadyForSettlement.eq(&market_account.market_status),
+        CoreError::SettlementMarketNotReadyForSettlement
+    );
+
     let market_position = &mut ctx.accounts.market_position;
     if market_position.paid {
         log::sol_log("market position has already been paid out");
         return Ok(());
     }
-
-    let market_account = &mut ctx.accounts.market;
-    // validate the market is settled
-    require!(
-        market_account.market_winning_outcome_index.is_some(),
-        CoreError::SettlementMarketNotSettled
-    );
 
     let payment_queue = &mut ctx.accounts.commission_payment_queue.payment_queue;
     let position_profit = market_position.market_outcome_sums
