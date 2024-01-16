@@ -923,6 +923,14 @@ pub struct SetMarketReadyToClose<'info> {
 pub struct CompleteMarketSettlement<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+    #[account(has_one = market @ CoreError::SettlementMarketMismatch)]
+    pub commission_payments_queue: Account<'info, MarketPaymentsQueue>,
+}
+
+#[derive(Accounts)]
+pub struct CompleteMarketVoid<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
 }
 
 #[derive(Accounts)]

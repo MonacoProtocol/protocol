@@ -99,6 +99,14 @@ impl PaymentQueue {
 }
 
 #[cfg(test)]
+pub fn mock_market_payments_queue(market_pk: Pubkey) -> MarketPaymentsQueue {
+    MarketPaymentsQueue {
+        market: market_pk,
+        payment_queue: PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH),
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

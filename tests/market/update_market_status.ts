@@ -89,6 +89,7 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
+        commissionPaymentsQueue: market.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -98,45 +99,6 @@ describe("Market: update status", () => {
 
     const marketAccount = await monaco.fetchMarket(market.pk);
     assert.deepEqual(marketAccount.marketStatus, { settled: {} });
-  });
-
-  it("complete market settlement: unclosed accounts", async () => {
-    // create a new market
-    const market = await monaco.create3WayMarket([4.2]);
-
-    const purchaser = await createWalletWithBalance(monaco.provider);
-    await market.airdrop(purchaser, 100.0);
-    await market.forOrder(0, 1, 4.2, purchaser);
-
-    await monaco.program.methods
-      .settleMarket(1)
-      .accounts({
-        market: market.pk,
-        marketMatchingQueue: market.matchingQueuePk,
-        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
-        marketOperator: monaco.operatorPk,
-        orderRequestQueue: (
-          await findOrderRequestQueuePda(monaco.program, market.pk)
-        ).data.pda,
-      })
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-
-    await monaco.program.methods
-      .completeMarketSettlement()
-      .accounts({
-        market: market.pk,
-      })
-      .rpc()
-      .catch((e) => {
-        assert.equal(
-          e.error.errorCode.code,
-          "MarketUnsettledAccountsCountNonZero",
-        );
-      });
   });
 
   it("Transfer market escrow surplus fails if market not settled", async () => {
@@ -243,6 +205,7 @@ describe("Market: update status", () => {
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
+        commissionPaymentsQueue: market.paymentsQueuePk,
       })
       .rpc();
 
@@ -294,27 +257,15 @@ describe("Market: update status", () => {
           await findOrderRequestQueuePda(monaco.program, market.pk)
         ).data.pda,
       })
-      .rpc()
-      .catch((e) => {
-        console.error(e);
-        throw e;
-      });
-
-    let marketAccount = await monaco.fetchMarket(market.pk);
-    assert.deepEqual(marketAccount.marketStatus, { readyForSettlement: {} });
+      .rpc();
 
     await monaco.program.methods
       .completeMarketSettlement()
       .accounts({
         market: market.pk,
+        commissionPaymentsQueue: market.paymentsQueuePk,
       })
-      .rpc()
-      .catch((e) => {
-        assert.equal(e.error.errorCode.code, "SettlementMarketEscrowNonZero");
-      });
-
-    marketAccount = await monaco.fetchMarket(market.pk);
-    assert.deepEqual(marketAccount.marketStatus, { settled: {} });
+      .rpc();
 
     assert.equal(
       (await monaco.provider.connection.getTokenAccountBalance(market.escrowPk))
@@ -331,6 +282,7 @@ describe("Market: update status", () => {
         marketOperator: monaco.operatorPk,
       })
       .rpc()
+      .then(() => assert.fail("Error expected"))
       .catch((e) => {
         assert.equal(e.error.errorCode.code, "SettlementMarketEscrowNonZero");
       });

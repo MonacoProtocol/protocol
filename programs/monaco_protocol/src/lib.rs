@@ -507,7 +507,10 @@ pub mod monaco_protocol {
     }
 
     pub fn complete_market_settlement(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-        instructions::market::complete_settlement(ctx)
+        instructions::market::complete_settlement(
+            &mut ctx.accounts.market,
+            &ctx.accounts.commission_payments_queue,
+        )
     }
 
     pub fn void_market(ctx: Context<VoidMarket>) -> Result<()> {
@@ -531,8 +534,8 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn complete_market_void(ctx: Context<CompleteMarketSettlement>) -> Result<()> {
-        instructions::market::complete_void(ctx)
+    pub fn complete_market_void(ctx: Context<CompleteMarketVoid>) -> Result<()> {
+        instructions::market::complete_void(&mut ctx.accounts.market)
     }
 
     pub fn publish_market(ctx: Context<UpdateMarket>) -> Result<()> {
