@@ -26,6 +26,7 @@ async function sendManagementTransaction(
   instructions: TransactionInstruction[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors?: object[],
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const response = new ResponseFactory({} as TransactionResponse);
   if (errors) {
@@ -33,7 +34,12 @@ async function sendManagementTransaction(
     return response.body;
   }
   try {
-    const tnxId = await signAndSendInstructions(program, instructions);
+    const tnxId = await signAndSendInstructions(
+      program,
+      instructions,
+      options?.computeUnitLimit,
+      options?.computeUnitPrice,
+    );
     const confirmation = await confirmTransaction(
       program,
       tnxId.data.signature,
@@ -69,6 +75,7 @@ export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
   winningOutcomeIndex: number,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketUpdateInstruction(
     program,
@@ -80,6 +87,7 @@ export async function settleMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -98,6 +106,7 @@ export async function settleMarket(
 export async function publishMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -108,6 +117,7 @@ export async function publishMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -126,6 +136,7 @@ export async function publishMarket(
 export async function unpublishMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -136,6 +147,7 @@ export async function unpublishMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -154,6 +166,7 @@ export async function unpublishMarket(
 export async function suspendMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -164,6 +177,7 @@ export async function suspendMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -182,6 +196,7 @@ export async function suspendMarket(
 export async function unsuspendMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -192,6 +207,7 @@ export async function unsuspendMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -213,6 +229,7 @@ export async function updateMarketTitle(
   program: Program,
   marketPk: PublicKey,
   title: string,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketUpdateInstruction(
     program,
@@ -224,6 +241,7 @@ export async function updateMarketTitle(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -244,6 +262,7 @@ export async function updateMarketEventStartTime(
   program: Program,
   marketPk: PublicKey,
   eventStartTimeTimestamp: EpochTimeStamp,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketUpdateInstruction(
     program,
@@ -255,6 +274,7 @@ export async function updateMarketEventStartTime(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -272,6 +292,7 @@ export async function updateMarketEventStartTime(
 export async function setMarketEventStartToNow(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketUpdateInstruction(
     program,
@@ -282,6 +303,7 @@ export async function setMarketEventStartToNow(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -303,6 +325,7 @@ export async function updateMarketLocktime(
   program: Program,
   marketPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketUpdateInstruction(
     program,
@@ -314,6 +337,7 @@ export async function updateMarketLocktime(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -334,6 +358,7 @@ export async function updateMarketLocktime(
 export async function openMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -344,6 +369,7 @@ export async function openMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -362,6 +388,7 @@ export async function openMarket(
 export async function setMarketReadyToClose(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -372,6 +399,7 @@ export async function setMarketReadyToClose(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -390,6 +418,7 @@ export async function setMarketReadyToClose(
 export async function voidMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketStatusChangeInstruction(
     program,
@@ -400,6 +429,7 @@ export async function voidMarket(
     program,
     [instruction.data.instruction],
     instruction.errors,
+    options,
   );
 }
 
@@ -425,6 +455,7 @@ export async function transferMarketEscrowSurplus(
   program: Program,
   marketPk: PublicKey,
   mintPk: PublicKey,
+  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
     await setupManagementRequest(program);
@@ -448,7 +479,7 @@ export async function transferMarketEscrowSurplus(
   );
 
   try {
-    const tnxId = await program.methods
+    const instruction = await program.methods
       .transferMarketEscrowSurplus()
       .accounts({
         market: marketPk,
@@ -458,8 +489,21 @@ export async function transferMarketEscrowSurplus(
         authorisedOperators: authorisedOperators.data.pda,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc();
-    response.addResponseData({ tnxId });
+      .instruction();
+    const tnxId = await signAndSendInstructions(
+      program,
+      [instruction],
+      options?.computeUnitLimit,
+      options?.computeUnitPrice,
+    );
+    const confirmation = await confirmTransaction(
+      program,
+      tnxId.data.signature,
+    );
+    if (!confirmation.success) {
+      response.addErrors(confirmation.errors);
+    }
+    response.addResponseData({ tnxId: tnxId.data.signature });
   } catch (e) {
     response.addError(e);
     return response.body;
