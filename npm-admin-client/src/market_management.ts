@@ -1,5 +1,5 @@
-import { Program, BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import {
   TransactionResponse,
   ClientResponse,
@@ -13,11 +13,43 @@ import {
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { findEscrowPda } from "./market_helpers";
 import {
-  MarketManagementInstructionType,
+  MarketStatusChangeInstructionType,
+  MarketUpdateInstructionType,
   buildMarketStatusChangeInstruction,
+  buildMarketUpdateInstruction,
   setupManagementRequest,
 } from "./market_management_instructions";
 import { confirmTransaction, signAndSendInstructions } from "./utils";
+
+async function sendManagementTransaction(
+  program: Program,
+  instructions: TransactionInstruction[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errors?: object[],
+): Promise<ClientResponse<TransactionResponse>> {
+  const response = new ResponseFactory({} as TransactionResponse);
+  if (errors) {
+    response.addErrors(errors);
+    return response.body;
+  }
+  try {
+    const tnxId = await signAndSendInstructions(program, instructions);
+    const confirmation = await confirmTransaction(
+      program,
+      tnxId.data.signature,
+    );
+    if (!confirmation.success) {
+      response.addErrors(confirmation.errors);
+    }
+    response.addResponseData({
+      tnxId: tnxId.data.signature,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+  return response;
+}
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -38,31 +70,17 @@ export async function settleMarket(
   marketPk: PublicKey,
   winningOutcomeIndex: number,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .settleMarket(winningOutcomeIndex)
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketUpdateInstruction(
+    program,
+    marketPk,
+    MarketUpdateInstructionType.SETTLE,
+    { winningOutcomeIndex },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -81,36 +99,16 @@ export async function publishMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.PUBLISH,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.PUBLISH,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -129,36 +127,16 @@ export async function unpublishMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.UNPUBLISH,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.UNPUBLISH,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -177,36 +155,16 @@ export async function suspendMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.SUSPEND,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.SUSPEND,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -225,36 +183,16 @@ export async function unsuspendMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.UNSUSPEND,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.UNSUSPEND,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -276,33 +214,17 @@ export async function updateMarketTitle(
   marketPk: PublicKey,
   title: string,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketTitle(title)
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketUpdateInstruction(
+    program,
+    marketPk,
+    MarketUpdateInstructionType.UPDATE_TITLE,
+    { title },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -323,33 +245,17 @@ export async function updateMarketEventStartTime(
   marketPk: PublicKey,
   eventStartTimeTimestamp: EpochTimeStamp,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketEventStartTime(new BN(eventStartTimeTimestamp))
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketUpdateInstruction(
+    program,
+    marketPk,
+    MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME,
+    { eventStartTimeTimestamp },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -367,33 +273,16 @@ export async function setMarketEventStartToNow(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketEventStartTimeToNow()
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketUpdateInstruction(
+    program,
+    marketPk,
+    MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -415,33 +304,17 @@ export async function updateMarketLocktime(
   marketPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketLocktime(new BN(marketLockTimestamp))
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketUpdateInstruction(
+    program,
+    marketPk,
+    MarketUpdateInstructionType.UPDATE_LOCK_TIME,
+    { marketLockTimestamp },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -462,36 +335,16 @@ export async function openMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.OPEN,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.OPEN,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -510,36 +363,16 @@ export async function setMarketReadyToClose(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.SET_READY_TO_CLOSE,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.SET_READY_TO_CLOSE,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
@@ -558,36 +391,16 @@ export async function voidMarket(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const response = new ResponseFactory({} as TransactionResponse);
-
-  try {
-    const instruction = await buildMarketStatusChangeInstruction(
-      program,
-      marketPk,
-      MarketManagementInstructionType.VOID,
-    );
-    if (!instruction.success) {
-      response.addErrors(instruction.errors);
-      return response.body;
-    }
-    const tnxId = await signAndSendInstructions(program, [
-      instruction?.data.instruction,
-    ]);
-    const confirmation = await confirmTransaction(
-      program,
-      tnxId.data.signature,
-    );
-    if (!confirmation.success) {
-      response.addErrors(confirmation.errors);
-    }
-    response.addResponseData({
-      tnxId: tnxId.data.signature,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketStatusChangeInstruction(
+    program,
+    marketPk,
+    MarketStatusChangeInstructionType.VOID,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+  );
 }
 
 /**
