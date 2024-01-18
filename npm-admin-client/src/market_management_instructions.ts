@@ -52,27 +52,37 @@ export async function buildMarketUpdateInstruction(
   try {
     switch (instructionType) {
       case MarketUpdateInstructionType.SETTLE: {
-        if (!instructionData?.winningOutcomeIndex) {
-          throw new Error("winningOutcomeIndex is required in instructionData");
+        if (instructionData?.winningOutcomeIndex === undefined) {
+          throw new Error(
+            "winningOutcomeIndex is required in instructionData. Received: " +
+              JSON.stringify(instructionData),
+          );
         }
         break;
       }
       case MarketUpdateInstructionType.UPDATE_TITLE: {
         if (!instructionData?.title) {
-          throw new Error("title is required in instructionData");
+          throw new Error(
+            "title is required in instructionData. Received: " +
+              JSON.stringify(instructionData),
+          );
         }
         break;
       }
       case MarketUpdateInstructionType.UPDATE_LOCK_TIME: {
         if (!instructionData?.marketLockTimestamp) {
-          throw new Error("marketLockTimestamp is required in instructionData");
+          throw new Error(
+            "marketLockTimestamp is required in instructionData. Received: " +
+              JSON.stringify(instructionData),
+          );
         }
         break;
       }
       case MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME: {
         if (!instructionData?.eventStartTimeTimestamp) {
           throw new Error(
-            "eventStartTimeTimestamp is required in instructionData",
+            "eventStartTimeTimestamp is required in instructionData. Received: " +
+              JSON.stringify(instructionData),
           );
         }
         break;

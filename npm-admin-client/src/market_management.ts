@@ -25,11 +25,11 @@ async function sendManagementTransaction(
   program: Program,
   instructions: TransactionInstruction[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  errors?: object[],
+  errors: object[],
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
   const response = new ResponseFactory({} as TransactionResponse);
-  if (errors) {
+  if (errors.length > 0) {
     response.addErrors(errors);
     return response.body;
   }
