@@ -31,10 +31,10 @@ describe("Initialise outcome on market", () => {
       market.pk,
       ["EXTRA"],
     );
-    await confirmTransaction(
-      monaco.program as Program,
-      response.data.signature,
-    );
+
+    for (const signature of response.data.signatures) {
+      await confirmTransaction(monaco.program as Program, signature);
+    }
 
     await new Promise((e) => setTimeout(e, 1000));
 

@@ -16,8 +16,7 @@ For the given market account, initialise outcome accounts for the provided outco
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
 *   `outcomes` **[Array][4]<[string][5]>** {string\[]} list of strings representing the market outcomes
 *   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
-*   `computeUnitLimit` **[number][6]?**&#x20;
-*   `computeUnitPrice` **[number][6]?**&#x20;
+*   `options` **TransactionOptionsBatch?**&#x20;
 
 ### Examples
 
@@ -39,5 +38,3 @@ Returns **OutcomeInitialisationsResponse** list of the outcomes provided, their 
 [4]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
 [5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

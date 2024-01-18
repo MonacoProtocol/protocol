@@ -3,9 +3,11 @@ import { PublicKey } from "@solana/web3.js";
 import {
   ClientResponse,
   ResponseFactory,
+  SignAndSendInstructionsBatchResponse,
   SignAndSendInstructionsResponse,
+  TransactionOptionsBatch,
 } from "../types";
-import { signAndSendInstructions } from "./utils";
+import { signAndSendInstructionsBatch } from "./utils";
 import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
 
 /**
@@ -29,10 +31,10 @@ export async function initialiseOutcomes(
   marketPk: PublicKey,
   outcomes: string[],
   priceLadderPk?: PublicKey,
-  computeUnitLimit?: number,
-  computeUnitPrice?: number,
-): Promise<ClientResponse<SignAndSendInstructionsResponse>> {
+  options?: TransactionOptionsBatch,
+): Promise<ClientResponse<SignAndSendInstructionsBatchResponse>> {
   const response = new ResponseFactory({} as SignAndSendInstructionsResponse);
+  const DEFAULT_BATCH_SIZE = 2;
 
   const instructions = await buildInitialiseOutcomesInstructions(
     program,
@@ -40,16 +42,18 @@ export async function initialiseOutcomes(
     outcomes,
     priceLadderPk,
   );
-  const transaction = await signAndSendInstructions(
+  const transaction = await signAndSendInstructionsBatch(
     program,
     instructions.data.instructions.map((i) => i.instruction),
-    computeUnitLimit,
-    computeUnitPrice,
+    options?.batchSize ? options.batchSize : DEFAULT_BATCH_SIZE,
+    options?.computeUnitLimit,
+    options?.computeUnitPrice,
   );
 
   if (transaction.success) {
     response.addResponseData({
-      tnxId: transaction.data.signature,
+      signatures: transaction.data.signatures,
+      failedInstructions: transaction.data.failedInstructions,
     });
   } else {
     response.addErrors(transaction.errors);

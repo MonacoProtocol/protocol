@@ -24,3 +24,12 @@ export type MarketOutcomeInstructionResponse = {
 export type MarketOutcomesInstructionsResponse = {
   instructions: MarketInstructionResponse[];
 };
+
+export type TransactionOptions = {
+  computeUnitLimit?: number;
+  computeUnitPrice?: number;
+};
+
+export type TransactionOptionsBatch = TransactionOptions & {
+  batchSize?: number;
+};
