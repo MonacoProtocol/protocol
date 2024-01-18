@@ -6,8 +6,7 @@ import {
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
-  MarketOrderBehaviour,
-  MarketAccount,
+  MarketCreateOptions,
 } from "../types";
 import { getMarket } from "./market_helpers";
 import { confirmTransaction, signAndSendInstructions } from "./utils";
@@ -68,20 +67,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   eventAccountPk: PublicKey,
   outcomes: string[],
   priceLadder?: PublicKey,
-  options?: {
-    marketTypeDiscriminator?: string;
-    marketTypeValue?: string;
-    existingMarketPk?: PublicKey;
-    existingMarket?: MarketAccount;
-    eventStartTimestamp?: EpochTimeStamp;
-    inplayEnabled?: boolean;
-    inplayOrderDelay?: number;
-    eventStartOrderBehaviour?: MarketOrderBehaviour;
-    marketLockOrderBehaviour?: MarketOrderBehaviour;
-    batchSize?: number;
-  },
-  computeUnitLimit?: number,
-  computeUnitPrice?: number,
+  options?: MarketCreateOptions,
 ): Promise<ClientResponse<CreateMarketWithOutcomesAndPriceLadderResponse>> {
   const response = new ResponseFactory({});
 
@@ -92,16 +78,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
     marketTokenPk,
     marketLockTimestamp,
     eventAccountPk,
-    {
-      marketTypeDiscriminator: options?.marketTypeDiscriminator,
-      marketTypeValue: options?.marketTypeValue,
-      existingMarketPk: options?.existingMarketPk,
-      eventStartTimestamp: options?.eventStartTimestamp,
-      inplayEnabled: options?.inplayEnabled,
-      inplayOrderDelay: options?.inplayOrderDelay,
-      eventStartOrderBehaviour: options?.eventStartOrderBehaviour,
-      marketLockOrderBehaviour: options?.marketLockOrderBehaviour,
-    },
+    options,
   );
 
   const instructionInitialiseOutcomes =
@@ -110,6 +87,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
       instructionCreateMarket.data.marketPk,
       outcomes,
       priceLadder instanceof PublicKey ? priceLadder : undefined,
+      0,
     );
 
   const signAndSendResponse = await signAndSendInstructions(
@@ -120,8 +98,8 @@ export async function createMarketWithOutcomesAndPriceLadder(
         (i) => i.instruction,
       ),
     ],
-    computeUnitLimit,
-    computeUnitPrice,
+    options?.computeUnitLimit,
+    options?.computeUnitPrice,
   );
 
   await confirmTransaction(program, signAndSendResponse.data.signature);
@@ -181,19 +159,7 @@ export async function createMarket(
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
-  options?: {
-    marketTypeDiscriminator?: string;
-    marketTypeValue?: string;
-    existingMarketPk?: PublicKey;
-    existingMarket?: MarketAccount;
-    eventStartTimestamp?: EpochTimeStamp;
-    inplayEnabled?: boolean;
-    inplayOrderDelay?: number;
-    eventStartOrderBehaviour?: MarketOrderBehaviour;
-    marketLockOrderBehaviour?: MarketOrderBehaviour;
-  },
-  computeUnitLimit?: number,
-  computeUnitPrice?: number,
+  options?: MarketCreateOptions,
 ): Promise<ClientResponse<CreateMarketResponse>> {
   const response = new ResponseFactory({});
   try {
@@ -204,23 +170,14 @@ export async function createMarket(
       marketTokenPk,
       marketLockTimestamp,
       eventAccountPk,
-      {
-        marketTypeDiscriminator: options?.marketTypeDiscriminator,
-        marketTypeValue: options?.marketTypeValue,
-        existingMarketPk: options?.existingMarketPk,
-        eventStartTimestamp: options?.eventStartTimestamp,
-        inplayEnabled: options?.inplayEnabled,
-        inplayOrderDelay: options?.inplayOrderDelay,
-        eventStartOrderBehaviour: options?.eventStartOrderBehaviour,
-        marketLockOrderBehaviour: options?.marketLockOrderBehaviour,
-      },
+      options,
     );
 
     const transaction = await signAndSendInstructions(
       program,
       [instruction.data.instruction],
-      computeUnitLimit,
-      computeUnitPrice,
+      options?.computeUnitLimit,
+      options?.computeUnitPrice,
     );
     await confirmTransaction(program, transaction.data.signature);
     const market = await getMarket(program, instruction.data.marketPk);

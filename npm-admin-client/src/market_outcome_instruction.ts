@@ -75,16 +75,18 @@ export async function buildInitialiseOutcomesInstructions(
     {} as MarketOutcomesInstructionsResponse,
   );
 
-  const market = await program.account.market.fetch(marketPk);
+  let resolvedIndex = 0;
+  if (startingIndex == undefined) {
+    const market = await program.account.market.fetch(marketPk);
+    resolvedIndex = market.marketOutcomesCount;
+  }
   const instructions = await Promise.all(
     outcomes.map((outcome, index) =>
       buildInitialiseOutcomeInstruction(
         program,
         marketPk,
         outcome,
-        startingIndex
-          ? startingIndex + index
-          : market.marketOutcomesCount + index,
+        startingIndex ? startingIndex + index : resolvedIndex + index,
         priceLadderPk,
       ),
     ),
@@ -117,31 +119,4 @@ export async function findMarketOutcomePda(
     response.addError(e);
   }
   return response.body;
-}
-
-export async function findNextOutcomePda(
-  program: Program,
-  marketPk: PublicKey,
-): Promise<ClientResponse<FindPdaResponse>> {
-  const response = new ResponseFactory({} as FindPdaResponse);
-  try {
-    const market = await program.account.market.fetch(marketPk);
-    try {
-      const nextOutcomePda = await findMarketOutcomePda(
-        program,
-        marketPk,
-        market.marketOutcomesCount,
-      );
-      response.addResponseData({
-        pda: nextOutcomePda.data.pda,
-      });
-    } catch (e) {
-      response.addError(e);
-      return response.body;
-    }
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response;
 }

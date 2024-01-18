@@ -6,9 +6,8 @@ import {
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
-  MarketOrderBehaviour,
   MarketOrderBehaviourValue,
-  MarketAccount,
+  MarketInstructionOptions,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -28,17 +27,7 @@ export async function buildCreateMarketInstruction(
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
-  options?: {
-    marketTypeDiscriminator?: string;
-    marketTypeValue?: string;
-    existingMarketPk?: PublicKey;
-    existingMarket?: MarketAccount;
-    eventStartTimestamp?: EpochTimeStamp;
-    inplayEnabled?: boolean;
-    inplayOrderDelay?: number;
-    eventStartOrderBehaviour?: MarketOrderBehaviour;
-    marketLockOrderBehaviour?: MarketOrderBehaviour;
-  },
+  options?: MarketInstructionOptions,
 ): Promise<ClientResponse<MarketInstructionResponse>> {
   const response = new ResponseFactory({});
 

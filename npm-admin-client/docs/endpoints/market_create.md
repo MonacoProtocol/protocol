@@ -27,7 +27,7 @@ For the given parameters:
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
 *   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
 *   `priceLadder` **PublicKey?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
-*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][9]?, inplayOrderDelay: [number][10]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][10]?}?** {object} optional parameters:  <ul>
+*   `options` **MarketCreateOptions?** {object} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -39,8 +39,6 @@ For the given parameters:
         <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
         <li> batchSize - number of prices to add in a single request (defaults to 50)</li>
        </ul>
-*   `computeUnitLimit` **[number][10]?**&#x20;
-*   `computeUnitPrice` **[number][10]?**&#x20;
 
 ### Examples
 
@@ -72,7 +70,7 @@ For the given parameters, create a wagering market that accepts orders in the pr
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
-*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][9]?, inplayOrderDelay: [number][10]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?}?** {object} optional parameters:  <ul>
+*   `options` **MarketCreateOptions?** {object} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -83,8 +81,6 @@ For the given parameters, create a wagering market that accepts orders in the pr
         <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
         <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
        </ul>
-*   `computeUnitLimit` **[number][10]?**&#x20;
-*   `computeUnitPrice` **[number][10]?**&#x20;
 
 ### Examples
 
@@ -116,7 +112,3 @@ Returns **CreateMarketResponse** containing the newly-created market account pub
 [7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
 [8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
-
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
-
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

@@ -136,3 +136,21 @@ export type PaymentInfo = {
   to: PublicKey;
   amount: BN;
 };
+
+export type MarketInstructionOptions = {
+  marketTypeDiscriminator?: string;
+  marketTypeValue?: string;
+  existingMarketPk?: PublicKey;
+  existingMarket?: MarketAccount;
+  eventStartTimestamp?: EpochTimeStamp;
+  inplayEnabled?: boolean;
+  inplayOrderDelay?: number;
+  eventStartOrderBehaviour?: MarketOrderBehaviour;
+  marketLockOrderBehaviour?: MarketOrderBehaviour;
+};
+
+export type MarketCreateOptions = MarketInstructionOptions & {
+  batchSize?: number;
+  computeUnitLimit?: number;
+  computeUnitPrice?: number;
+};
