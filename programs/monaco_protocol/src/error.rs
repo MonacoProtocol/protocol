@@ -29,9 +29,13 @@ pub enum CoreError {
     #[msg("Order Creation: Failed to create Order, selected price is invalid for outcome")]
     CreationInvalidPrice,
     #[msg("Order Creation: calculating payment/refund amount error")]
-    CreationPaymentAmountError,
+    CreationTransferAmountError,
     #[msg("Order Creation: market is already inplay")]
     CreationMarketAlreadyInplay,
+    #[msg("Order Creation: market mismatch")]
+    CreationMarketMismatch,
+    #[msg("Order Creation: purchaser mismatch")]
+    CreationPurchaserMismatch,
 
     #[msg("Order Request Creation: request queue is full")]
     OrderRequestCreationQueueFull,
@@ -51,6 +55,10 @@ pub enum CoreError {
     CancelationPurchaserMismatch,
     #[msg("Core Cancelation: market mismatch")]
     CancelationMarketMismatch,
+    #[msg("Core Cancelation: market liquidities mismatch")]
+    CancelationMarketLiquiditiesMismatch,
+    #[msg("Core Cancelation: market outcome mismatch")]
+    CancelationMarketOutcomeMismatch,
     #[msg("Order Cancelation: market status invalid")]
     CancelationMarketStatusInvalid,
     #[msg("Order Cancelation: market not inplay")]
@@ -63,6 +71,8 @@ pub enum CoreError {
     CancelationOrderStatusInvalid,
     #[msg("Order Cancelation: order created after market event started")]
     CancelationOrderCreatedAfterMarketEventStarted,
+    #[msg("Order Cancelation: liquidity too low")]
+    CancelationLowLiquidity,
     #[msg("Order Cancelation: cannot cancel preplay orders until all preplay order requests are processed")]
     CancelationPreplayOrderRequestsExist,
 
@@ -156,6 +166,8 @@ pub enum CoreError {
     MatchingStatusClosed,
     #[msg("Order Matching: remaining stake too small")]
     MatchingRemainingStakeTooSmall,
+    #[msg("Order Matching: remaining liquidity too small")]
+    MatchingRemainingLiquidityTooSmall,
     #[msg("Failed to update market: invalid arguments provided.")]
     MarketDoesNotMatch,
     #[msg(
@@ -197,6 +209,14 @@ pub enum CoreError {
     MatchingMarketNotYetInplay,
     #[msg("Matching: invalid market status for operation")]
     MatchingMarketInvalidStatus,
+    // matching queue related errors
+    #[msg("Matching: matched stake calculated incorrectly")]
+    MatchingMatchedStakeCalculationError,
+    #[msg("Matching: matching queue empty")]
+    MatchingMatchingQueueEmpty,
+    #[msg("Matching: matching queue head mismatch")]
+    MatchingMatchingQueueHeadMismatch,
+    // -------------------
     #[msg("matching: unknown")]
     Unknown,
 

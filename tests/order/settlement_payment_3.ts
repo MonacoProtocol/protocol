@@ -25,26 +25,26 @@ describe("Order Settlement Payment 3", () => {
     orderPks.push(await market.forOrder(outcome, 100, 1.99, purchaser)); // 1
     orderPks.push(await market.againstOrder(outcome, 200, 2.01, purchaser)); // 2
 
-    await market.match(orderPks[0], orderPks[2]);
-    await market.match(orderPks[1], orderPks[2]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 100, 2.0, purchaser)); // 3
     orderPks.push(await market.againstOrder(outcome, 200, 1.99, purchaser)); // 4
     orderPks.push(await market.forOrder(outcome, 100, 2.01, purchaser)); // 5
     orderPks.push(await market.forOrder(outcome, 250, 1.97, purchaser)); // 6
 
-    await market.match(orderPks[6], orderPks[3]);
-    await market.match(orderPks[6], orderPks[4]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 100, 2, purchaser)); // 7
     orderPks.push(await market.forOrder(outcome, 50, 1.97, purchaser)); // 8
 
-    await market.match(orderPks[8], orderPks[7]);
+    await market.processMatchingQueue();
 
     orderPks.push(await market.forOrder(outcome, 250, 1.99, purchaser)); // 9
 
-    await market.match(orderPks[9], orderPks[7]);
-    await market.match(orderPks[9], orderPks[4]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // All orders are created
     assert.deepEqual(
@@ -156,25 +156,25 @@ describe("Order Settlement Payment 3", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [600, 850, 850] },
-        { len: 3, liquidity: 400, matched: 0 },
-        { len: 2, liquidity: 350, matched: 0 },
+        { matched: [202, -200, -200], unmatched: [398, 450, 450] },
+        { len: 1, liquidity: 100, matched: 300 },
+        { len: 2, liquidity: 250, matched: 100 },
         { len: 1, liquidity: 100, matched: 0 },
         { len: 1, liquidity: 200, matched: 0 },
         { len: 2, liquidity: 200, matched: 0 },
-        { len: 1, liquidity: 200, matched: 0 },
-        850,
-        150,
+        { len: 0, liquidity: 0, matched: 200 },
+        650,
+        350,
       ],
     );
 
-    await market.match(orderPks[0], orderPks[2]);
-    await market.match(orderPks[1], orderPks[2]);
-    await market.match(orderPks[6], orderPks[3]);
-    await market.match(orderPks[6], orderPks[4]);
-    await market.match(orderPks[8], orderPks[7]);
-    await market.match(orderPks[9], orderPks[7]);
-    await market.match(orderPks[9], orderPks[4]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // All orders are matched
     assert.deepEqual(

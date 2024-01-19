@@ -15,7 +15,7 @@ describe("Void order", () => {
     const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
     const againstOrderPk = await market.againstOrder(0, 20.0, price, purchaser);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     await market.voidMarket();
     await market.voidOrder(forOrderPk);

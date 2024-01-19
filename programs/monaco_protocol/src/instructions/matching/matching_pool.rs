@@ -65,13 +65,25 @@ pub fn update_matching_pool_with_new_order(
 
     market_matching_pool.liquidity_amount = market_matching_pool
         .liquidity_amount
-        .checked_add(order_account.stake)
+        .checked_add(order_account.stake_unmatched)
         .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
 
-    market_matching_pool
-        .orders
-        .enqueue(order_account.key())
-        .ok_or(CoreError::MatchingQueueIsFull)?;
+    market_matching_pool.matched_amount = market_matching_pool
+        .matched_amount
+        .checked_add(
+            order_account
+                .stake
+                .checked_sub(order_account.stake_unmatched)
+                .ok_or(CoreError::MatchingMatchedAmountUpdateError)?,
+        )
+        .ok_or(CoreError::MatchingMatchedAmountUpdateError)?;
+
+    if order_account.stake_unmatched > 0 {
+        market_matching_pool
+            .orders
+            .enqueue(order_account.key())
+            .ok_or(CoreError::MatchingQueueIsFull)?;
+    }
 
     Ok(())
 }
@@ -99,7 +111,7 @@ pub fn move_market_matching_pool_to_inplay(
     Ok(())
 }
 
-fn update_matching_pool_with_matched_order(
+pub fn update_matching_pool_with_matched_order(
     matching_pool: &mut MarketMatchingPool,
     amount_matched: u64,
     matched_order: Pubkey,

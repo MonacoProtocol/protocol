@@ -50,20 +50,8 @@ describe("Product commissions", () => {
 
     const stake = 20;
 
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -76,7 +64,7 @@ describe("Product commissions", () => {
       againstPurchaser.publicKey,
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     const forMarketPosition = await monaco.program.account.marketPosition.fetch(
       forMarketPositionPk.data.pda,
@@ -128,13 +116,8 @@ describe("Product commissions", () => {
 
     const stake = 20;
 
-    const forOrderPk = await market.forOrder(0, stake, 2.0, forPurchaser);
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-    );
+    await market.forOrder(0, stake, 2.0, forPurchaser);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser);
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -147,7 +130,7 @@ describe("Product commissions", () => {
       againstPurchaser.publicKey,
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     const forMarketPosition = await monaco.program.account.marketPosition.fetch(
       forMarketPositionPk.data.pda,
@@ -178,27 +161,9 @@ describe("Product commissions", () => {
 
     const stake = 20;
 
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      10,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    const againstOrderPk2 = await market.againstOrder(
-      0,
-      10,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, 10, 2.0, againstPurchaser, productPk);
+    await market.againstOrder(0, 10, 2.0, againstPurchaser, productPk);
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -206,7 +171,7 @@ describe("Product commissions", () => {
       forPurchaser.publicKey,
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     const forMarketPositionMatch1 =
       await monaco.program.account.marketPosition.fetch(
@@ -229,7 +194,7 @@ describe("Product commissions", () => {
       productCommission,
     );
 
-    await market.match(forOrderPk, againstOrderPk2);
+    await market.processMatchingQueue();
 
     const forMarketPositionMatch2 =
       await monaco.program.account.marketPosition.fetch(
@@ -269,37 +234,13 @@ describe("Product commissions", () => {
     );
 
     const stake = 20;
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk, againstOrderPk);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
-    const forOrderPk2 = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk2 = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk2, againstOrderPk2);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -338,21 +279,9 @@ describe("Product commissions", () => {
     );
 
     const stake = 20;
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk, againstOrderPk);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const productCommission2 = 5;
     await externalPrograms.updateProductCommission(
@@ -360,21 +289,9 @@ describe("Product commissions", () => {
       productCommission2,
     );
 
-    const forOrderPk2 = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk2 = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk2, againstOrderPk2);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -425,21 +342,9 @@ describe("Product commissions", () => {
     );
 
     const stake = 20;
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk, againstOrderPk);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const productCommission2 = 5;
     const productPk2 = await externalPrograms.createProduct(
@@ -447,21 +352,9 @@ describe("Product commissions", () => {
       productCommission2,
     );
 
-    const forOrderPk2 = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      forPurchaser,
-      productPk2,
-    );
-    const againstOrderPk2 = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk2, againstOrderPk2);
+    await market.forOrder(0, stake, 2.0, forPurchaser, productPk2);
+    await market.againstOrder(0, stake, 2.0, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const forMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -510,20 +403,8 @@ describe("Product commissions", () => {
 
     const layStake = 10;
 
-    const forOrderPk = await market.forOrder(
-      0,
-      layStake * 10,
-      price,
-      forPurchaser,
-      productPk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      layStake,
-      price,
-      againstPurchaser,
-      productPk,
-    );
+    await market.forOrder(0, layStake * 10, price, forPurchaser, productPk);
+    await market.againstOrder(0, layStake, price, againstPurchaser, productPk);
 
     const againstMarketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -531,7 +412,7 @@ describe("Product commissions", () => {
       againstPurchaser.publicKey,
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     let marketPosition = await monaco.program.account.marketPosition.fetch(
       againstMarketPositionPk.data.pda,
@@ -545,14 +426,8 @@ describe("Product commissions", () => {
     );
 
     const layStake2 = layStake * 2;
-    const againstOrderPk2 = await market.againstOrder(
-      0,
-      layStake2,
-      price,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forOrderPk, againstOrderPk2);
+    await market.againstOrder(0, layStake2, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     marketPosition = await monaco.program.account.marketPosition.fetch(
       againstMarketPositionPk.data.pda,
@@ -584,21 +459,9 @@ describe("Product commissions", () => {
     );
 
     const stake = 20;
-    const forOrderPk = await market.forOrder(
-      0,
-      stake,
-      2.0,
-      purchaser,
-      product1Pk,
-    );
-    const againstOrderPk = await market.againstOrder(
-      0,
-      stake,
-      2.0,
-      purchaser,
-      product2Pk,
-    );
-    await market.match(forOrderPk, againstOrderPk);
+    await market.forOrder(0, stake, 2.0, purchaser, product1Pk);
+    await market.againstOrder(0, stake, 2.0, purchaser, product2Pk);
+    await market.processMatchingQueue();
 
     const marketPositionPk = await findMarketPositionPda(
       monaco.getRawProgram(),
@@ -608,25 +471,18 @@ describe("Product commissions", () => {
     const marketPosition = await monaco.fetchMarketPosition(
       marketPositionPk.data.pda,
     );
-    const expectedMatchedStake = stake * 10 ** market.mintInfo.decimals;
 
     assert.equal(marketPosition.matchedRisk.toNumber(), stake * 2 * 1_000_000); // two stakes of 20
-    assert.equal(marketPosition.matchedRiskPerProduct.length, 2);
-
-    const matchedStakeForProduct = marketPosition.matchedRiskPerProduct[0];
-    assert.equal(
-      matchedStakeForProduct.product.toBase58(),
-      product1Pk.toBase58(),
+    assert.deepEqual(
+      marketPosition.matchedRiskPerProduct.map((matchedRisk) => [
+        matchedRisk.product.toBase58(),
+        matchedRisk.rate,
+        matchedRisk.risk.toNumber(),
+      ]),
+      [
+        ["4ymGSSeQRu4pQCNjWiK7Np9gAL4o6xF9WAfk8dUQiYhM", 10, 20000000],
+        ["DMEHdhuy2GQLUL6RSoAefQz1a529JznHZT6FhuwRcBN5", 5, 20000000],
+      ],
     );
-    assert.equal(matchedStakeForProduct.risk.toNumber(), expectedMatchedStake);
-    assert.equal(matchedStakeForProduct.rate, product1Commission);
-
-    const matchedStakeForProduct2 = marketPosition.matchedRiskPerProduct[1];
-    assert.equal(
-      matchedStakeForProduct2.product.toBase58(),
-      product2Pk.toBase58(),
-    );
-    assert.equal(matchedStakeForProduct2.risk.toNumber(), expectedMatchedStake);
-    assert.equal(matchedStakeForProduct2.rate, product2Commission);
   });
 });

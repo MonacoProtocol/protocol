@@ -216,10 +216,10 @@ mod settle_market_tests {
     use crate::error::CoreError;
     use crate::instructions::market::settle;
     use crate::state::market_account::{mock_market, MarketStatus};
-    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatched};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
     use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use anchor_lang::error;
-    use solana_program::pubkey::Pubkey;
+    use anchor_lang::prelude::Pubkey;
 
     #[test]
     fn success() {
@@ -296,9 +296,7 @@ mod settle_market_tests {
         market.market_outcomes_count = 3;
         let order_request_queue = &mut mock_order_request_queue(Pubkey::new_unique());
         let mut market_matching_queue = mock_market_matching_queue(market_pk);
-        market_matching_queue
-            .matches
-            .enqueue(OrderMatched::default());
+        market_matching_queue.matches.enqueue(OrderMatch::default());
 
         let settle_time = 1665483869;
 

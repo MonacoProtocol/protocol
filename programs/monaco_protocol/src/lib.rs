@@ -64,12 +64,23 @@ pub mod monaco_protocol {
     }
 
     pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {
-        instructions::order_request::process_order_request(
+        let refund = instructions::order_request::process_order_request(
             &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
             &mut ctx.accounts.market,
+            &mut ctx.accounts.market_liquidities,
+            &mut ctx.accounts.market_matching_queue,
             ctx.accounts.crank_operator.key(),
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order_request_queue,
+        )?;
+
+        transfer::order_creation_refund(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token_account,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund,
         )
     }
 
@@ -137,6 +148,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         let refund_amount = instructions::order::cancel_preplay_order_post_event_start(
             &mut ctx.accounts.market,
+            &mut ctx.accounts.market_liquidities,
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order,
             &mut ctx.accounts.market_position,
@@ -231,6 +243,46 @@ pub mod monaco_protocol {
         Ok(())
     }
 
+    pub fn process_order_match(ctx: Context<ProcessOrderMatch>) -> Result<()> {
+        let stake_unmatched = ctx.accounts.maker_order.stake_unmatched;
+
+        // if there's nothing to match close the trades
+        if stake_unmatched == 0 {
+            ctx.accounts
+                .taker_order_trade
+                .close(ctx.accounts.crank_operator.to_account_info())?;
+            ctx.accounts
+                .maker_order_trade
+                .close(ctx.accounts.crank_operator.to_account_info())?;
+
+        // otherwise just do the matching
+        } else {
+            let refund_amount = instructions::matching::on_order_match(
+                &mut ctx.accounts.market,
+                &mut ctx.accounts.market_matching_queue,
+                &mut ctx.accounts.market_matching_pool,
+                &ctx.accounts.maker_order.key(),
+                &mut ctx.accounts.maker_order,
+                &mut ctx.accounts.market_position,
+                &ctx.accounts.maker_order_trade.key(),
+                &mut ctx.accounts.maker_order_trade,
+                &ctx.accounts.taker_order_trade.key(),
+                &mut ctx.accounts.taker_order_trade,
+                &ctx.accounts.crank_operator.key(),
+            )?;
+
+            transfer::transfer_from_market_escrow(
+                &ctx.accounts.market_escrow,
+                &ctx.accounts.purchaser_token,
+                &ctx.accounts.token_program,
+                &ctx.accounts.market,
+                refund_amount,
+            )?;
+        }
+
+        Ok(())
+    }
+
     pub fn match_orders(mut ctx: Context<MatchOrders>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.crank_operator.key,
@@ -240,7 +292,20 @@ pub mod monaco_protocol {
         let for_stake_unmatched = ctx.accounts.order_for.stake_unmatched;
         let against_stake_unmatched = ctx.accounts.order_against.stake_unmatched;
 
-        if for_stake_unmatched == 0 || against_stake_unmatched == 0 {
+        let liquidity_for = ctx.accounts.market_liquidities.get_liquidity_for(
+            ctx.accounts.order_for.market_outcome_index,
+            ctx.accounts.order_for.expected_price,
+        );
+        let liquidity_against = ctx.accounts.market_liquidities.get_liquidity_against(
+            ctx.accounts.order_against.market_outcome_index,
+            ctx.accounts.order_against.expected_price,
+        );
+
+        if for_stake_unmatched == 0
+            || against_stake_unmatched == 0
+            || liquidity_for.liquidity < against_stake_unmatched
+            || liquidity_against.liquidity < for_stake_unmatched
+        {
             ctx.accounts
                 .trade_for
                 .close(ctx.accounts.crank_operator.to_account_info())?;

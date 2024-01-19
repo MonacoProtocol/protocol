@@ -3,7 +3,6 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   authoriseOperator,
   createAssociatedTokenAccountWithBalance,
-  createOrder,
   createMarket,
   createNewMint,
   createWalletWithBalance,
@@ -13,17 +12,15 @@ import {
 import assert from "assert";
 import { AnchorError, Program, BN } from "@coral-xyz/anchor";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
-import { SendTransactionError, SystemProgram } from "@solana/web3.js";
+import { SendTransactionError } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   findMarketMatchingPoolPda,
-  getMarketAccounts,
   confirmTransaction,
 } from "../../npm-client/src";
-import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
+import { getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
 import { findOrderRequestQueuePda } from "../../npm-admin-client";
-import { findUserPdas } from "../util/pdas";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -67,7 +64,7 @@ describe("Protocol - Create Order", () => {
     assert.equal(orderAccount.marketOutcomeIndex, outcomeIndex);
     assert.equal(orderAccount.forOutcome, testData.forOutcome);
     assert.deepEqual(orderAccount.purchaser, purchaser.publicKey);
-    assert.deepEqual(orderAccount.payer, purchaser.publicKey);
+    assert.deepEqual(orderAccount.payer, monaco.operatorPk);
     assert.deepEqual(orderAccount.orderStatus, { open: {} });
     assert.equal(
       orderAccount.stake.toNumber(),
@@ -228,72 +225,23 @@ describe("Protocol - Create Order", () => {
   });
 
   it("Throws appropriate error when outcome index is out of bounds", async () => {
-    const protocolProgram = anchor.workspace.MonacoProtocol;
-
     // Order parameters
     const price = 3.0;
-    const index = 0;
+    const outcome = 0;
     const outOfBoundsIndex = 10;
 
     // Set up Market and related accounts
-    const { marketPda, mintPk } = await createMarket(
-      protocolProgram,
-      provider,
-      [price],
-    );
-    const MarketAccounts = await getMarketAccounts(
-      protocolProgram,
-      marketPda,
-      true,
-      index,
-      price,
-    );
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
 
-    const purchaserTokenAccount = await createAssociatedTokenAccountWithBalance(
-      mintPk,
-      provider.wallet.publicKey,
-      100,
-    );
-
-    const stake = new BN(
-      10 ** (await getMint(provider.connection, mintPk)).decimals,
-    );
-
-    const orderRequestQueuePk = await findOrderRequestQueuePda(
-      protocolProgram,
-      marketPda,
-    );
-
-    const { orderPk, orderDistinctSeed } = await findUserPdas(
-      marketPda,
-      provider.wallet.publicKey,
-      protocolProgram as Program<anchor.Idl>,
-    );
-
-    await protocolProgram.methods
-      .createOrderRequest({
-        marketOutcomeIndex: outOfBoundsIndex,
-        forOutcome: true,
-        stake: stake,
-        price: price,
-        distinctSeed: Array.from(orderDistinctSeed),
+    await market
+      ._createOrderRequest(outOfBoundsIndex, true, 1, price, purchaser, {
+        marketOutcome: market.outcomePks[outcome],
       })
-      .accounts({
-        reservedOrder: orderPk,
-        purchaser: provider.wallet.publicKey,
-        marketPosition: MarketAccounts.data.marketPositionPda,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        market: marketPda,
-        marketOutcome: MarketAccounts.data.marketOutcomePda,
-        priceLadder: null,
-        purchaserToken: purchaserTokenAccount,
-        marketEscrow: MarketAccounts.data.escrowPda,
-        product: null,
-        orderRequestQueue: orderRequestQueuePk.data.pda,
-      })
-      .rpc()
       .catch((e) => {
+        console.error(e);
         assert.equal(e.error.errorCode.code, "ConstraintSeeds");
       });
   });
@@ -697,17 +645,17 @@ describe("Protocol - Create Order", () => {
   });
 
   it("purchaser uses different token account for a different mint", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
     // Order parameters
     const stake = 1.1;
     const outcomeIndex = 0;
     const price = 2.3;
 
     // Setup
-    const market = await createMarket(program, provider, [price]);
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
 
-    const purchaser = await createWalletWithBalance(provider, 100000000);
     const mintOther = await createNewMint(
       provider,
       provider.wallet as NodeWallet,
@@ -719,185 +667,51 @@ describe("Protocol - Create Order", () => {
       0,
     );
 
-    await createOrder(
-      market.marketPda,
-      purchaser,
-      outcomeIndex,
-      true,
-      price,
-      stake,
-      purchaserInvalidToken,
-    ).then(
-      function (_) {
-        assert.fail("This test should have thrown an error");
-      },
-      function (err: AnchorError) {
-        assert.equal(err.error.errorCode.code, "ConstraintAssociated");
-      },
-    );
-  });
-
-  it("purchaser uses different token account for a different mint which is passed in as well", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
-    // Order parameters
-    const stake = 1.1;
-    const outcomeIndex = 0;
-    const price = 2.3;
-
-    // Setup
-    const market = await createMarket(program, provider, [price]);
-
-    const purchaser = await createWalletWithBalance(provider, 100000000);
-    const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
-      6,
-    );
-    const purchaserInvalidToken = await createAssociatedTokenAccountWithBalance(
-      mintOther,
-      purchaser.publicKey,
-      1000,
-    );
-
-    await createOrder(
-      market.marketPda,
-      purchaser,
-      outcomeIndex,
-      true,
-      price,
-      stake,
-      purchaserInvalidToken,
-    ).then(
-      function (_) {
-        assert.fail("This test should have thrown an error");
-      },
-      function (err: AnchorError) {
-        assert.equal(err.error.errorCode.code, "ConstraintAssociated");
-      },
-    );
+    await market
+      ._createOrderRequest(outcomeIndex, true, stake, price, purchaser, {
+        purchaserToken: purchaserInvalidToken,
+      })
+      .then(
+        function (_) {
+          assert.fail("This test should have thrown an error");
+        },
+        function (err: AnchorError) {
+          assert.equal(err.error.errorCode.code, "ConstraintAssociated");
+        },
+      );
   });
 
   it("purchaser uses different person's token account for the same mint", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
     // Order parameters
     const stake = 1.1;
     const outcomeIndex = 0;
     const price = 2.3;
 
     // Setup
-    const market = await createMarket(program, provider, [price]);
-    const purchaser = await createWalletWithBalance(provider, 100000000);
+    const [purchaser, purchaserOther, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
 
-    const purchaserOther = await createWalletWithBalance(provider, 100000000);
     const purchaserOtherToken = await createAssociatedTokenAccountWithBalance(
       market.mintPk,
       purchaserOther.publicKey,
       10.0,
     );
 
-    await createOrder(
-      market.marketPda,
-      purchaser,
-      outcomeIndex,
-      true,
-      price,
-      stake,
-      purchaserOtherToken,
-    ).then(
-      function (_) {
-        assert.fail("This test should have thrown an error");
-      },
-      function (err: AnchorError) {
-        assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
-      },
-    );
-  });
-
-  it("purchaser uses different person's token account for a different mint", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
-    // Order parameters
-    const stake = 1.1;
-    const outcomeIndex = 0;
-    const price = 2.3;
-
-    // Setup
-    const market = await createMarket(program, provider, [price]);
-    const purchaser = await createWalletWithBalance(provider, 100000000);
-
-    const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
-      6,
-    );
-    const purchaserOther = await createWalletWithBalance(provider, 100000000);
-    const purchaserOtherToken = await createAssociatedTokenAccountWithBalance(
-      mintOther,
-      purchaserOther.publicKey,
-      10.0,
-    );
-
-    await createOrder(
-      market.marketPda,
-      purchaser,
-      outcomeIndex,
-      true,
-      price,
-      stake,
-      purchaserOtherToken,
-    ).then(
-      function (_) {
-        assert.fail("This test should have thrown an error");
-      },
-      function (err: AnchorError) {
-        assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
-      },
-    );
-  });
-
-  it("purchaser uses different person's token account for a different mint which is passed in as well", async () => {
-    const program = anchor.workspace.MonacoProtocol as Program<MonacoProtocol>;
-
-    // Order parameters
-    const stake = 1.1;
-    const outcomeIndex = 0;
-    const price = 2.3;
-
-    // Setup
-    const market = await createMarket(program, provider, [price]);
-
-    const purchaser = await createWalletWithBalance(provider, 100000000);
-
-    const mintOther = await createNewMint(
-      provider,
-      provider.wallet as NodeWallet,
-      6,
-    );
-    const purchaserOther = await createWalletWithBalance(provider, 100000000);
-    const purchaserOtherToken = await createAssociatedTokenAccountWithBalance(
-      mintOther,
-      purchaserOther.publicKey,
-      10.0,
-    );
-
-    await createOrder(
-      market.marketPda,
-      purchaser,
-      outcomeIndex,
-      true,
-      price,
-      stake,
-      purchaserOtherToken,
-    ).then(
-      function (_) {
-        assert.fail("This test should have thrown an error");
-      },
-      function (err: AnchorError) {
-        assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
-      },
-    );
+    await market
+      ._createOrderRequest(outcomeIndex, true, stake, price, purchaser, {
+        purchaserToken: purchaserOtherToken,
+      })
+      .then(
+        function (_) {
+          assert.fail("This test should have thrown an error");
+        },
+        function (err: AnchorError) {
+          assert.equal(err.error.errorCode.code, "ConstraintTokenOwner");
+        },
+      );
   });
 
   it("Create order while market is inplay and add liquidity to matching pool after delay", async () => {

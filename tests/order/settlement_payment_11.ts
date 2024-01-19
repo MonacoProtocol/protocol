@@ -63,17 +63,17 @@ describe("Order Settlement Payment 11", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
+        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
+        { matched: [10, -22, 10], unmatched: [10, 4.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
-        { len: 1, liquidity: 12, matched: 0 },
+        { len: 1, liquidity: 2, matched: 10 },
         26.4,
         173.6,
       ],
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -157,17 +157,17 @@ describe("Order Settlement Payment 11", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
+        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
+        { matched: [10, -22, 10], unmatched: [10, 4.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
-        { len: 1, liquidity: 12, matched: 0 },
+        { len: 1, liquidity: 2, matched: 10 },
         26.4,
         173.6,
       ],
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -250,10 +250,10 @@ describe("Order Settlement Payment 11", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [-10, 22, -10], unmatched: [0, 26.4, 0] },
+        { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
         173.6,
@@ -261,7 +261,7 @@ describe("Order Settlement Payment 11", () => {
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -344,10 +344,10 @@ describe("Order Settlement Payment 11", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [-10, 22, -10], unmatched: [0, 26.4, 0] },
+        { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
         173.6,
@@ -355,7 +355,7 @@ describe("Order Settlement Payment 11", () => {
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

@@ -10,7 +10,7 @@ pub struct MarketMatchingQueue {
 }
 
 impl MarketMatchingQueue {
-    pub const QUEUE_LENGTH: usize = 0;
+    pub const QUEUE_LENGTH: usize = 10;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
@@ -21,20 +21,20 @@ impl MarketMatchingQueue {
 pub struct MatchingQueue {
     front: u32,
     len: u32,
-    items: Vec<OrderMatched>,
+    items: Vec<OrderMatch>,
 }
 
 impl MatchingQueue {
     pub const fn size_for(length: usize) -> usize {
         (U32_SIZE  * 2) + // front and len
-        vec_size(OrderMatched::SIZE, length) // items
+        vec_size(OrderMatch::SIZE, length) // items
     }
 
     pub fn new(size: usize) -> MatchingQueue {
         MatchingQueue {
             front: 0,
             len: 0,
-            items: vec![OrderMatched::default(); size],
+            items: vec![OrderMatch::default(); size],
         }
     }
 
@@ -55,7 +55,7 @@ impl MatchingQueue {
         (self.front + self.len) % self.size()
     }
 
-    pub fn peek(&self) -> Option<&OrderMatched> {
+    pub fn peek(&self) -> Option<&OrderMatch> {
         if self.len == 0 {
             None
         } else {
@@ -63,7 +63,7 @@ impl MatchingQueue {
         }
     }
 
-    pub fn peek_mut(&mut self) -> Option<&mut OrderMatched> {
+    pub fn peek_mut(&mut self) -> Option<&mut OrderMatch> {
         if self.len == 0 {
             None
         } else {
@@ -71,7 +71,7 @@ impl MatchingQueue {
         }
     }
 
-    pub fn enqueue(&mut self, item: OrderMatched) -> Option<u32> {
+    pub fn enqueue(&mut self, item: OrderMatch) -> Option<u32> {
         if self.len == self.size() {
             None
         } else {
@@ -83,7 +83,7 @@ impl MatchingQueue {
         }
     }
 
-    pub fn dequeue(&mut self) -> Option<&mut OrderMatched> {
+    pub fn dequeue(&mut self) -> Option<&mut OrderMatch> {
         if self.len == 0 {
             None
         } else {
@@ -95,7 +95,7 @@ impl MatchingQueue {
         }
     }
 
-    pub fn to_vec(&self) -> Vec<OrderMatched> {
+    pub fn to_vec(&self) -> Vec<OrderMatch> {
         let mut clone = Vec::with_capacity(self.len() as usize);
         for i in 0..self.len() as usize {
             let index = (self.front as usize + i) % (self.size() as usize);
@@ -106,7 +106,7 @@ impl MatchingQueue {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
-pub struct OrderMatched {
+pub struct OrderMatch {
     pub pk: Pubkey,
     pub purchaser: Pubkey,
 
@@ -116,7 +116,7 @@ pub struct OrderMatched {
     pub stake: u64,
 }
 
-impl OrderMatched {
+impl OrderMatch {
     pub const SIZE: usize = PUB_KEY_SIZE +  // pk
     PUB_KEY_SIZE + // purchaser
         BOOL_SIZE + //for_outcome
@@ -125,13 +125,13 @@ impl OrderMatched {
          U64_SIZE; // stake
 }
 
-impl PartialEq for OrderMatched {
+impl PartialEq for OrderMatch {
     fn eq(&self, other: &Self) -> bool {
         self.pk.eq(&other.pk)
     }
 }
 
-impl Eq for OrderMatched {}
+impl Eq for OrderMatch {}
 
 #[cfg(test)]
 pub fn mock_market_matching_queue(market_pk: Pubkey) -> MarketMatchingQueue {
@@ -150,7 +150,7 @@ mod tests_matching_queue {
         let mut queue = MatchingQueue::new(10);
         assert_eq!(0, queue.len());
 
-        let result = queue.enqueue(OrderMatched::default());
+        let result = queue.enqueue(OrderMatch::default());
         assert!(result.is_some());
         assert_eq!(0, result.unwrap());
         assert_eq!(1, queue.len());
@@ -159,11 +159,11 @@ mod tests_matching_queue {
     #[test]
     fn enqueue_some_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
         assert_eq!(2, queue.len());
 
-        let result = queue.enqueue(OrderMatched::default());
+        let result = queue.enqueue(OrderMatch::default());
         assert!(result.is_some());
         assert_eq!(2, result.unwrap());
         assert_eq!(3, queue.len());
@@ -172,19 +172,19 @@ mod tests_matching_queue {
     #[test]
     fn enqueue_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
         assert_eq!(10, queue.len());
 
-        let result = queue.enqueue(OrderMatched::default());
+        let result = queue.enqueue(OrderMatch::default());
         assert!(result.is_none());
         assert_eq!(10, queue.len());
     }
@@ -202,9 +202,9 @@ mod tests_matching_queue {
     #[test]
     fn dequeue_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
         assert_eq!(3, queue.len());
 
         let result = queue.dequeue();
@@ -228,7 +228,7 @@ mod tests_matching_queue {
     #[test]
     fn peek_full_queue() {
         let mut queue = MatchingQueue::new(10);
-        let item = OrderMatched::default();
+        let item = OrderMatch::default();
         queue.enqueue(item);
         assert_eq!(1, queue.len());
 
@@ -246,8 +246,8 @@ mod tests_matching_queue {
     #[test]
     fn peek_edit_in_place() {
         let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatched::default());
-        queue.enqueue(OrderMatched::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
         assert_eq!(2, queue.len());
 
         queue.peek_mut().unwrap().stake = 10;

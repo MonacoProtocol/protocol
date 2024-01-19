@@ -91,15 +91,10 @@ describe("Market Prices", () => {
       market.airdrop(purchaser2, stake),
     ]);
 
-    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
-    const order2 = await market.againstOrder(
-      0,
-      stakeSimple + 1,
-      prices[0],
-      purchaser2,
-    );
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2);
 
-    await market.match(order1, order2);
+    await market.processMatchingQueue();
     await new Promise((e) => setTimeout(e, 1000));
 
     const response = await getMarketPrices(

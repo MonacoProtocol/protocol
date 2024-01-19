@@ -21,6 +21,22 @@ pub fn order_creation_payment<'info>(
     )
 }
 
+pub fn order_creation_refund<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    purchaser_token_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    market: &Account<Market>,
+    amount: u64,
+) -> Result<()> {
+    transfer_from_market_escrow(
+        market_escrow,
+        purchaser_token_account,
+        token_program,
+        market,
+        amount,
+    )
+}
+
 pub fn order_cancelation_refund(ctx: &Context<CancelOrder>, amount: u64) -> Result<()> {
     let accounts = &ctx.accounts;
 

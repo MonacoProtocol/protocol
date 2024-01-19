@@ -157,7 +157,7 @@ describe("Order Request Creation", () => {
           distinctSeed: duplicateDistinctSeed,
         })
         .accounts({
-          reservedOrder: orderPk,
+          reservedOrder: orderPk.data.orderPk,
           orderRequestQueue: (
             await findOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
@@ -241,7 +241,7 @@ describe("Order Request Creation", () => {
           distinctSeed: duplicateDistinctSeed,
         })
         .accounts({
-          reservedOrder: orderPk,
+          reservedOrder: orderPk.data.orderPk,
           orderRequestQueue: (
             await findOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
