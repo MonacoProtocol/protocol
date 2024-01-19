@@ -24,6 +24,7 @@ Current version of the protocol on mainnet-beta: [0.11.0](https://github.com/Mon
 
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| TBC        | [0.13.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.13.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | TBC        | [0.12.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | TBC        | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-08-01 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
@@ -41,6 +42,7 @@ Protocol releases, along with their corresponding client versions and audit repo
 
 | Protocol version                                                          | Client       | Admin client | Audit reports                                                                      |
 |---------------------------------------------------------------------------|--------------|--------------|------------------------------------------------------------------------------------|
+| [0.13.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.13.0) | 10.0.0       | 9.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.13.0.pdf) |
 | [0.12.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.1) | 9.0.0        | 8.0.0        |  |
 | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | 9.0.0        | 8.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.12.0.pdf) |
 | [0.11.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.11.0) | 8.0.0        | 7.0.0        | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.11.0.pdf) |

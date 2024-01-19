@@ -1,6 +1,7 @@
 use crate::error::CoreError;
 use crate::monaco_protocol::SEED_SEPARATOR;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::{AuthorisedOperators, Market, MarketPosition, Order, OrderData, Trade};
 use anchor_lang::prelude::*;
@@ -342,7 +343,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_against: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_against: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(
         mut,
@@ -382,7 +383,7 @@ pub struct MatchOrders<'info> {
         ],
         bump,
     )]
-    pub market_matching_pool_for: Account<'info, MarketMatchingPool>,
+    pub market_matching_pool_for: Box<Account<'info, MarketMatchingPool>>,
 
     #[account(mut)]
     pub market: Box<Account<'info, Market>>,
@@ -567,6 +568,17 @@ pub struct CreateMarket<'info> {
         token::authority = escrow
     )]
     pub escrow: Account<'info, TokenAccount>,
+    #[account(
+        init,
+        seeds = [
+            b"matching".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        space = MarketMatchingQueue::SIZE
+    )]
+    pub matching_queue: Box<Account<'info, MarketMatchingQueue>>,
     #[account(
         init,
         seeds = [
@@ -903,6 +915,14 @@ pub struct CloseMarket<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        seeds = [b"matching".as_ref(), market.key().as_ref()],
+        bump,
+        close = authority,
+    )]
+    pub matching_queue: Account<'info, MarketMatchingQueue>,
     #[account(
         mut,
         has_one = market @ CoreError::CloseAccountMarketMismatch,

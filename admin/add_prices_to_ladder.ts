@@ -28,7 +28,7 @@ export async function addPricesToLadder() {
     Operator.MARKET,
   );
 
-  Array.from({ length: market.marketOutcomesCount }, (_, i) => i).forEach(
+  Array.from(new Array(market.marketOutcomesCount), (_, i) => i).forEach(
     async (marketOutcomeIndex) => {
       const marketOutcomePda = await findMarketOutcomePda(
         marketPda,

@@ -1,6 +1,6 @@
 {
   "name": "@monaco-protocol/admin-client",
-  "version": "8.0.1-dev.instructions.3",
+  "version": "9.0.0",
   "description": "Admin interface package for the Monaco Protocol on Solana",
   "author": "Monaco Protocol",
   "license": "MIT",
@@ -30,8 +30,8 @@
   },
   "peerDependencies": {
     "bs58": "^4.0.1",
-    "@coral-xyz/anchor": "~0.27.0",
-    "@solana/spl-token": "^0.3.5",
+    "@coral-xyz/anchor": "~0.29.0",
+    "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.68.0",
     "typescript": "^4.5.4"
   },

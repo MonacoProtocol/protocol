@@ -8,6 +8,7 @@ import {
   Operator,
   ClientResponse,
   ResponseFactory,
+  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import { findMarketOutcomePda } from "./market_outcome_instruction";
@@ -157,7 +158,9 @@ export async function batchAddPricesToAllOutcomePools(
   batchSize: number,
 ): Promise<ClientResponse<BatchAddPricesToOutcomesResponse>> {
   const response = new ResponseFactory({} as BatchAddPricesToOutcomesResponse);
-  const market = await program.account.market.fetch(marketPk);
+  const market = (await program.account.market.fetch(
+    marketPk,
+  )) as MarketAccount;
 
   const results = [] as BatchAddPricesToOutcomes[];
   for (

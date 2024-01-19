@@ -33,6 +33,7 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
   findCommissionPaymentsQueuePda,
+  findMarketMatchingQueuePda,
   findPriceLadderPda,
 } from "../../npm-admin-client";
 
@@ -125,6 +126,12 @@ export class Monaco {
     );
   }
 
+  async fetchMarketMatchingQueue(marketMatchingQueuePk: PublicKey) {
+    return await this.program.account.marketMatchingQueue.fetch(
+      marketMatchingQueuePk,
+    );
+  }
+
   async getTokenBalance(tokenPk: PublicKey) {
     const result = await this.provider.connection.getTokenAccountBalance(
       tokenPk,
@@ -136,16 +143,16 @@ export class Monaco {
     marketPositionPk: PublicKey,
     decimals = TOKEN_DECIMALS,
   ) {
-    const decimalsMultiplayer = 10 ** decimals;
+    const decimalsMultiplier = 10 ** decimals;
     const marketPosition = await this.program.account.marketPosition.fetch(
       marketPositionPk,
     );
     return {
       matched: marketPosition.marketOutcomeSums.map(
-        (bn) => bn.toNumber() / decimalsMultiplayer,
+        (bn) => bn.toNumber() / decimalsMultiplier,
       ),
       unmatched: marketPosition.unmatchedExposures.map(
-        (bn) => bn.toNumber() / decimalsMultiplayer,
+        (bn) => bn.toNumber() / decimalsMultiplier,
       ),
     };
   }
@@ -172,26 +179,25 @@ export class Monaco {
     marketMatchingPoolPk: PublicKey,
     decimals = TOKEN_DECIMALS,
   ) {
-    const decimalsMultiplayer = 10 ** decimals;
+    const decimalsMultiplier = 10 ** decimals;
     const marketMatchingPool = await this.fetchMarketMatchingPool(
       marketMatchingPoolPk,
     );
     return {
       len: marketMatchingPool.orders.len,
       liquidity:
-        marketMatchingPool.liquidityAmount.toNumber() / decimalsMultiplayer,
-      matched:
-        marketMatchingPool.matchedAmount.toNumber() / decimalsMultiplayer,
+        marketMatchingPool.liquidityAmount.toNumber() / decimalsMultiplier,
+      matched: marketMatchingPool.matchedAmount.toNumber() / decimalsMultiplier,
     };
   }
 
   async getOrder(orderPk: PublicKey, decimals = TOKEN_DECIMALS) {
-    const decimalsMultiplayer = 10 ** decimals;
+    const decimalsMultiplier = 10 ** decimals;
     const order = await this.program.account.order.fetch(orderPk);
     return {
       status: order.orderStatus,
-      stakeUnmatched: order.stakeUnmatched.toNumber() / decimalsMultiplayer,
-      stakeVoided: order.voidedStake.toNumber() / decimalsMultiplayer,
+      stakeUnmatched: order.stakeUnmatched.toNumber() / decimalsMultiplier,
+      stakeVoided: order.voidedStake.toNumber() / decimalsMultiplier,
     };
   }
 
@@ -326,6 +332,11 @@ export class Monaco {
       marketPk,
     );
 
+    const matchingQueuePk = await findMarketMatchingQueuePda(
+      this.program as Program,
+      marketPk,
+    );
+
     const commissionQueuePk = await findCommissionPaymentsQueuePda(
       this.program as Program,
       marketPk,
@@ -351,6 +362,7 @@ export class Monaco {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
+        matchingQueue: matchingQueuePk.data.pda,
         commissionPaymentQueue: commissionQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -462,6 +474,7 @@ export class Monaco {
       externalPrograms,
       marketPk,
       marketEscrowPk.data.pda,
+      matchingQueuePk.data.pda,
       commissionQueuePk.data.pda,
       outcomePks,
       matchingPools,
@@ -521,6 +534,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly matchingQueuePk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
   readonly matchingPools: {
@@ -545,6 +559,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    matchingQueuePk: PublicKey,
     paymentsQueuePk: PublicKey,
     outcomePks: PublicKey[],
     matchingPools: {
@@ -561,6 +576,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.matchingQueuePk = matchingQueuePk;
     this.paymentsQueuePk = paymentsQueuePk;
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;

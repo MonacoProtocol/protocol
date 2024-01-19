@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::error::CoreError;
 use crate::state::market_account::MarketStatus::ReadyToClose;
 use crate::state::market_account::{Market, MarketStatus};
+use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 
 pub fn close_market_child_account(market: &mut Market) -> Result<()> {
@@ -17,6 +18,14 @@ pub fn close_order(market: &mut Market, order: &Order) -> Result<()> {
     require!(
         order.is_completed(),
         CoreError::CloseAccountOrderNotComplete
+    );
+    close_market_child_account(market)
+}
+
+pub fn close_market_position(market: &mut Market, market_position: &MarketPosition) -> Result<()> {
+    require!(
+        market_position.paid,
+        CoreError::CloseAccountMarketPositionNotPaid
     );
     close_market_child_account(market)
 }
@@ -97,6 +106,39 @@ mod tests {
         let result = close_order(market, order);
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::CloseAccountOrderNotComplete)), result);
+    }
+
+    // close market_position validation
+
+    #[test]
+    fn test_close_market_position() {
+        let market = &mut test_market();
+        market.market_status = ReadyToClose;
+        market.unclosed_accounts_count = 1;
+
+        let market_position = &mut test_market_position();
+        market_position.paid = true;
+
+        assert!(close_market_position(market, market_position).is_ok());
+        assert_eq!(market.unclosed_accounts_count, 0);
+    }
+
+    #[test]
+    fn test_close_market_position_not_paid() {
+        let market = &mut test_market();
+        market.market_status = ReadyToClose;
+        market.unclosed_accounts_count = 1;
+
+        let market_position = &mut test_market_position();
+        market_position.paid = false;
+
+        let result = close_market_position(market, market_position);
+        assert!(result.is_err());
+        assert_eq!(
+            Err(error!(CoreError::CloseAccountMarketPositionNotPaid)),
+            result
+        );
+        assert_eq!(market.unclosed_accounts_count, 1);
     }
 
     // close market validation
@@ -180,6 +222,19 @@ mod tests {
             payout: 0,
             payer: Default::default(),
             product_commission_rate: 0.0,
+        }
+    }
+
+    fn test_market_position() -> MarketPosition {
+        MarketPosition {
+            purchaser: Default::default(),
+            market: Default::default(),
+            paid: false,
+            market_outcome_sums: vec![],
+            unmatched_exposures: vec![],
+            payer: Default::default(),
+            matched_risk: 0,
+            matched_risk_per_product: vec![],
         }
     }
 }

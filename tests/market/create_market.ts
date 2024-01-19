@@ -7,7 +7,10 @@ import assert from "assert";
 import { findEscrowPda, findMarketPda } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
-import { findCommissionPaymentsQueuePda } from "../../npm-admin-client";
+import {
+  findCommissionPaymentsQueuePda,
+  findMarketMatchingQueuePda,
+} from "../../npm-admin-client";
 import { getOrCreateMarketType } from "../../npm-admin-client/src/market_type_create";
 
 describe("Create markets with inplay features", () => {
@@ -50,10 +53,7 @@ describe("Market: creation", () => {
     assert.deepEqual(account.marketType, market.marketTypePk);
 
     // place some orders to ensure matching pools are created
-    const purchaser = await createWalletWithBalance(
-      monaco.provider,
-      1000000000,
-    );
+    const purchaser = await createWalletWithBalance(monaco.provider);
     await market.cachePurchaserTokenPk(purchaser.publicKey);
     await market.airdrop(purchaser, 100);
 
@@ -141,7 +141,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -165,6 +167,7 @@ describe("Market: creation", () => {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk,
+        matchingQueue: matchingQueuePk,
         commissionPaymentQueue: marketPaymentQueuePk,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -223,7 +226,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -248,6 +253,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
           commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -313,7 +319,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -338,6 +346,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
           commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -403,7 +412,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -428,6 +439,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
           commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -494,7 +506,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -519,6 +533,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
           commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -581,7 +596,9 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-
+    const matchingQueuePk = (
+      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+    ).data.pda;
     const marketPaymentQueuePk = (
       await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -606,6 +623,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
+          matchingQueue: matchingQueuePk,
           commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -752,7 +770,9 @@ async function createMarket(
   const marketEscrowPk = (
     await findEscrowPda(protocol.program as Program, marketPk)
   ).data.pda;
-
+  const matchingQueuePk = (
+    await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
+  ).data.pda;
   const marketPaymentQueuePk = (
     await findCommissionPaymentsQueuePda(protocol.program as Program, marketPk)
   ).data.pda;
@@ -776,6 +796,7 @@ async function createMarket(
       market: marketPk,
       marketType: marketTypePk,
       escrow: marketEscrowPk,
+      matchingQueue: matchingQueuePk,
       commissionPaymentQueue: marketPaymentQueuePk,
       mint: mintPk,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,

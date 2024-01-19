@@ -4,7 +4,7 @@ use crate::context::MatchOrders;
 use crate::error::CoreError;
 use crate::events::trade::TradeEvent;
 use crate::instructions::market_position::update_product_commission_contributions;
-use crate::instructions::matching::create_trade::initialize_trade;
+use crate::instructions::matching::create_trade::create_trade;
 use crate::instructions::{
     calculate_risk_from_stake, current_timestamp, matching, order, transfer,
 };
@@ -152,20 +152,28 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
 
     // 5. Initialize the trade accounts
     let now = current_timestamp();
-    initialize_trade(
+    create_trade(
         &mut ctx.accounts.trade_against,
-        &ctx.accounts.order_against,
-        &ctx.accounts.trade_for,
+        &ctx.accounts.order_against.purchaser,
+        &ctx.accounts.order_against.market,
+        &ctx.accounts.order_against.key(),
+        &ctx.accounts.trade_for.key(),
+        ctx.accounts.order_against.market_outcome_index,
+        ctx.accounts.order_against.for_outcome,
         stake_matched,
         selected_price,
         now,
         ctx.accounts.crank_operator.key(),
     );
     ctx.accounts.market.increment_unclosed_accounts_count()?;
-    initialize_trade(
+    create_trade(
         &mut ctx.accounts.trade_for,
-        &ctx.accounts.order_for,
-        &ctx.accounts.trade_against,
+        &ctx.accounts.order_for.purchaser,
+        &ctx.accounts.order_for.market,
+        &ctx.accounts.order_for.key(),
+        &ctx.accounts.trade_against.key(),
+        ctx.accounts.order_for.market_outcome_index,
+        ctx.accounts.order_for.for_outcome,
         stake_matched,
         selected_price,
         now,

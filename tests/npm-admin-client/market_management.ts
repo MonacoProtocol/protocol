@@ -1,10 +1,4 @@
-import {
-  Program,
-  AnchorProvider,
-  setProvider,
-  workspace,
-  BN,
-} from "@coral-xyz/anchor";
+import { AnchorProvider, setProvider, workspace, BN } from "@coral-xyz/anchor";
 import assert from "assert";
 import {
   settleMarket,
@@ -29,7 +23,7 @@ describe("Settle market", () => {
   setProvider(provider);
 
   it("Settles market", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const settleMarketResponse = await settleMarket(
       protocolProgram,
@@ -45,7 +39,7 @@ describe("Settle market", () => {
   });
 
   it("Fails settle with invalid index", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const settleMarketResponse = await settleMarket(
       protocolProgram,
@@ -61,40 +55,34 @@ describe("Settle market", () => {
   });
 });
 
-describe("Set publish status", () => {
+describe("Update market endpoints", () => {
   const provider = AnchorProvider.local();
   setProvider(provider);
+  const newTitle = "Brand New Title";
+  const newLocktime = 1000 + Math.floor(new Date().getTime() / 1000);
+  const newEventStartTime = 1000 + Math.floor(new Date().getTime() / 1000);
 
-  it("Sets as unpublished then published", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+  it("Updates market", async () => {
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const unpublish = await unpublishMarket(protocolProgram, market.pk);
-    let updatedMarket = await monaco.fetchMarket(market.pk);
+    const unpublishResponse = await monaco.fetchMarket(market.pk);
 
     assert(unpublish.success);
     assert(unpublish.data.tnxId);
     assert.deepEqual(unpublish.errors, []);
-    assert(!updatedMarket.published);
+    assert(!unpublishResponse.published);
 
     const publish = await publishMarket(protocolProgram, market.pk);
-    updatedMarket = await monaco.fetchMarket(market.pk);
+    let updatedMarket = await monaco.fetchMarket(market.pk);
 
     assert(publish.success);
     assert(publish.data.tnxId);
     assert.deepEqual(publish.errors, []);
     assert(updatedMarket.published);
-  });
-});
 
-describe("Set suspended status", () => {
-  const provider = AnchorProvider.local();
-  setProvider(provider);
-
-  it("Sets as suspended then unsuspended", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
-    const market = await monaco.create3WayMarket([1.001]);
     const suspend = await suspendMarket(protocolProgram, market.pk);
-    let updatedMarket = await monaco.fetchMarket(market.pk);
+    updatedMarket = await monaco.fetchMarket(market.pk);
 
     assert(suspend.success);
     assert(suspend.data.tnxId);
@@ -108,91 +96,55 @@ describe("Set suspended status", () => {
     assert(unsuspend.data.tnxId);
     assert.deepEqual(unsuspend.errors, []);
     assert(!updatedMarket.suspended);
-  });
-});
 
-describe("Set new title", () => {
-  const provider = AnchorProvider.local();
-  setProvider(provider);
-  const newTitle = "Brand New Title";
-
-  it("Sets provided title", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
-    const market = await monaco.create3WayMarket([1.001]);
-    const response = await updateMarketTitle(
+    const newTitleResponse = await updateMarketTitle(
       protocolProgram,
       market.pk,
       newTitle,
     );
-    const updatedMarket = await monaco.fetchMarket(market.pk);
+    updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert(response.success);
-    assert(response.data.tnxId);
-    assert.deepEqual(response.errors, []);
+    assert(newTitleResponse.success);
+    assert(newTitleResponse.data.tnxId);
+    assert.deepEqual(newTitleResponse.errors, []);
     assert.equal(updatedMarket.title, "Brand New Title");
-  });
-});
 
-describe("Set new locktime", () => {
-  const provider = AnchorProvider.local();
-  setProvider(provider);
-  const newLocktime = 1000 + Math.floor(new Date().getTime() / 1000);
-
-  it("Sets provided locktime", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
-    const market = await monaco.create3WayMarket([1.001]);
-    const response = await updateMarketLocktime(
+    const updateLocktimeResponse = await updateMarketLocktime(
       protocolProgram,
       market.pk,
       newLocktime,
     );
-    const updatedMarket = await monaco.fetchMarket(market.pk);
+    updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert.deepEqual(response.errors, []);
-    assert(response.success);
-    assert(response.data.tnxId);
+    assert.deepEqual(updateLocktimeResponse.errors, []);
+    assert(updateLocktimeResponse.success);
+    assert(updateLocktimeResponse.data.tnxId);
     assert.deepEqual(updatedMarket.marketLockTimestamp, new BN(newLocktime));
-  });
-});
 
-describe("Set new event start", () => {
-  const provider = AnchorProvider.local();
-  setProvider(provider);
-  const newEventStartTime = 1000 + Math.floor(new Date().getTime() / 1000);
-
-  it("Sets provided event start time", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
-    const market = await monaco.create3WayMarket([1.001]);
-    const response = await updateMarketEventStartTime(
+    const updateEventStartTimeResponse = await updateMarketEventStartTime(
       protocolProgram,
       market.pk,
       newEventStartTime,
     );
-    const updatedMarket = await monaco.fetchMarket(market.pk);
+    updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert.deepEqual(response.errors, []);
-    assert(response.success);
-    assert(response.data.tnxId);
+    assert.deepEqual(updateEventStartTimeResponse.errors, []);
+    assert(updateEventStartTimeResponse.success);
+    assert(updateEventStartTimeResponse.data.tnxId);
     assert.deepEqual(
       updatedMarket.eventStartTimestamp,
       new BN(newEventStartTime),
     );
-  });
-});
 
-describe("Set new event start to now", () => {
-  const provider = AnchorProvider.local();
-  setProvider(provider);
+    const startToNowResponse = await setMarketEventStartToNow(
+      protocolProgram,
+      market.pk,
+    );
+    updatedMarket = await monaco.fetchMarket(market.pk);
 
-  it("Sets provided event start time", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
-    const market = await monaco.create3WayMarket([1.001]);
-    const response = await setMarketEventStartToNow(protocolProgram, market.pk);
-    const updatedMarket = await monaco.fetchMarket(market.pk);
-
-    assert.deepEqual(response.errors, []);
-    assert(response.success);
-    assert(response.data.tnxId);
+    assert.deepEqual(startToNowResponse.errors, []);
+    assert(startToNowResponse.success);
+    assert(startToNowResponse.data.tnxId);
     // Asserting the eventStart time changed need to add in assert for more accurate time check
     assert(updatedMarket.eventStartTimestamp != new BN(1924254038));
   });
@@ -203,7 +155,7 @@ describe("Open market", () => {
   setProvider(provider);
 
   it("Open market", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
       [1.001],
@@ -218,7 +170,7 @@ describe("Open market", () => {
   });
 
   it("Fails when market isn't in Initializing status", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const openMarketResponse = await openMarket(protocolProgram, market.pk);
 
@@ -233,7 +185,7 @@ describe("Market ready to close", () => {
   setProvider(provider);
 
   it("Set market as ready to close", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     await market.settle(0);
     await market.completeSettlement();
@@ -248,7 +200,7 @@ describe("Market ready to close", () => {
   });
 
   it("Fails if market not settled", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const response = await setMarketReadyToClose(protocolProgram, market.pk);
     const updatedMarket = await monaco.fetchMarket(market.pk);
@@ -265,7 +217,7 @@ describe("Market ready to void", () => {
   setProvider(provider);
 
   it("Set market as ready to void", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
 
     const response = await voidMarket(protocolProgram, market.pk);
@@ -278,7 +230,7 @@ describe("Market ready to void", () => {
   });
 
   it("Fails if market not initializing or open", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
 
     await market.settle(0);
@@ -298,7 +250,7 @@ describe("Transfer market escrow surplus", () => {
   setProvider(provider);
 
   it("Successfully transfer surplus", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 1);
@@ -335,7 +287,7 @@ describe("Transfer market escrow surplus", () => {
   });
 
   it("Fails if market not settled", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 1);

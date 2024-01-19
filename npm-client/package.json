@@ -1,6 +1,6 @@
 {
   "name": "@monaco-protocol/client",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "description": "Interface package for the Monaco Protocol on Solana",
   "author": "Monaco Protocol",
   "license": "MIT",
@@ -28,8 +28,8 @@
     "publishRCClient": "npm install && npm run build && npm publish --tag rc --access public && npm run clean"
   },
   "peerDependencies": {
-    "@coral-xyz/anchor": "~0.27.0",
-    "@solana/spl-token": "^0.3.5",
+    "@coral-xyz/anchor": "~0.29.0",
+    "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.68.0",
     "bs58": "^4.0.1",
     "typescript": "^4.5.4",

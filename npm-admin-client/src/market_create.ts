@@ -16,6 +16,7 @@ import {
 } from "./utils";
 import { buildCreateMarketInstruction } from "./market_create_instruction";
 import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
+import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
 
 /**
  * For the given parameters:
@@ -70,11 +71,12 @@ export async function createMarketWithOutcomesAndPriceLadder(
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
   outcomes: string[],
-  priceLadder?: PublicKey,
+  priceLadder?: number[] | PublicKey,
   options?: MarketCreateOptions,
 ): Promise<ClientResponse<CreateMarketWithOutcomesAndPriceLadderResponse>> {
   const response = new ResponseFactory({});
-  const DEFAULT_BATCH_SIZE = 2;
+  const batchSize = options?.batchSize ? options.batchSize : 50;
+  const outcomesBatchSize = 2;
 
   const instructionCreateMarket = await buildCreateMarketInstruction(
     program,
@@ -128,7 +130,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
         (i) => i.instruction,
       ),
     ],
-    options?.batchSize ? options.batchSize : DEFAULT_BATCH_SIZE,
+    outcomesBatchSize,
     options?.computeUnitLimit,
     options?.computeUnitPrice,
   );
@@ -141,6 +143,25 @@ export async function createMarketWithOutcomesAndPriceLadder(
   if (!signAndSendOutcomesResponse.success) {
     response.addErrors(signAndSendOutcomesResponse.errors);
     return response.body;
+  }
+
+  if (
+    Array.isArray(priceLadder) &&
+    priceLadder.every((element) => typeof element === "number")
+  ) {
+    const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
+      program,
+      instructionCreateMarket.data.marketPk,
+      priceLadder,
+      batchSize,
+    );
+
+    if (!addPriceLaddersResponse.success) {
+      response.addErrors(addPriceLaddersResponse.errors);
+    }
+    response.addResponseData({
+      priceLadderResults: addPriceLaddersResponse.data.results,
+    });
   }
 
   for (const signature of signAndSendOutcomesResponse.data.signatures) {

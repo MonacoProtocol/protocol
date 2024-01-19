@@ -1,21 +1,21 @@
-use anchor_lang::prelude::*;
-use solana_program::log;
-
 use crate::context::SettleOrder;
 use crate::error::CoreError;
+use crate::state::market_account::MarketStatus::ReadyForSettlement;
 use crate::state::order_account::OrderStatus::{Cancelled, Open, SettledLose, SettledWin};
 use crate::{Market, Order};
+use anchor_lang::prelude::*;
+use solana_program::log;
 
 pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
     let market_account = &mut ctx.accounts.market;
 
-    // validate the market is settled
+    // validate the market is ready for settlement
     require!(
-        market_account.market_winning_outcome_index.is_some(),
-        CoreError::SettlementMarketNotSettled
+        ReadyForSettlement.eq(&market_account.market_status),
+        CoreError::SettlementMarketNotReadyForSettlement
     );
 
-    // exit early if already settled
+    // exit early if order already settled
     if Cancelled.eq(&ctx.accounts.order.order_status) {
         log::sol_log("order already cancelled");
         return Ok(());

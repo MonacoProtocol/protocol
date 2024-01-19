@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program } from "@coral-xyz/anchor";
+import { workspace } from "@coral-xyz/anchor";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
 import {
@@ -10,6 +10,7 @@ import {
 describe("Initialise outcome on market", () => {
   it("Initialises additional outcome", async () => {
     // create a new market
+    const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
       [1.001, 1.01, 1.1],
@@ -26,14 +27,12 @@ describe("Initialise outcome on market", () => {
       monaco.program.programId,
     );
 
-    const response = await initialiseOutcomes(
-      monaco.program as Program,
-      market.pk,
-      ["EXTRA"],
-    );
+    const response = await initialiseOutcomes(protocolProgram, market.pk, [
+      "EXTRA",
+    ]);
 
     for (const signature of response.data.signatures) {
-      await confirmTransaction(monaco.program as Program, signature);
+      await confirmTransaction(protocolProgram, signature);
     }
 
     await new Promise((e) => setTimeout(e, 1000));

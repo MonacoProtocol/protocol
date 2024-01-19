@@ -7,6 +7,7 @@ use crate::instructions::current_timestamp;
 use crate::monaco_protocol::{PRICE_SCALE, SEED_SEPARATOR_CHAR};
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
+use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::order_account::Order;
 use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
@@ -125,7 +126,7 @@ pub fn create(
     ctx.accounts.market.title = title;
     ctx.accounts.market.mint_account = ctx.accounts.mint.key();
     ctx.accounts.market.decimal_limit = decimal_limit;
-    ctx.accounts.market.escrow_account_bump = *ctx.bumps.get("escrow").unwrap();
+    ctx.accounts.market.escrow_account_bump = ctx.bumps.escrow;
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
@@ -143,6 +144,8 @@ pub fn create(
     } else {
         false
     };
+
+    intialize_matching_queue(&mut ctx.accounts.matching_queue, &ctx.accounts.market.key())?;
 
     intialize_commission_payments_queue(
         &mut ctx.accounts.commission_payment_queue,
@@ -223,7 +226,7 @@ pub fn add_prices_to_market_outcome(
 
     let mut ladder = market_outcome.price_ladder.clone();
 
-    ladder.extend(new_prices.into_iter());
+    ladder.extend(new_prices);
     ladder.sort_by(|a, b| a.partial_cmp(b).unwrap());
     ladder.dedup();
 
@@ -234,6 +237,15 @@ pub fn add_prices_to_market_outcome(
         CoreError::MarketPriceListIsFull
     );
 
+    Ok(())
+}
+
+fn intialize_matching_queue(
+    matching_queue: &mut MarketMatchingQueue,
+    market: &Pubkey,
+) -> Result<()> {
+    matching_queue.market = *market;
+    matching_queue.matches = MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
     Ok(())
 }
 

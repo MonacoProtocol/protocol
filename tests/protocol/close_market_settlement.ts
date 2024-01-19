@@ -39,6 +39,9 @@ describe("Close market accounts (settled)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const matchingQueueRent = await monaco.provider.connection.getBalance(
+      market.matchingQueuePk,
+    );
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
@@ -48,6 +51,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
       })
@@ -62,6 +66,7 @@ describe("Close market accounts (settled)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      matchingQueueRent +
       paymentsQueueRent +
       outcomeARent +
       outcomeBRent;
@@ -106,6 +111,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
       })
@@ -138,6 +144,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: monaco.operatorPk,
       })
@@ -184,6 +191,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: marketB.pk,
         marketEscrow: marketB.escrowPk,
+        matchingQueue: marketB.matchingQueuePk,
         commissionPaymentQueue: marketB.paymentsQueuePk,
         authority: marketOperator.publicKey,
       })
@@ -217,6 +225,7 @@ describe("Close market accounts (settled)", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        matchingQueue: market.matchingQueuePk,
         commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
       })

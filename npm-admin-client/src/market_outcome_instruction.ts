@@ -5,6 +5,7 @@ import {
   ClientResponse,
   ResponseFactory,
   FindPdaResponse,
+  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -77,7 +78,9 @@ export async function buildInitialiseOutcomesInstructions(
 
   let resolvedIndex = 0;
   if (startingIndex == undefined) {
-    const market = await program.account.market.fetch(marketPk);
+    const market = (await program.account.market.fetch(
+      marketPk,
+    )) as MarketAccount;
     resolvedIndex = market.marketOutcomesCount;
   }
   const instructions = await Promise.all(
