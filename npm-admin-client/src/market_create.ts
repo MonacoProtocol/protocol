@@ -78,7 +78,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   const batchSize = options?.batchSize ? options.batchSize : 50;
   const outcomesBatchSize = 2;
 
-  const instructionCreateMarket = await buildCreateMarketInstruction(
+  const createMarketResponse = await createMarket(
     program,
     marketName,
     marketType,
@@ -88,40 +88,18 @@ export async function createMarketWithOutcomesAndPriceLadder(
     options,
   );
 
-  response.addResponseData({
-    marketPk: instructionCreateMarket.data.marketPk,
-  });
+  if (!createMarketResponse.success) {
+    response.addErrors(createMarketResponse.errors);
+    return response.body;
+  }
 
   const instructionInitialiseOutcomes =
     await buildInitialiseOutcomesInstructions(
       program,
-      instructionCreateMarket.data.marketPk,
+      createMarketResponse.data.marketPk,
       outcomes,
       priceLadder instanceof PublicKey ? priceLadder : undefined,
-      0,
     );
-
-  const signAndSendCreateResponse = await signAndSendInstructions(
-    program,
-    [instructionCreateMarket.data.instruction],
-    options?.computeUnitLimit,
-    options?.computeUnitPrice,
-  );
-
-  if (!signAndSendCreateResponse.success) {
-    response.addErrors(signAndSendCreateResponse.errors);
-    return response.body;
-  }
-
-  const confirmCreateResponse = await confirmTransaction(
-    program,
-    signAndSendCreateResponse.data.signature,
-  );
-
-  if (!confirmCreateResponse.success) {
-    response.addErrors(confirmCreateResponse.errors);
-    return response.body;
-  }
 
   const signAndSendOutcomesResponse = await signAndSendInstructionsBatch(
     program,
@@ -145,13 +123,17 @@ export async function createMarketWithOutcomesAndPriceLadder(
     return response.body;
   }
 
+  for (const signature of signAndSendOutcomesResponse.data.signatures) {
+    await confirmTransaction(program, signature);
+  }
+
   if (
     Array.isArray(priceLadder) &&
     priceLadder.every((element) => typeof element === "number")
   ) {
     const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
       program,
-      instructionCreateMarket.data.marketPk,
+      createMarketResponse.data.marketPk,
       priceLadder,
       batchSize,
     );
@@ -164,19 +146,12 @@ export async function createMarketWithOutcomesAndPriceLadder(
     });
   }
 
-  for (const signature of signAndSendOutcomesResponse.data.signatures) {
-    await confirmTransaction(program, signature);
-  }
-
-  const market = await getMarket(
-    program,
-    instructionCreateMarket.data.marketPk,
-  );
+  const market = await getMarket(program, createMarketResponse.data.marketPk);
 
   response.addResponseData({
-    marketPk: instructionCreateMarket.data.marketPk,
+    marketPk: createMarketResponse.data.marketPk,
     market: market.data.account,
-    tnxId: signAndSendCreateResponse.data.signature,
+    tnxId: createMarketResponse.data.tnxId,
   });
   return response.body;
 }
@@ -237,13 +212,33 @@ export async function createMarket(
       options,
     );
 
+    if (!instruction.success) {
+      response.addErrors(instruction.errors);
+      return response.body;
+    }
+
     const transaction = await signAndSendInstructions(
       program,
       [instruction.data.instruction],
       options?.computeUnitLimit,
       options?.computeUnitPrice,
     );
-    await confirmTransaction(program, transaction.data.signature);
+
+    if (!transaction.success) {
+      response.addErrors(transaction.errors);
+      return response.body;
+    }
+
+    const confirm = await confirmTransaction(
+      program,
+      transaction.data.signature,
+    );
+
+    if (!confirm.success) {
+      response.addErrors(confirm.errors);
+      return response.body;
+    }
+
     const market = await getMarket(program, instruction.data.marketPk);
 
     response.addResponseData({

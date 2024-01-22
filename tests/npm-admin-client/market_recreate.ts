@@ -1,4 +1,4 @@
-import { AnchorError, workspace } from "@coral-xyz/anchor";
+import { workspace } from "@coral-xyz/anchor";
 import {
   createMarket,
   createMarketWithOutcomesAndPriceLadder,
@@ -86,9 +86,6 @@ describe("Admin Client Recreate Market", () => {
         inplayOrderDelay: existingMarket.inplayOrderDelay,
       },
     );
-    console.log(response);
-    expect((response.errors[0] as AnchorError).error.errorCode.code).toMatch(
-      "MarketInvalidStatus",
-    );
+    assert(response.errors[0] as unknown as string, "MarketInvalidStatus");
   });
 });

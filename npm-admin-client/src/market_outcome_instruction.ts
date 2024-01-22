@@ -102,15 +102,15 @@ export async function buildInitialiseOutcomesInstructions(
   return response.body;
 }
 
-export async function findMarketOutcomePda(
+export function findMarketOutcomePda(
   program: Program,
   marketPk: PublicKey,
   marketOutcomeIndex: number,
-): Promise<ClientResponse<FindPdaResponse>> {
+): ClientResponse<FindPdaResponse> {
   const response = new ResponseFactory({} as FindPdaResponse);
 
   try {
-    const [pda, _] = await PublicKey.findProgramAddress(
+    const [pda, _] = PublicKey.findProgramAddressSync(
       [marketPk.toBuffer(), Buffer.from(marketOutcomeIndex.toString())],
       program.programId,
     );
