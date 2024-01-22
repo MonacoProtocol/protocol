@@ -13,10 +13,8 @@ import {
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { findEscrowPda } from "./market_helpers";
 import {
-  MarketStatusChangeInstructionType,
-  MarketUpdateInstructionType,
-  buildMarketStatusChangeInstruction,
-  buildMarketUpdateInstruction,
+  MarketManagementInstructionType,
+  buildMarketManagementInstruction,
   setupManagementRequest,
 } from "./market_management_instructions";
 import { confirmTransaction, signAndSendInstructions } from "./utils";
@@ -77,10 +75,10 @@ export async function settleMarket(
   winningOutcomeIndex: number,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketUpdateInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketUpdateInstructionType.SETTLE,
+    MarketManagementInstructionType.SETTLE,
     { winningOutcomeIndex },
   );
   return await sendManagementTransaction(
@@ -108,10 +106,10 @@ export async function publishMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.PUBLISH,
+    MarketManagementInstructionType.PUBLISH,
   );
   return await sendManagementTransaction(
     program,
@@ -138,10 +136,10 @@ export async function unpublishMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.UNPUBLISH,
+    MarketManagementInstructionType.UNPUBLISH,
   );
   return await sendManagementTransaction(
     program,
@@ -168,10 +166,10 @@ export async function suspendMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.SUSPEND,
+    MarketManagementInstructionType.SUSPEND,
   );
   return await sendManagementTransaction(
     program,
@@ -198,10 +196,10 @@ export async function unsuspendMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.UNSUSPEND,
+    MarketManagementInstructionType.UNSUSPEND,
   );
   return await sendManagementTransaction(
     program,
@@ -231,10 +229,10 @@ export async function updateMarketTitle(
   title: string,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketUpdateInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketUpdateInstructionType.UPDATE_TITLE,
+    MarketManagementInstructionType.UPDATE_TITLE,
     { title },
   );
   return await sendManagementTransaction(
@@ -264,10 +262,10 @@ export async function updateMarketEventStartTime(
   eventStartTimeTimestamp: EpochTimeStamp,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketUpdateInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME,
+    MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME,
     { eventStartTimeTimestamp },
   );
   return await sendManagementTransaction(
@@ -294,10 +292,10 @@ export async function setMarketEventStartToNow(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketUpdateInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW,
+    MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW,
   );
   return await sendManagementTransaction(
     program,
@@ -327,10 +325,10 @@ export async function updateMarketLocktime(
   marketLockTimestamp: EpochTimeStamp,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketUpdateInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketUpdateInstructionType.UPDATE_LOCK_TIME,
+    MarketManagementInstructionType.UPDATE_LOCK_TIME,
     { marketLockTimestamp },
   );
   return await sendManagementTransaction(
@@ -360,10 +358,10 @@ export async function openMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.OPEN,
+    MarketManagementInstructionType.OPEN,
   );
   return await sendManagementTransaction(
     program,
@@ -390,10 +388,10 @@ export async function setMarketReadyToClose(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.SET_READY_TO_CLOSE,
+    MarketManagementInstructionType.SET_READY_TO_CLOSE,
   );
   return await sendManagementTransaction(
     program,
@@ -420,10 +418,10 @@ export async function voidMarket(
   marketPk: PublicKey,
   options?: { computeUnitLimit?: number; computeUnitPrice?: number },
 ): Promise<ClientResponse<TransactionResponse>> {
-  const instruction = await buildMarketStatusChangeInstruction(
+  const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
-    MarketStatusChangeInstructionType.VOID,
+    MarketManagementInstructionType.VOID,
   );
   return await sendManagementTransaction(
     program,

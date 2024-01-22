@@ -10,7 +10,7 @@ import {
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import { findEscrowPda } from "./market_helpers";
 
-export enum MarketStatusChangeInstructionType {
+export enum MarketManagementInstructionType {
   PUBLISH = 0,
   UNPUBLISH = 1,
   SUSPEND = 2,
@@ -18,14 +18,11 @@ export enum MarketStatusChangeInstructionType {
   OPEN = 4,
   SET_READY_TO_CLOSE = 5,
   VOID = 6,
-}
-
-export enum MarketUpdateInstructionType {
-  SETTLE = 0,
-  UPDATE_TITLE = 1,
-  UPDATE_LOCK_TIME = 2,
-  UPDATE_MARKET_EVENT_START_TIME = 3,
-  UPDATE_MARKET_EVENT_START_TIME_TO_NOW = 4,
+  SETTLE = 7,
+  UPDATE_TITLE = 8,
+  UPDATE_LOCK_TIME = 9,
+  UPDATE_MARKET_EVENT_START_TIME = 10,
+  UPDATE_MARKET_EVENT_START_TIME_TO_NOW = 11,
 }
 
 export type MarketUpdateInstructionData = {
@@ -35,10 +32,10 @@ export type MarketUpdateInstructionData = {
   eventStartTimeTimestamp?: number;
 };
 
-export async function buildMarketUpdateInstruction(
+export async function buildMarketManagementInstruction(
   program: Program,
   marketPk: PublicKey,
-  instructionType: MarketUpdateInstructionType,
+  instructionType: MarketManagementInstructionType,
   instructionData?: MarketUpdateInstructionData,
 ): Promise<ClientResponse<MarketInstructionResponse>> {
   const { response, provider, authorisedOperators } =
@@ -49,138 +46,47 @@ export async function buildMarketUpdateInstruction(
     return response.body;
   }
 
-  try {
-    switch (instructionType) {
-      case MarketUpdateInstructionType.SETTLE: {
-        if (instructionData?.winningOutcomeIndex === undefined) {
-          throw new Error(
-            "winningOutcomeIndex is required in instructionData. Received: " +
-              JSON.stringify(instructionData),
-          );
-        }
-        break;
+  switch (instructionType) {
+    case MarketManagementInstructionType.SETTLE: {
+      if (instructionData?.winningOutcomeIndex === undefined) {
+        throw new Error(
+          "winningOutcomeIndex is required in instructionData. Received: " +
+            JSON.stringify(instructionData),
+        );
       }
-      case MarketUpdateInstructionType.UPDATE_TITLE: {
-        if (!instructionData?.title) {
-          throw new Error(
-            "title is required in instructionData. Received: " +
-              JSON.stringify(instructionData),
-          );
-        }
-        break;
-      }
-      case MarketUpdateInstructionType.UPDATE_LOCK_TIME: {
-        if (!instructionData?.marketLockTimestamp) {
-          throw new Error(
-            "marketLockTimestamp is required in instructionData. Received: " +
-              JSON.stringify(instructionData),
-          );
-        }
-        break;
-      }
-      case MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME: {
-        if (!instructionData?.eventStartTimeTimestamp) {
-          throw new Error(
-            "eventStartTimeTimestamp is required in instructionData. Received: " +
-              JSON.stringify(instructionData),
-          );
-        }
-        break;
-      }
+      break;
     }
-
-    switch (instructionType) {
-      case MarketUpdateInstructionType.SETTLE: {
-        const instruction = await program.methods
-          .settleMarket(instructionData?.winningOutcomeIndex)
-          .accounts({
-            market: marketPk,
-            authorisedOperators: authorisedOperators.data.pda,
-            marketOperator: provider.wallet.publicKey,
-          })
-          .instruction();
-        response.addResponseData({ instruction: instruction });
-        break;
+    case MarketManagementInstructionType.UPDATE_TITLE: {
+      if (!instructionData?.title) {
+        throw new Error(
+          "title is required in instructionData. Received: " +
+            JSON.stringify(instructionData),
+        );
       }
-      case MarketUpdateInstructionType.UPDATE_TITLE: {
-        const instruction = await program.methods
-          .updateMarketTitle(instructionData?.title)
-          .accounts({
-            market: marketPk,
-            authorisedOperators: authorisedOperators.data.pda,
-            marketOperator: provider.wallet.publicKey,
-          })
-          .instruction();
-        response.addResponseData({ instruction: instruction });
-        break;
-      }
-      case MarketUpdateInstructionType.UPDATE_LOCK_TIME: {
-        const instruction = await program.methods
-          .updateMarketLocktime(new BN(instructionData?.marketLockTimestamp))
-          .accounts({
-            market: marketPk,
-            authorisedOperators: authorisedOperators.data.pda,
-            marketOperator: provider.wallet.publicKey,
-          })
-          .instruction();
-        response.addResponseData({ instruction: instruction });
-        break;
-      }
-      case MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME: {
-        const instruction = await program.methods
-          .updateMarketEventStartTime(
-            new BN(instructionData?.eventStartTimeTimestamp),
-          )
-          .accounts({
-            market: marketPk,
-            authorisedOperators: authorisedOperators.data.pda,
-            marketOperator: provider.wallet.publicKey,
-          })
-          .instruction();
-        response.addResponseData({ instruction: instruction });
-        break;
-      }
-      case MarketUpdateInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW: {
-        const instruction = await program.methods
-          .updateMarketEventStartTimeToNow()
-          .accounts({
-            market: marketPk,
-            authorisedOperators: authorisedOperators.data.pda,
-            marketOperator: provider.wallet.publicKey,
-          })
-          .instruction();
-        response.addResponseData({ instruction: instruction });
-        break;
-      }
-      default: {
-        response.addErrors([
-          `Market update instruction type ${instructionType} is not supported`,
-        ]);
-        break;
-      }
+      break;
     }
-  } catch (e) {
-    response.addError(e);
-  }
-  response.addResponseData({ marketPk: marketPk });
-  return response.body;
-}
-
-export async function buildMarketStatusChangeInstruction(
-  program: Program,
-  marketPk: PublicKey,
-  instructionType: MarketStatusChangeInstructionType,
-): Promise<ClientResponse<MarketInstructionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
+    case MarketManagementInstructionType.UPDATE_LOCK_TIME: {
+      if (!instructionData?.marketLockTimestamp) {
+        throw new Error(
+          "marketLockTimestamp is required in instructionData. Received: " +
+            JSON.stringify(instructionData),
+        );
+      }
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME: {
+      if (!instructionData?.eventStartTimeTimestamp) {
+        throw new Error(
+          "eventStartTimeTimestamp is required in instructionData. Received: " +
+            JSON.stringify(instructionData),
+        );
+      }
+      break;
+    }
   }
 
   switch (instructionType) {
-    case MarketStatusChangeInstructionType.PUBLISH: {
+    case MarketManagementInstructionType.PUBLISH: {
       const instruction = await program.methods
         .publishMarket()
         .accounts({
@@ -192,7 +98,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.UNPUBLISH: {
+    case MarketManagementInstructionType.UNPUBLISH: {
       const instruction = await program.methods
         .unpublishMarket()
         .accounts({
@@ -204,7 +110,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.SUSPEND: {
+    case MarketManagementInstructionType.SUSPEND: {
       const instruction = await program.methods
         .suspendMarket()
         .accounts({
@@ -216,7 +122,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.UNSUSPEND: {
+    case MarketManagementInstructionType.UNSUSPEND: {
       const instruction = await program.methods
         .unsuspendMarket()
         .accounts({
@@ -228,7 +134,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.OPEN: {
+    case MarketManagementInstructionType.OPEN: {
       const marketEscrow = await findEscrowPda(program, marketPk);
       if (!marketEscrow.success) {
         response.addErrors(marketEscrow.errors);
@@ -246,7 +152,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.SET_READY_TO_CLOSE: {
+    case MarketManagementInstructionType.SET_READY_TO_CLOSE: {
       const marketEscrow = await findEscrowPda(program, marketPk);
       if (!marketEscrow.success) {
         response.addErrors(marketEscrow.errors);
@@ -264,7 +170,7 @@ export async function buildMarketStatusChangeInstruction(
       response.addResponseData({ instruction: instruction });
       break;
     }
-    case MarketStatusChangeInstructionType.VOID: {
+    case MarketManagementInstructionType.VOID: {
       const marketEscrow = await findEscrowPda(program, marketPk);
       if (!marketEscrow.success) {
         response.addErrors(marketEscrow.errors);
@@ -275,6 +181,68 @@ export async function buildMarketStatusChangeInstruction(
         .accounts({
           market: new PublicKey(marketPk),
           marketEscrow: marketEscrow.data.pda,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.SETTLE: {
+      const instruction = await program.methods
+        .settleMarket(instructionData?.winningOutcomeIndex)
+        .accounts({
+          market: marketPk,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_TITLE: {
+      const instruction = await program.methods
+        .updateMarketTitle(instructionData?.title)
+        .accounts({
+          market: marketPk,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_LOCK_TIME: {
+      const instruction = await program.methods
+        .updateMarketLocktime(new BN(instructionData?.marketLockTimestamp))
+        .accounts({
+          market: marketPk,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME: {
+      const instruction = await program.methods
+        .updateMarketEventStartTime(
+          new BN(instructionData?.eventStartTimeTimestamp),
+        )
+        .accounts({
+          market: marketPk,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW: {
+      const instruction = await program.methods
+        .updateMarketEventStartTimeToNow()
+        .accounts({
+          market: marketPk,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
         })
