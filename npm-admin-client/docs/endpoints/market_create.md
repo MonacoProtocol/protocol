@@ -27,7 +27,7 @@ For the given parameters:
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
 *   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
 *   `priceLadder` **([Array][8]<[number][9]> | PublicKey)?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
-*   `options` **MarketCreateOptions?** {object} optional parameters:  <ul>
+*   `options` **MarketCreateOptions?** {MarketCreateOptions} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -38,7 +38,10 @@ For the given parameters:
         <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
         <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
         <li> batchSize - number of prices to add in a single request (defaults to 50)</li>
-       </ul>
+        <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -52,8 +55,7 @@ const marketLock = 1633042800
 const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
 const outcomes = ["Red", "Draw", "Blue"]
 const priceLadder = DEFAULT_PRICE_LADDER
-const batchSize = 100
-const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder, batchSize)
+const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder)
 ```
 
 Returns **CreateMarketWithOutcomesAndPriceLadderResponse** containing the newly-created market account publicKey, creation transaction ID, the market account and the results of the batched requests to add prices to the outcome accounts
@@ -70,7 +72,7 @@ For the given parameters, create a wagering market that accepts orders in the pr
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
-*   `options` **MarketCreateOptions?** {object} optional parameters:  <ul>
+*   `options` **MarketCreateOptions?** {MarketCreateOptions} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -80,7 +82,9 @@ For the given parameters, create a wagering market that accepts orders in the pr
         <li> inplayOrderDelay - number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)</li>
         <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
         <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
-       </ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 

@@ -61,15 +61,18 @@ Sign and send, as the provider authority, the given transaction instructions.
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `instructions` **[Array][13]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
-*   `computeUnitLimit` **[number][17]?** {number} optional limit on the number of compute units to be used by the transaction
-*   `computeUnitPrice` **[number][17]?**&#x20;
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
 ```javascript
 const orderInstruction = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
 const computeUnitLimit = 1400000
-const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], computeUnitLimit)
+const computeUnitPrice = 10000
+const transaction = await signAndSendInstruction(program, [orderInstruction.data.instruction], {computeUnitLimit, computeUnitPrice})
 ```
 
 Returns **SignAndSendInstructionsResponse** containing the signature of the transaction
@@ -84,9 +87,12 @@ Note: batches can be optimised for size by ensuring that instructions have commo
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `instructions` **[Array][13]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
-*   `batchSize` **[number][17]** {number} number of instructions to be included in each transaction
-*   `computeUnitLimit` **[number][17]?** {number} optional limit on the number of compute units to be used by the transaction
-*   `computeUnitPrice` **[number][17]?**&#x20;
+*   `options` **TransactionOptionsBatch?** {TransactionOptionsBatch} optional parameters:  <ul>
+        <li> batchSize - number of instructions to pass a single transaction (defaults to 2)</li>
+        <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent</li>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -95,8 +101,10 @@ const orderInstruction1 = await buildOrderInstructionUIStake(program, marketPk, 
 ...
 const orderInstruction20 = await buildOrderInstructionUIStake(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, productPk)
 const batchSize = 5
+const confirmBatchSuccess = true
 const computeUnitLimit = 1400000
-const transactions = await signAndSendInstructionsBatch(program, [orderInstruction1.data.instruction, ..., orderInstruction20.data.instruction], batchSize, computeUnitLimit)
+const computeUnitPrice = 10000
+const transactions = await signAndSendInstructionsBatch(program, [orderInstruction1.data.instruction, ..., orderInstruction20.data.instruction], {batchSize, confirmBatchSuccess, computeUnitLimit, computeUnitPrice})
 ```
 
 Returns **SignAndSendInstructionsBatchResponse** containing the signature of the transaction
@@ -134,5 +142,3 @@ Returns **any**&#x20;
 [15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
 
 [16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

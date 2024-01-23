@@ -16,7 +16,12 @@ For the given market account, initialise outcome accounts for the provided outco
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
 *   `outcomes` **[Array][4]<[string][5]>** {string\[]} list of strings representing the market outcomes
 *   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
-*   `options` **TransactionOptionsBatch?**&#x20;
+*   `options` **TransactionOptionsBatch?** {TransactionOptionsBatch} optional parameters:  <ul>
+        <li> batchSize - number of outcomes to create in single transaction (defaults to 2)</li>
+        <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 

@@ -33,7 +33,7 @@ import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
  * @param outcomes {string[]} list of possible outcomes for the market
  * @param priceLadder {number[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
- * @param options {object} optional parameters:
+ * @param options {MarketCreateOptions} optional parameters:
  *   <ul>
  *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
  *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
@@ -45,7 +45,10 @@ import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
  *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> batchSize - number of prices to add in a single request (defaults to 50)</li>
- *    </ul>
+ *     <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  *
  * @returns {CreateMarketWithOutcomesAndPriceLadderResponse} containing the newly-created market account publicKey, creation transaction ID, the market account and the results of the batched requests to add prices to the outcome accounts
  *
@@ -60,8 +63,7 @@ import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const outcomes = ["Red", "Draw", "Blue"]
  * const priceLadder = DEFAULT_PRICE_LADDER
- * const batchSize = 100
- * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder, batchSize)
+ * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder)
  */
 export async function createMarketWithOutcomesAndPriceLadder(
   program: Program,
@@ -77,6 +79,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
   const response = new ResponseFactory({});
   const batchSize = options?.batchSize ? options.batchSize : 50;
   const outcomesBatchSize = 2;
+  const confirmBatchSuccess = true;
 
   const createMarketResponse = await createMarket(
     program,
@@ -101,6 +104,11 @@ export async function createMarketWithOutcomesAndPriceLadder(
       priceLadder instanceof PublicKey ? priceLadder : undefined,
     );
 
+  if (!instructionInitialiseOutcomes.success) {
+    response.addErrors(instructionInitialiseOutcomes.errors);
+    return response.body;
+  }
+
   const signAndSendOutcomesResponse = await signAndSendInstructionsBatch(
     program,
     [
@@ -108,9 +116,12 @@ export async function createMarketWithOutcomesAndPriceLadder(
         (i) => i.instruction,
       ),
     ],
-    outcomesBatchSize,
-    options?.computeUnitLimit,
-    options?.computeUnitPrice,
+    {
+      batchSize: outcomesBatchSize,
+      confirmBatchSuccess,
+      computeUnitLimit: options?.computeUnitLimit,
+      computeUnitPrice: options?.computeUnitPrice,
+    },
   );
 
   response.addResponseData({
@@ -124,7 +135,11 @@ export async function createMarketWithOutcomesAndPriceLadder(
   }
 
   for (const signature of signAndSendOutcomesResponse.data.signatures) {
-    await confirmTransaction(program, signature);
+    const confirm = await confirmTransaction(program, signature);
+    if (!confirm.success) {
+      response.addErrors(confirm.errors);
+      return response.body;
+    }
   }
 
   if (
@@ -165,7 +180,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
- * @param options {object} optional parameters:
+ * @param options {MarketCreateOptions} optional parameters:
  *   <ul>
  *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
  *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
@@ -176,7 +191,9 @@ export async function createMarketWithOutcomesAndPriceLadder(
  *     <li> inplayOrderDelay - number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)</li>
  *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
- *    </ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  *
  *  @returns {CreateMarketResponse} containing the newly-created market account publicKey, creation transaction ID and the market account
  *
@@ -220,8 +237,10 @@ export async function createMarket(
     const transaction = await signAndSendInstructions(
       program,
       [instruction.data.instruction],
-      options?.computeUnitLimit,
-      options?.computeUnitPrice,
+      {
+        computeUnitLimit: options?.computeUnitLimit,
+        computeUnitPrice: options?.computeUnitPrice,
+      },
     );
 
     if (!transaction.success) {
@@ -240,6 +259,10 @@ export async function createMarket(
     }
 
     const market = await getMarket(program, instruction.data.marketPk);
+
+    if (!market.success) {
+      response.addErrors(market.errors);
+    }
 
     response.addResponseData({
       marketPk: instruction.data.marketPk,

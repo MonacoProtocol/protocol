@@ -32,4 +32,5 @@ export type TransactionOptions = {
 
 export type TransactionOptionsBatch = TransactionOptions & {
   batchSize?: number;
+  confirmBatchSuccess?: boolean;
 };

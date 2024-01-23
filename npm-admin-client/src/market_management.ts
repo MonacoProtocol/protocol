@@ -5,6 +5,7 @@ import {
   ClientResponse,
   EpochTimeStamp,
   ResponseFactory,
+  TransactionOptions,
 } from "../types";
 import {
   getOrCreateAssociatedTokenAccount,
@@ -24,7 +25,7 @@ async function sendManagementTransaction(
   instructions: TransactionInstruction[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors: object[],
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const response = new ResponseFactory({} as TransactionResponse);
   if (errors.length > 0) {
@@ -32,12 +33,13 @@ async function sendManagementTransaction(
     return response.body;
   }
   try {
-    const tnxId = await signAndSendInstructions(
-      program,
-      instructions,
-      options?.computeUnitLimit,
-      options?.computeUnitPrice,
-    );
+    const tnxId = await signAndSendInstructions(program, instructions, options);
+
+    if (!tnxId.success) {
+      response.addErrors(tnxId.errors);
+      return response.body;
+    }
+
     const confirmation = await confirmTransaction(
       program,
       tnxId.data.signature,
@@ -61,6 +63,11 @@ async function sendManagementTransaction(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -73,7 +80,7 @@ export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
   winningOutcomeIndex: number,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -94,6 +101,11 @@ export async function settleMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -104,7 +116,7 @@ export async function settleMarket(
 export async function publishMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -124,6 +136,11 @@ export async function publishMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -134,7 +151,7 @@ export async function publishMarket(
 export async function unpublishMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -154,6 +171,11 @@ export async function unpublishMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -164,7 +186,7 @@ export async function unpublishMarket(
 export async function suspendMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -184,6 +206,11 @@ export async function suspendMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -194,7 +221,7 @@ export async function suspendMarket(
 export async function unsuspendMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -215,6 +242,11 @@ export async function unsuspendMarket(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param title {string} new title to apply to the provided market
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -227,7 +259,7 @@ export async function updateMarketTitle(
   program: Program,
   marketPk: PublicKey,
   title: string,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -249,6 +281,11 @@ export async function updateMarketTitle(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param eventStartTimeTimestamp {EpochTimeStamp} timestamp in seconds representing the new time when the market event will start (moving in-play markets to in-play)
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -260,7 +297,7 @@ export async function updateMarketEventStartTime(
   program: Program,
   marketPk: PublicKey,
   eventStartTimeTimestamp: EpochTimeStamp,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -281,6 +318,11 @@ export async function updateMarketEventStartTime(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -290,7 +332,7 @@ export async function updateMarketEventStartTime(
 export async function setMarketEventStartToNow(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -311,6 +353,11 @@ export async function setMarketEventStartToNow(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing the new time when the market can no longer accept orders
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -323,7 +370,7 @@ export async function updateMarketLocktime(
   program: Program,
   marketPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -346,6 +393,11 @@ export async function updateMarketLocktime(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to open
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -356,7 +408,7 @@ export async function updateMarketLocktime(
 export async function openMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -376,6 +428,11 @@ export async function openMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -386,7 +443,7 @@ export async function openMarket(
 export async function setMarketReadyToClose(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -406,6 +463,11 @@ export async function setMarketReadyToClose(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -416,7 +478,7 @@ export async function setMarketReadyToClose(
 export async function voidMarket(
   program: Program,
   marketPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
@@ -441,6 +503,11 @@ export async function voidMarket(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market with a surplus escrow balance
  * @param mintPk {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -453,7 +520,7 @@ export async function transferMarketEscrowSurplus(
   program: Program,
   marketPk: PublicKey,
   mintPk: PublicKey,
-  options?: { computeUnitLimit?: number; computeUnitPrice?: number },
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
     await setupManagementRequest(program);
@@ -491,13 +558,19 @@ export async function transferMarketEscrowSurplus(
     const tnxId = await signAndSendInstructions(
       program,
       [instruction],
-      options?.computeUnitLimit,
-      options?.computeUnitPrice,
+      options,
     );
+
+    if (!tnxId.success) {
+      response.addErrors(tnxId.errors);
+      return response.body;
+    }
+
     const confirmation = await confirmTransaction(
       program,
       tnxId.data.signature,
     );
+
     if (!confirmation.success) {
       response.addErrors(confirmation.errors);
     }
