@@ -89,7 +89,7 @@ describe("Admin Client Create Full Market", () => {
       marketLockTimestamp,
       event.publicKey,
       marketOutcomes,
-      undefined,
+      [1.001],
       {
         marketTypeDiscriminator,
         marketTypeValue,
@@ -99,6 +99,7 @@ describe("Admin Client Create Full Market", () => {
     assert.deepEqual(market.errors, []);
     assert(market.success);
     assert(market.data.market);
+    assert(market.data.priceLadderResults);
     assert(market.data.tnxId);
     assert.deepEqual(market.data.market.mintAccount, newMintPk);
     assert.deepEqual(market.data.market.title, marketTitle);
@@ -108,6 +109,7 @@ describe("Admin Client Create Full Market", () => {
       market.data.marketPk,
     );
 
+    assert.equal(market.data.priceLadderResults.length, marketOutcomes.length);
     assert.deepEqual(outcomeTitles.data.marketOutcomeTitles, marketOutcomes);
   });
 });
