@@ -94,16 +94,20 @@ export async function signAndSendInstructions(
 
   const transaction = new web3.Transaction();
   instructions.forEach((instruction) => transaction.add(instruction));
-  if (options)
+  if (options?.computeUnitLimit) {
     transaction.add(
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: options.computeUnitLimit ? options.computeUnitLimit : 0,
-      }),
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: options.computeUnitPrice ? options.computeUnitPrice : 0,
+        units: options.computeUnitLimit,
       }),
     );
-
+  }
+  if (options?.computeUnitPrice) {
+    transaction.add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: options.computeUnitPrice,
+      }),
+    );
+  }
   transaction.feePayer = provider.wallet.publicKey;
   transaction.recentBlockhash = (
     await provider.connection.getLatestBlockhash()

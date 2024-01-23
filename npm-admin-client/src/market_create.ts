@@ -134,14 +134,6 @@ export async function createMarketWithOutcomesAndPriceLadder(
     return response.body;
   }
 
-  for (const signature of signAndSendOutcomesResponse.data.signatures) {
-    const confirm = await confirmTransaction(program, signature);
-    if (!confirm.success) {
-      response.addErrors(confirm.errors);
-      return response.body;
-    }
-  }
-
   if (
     Array.isArray(priceLadder) &&
     priceLadder.every((element) => typeof element === "number")
