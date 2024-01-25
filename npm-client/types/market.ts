@@ -118,6 +118,7 @@ export type MarketAccountsForCreateOrder = {
   marketOrderRequestQueuePda: PublicKey;
   marketOutcomePda: PublicKey;
   marketOutcomePoolPda: PublicKey;
+  marketMatchingQueuePda: PublicKey;
   marketPositionPda: PublicKey;
   market: MarketAccount;
 };

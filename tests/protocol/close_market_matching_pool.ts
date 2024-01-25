@@ -17,10 +17,7 @@ describe("Close market matching pool accounts", () => {
     const forOrder = await market.forOrder(0, 10, price, purchaserA);
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
-    const balanceMatchingPoolCreated =
-      await monaco.provider.connection.getBalance(purchaserA.publicKey);
-
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -31,29 +28,25 @@ describe("Close market matching pool accounts", () => {
 
     const matchingPoolPk = market.matchingPools[0][2.0].forOutcome;
 
-    const matchingPoolRent = await monaco.provider.connection.getBalance(
-      matchingPoolPk,
-    );
-
     await monaco.program.methods
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        payer: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         marketMatchingPool: matchingPoolPk,
       })
       .rpc()
-      .catch((e) => console.log(e));
+      .catch((e) => console.error(e));
 
-    const balanceAfterMatchingPoolClosed =
-      await monaco.provider.connection.getBalance(purchaserA.publicKey);
-    const expectedBalanceAfterMatchingPoolClosed =
-      balanceMatchingPoolCreated + matchingPoolRent;
-
-    assert.equal(
-      balanceAfterMatchingPoolClosed,
-      expectedBalanceAfterMatchingPoolClosed,
-    );
+    try {
+      await monaco.fetchMarketMatchingPool(matchingPoolPk);
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + matchingPoolPk,
+      );
+    }
   });
 
   it("close matching pool: market incorrect status", async () => {
@@ -69,7 +62,7 @@ describe("Close market matching pool accounts", () => {
     const forOrder = await market.forOrder(0, 10, price, purchaserA);
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -83,7 +76,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        payer: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         marketMatchingPool: matchingPoolPk,
       })
       .rpc()
@@ -105,7 +98,7 @@ describe("Close market matching pool accounts", () => {
     const forOrder = await market.forOrder(0, 10, price, purchaserA);
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -120,7 +113,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: market.pk,
-        payer: purchaserB.publicKey,
+        payer: monaco.operatorPk,
         marketMatchingPool: matchingPoolPk,
       })
       .rpc()
@@ -143,7 +136,7 @@ describe("Close market matching pool accounts", () => {
     const forOrder = await marketA.forOrder(0, 10, price, purchaserA);
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
-    await marketA.match(forOrder, againstOrder);
+    await marketA.processMatchingQueue();
     await marketA.settle(0);
     await marketA.settleOrder(forOrder);
     await marketA.settleOrder(againstOrder);
@@ -162,7 +155,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: marketB.pk,
-        payer: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         marketMatchingPool: matchingPoolPk,
       })
       .rpc()
@@ -185,7 +178,7 @@ describe("Close market matching pool accounts", () => {
     const forOrder = await marketA.forOrder(0, 10, price, purchaserA);
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
-    await marketA.match(forOrder, againstOrder);
+    await marketA.processMatchingQueue();
     await marketA.settle(0);
     await marketA.settleOrder(forOrder);
     await marketA.settleOrder(againstOrder);
@@ -204,7 +197,7 @@ describe("Close market matching pool accounts", () => {
       .closeMarketMatchingPool()
       .accounts({
         market: marketA.pk,
-        payer: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         marketMatchingPool: matchingPoolPk,
       })
       .rpc()

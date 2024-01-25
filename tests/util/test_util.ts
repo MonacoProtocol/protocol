@@ -33,9 +33,8 @@ import {
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
-  findTradePda,
-} from "../../npm-client/src";
-import { findMarketPdas, findProductPda, findUserPdas } from "../util/pdas";
+} from "../../npm-client";
+import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
 import { AssertionError } from "assert";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
@@ -58,95 +57,9 @@ export enum OperatorType {
   MARKET,
 }
 
-export async function matchOrder(
-  forPk: PublicKey,
-  againstPk: PublicKey,
-  marketPk: PublicKey,
-  marketOutcomePk: PublicKey,
-  marketMatchingPools: { forOutcome: PublicKey; against: PublicKey },
-  crankOperator: Keypair,
-  authorisedCrankOperatorsPk: PublicKey,
-) {
-  const program = anchor.workspace.MonacoProtocol;
-  const protocolProgram = anchor.workspace
-    .MonacoProtocol as Program<MonacoProtocol>;
-
-  const [orderFor, orderAgainst] = await Promise.all([
-    protocolProgram.account.order.fetch(forPk),
-    protocolProgram.account.order.fetch(againstPk),
-  ]);
-
-  const [tradeForPK, tradeAgainstPK] = (
-    await Promise.all([
-      findTradePda(program, againstPk, forPk, true),
-      findTradePda(program, againstPk, forPk, false),
-    ])
-  ).map((result) => result.data.tradePk);
-
-  const [marketPositionForPK, marketPositionAgainstPK] = await Promise.all([
-    findMarketPositionPda(
-      protocolProgram as Program,
-      marketPk,
-      orderFor.purchaser,
-    ),
-    findMarketPositionPda(
-      protocolProgram as Program,
-      marketPk,
-      orderAgainst.purchaser,
-    ),
-  ]);
-
-  const market = await protocolProgram.account.market.fetch(marketPk);
-  const marketEscrowPk = await findEscrowPda(
-    protocolProgram as Program,
-    marketPk,
-  );
-
-  const purchaserTokenAccountForPk = await getAssociatedTokenAddress(
-    market.mintAccount,
-    orderFor.purchaser,
-  );
-
-  const purchaserTokenAccountAgainstPk = await getAssociatedTokenAddress(
-    market.mintAccount,
-    orderAgainst.purchaser,
-  );
-
-  const ix = await protocolProgram.methods
-    .matchOrders()
-    .accounts({
-      orderFor: forPk,
-      tradeFor: tradeForPK,
-      marketPositionFor: marketPositionForPK.data.pda,
-      marketMatchingPoolFor: marketMatchingPools.forOutcome,
-      purchaserTokenAccountFor: purchaserTokenAccountForPk,
-      orderAgainst: againstPk,
-      tradeAgainst: tradeAgainstPK,
-      marketPositionAgainst: marketPositionAgainstPK.data.pda,
-      marketMatchingPoolAgainst: marketMatchingPools.against,
-      purchaserTokenAccountAgainst: purchaserTokenAccountAgainstPk,
-      market: marketPk,
-      marketOutcome: marketOutcomePk,
-      marketEscrow: marketEscrowPk.data.pda,
-      crankOperator: crankOperator.publicKey,
-      authorisedOperators: authorisedCrankOperatorsPk,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .signers([crankOperator])
-    .instruction();
-
-  try {
-    await executeTransactionMaxCompute([ix]);
-  } catch (e) {
-    console.error(e);
-    throw e;
-  }
-}
-
 export async function getMarketMatchingPoolsPks(
   market: PublicKey,
   outcomeIndex: number,
-  outcomePda: PublicKey,
   priceLadder: number[],
 ) {
   const protocolProgram = anchor.workspace
@@ -270,7 +183,11 @@ export async function createMarket(
       marketOperator: marketOperator.publicKey,
     })
     .signers([marketOperator])
-    .rpc();
+    .rpc()
+    .catch((e) => {
+      console.error(e);
+      throw e;
+    });
 
   const outcomePdas = await Promise.all(
     outcomes.map(async (_, index) => {
@@ -342,7 +259,6 @@ export async function createMarket(
         return await getMarketMatchingPoolsPks(
           marketPda,
           index,
-          outcomePda,
           prices as number[],
         );
       }),
@@ -528,97 +444,6 @@ export async function createNewMint(
   );
 }
 
-export async function createOrder(
-  marketPk: PublicKey,
-  purchaser: Keypair | Wallet,
-  marketOutcomeIndex: number,
-  forOutcome: boolean,
-  marketOutcomePrice: number,
-  stake: number,
-  purchaserTokenAccount: PublicKey,
-  productPk?: PublicKey,
-) {
-  await createOrderRequest(
-    marketPk,
-    purchaser,
-    marketOutcomeIndex,
-    forOutcome,
-    marketOutcomePrice,
-    stake,
-    purchaserTokenAccount,
-    productPk,
-  );
-
-  return await processNextOrderRequest(marketPk, purchaser);
-}
-
-export async function createOrderRequest(
-  marketPk: PublicKey,
-  purchaser: Keypair | Wallet,
-  marketOutcomeIndex: number,
-  forOutcome: boolean,
-  marketOutcomePrice: number,
-  stake: number,
-  purchaserTokenAccount: PublicKey,
-  productPk?: PublicKey,
-) {
-  const protocolProgram = anchor.workspace
-    .MonacoProtocol as Program<MonacoProtocol>;
-
-  const { uiAmountToAmount, marketEscrowPk, marketOutcomePk } =
-    await findMarketPdas(
-      marketPk,
-      forOutcome,
-      marketOutcomeIndex,
-      marketOutcomePrice,
-      protocolProgram as Program<anchor.Idl>,
-    );
-
-  const { orderPk, orderDistinctSeed, marketPositionPk } = await findUserPdas(
-    marketPk,
-    purchaser.publicKey,
-    protocolProgram as Program<anchor.Idl>,
-  );
-
-  const stakeInteger = uiAmountToAmount(stake);
-
-  const orderRequestQueuePk = await findOrderRequestQueuePda(
-    protocolProgram as Program<anchor.Idl>,
-    marketPk,
-  );
-
-  await protocolProgram.methods
-    .createOrderRequest({
-      marketOutcomeIndex: marketOutcomeIndex,
-      forOutcome: forOutcome,
-      stake: new BN(stakeInteger),
-      price: marketOutcomePrice,
-      distinctSeed: Array.from(orderDistinctSeed),
-    })
-    .accounts({
-      reservedOrder: orderPk,
-      orderRequestQueue: orderRequestQueuePk.data.pda,
-      marketPosition: marketPositionPk.data.pda,
-      purchaser: purchaser.publicKey,
-      purchaserToken: purchaserTokenAccount,
-      market: marketPk,
-      marketOutcome: marketOutcomePk,
-      priceLadder: null,
-      marketEscrow: marketEscrowPk,
-      product: productPk == undefined ? null : productPk,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .signers(purchaser instanceof Keypair ? [purchaser] : [])
-    .rpc()
-    .catch((e) => {
-      console.error(e);
-      throw e;
-    });
-
-  return orderPk;
-}
-
 export async function processNextOrderRequest(
   marketPk: PublicKey,
   crankOperator?: Keypair | Wallet,
@@ -638,15 +463,19 @@ export async function processNextOrderRequest(
       orderRequestQueue.orderRequests.front
     ];
 
-  const marketMatchingPoolPk = (
-    await findMarketMatchingPoolPda(
-      protocolProgram,
-      marketPk,
-      firstOrderRequest.marketOutcomeIndex,
-      firstOrderRequest.expectedPrice,
-      firstOrderRequest.forOutcome,
-    )
-  ).data.pda;
+  const {
+    market,
+    marketEscrowPk,
+    marketLiquiditiesPk,
+    marketMatchingQueuePk,
+    marketMatchingPoolPk,
+  } = await findMarketPdas(
+    marketPk,
+    firstOrderRequest.forOutcome,
+    firstOrderRequest.marketOutcomeIndex,
+    firstOrderRequest.expectedPrice,
+    protocolProgram as Program<anchor.Idl>,
+  );
 
   const orderPk = (
     await findOrderPda(
@@ -657,17 +486,34 @@ export async function processNextOrderRequest(
     )
   ).data.orderPk;
 
+  const purchaserTokenPk = await getAssociatedTokenAddress(
+    market.mintAccount,
+    firstOrderRequest.purchaser,
+  );
+  const marketPositionPk = await findMarketPositionPda(
+    protocolProgram as Program,
+    marketPk,
+    firstOrderRequest.purchaser,
+  );
+
   await protocolProgram.methods
     .processOrderRequest()
     .accounts({
       order: orderPk,
+      purchaserTokenAccount: purchaserTokenPk,
+      marketPosition: marketPositionPk.data.pda,
       marketMatchingPool: marketMatchingPoolPk,
       orderRequestQueue: orderRequestQueuePk,
       market: marketPk,
+      marketEscrow: marketEscrowPk,
+      marketLiquidities: marketLiquiditiesPk,
+      marketMatchingQueue: marketMatchingQueuePk,
       crankOperator:
         crankOperator == null
           ? protocolProgram.provider.publicKey
           : crankOperator.publicKey,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .signers(crankOperator instanceof Keypair ? [crankOperator] : [])
     .rpc()

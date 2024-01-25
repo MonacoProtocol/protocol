@@ -2,20 +2,29 @@ use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
+use crate::instructions::market_position::update_product_commission_contributions;
 use crate::instructions::order::initialize_order;
-use crate::instructions::{current_timestamp, market, matching};
+use crate::instructions::{
+    calculate_risk_from_stake, current_timestamp, market, market_position, matching,
+};
 use crate::state::market_account::*;
+use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_order_request_queue::MarketOrderRequestQueue;
+use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 
 pub fn process_order_request(
     order: &mut Account<Order>,
+    market_position: &mut MarketPosition,
     market: &mut Account<Market>,
+    market_liquidities: &mut MarketLiquidities,
+    market_matching_queue: &mut MarketMatchingQueue,
     fee_payer: Pubkey,
     matching_pool: &mut Account<MarketMatchingPool>,
     order_request_queue: &mut Account<MarketOrderRequestQueue>,
-) -> Result<()> {
+) -> Result<u64> {
     let order_request = order_request_queue
         .order_requests
         .dequeue()
@@ -39,7 +48,37 @@ pub fn process_order_request(
         market.increment_unclosed_accounts_count()?;
     }
 
+    let order_matches = matching::on_order_creation(
+        market_liquidities,
+        market_matching_queue,
+        &order.key(),
+        order,
+    )?;
     matching::update_matching_pool_with_new_order(market, matching_pool, order)?;
 
-    Ok(())
+    // calculate payment
+    let mut total_refund = 0_u64;
+    for order_match in &order_matches {
+        let refund = market_position::update_on_order_match(
+            market_position,
+            order,
+            order_match.stake,
+            order_match.price,
+        )?;
+        total_refund = total_refund
+            .checked_add(refund)
+            .ok_or(CoreError::CreationTransferAmountError)?;
+
+        // update product commission tracking for matched risk
+        update_product_commission_contributions(
+            market_position,
+            order,
+            match order.for_outcome {
+                true => order_match.stake,
+                false => calculate_risk_from_stake(order_match.stake, order_match.price),
+            },
+        )?;
+    }
+
+    Ok(total_refund)
 }

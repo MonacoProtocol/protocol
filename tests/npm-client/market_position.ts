@@ -91,21 +91,21 @@ describe("Market Position", () => {
         continue;
       }
 
-      const wallet1order = await market.forOrder(
+      await market.forOrder(
         order.marketOutcomeIndex,
         order.stake,
         order.marketOutcomePrice,
         order.for ? wallet1 : wallet2,
       );
 
-      const wallet2order = await market.againstOrder(
+      await market.againstOrder(
         order.marketOutcomeIndex,
         order.stake,
         order.marketOutcomePrice,
         order.for ? wallet2 : wallet1,
       );
 
-      await market.match(wallet1order, wallet2order);
+      await market.processMatchingQueue();
 
       const marketPosition = await getMarketPosition(
         monaco.program as anchor.Program<anchor.Idl>,

@@ -84,11 +84,11 @@ describe("Market: creation", () => {
           [
             { price: [1.001, 1.01, 1.1], title: marketOutcome },
             { len: 1, liquidity: 1, matched: 0 },
+            { len: 0, liquidity: 0, matched: 1 },
             { len: 1, liquidity: 1, matched: 0 },
+            { len: 0, liquidity: 0, matched: 1 },
             { len: 1, liquidity: 1, matched: 0 },
-            { len: 1, liquidity: 1, matched: 0 },
-            { len: 1, liquidity: 1, matched: 0 },
-            { len: 1, liquidity: 1, matched: 0 },
+            { len: 0, liquidity: 0, matched: 1 },
           ],
         );
       },

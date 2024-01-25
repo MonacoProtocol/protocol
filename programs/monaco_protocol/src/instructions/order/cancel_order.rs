@@ -24,6 +24,27 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         CoreError::CancelOrderNotCancellable
     );
 
+    // update liquidity
+    match order.for_outcome {
+        true => ctx
+            .accounts
+            .market_liquidities
+            .remove_liquidity_for(
+                order.market_outcome_index,
+                order.expected_price,
+                order.stake_unmatched,
+            )
+            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+        false => ctx
+            .accounts
+            .market_liquidities
+            .remove_liquidity_against(
+                order.market_outcome_index,
+                order.expected_price,
+                order.stake_unmatched,
+            )
+            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+    }
     ctx.accounts.order.void_stake_unmatched();
 
     let order = &ctx.accounts.order;

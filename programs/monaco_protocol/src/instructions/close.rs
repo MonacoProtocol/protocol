@@ -83,7 +83,7 @@ mod tests {
     use crate::state::market_account::MarketOrderBehaviour;
     use crate::state::market_account::MarketStatus::Open;
     use crate::state::market_liquidities::mock_market_liquidities;
-    use crate::state::market_matching_queue_account::OrderMatched;
+    use crate::state::market_matching_queue_account::OrderMatch;
     use crate::state::order_account::OrderStatus;
     use crate::state::payments_queue::PaymentInfo;
 
@@ -170,7 +170,7 @@ mod tests {
         });
 
         let matching_queue = &mut MatchingQueue::new(1);
-        matching_queue.enqueue(OrderMatched {
+        matching_queue.enqueue(OrderMatch {
             pk: Pubkey::new_unique(),
             purchaser: Pubkey::new_unique(),
             for_outcome: false,

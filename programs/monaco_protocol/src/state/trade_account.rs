@@ -2,6 +2,7 @@ use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 
 #[account]
+#[derive(Default)]
 pub struct Trade {
     pub purchaser: Pubkey,
     pub market: Pubkey,

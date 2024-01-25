@@ -23,7 +23,7 @@ describe("Close trade accounts", () => {
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await market.match(forOrder, againstOrder, crankOperator);
+    await market.processMatchingQueue(crankOperator);
     const balanceAfterTrades = await monaco.provider.connection.getBalance(
       crankOperator.publicKey,
     );
@@ -84,7 +84,7 @@ describe("Close trade accounts", () => {
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await market.match(forOrder, againstOrder, crankOperator);
+    await market.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
       againstOrder,
@@ -132,7 +132,7 @@ describe("Close trade accounts", () => {
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await marketA.match(forOrder, againstOrder, crankOperator);
+    await marketA.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
       againstOrder,
@@ -181,7 +181,7 @@ describe("Close trade accounts", () => {
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await marketA.match(forOrder, againstOrder, crankOperator);
+    await marketA.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
       againstOrder,

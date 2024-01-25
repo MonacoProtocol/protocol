@@ -24,7 +24,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    // Update Market's evenet start time
+    // Update Market's event start time
+    await new Promise((e) => setTimeout(e, 1000));
     await market.updateMarketEventStartTimeToNow();
     await market.moveMarketToInplay();
 
@@ -55,13 +56,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    const matchingOrderPk = await market.againstOrder(
-      outcomeIndex,
-      stake / 2,
-      price,
-      purchaser,
-    );
-    await market.match(orderPk, matchingOrderPk);
+    await market.againstOrder(outcomeIndex, stake / 2, price, purchaser);
+    await market.processMatchingQueue();
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
@@ -96,13 +92,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    const matchingOrderPk = await market.againstOrder(
-      outcomeIndex,
-      stake,
-      price,
-      purchaser,
-    );
-    await market.match(orderPk, matchingOrderPk);
+    await market.againstOrder(outcomeIndex, stake, price, purchaser);
+    await market.processMatchingQueue();
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
@@ -272,6 +263,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -335,6 +327,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -393,6 +386,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -456,6 +450,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -522,6 +517,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserInvalidTokenPk, // invalid
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -587,6 +583,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           ),
           market: marketOther.marketPda, // invalid
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -652,6 +649,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           ),
           market: market.pk,
           marketEscrow: marketOther.escrowPda, // invalid
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,

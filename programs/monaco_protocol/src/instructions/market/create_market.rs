@@ -233,10 +233,10 @@ pub fn add_prices_to_market_outcome(
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        instructions::market::create_market::{add_prices_to_market_outcome, validate_prices},
-        state::market_outcome_account::MarketOutcome,
+    use crate::instructions::market::create_market::{
+        add_prices_to_market_outcome, validate_prices,
     };
+    use crate::state::market_outcome_account::MarketOutcome;
 
     #[test]
     fn test_add_prices_to_market_outcome() {

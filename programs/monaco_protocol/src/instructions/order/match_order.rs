@@ -35,7 +35,11 @@ pub fn match_order(
     Ok(refund)
 }
 
-fn match_order_internal(order: &mut Order, stake_matched: u64, price_matched: f64) -> Result<()> {
+pub fn match_order_internal(
+    order: &mut Order,
+    stake_matched: u64,
+    price_matched: f64,
+) -> Result<()> {
     if stake_matched <= order.stake_unmatched {
         order.order_status = OrderStatus::Matched;
         order.stake_unmatched -= stake_matched;

@@ -107,6 +107,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -171,6 +173,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -230,6 +234,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -294,6 +300,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -361,6 +369,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserInvalidTokenPk, // invalid
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -463,6 +473,8 @@ describe("Security: Cancel Order", () => {
           ),
           market: marketOther.marketPda, // invalid
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -529,6 +541,8 @@ describe("Security: Cancel Order", () => {
           ),
           market: market.pk,
           marketEscrow: marketOther.escrowPda, // invalid
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -571,7 +585,7 @@ describe("Security: Cancel Order", () => {
     const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
     const againstOrderPk = await market.againstOrder(0, 10.0, price, purchaser);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue(); // TODO move this lower after cancel method updated
 
     try {
       await market.cancel(forOrderPk, purchaser);

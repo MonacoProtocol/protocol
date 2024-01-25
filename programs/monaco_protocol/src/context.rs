@@ -113,6 +113,24 @@ pub struct ProcessOrderRequest<'info> {
         space = Order::SIZE,
     )]
     pub order: Account<'info, Order>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = order_request_queue.order_requests
+            .peek_front()
+            .ok_or(CoreError::OrderRequestQueueIsEmpty)?
+            .purchaser,
+    )]
+    pub purchaser_token_account: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CreationMarketMismatch,
+        constraint = market_position.purchaser == order_request_queue.order_requests
+            .peek_front()
+            .ok_or(CoreError::OrderRequestQueueIsEmpty)?
+            .purchaser @ CoreError::CreationPurchaserMismatch
+    )]
+    pub market_position: Account<'info, MarketPosition>,
 
     #[account(
         init_if_needed,
@@ -146,12 +164,33 @@ pub struct ProcessOrderRequest<'info> {
         bump,
     )]
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
+
     #[account(mut)]
     pub market: Box<Account<'info, Market>>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CreationMarketMismatch,
+    )]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CreationMarketMismatch,
+    )]
+    pub market_matching_queue: Account<'info, MarketMatchingQueue>,
 
     #[account(mut)]
     pub crank_operator: Signer<'info>,
 
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
 }
@@ -220,6 +259,17 @@ pub struct CancelOrder<'info> {
 
     #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
     pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CancelationMarketLiquiditiesMismatch,
+    )]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CancelationMarketOutcomeMismatch,
+        constraint = market_outcome.index == order.market_outcome_index @ CoreError::CancelationMarketOutcomeMismatch,
+    )]
+    pub market_outcome: Account<'info, MarketOutcome>,
     #[account(
         mut,
         seeds = [
@@ -326,6 +376,11 @@ pub struct CancelPreplayOrderPostEventStart<'info> {
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
+        has_one = market @ CoreError::CreationMarketMismatch,
+    )]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
+    #[account(
+        mut,
         seeds = [
             market.key().as_ref(),
             order.market_outcome_index.to_string().as_ref(),
@@ -398,6 +453,117 @@ pub struct AuthoriseOperator<'info> {
     pub admin_operators: Account<'info, AuthorisedOperators>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
+}
+
+fn order_against_pk(
+    order: &Account<Order>,
+    market_matching_queue: &Account<MarketMatchingQueue>,
+) -> Result<Pubkey> {
+    let order_against_pk = match order.for_outcome {
+        true => {
+            market_matching_queue
+                .matches
+                .peek()
+                .ok_or(CoreError::MatchingQueueIsEmpty)?
+                .pk
+        }
+        false => order.key(),
+    };
+    Ok(order_against_pk)
+}
+
+fn order_for_pk(
+    order: &Account<Order>,
+    market_matching_queue: &Account<MarketMatchingQueue>,
+) -> Result<Pubkey> {
+    let order_for_pk = match order.for_outcome {
+        true => order.key(),
+        false => {
+            market_matching_queue
+                .matches
+                .peek()
+                .ok_or(CoreError::MatchingQueueIsEmpty)?
+                .pk
+        }
+    };
+    Ok(order_for_pk)
+}
+
+#[derive(Accounts)]
+pub struct ProcessOrderMatch<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::MatchingMarketMismatch,
+    )]
+    pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::MatchingMarketMismatch,
+    )]
+    pub market_matching_queue: Box<Account<'info, MarketMatchingQueue>>,
+
+    #[account(
+        mut,
+        has_one = market @ CoreError::MatchingMarketMismatch,
+        constraint = *market_matching_pool.orders.peek(0)
+            .ok_or(CoreError::MatchingQueueIsEmpty)? == maker_order.key() @ CoreError::MatchingPurchaserMismatch,
+    )]
+    pub maker_order: Account<'info, Order>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::MatchingMarketMismatch,
+        constraint = market_position.purchaser == maker_order.purchaser @ CoreError::MatchingPurchaserMismatch,
+    )]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+    #[account(
+        mut,
+        associated_token::mint = market.mint_account,
+        associated_token::authority = maker_order.purchaser
+    )]
+    pub purchaser_token: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        seeds = [
+            order_against_pk(&maker_order, &market_matching_queue)?.as_ref(),
+            order_for_pk(&maker_order, &market_matching_queue)?.as_ref(),
+            maker_order.for_outcome.to_string().as_ref(),
+        ],
+        bump,
+        payer = crank_operator,
+        space = Trade::SIZE,
+    )]
+    pub maker_order_trade: Box<Account<'info, Trade>>,
+    #[account(
+        init,
+        seeds = [
+            order_against_pk(&maker_order, &market_matching_queue)?.as_ref(),
+            order_for_pk(&maker_order, &market_matching_queue)?.as_ref(),
+            (!maker_order.for_outcome).to_string().as_ref(),
+        ],
+        bump,
+        payer = crank_operator,
+        space = Trade::SIZE,
+    )]
+    pub taker_order_trade: Box<Account<'info, Trade>>,
+
+    #[account(mut)]
+    pub crank_operator: Signer<'info>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
@@ -513,6 +679,10 @@ pub struct MatchOrders<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
+    #[account(
+        has_one = market @ CoreError::CreationMarketMismatch,
+    )]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
 
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,

@@ -46,13 +46,8 @@ describe("Security: Cancel Order Post Market Lock", () => {
       stake,
     );
 
-    const matchingOrderPk = await market.againstOrder(
-      outcomeIndex,
-      stake,
-      price,
-      purchaser,
-    );
-    await market.match(orderPk, matchingOrderPk);
+    await market.againstOrder(outcomeIndex, stake, price, purchaser);
+    await market.processMatchingQueue();
 
     // Update Market's lock time to now
     await market.updateMarketLockTimeToNow();

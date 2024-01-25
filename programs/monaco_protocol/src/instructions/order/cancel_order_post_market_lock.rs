@@ -62,7 +62,7 @@ pub fn cancel_order_post_market_lock(
 #[cfg(test)]
 mod test {
     use crate::state::market_account::MarketStatus;
-    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatched};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
     use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use crate::state::order_account::OrderStatus;
 
@@ -100,7 +100,7 @@ mod test {
             payer: Pubkey::new_unique(),
         };
         let matching_queue = &mut mock_market_matching_queue(order.market);
-        matching_queue.matches.enqueue(OrderMatched {
+        matching_queue.matches.enqueue(OrderMatch {
             pk: Default::default(),
             purchaser: Default::default(),
             for_outcome: false,

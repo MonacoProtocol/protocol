@@ -34,14 +34,9 @@ describe("Trades Query", () => {
     await confirmTransaction(monaco.getRawProgram(), forOrderTx.data.tnxID);
     const forOrderPk = await market.processNextOrderRequest();
 
-    const againstOrderPk = await market.againstOrder(
-      outcomeIndex,
-      10.0,
-      price,
-      purchaser,
-    );
+    await market.againstOrder(outcomeIndex, 10.0, price, purchaser);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
     await new Promise((e) => setTimeout(e, 1000));
 
     const responseForProvider = await getTradesForProviderWallet(

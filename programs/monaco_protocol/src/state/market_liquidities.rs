@@ -14,10 +14,11 @@ pub struct MarketLiquidities {
 }
 
 impl MarketLiquidities {
+    const LIQUIDITIES_VEC_LENGTH: usize = 30_usize;
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + PUB_KEY_SIZE // market
-        + vec_size(MarketOutcomePriceLiquidity::SIZE, 0_usize) // liquidities_for
-        + vec_size(MarketOutcomePriceLiquidity::SIZE, 0_usize); // liquidities_against
+        + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
+        + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
 
     pub fn get_liquidity_for(&self, outcome: u16, price: f64) -> MarketOutcomePriceLiquidity {
         match self

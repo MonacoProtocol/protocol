@@ -24,18 +24,11 @@ describe("Pending Orders", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
-    const order2 = await market.againstOrder(
-      0,
-      stakeSimple + 1,
-      prices[0],
-      purchaser2,
-    );
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2);
 
-    await Promise.all([
-      market.match(order1, order2),
-      market.forOrder(0, stakeSimple, prices[1], purchaser),
-    ]);
+    await market.processMatchingQueue();
+    await market.forOrder(0, stakeSimple, prices[1], purchaser);
     await new Promise((e) => setTimeout(e, 1000));
 
     const response = await getPendingOrdersForMarket(
@@ -99,19 +92,12 @@ describe("Pending Orders by index", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const order1 = await market.forOrder(0, stakeSimple, prices[0], purchaser);
-    const order2 = await market.againstOrder(
-      0,
-      stakeSimple + 1,
-      prices[0],
-      purchaser2,
-    );
+    await market.forOrder(0, stakeSimple, prices[0], purchaser);
+    await market.againstOrder(0, stakeSimple + 1, prices[0], purchaser2);
 
     // match orders and place an additional order
-    await Promise.all([
-      market.match(order1, order2),
-      market.forOrder(0, stakeSimple, prices[1], purchaser),
-    ]);
+    await market.processMatchingQueue();
+    await market.forOrder(0, stakeSimple, prices[1], purchaser);
     await new Promise((e) => setTimeout(e, 1000));
 
     const response = await getPendingOrdersForMarketByOutcomeIndex(
@@ -143,13 +129,8 @@ describe("Pending Orders by index and for order", () => {
       market.airdrop(purchaser, stake),
       market.airdrop(purchaser2, stake),
     ]);
-    const order1 = await market.forOrder(
-      outcomeIndex,
-      stakeSimple,
-      prices[0],
-      purchaser,
-    );
-    const order2 = await market.againstOrder(
+    await market.forOrder(outcomeIndex, stakeSimple, prices[0], purchaser);
+    await market.againstOrder(
       outcomeIndex,
       stakeSimple + 1,
       prices[0],
@@ -178,7 +159,7 @@ describe("Pending Orders by index and for order", () => {
 
     // match orders and place an additional order
     await Promise.all([
-      market.match(order1, order2),
+      market.processMatchingQueue(),
       market.forOrder(0, stakeSimple, prices[1], purchaser),
     ]);
     await new Promise((e) => setTimeout(e, 1000));

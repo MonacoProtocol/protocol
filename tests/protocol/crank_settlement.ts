@@ -1088,7 +1088,7 @@ describe("Settlement Crank", () => {
     //
     // Match
     //
-    await market.match(forOrderPK, againstOrderPK);
+    await market.processMatchingQueue();
 
     // check payouts after match
     const forOrderMatched = await protocolProgram.account.order.fetch(
@@ -1335,7 +1335,7 @@ async function setupFullyMatchedOrders(
     price,
     wallet2,
   );
-  await market.match(forOrderPda, againstOrderPda);
+  await market.processMatchingQueue();
 
   return { forOrderPda, againstOrderPda };
 }

@@ -126,7 +126,7 @@ describe("NPM client", () => {
     const order1Response = await createOrderNpm(
       monaco.getRawProgram(),
       market.pk,
-      outcomeIndex,
+      0,
       true,
       price,
       stake,
@@ -140,7 +140,7 @@ describe("NPM client", () => {
     const order2Response = await createOrderNpm(
       monaco.getRawProgram(),
       market.pk,
-      outcomeIndex,
+      1,
       false,
       price,
       stake,
@@ -148,7 +148,7 @@ describe("NPM client", () => {
     await confirmTransaction(monaco.getRawProgram(), order2Response.data.tnxID);
     assert.equal(
       await market.getTokenBalance(monaco.provider.wallet.publicKey),
-      10_000, // risk was 10,000 but previous payment 2,000 is taken into account
+      8_000, // risk was 10,000 but previous payment 2,000 is taken into account
     );
 
     await market.processOrderRequests();
@@ -171,14 +171,14 @@ describe("NPM client", () => {
         order1AccountResponse.data.account,
         marketPositionResponse.data,
       ),
-      0, // cancelation does not refund due to risk of 2nd order
+      2_000_000_000, // cancelation does not refund due to risk of 2nd order
     );
     assert.equal(
       calculateOrderCancellationRefund(
         order2AccountResponse.data.account,
         marketPositionResponse.data,
       ),
-      8_000_000_000, // cancelation does refund some due to risk of 1nd order
+      10_000_000_000, // cancelation does not refund due to risk of 1nd order
     );
 
     const orderResponse3 = await cancelOrderNpm(
