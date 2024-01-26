@@ -143,3 +143,20 @@ export type MarketPricesAndPendingOrders = {
 } & MarketOutcomeAccounts &
   MarketPrices &
   PendingOrders;
+
+export type Cirque<T> = {
+  front: number;
+  len: number;
+  items: T[];
+};
+
+export type MarketPaymentsQueue = {
+  market: PublicKey;
+  paymentQueue: Cirque<PaymentInfo>;
+};
+
+export type PaymentInfo = {
+  from: PublicKey;
+  to: PublicKey;
+  amount: BN;
+};

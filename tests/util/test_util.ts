@@ -27,12 +27,15 @@ import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
+  Cirque,
   findEscrowPda,
   findMarketMatchingPoolPda,
   findMarketOutcomePda,
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
+  MarketPaymentsQueue,
+  PaymentInfo,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
@@ -45,7 +48,6 @@ import {
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
-  PaymentInfo,
 } from "../../npm-admin-client";
 import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
 
@@ -632,7 +634,9 @@ export async function processCommissionPayments(
   const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
 
   const queue = (
-    await monaco.account.marketPaymentsQueue.fetch(commissionQueuePk)
+    (await monaco.account.marketPaymentsQueue.fetch(
+      commissionQueuePk,
+    )) as MarketPaymentsQueue
   ).paymentQueue;
   if (queue.len == 0) {
     return;
@@ -679,7 +683,9 @@ export async function processCommissionPayments(
   }
 }
 
-export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
+export function getPaymentInfoQueueItems(
+  queue: Cirque<PaymentInfo>,
+): PaymentInfo[] {
   const frontIndex = queue.front;
   const allItems = queue.items;
   const backIndex = frontIndex + (queue.len % queue.items.length);

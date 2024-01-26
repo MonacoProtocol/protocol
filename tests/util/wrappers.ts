@@ -17,6 +17,7 @@ import {
   findMarketPositionPda,
   findOrderPda,
   findTradePda,
+  MarketMatchingPool,
 } from "../../npm-client/src/";
 import {
   authoriseOperator,
@@ -133,9 +134,9 @@ export class Monaco {
   }
 
   async fetchMarketMatchingPool(marketMatchingPoolPk: PublicKey) {
-    return await this.program.account.marketMatchingPool.fetch(
+    return (await this.program.account.marketMatchingPool.fetch(
       marketMatchingPoolPk,
-    );
+    )) as MarketMatchingPool;
   }
 
   async getTokenBalance(tokenPk: PublicKey) {

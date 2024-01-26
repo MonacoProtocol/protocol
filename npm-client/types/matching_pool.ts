@@ -1,5 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { Cirque } from "./market";
 
 export type MarketMatchingPool = {
   market: PublicKey;
@@ -10,11 +11,5 @@ export type MarketMatchingPool = {
   liquidityAmount: BN;
   matchedAmount: BN;
   inplay: boolean;
-  orders: Cirque;
-};
-
-export type Cirque = {
-  front: number;
-  len: number;
-  items: PublicKey[];
+  orders: Cirque<PublicKey>;
 };

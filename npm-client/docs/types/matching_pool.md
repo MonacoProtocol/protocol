@@ -4,45 +4,27 @@
 
 *   [MarketMatchingPool][1]
     *   [Properties][2]
-*   [Cirque][3]
-    *   [Properties][4]
 
 ## MarketMatchingPool
 
-Type: {market: PublicKey, marketOutcomeIndex: [number][5], forOutcome: [boolean][6], price: [number][5], payer: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][6], orders: [Cirque][3]}
+Type: {market: PublicKey, marketOutcomeIndex: [number][3], forOutcome: [boolean][4], price: [number][3], payer: PublicKey, liquidityAmount: BN, matchedAmount: BN, inplay: [boolean][4], orders: Cirque\<PublicKey>}
 
 ### Properties
 
 *   `market` **PublicKey**&#x20;
-*   `marketOutcomeIndex` **[number][5]**&#x20;
-*   `forOutcome` **[boolean][6]**&#x20;
-*   `price` **[number][5]**&#x20;
+*   `marketOutcomeIndex` **[number][3]**&#x20;
+*   `forOutcome` **[boolean][4]**&#x20;
+*   `price` **[number][3]**&#x20;
 *   `payer` **PublicKey**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
-*   `inplay` **[boolean][6]**&#x20;
-*   `orders` **[Cirque][3]**&#x20;
-
-## Cirque
-
-Type: {front: [number][5], len: [number][5], items: [Array][7]\<PublicKey>}
-
-### Properties
-
-*   `front` **[number][5]**&#x20;
-*   `len` **[number][5]**&#x20;
-*   `items` **[Array][7]\<PublicKey>**&#x20;
+*   `inplay` **[boolean][4]**&#x20;
+*   `orders` **Cirque\<PublicKey>**&#x20;
 
 [1]: #marketmatchingpool
 
 [2]: #properties
 
-[3]: #cirque
+[3]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[4]: #properties-1
-
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
-
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[4]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
