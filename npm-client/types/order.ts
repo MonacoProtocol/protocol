@@ -1,6 +1,7 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
+import { Cirque } from "./market";
 
 export interface OrderStatus {
   readonly open?: Record<string, never>;
@@ -31,6 +32,19 @@ export type Order = {
   payout: BN;
   payer: PublicKey;
   productCommissionRate: number;
+};
+
+export type OrderRequest = {
+  purchaser: PublicKey;
+  marketOutcomeIndex: number;
+  forOutcome: boolean;
+  product: PublicKey | null;
+  stake: BN;
+  expectedPrice: number;
+  delayExpirationTimestamp: BN;
+  productCommissionRate: number;
+  distinctSeed: number[];
+  creationTimestamp: BN;
 };
 
 export type OrderInstructionResponse = {
@@ -67,4 +81,9 @@ export type orderPdaResponse = {
 
 export type StakeInteger = {
   stakeInteger: BN;
+};
+
+export type OrderRequestQueue = {
+  market: PublicKey;
+  orderRequests: Cirque<OrderRequest>;
 };

@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
+import { OrderRequestQueue } from "../../npm-client";
 
 describe("Dequeue Order Request", () => {
   const provider = anchor.AnchorProvider.local();
@@ -30,9 +31,9 @@ describe("Dequeue Order Request", () => {
     );
 
     let orderRequestQueue =
-      await monaco.program.account.marketOrderRequestQueue.fetch(
+      (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      );
+      )) as OrderRequestQueue;
 
     assert.equal(orderRequestQueue.market.toBase58(), market.pk.toBase58());
     assert.equal(orderRequestQueue.orderRequests.len, 2);
@@ -40,9 +41,9 @@ describe("Dequeue Order Request", () => {
     await market.dequeueOrderRequest();
 
     orderRequestQueue =
-      await monaco.program.account.marketOrderRequestQueue.fetch(
+      (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      );
+      )) as OrderRequestQueue;
 
     assert.equal(orderRequestQueue.orderRequests.len, 1);
     assert.equal(await market.getTokenBalance(purchaser), 1000.0);
