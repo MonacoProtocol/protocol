@@ -5,15 +5,18 @@
 *   [findMarketMatchingPoolPda][1]
     *   [Parameters][2]
     *   [Examples][3]
-*   [getMarketMatchingPoolAccounts][4]
+*   [getMarketMatchingPool][4]
     *   [Parameters][5]
     *   [Examples][6]
-*   [getAllMarketMatchingPools][7]
+*   [getMarketMatchingPoolAccounts][7]
     *   [Parameters][8]
     *   [Examples][9]
-*   [findAllMarketMatchingPoolPks][10]
+*   [getAllMarketMatchingPools][10]
     *   [Parameters][11]
     *   [Examples][12]
+*   [findAllMarketMatchingPoolPks][13]
+    *   [Parameters][14]
+    *   [Examples][15]
 
 ## findMarketMatchingPoolPda
 
@@ -23,9 +26,9 @@ For the provided market publicKey, outcome, price and forOutcome, return the PDA
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `marketOutcomeIndex` **[number][13]** {number} index representing a market outcome
-*   `price` **[number][13]** {number} price for the matching pool
-*   `forOutcome` **[boolean][14]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][16]** {number} index representing a market outcome
+*   `price` **[number][16]** {number} price for the matching pool
+*   `forOutcome` **[boolean][17]** {boolean} bool representing for or against a market outcome
 
 ### Examples
 
@@ -39,6 +42,24 @@ const marketMatchingPoolPda = await findMarketMatchingPoolPda(program, marketPK,
 
 Returns **FindPdaResponse** PDA of the market matching pool account
 
+## getMarketMatchingPool
+
+For the provided marketMatchingPool publicKey, return the market matching pool account details.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketMatchingPoolPk` **PublicKey** {PublicKey} publicKey of the market matching pool
+
+### Examples
+
+```javascript
+const marketMatchingPoolPk = new PublicKey('DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R')
+const marketMatchingPool = await getMarketMatchingPool(program, marketMatchingPoolPk)
+```
+
+Returns **GetAccount\<MarketMatchingPoolAccount>** market matching pool account details
+
 ## getMarketMatchingPoolAccounts
 
 For the provided marketMatchingPool PDAs, return the market matching pool accounts for those PDAs.
@@ -46,7 +67,7 @@ For the provided marketMatchingPool PDAs, return the market matching pool accoun
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketMatchingPoolPDAs` **[Array][15]\<PublicKey>** {PublicKey\[]} PDAs of market matching pools
+*   `marketMatchingPoolPDAs` **[Array][18]\<PublicKey>** {PublicKey\[]} PDAs of market matching pools
 
 ### Examples
 
@@ -107,26 +128,32 @@ Returns **MarketMatchingPoolPublicKeysWithSeeds** list of PublicKeys
 
 [3]: #examples
 
-[4]: #getmarketmatchingpoolaccounts
+[4]: #getmarketmatchingpool
 
 [5]: #parameters-1
 
 [6]: #examples-1
 
-[7]: #getallmarketmatchingpools
+[7]: #getmarketmatchingpoolaccounts
 
 [8]: #parameters-2
 
 [9]: #examples-2
 
-[10]: #findallmarketmatchingpoolpks
+[10]: #getallmarketmatchingpools
 
 [11]: #parameters-3
 
 [12]: #examples-3
 
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[13]: #findallmarketmatchingpoolpks
 
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[14]: #parameters-4
 
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[15]: #examples-4
+
+[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
