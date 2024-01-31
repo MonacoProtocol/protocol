@@ -89,7 +89,7 @@ export async function getMarketMatchingPool(
       account: marketMatchingPool,
     });
   } catch (e) {
-    response.addErrors([e]);
+    response.addError(e);
   }
   return response.body;
 }
