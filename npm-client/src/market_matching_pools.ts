@@ -80,13 +80,13 @@ export async function getMarketMatchingPool(
     {} as GetAccount<MarketMatchingPoolAccount>,
   );
   try {
-    const marketMatchingQueue = (await program.account.marketMatchingPool.fetch(
+    const marketMatchingPool = (await program.account.marketMatchingPool.fetch(
       marketMatchingPoolPk,
     )) as MarketMatchingPoolAccount;
 
     response.addResponseData({
       publicKey: marketMatchingPoolPk,
-      account: marketMatchingQueue,
+      account: marketMatchingPool,
     });
   } catch (e) {
     response.addErrors([e]);
