@@ -42,7 +42,7 @@ export async function findMarketMatchingQueuePda(
 }
 
 /**
- * For the provided marketMatchingQueue publicKey, get the market matching queue account details.
+ * For the provided market matching queue publicKey, get the market matching queue account details.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketMatchingQueuePk {PublicKey} publicKey of the market matching queue

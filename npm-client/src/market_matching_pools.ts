@@ -61,7 +61,7 @@ export async function findMarketMatchingPoolPda(
 }
 
 /**
- * For the provided marketMatchingPool publicKey, return the market matching pool account details.
+ * For the provided market matching pool publicKey, return the market matching pool account details.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketMatchingPoolPk {PublicKey} publicKey of the market matching pool

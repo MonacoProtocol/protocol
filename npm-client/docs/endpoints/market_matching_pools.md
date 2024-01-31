@@ -44,7 +44,7 @@ Returns **FindPdaResponse** PDA of the market matching pool account
 
 ## getMarketMatchingPool
 
-For the provided marketMatchingPool publicKey, return the market matching pool account details.
+For the provided market matching pool publicKey, return the market matching pool account details.
 
 ### Parameters
 
