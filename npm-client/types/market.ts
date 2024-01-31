@@ -51,20 +51,41 @@ export type MarketAccounts = {
   markets: GetAccount<MarketAccount>[];
 };
 
+export type MarketMatchingQueueAccount = {
+  market: PublicKey;
+  matches: MarketMatchingQueue;
+};
+
+export type MarketMatchingQueue = {
+  front: number;
+  len: number;
+  items: MarketMatchingQueueOrderMatch[];
+};
+
+export type MarketMatchingQueueOrderMatch = {
+  pk: PublicKey;
+  purchaser: PublicKey;
+
+  forOutcome: boolean;
+  outcomeIndex: number;
+  price: number;
+  stake: number;
+};
+
 export type MarketMatchingPoolAccount = {
   market: PublicKey;
+  inplay: boolean;
+  forOutcome: boolean;
+  marketOutcomeIndex: number;
+  price: number;
   orders: {
     front: number;
     len: number;
     items: PublicKey[];
   };
-  inplay: boolean;
   liquidityAmount: BN;
   matchedAmount: BN;
   payer: PublicKey;
-  marketOutcomeIndex: number;
-  price: number;
-  forOutcome: boolean;
 };
 
 export type MarketMatchingPoolAccounts = {
