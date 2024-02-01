@@ -27,14 +27,13 @@ import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
-  Cirque,
   findEscrowPda,
   findMarketMatchingPoolPda,
   findMarketOutcomePda,
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
-  MarketPaymentsQueue,
+  MarketPaymentsQueueAccount,
   PaymentInfo,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
@@ -636,7 +635,7 @@ export async function processCommissionPayments(
   const queue = (
     (await monaco.account.marketPaymentsQueue.fetch(
       commissionQueuePk,
-    )) as MarketPaymentsQueue
+    )) as MarketPaymentsQueueAccount
   ).paymentQueue;
   if (queue.len == 0) {
     return;
@@ -683,9 +682,7 @@ export async function processCommissionPayments(
   }
 }
 
-export function getPaymentInfoQueueItems(
-  queue: Cirque<PaymentInfo>,
-): PaymentInfo[] {
+export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
   const frontIndex = queue.front;
   const allItems = queue.items;
   const backIndex = frontIndex + (queue.len % queue.items.length);

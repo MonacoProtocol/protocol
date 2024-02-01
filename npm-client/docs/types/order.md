@@ -25,7 +25,7 @@
     *   [Properties][21]
 *   [StakeInteger][22]
     *   [Properties][23]
-*   [OrderRequestQueue][24]
+*   [OrderRequestQueueAccount][24]
     *   [Properties][25]
 
 ## OrderStatus
@@ -145,14 +145,14 @@ Type: {stakeInteger: BN}
 
 *   `stakeInteger` **BN**&#x20;
 
-## OrderRequestQueue
+## OrderRequestQueueAccount
 
-Type: {market: PublicKey, orderRequests: Cirque<[OrderRequest][6]>}
+Type: {market: PublicKey, orderRequests: {front: [number][26], len: [number][26], items: [Array][28]<[OrderRequest][6]>}}
 
 ### Properties
 
 *   `market` **PublicKey**&#x20;
-*   `orderRequests` **Cirque<[OrderRequest][6]>**&#x20;
+*   `orderRequests` **{front: [number][26], len: [number][26], items: [Array][28]<[OrderRequest][6]>}**&#x20;
 
 [1]: #orderstatus
 
@@ -200,7 +200,7 @@ Type: {market: PublicKey, orderRequests: Cirque<[OrderRequest][6]>}
 
 [23]: #properties-10
 
-[24]: #orderrequestqueue
+[24]: #orderrequestqueueaccount
 
 [25]: #properties-11
 

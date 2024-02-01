@@ -7,7 +7,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { findMarketPdas, findUserPdas } from "../util/pdas";
 import { findOrderRequestQueuePda } from "../../npm-admin-client";
-import { OrderRequestQueue } from "../../npm-client";
+import { OrderRequestQueueAccount } from "../../npm-client";
 
 describe("Order Request Creation", () => {
   const provider = anchor.AnchorProvider.local();
@@ -28,7 +28,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
 
     assert.equal(orderRequestQueue.market.toBase58(), market.pk.toBase58());
     assert.equal(orderRequestQueue.orderRequests.len, 2);
@@ -86,7 +86,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 2);
 
     // check that inplay de
@@ -128,7 +128,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
 
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
@@ -210,7 +210,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
 
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 

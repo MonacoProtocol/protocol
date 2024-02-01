@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
-import { OrderRequestQueue } from "../../npm-client";
+import { OrderRequestQueueAccount } from "../../npm-client";
 
 describe("Order Request Processing", () => {
   const provider = anchor.AnchorProvider.local();
@@ -33,7 +33,7 @@ describe("Order Request Processing", () => {
     let orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
     const orderPk = await market.processNextOrderRequest();
@@ -42,7 +42,7 @@ describe("Order Request Processing", () => {
     orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 0);
 
     // ensure order account matches the order request spec
@@ -98,7 +98,7 @@ describe("Order Request Processing", () => {
     let orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
     // Wait for delay to expire and process orders
@@ -109,7 +109,7 @@ describe("Order Request Processing", () => {
     orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 0);
 
     const order = await monaco.program.account.order.fetch(orderPk);
@@ -163,7 +163,7 @@ describe("Order Request Processing", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueue;
+      )) as OrderRequestQueueAccount;
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
     try {

@@ -1,7 +1,6 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
-import { Cirque } from "./market";
 
 export interface OrderStatus {
   readonly open?: Record<string, never>;
@@ -83,7 +82,11 @@ export type StakeInteger = {
   stakeInteger: BN;
 };
 
-export type OrderRequestQueue = {
+export type OrderRequestQueueAccount = {
   market: PublicKey;
-  orderRequests: Cirque<OrderRequest>;
+  orderRequests: {
+    front: number;
+    len: number;
+    items: OrderRequest[];
+  };
 };
