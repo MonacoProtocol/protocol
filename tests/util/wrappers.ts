@@ -40,6 +40,7 @@ import {
   MarketAccount,
 } from "../../npm-admin-client";
 import console from "console";
+import { MarketMatchingPoolAccount } from "../../npm-client/types";
 
 const { SystemProgram } = anchor.web3;
 
@@ -133,9 +134,9 @@ export class Monaco {
   }
 
   async fetchMarketMatchingPool(marketMatchingPoolPk: PublicKey) {
-    return await this.program.account.marketMatchingPool.fetch(
+    return (await this.program.account.marketMatchingPool.fetch(
       marketMatchingPoolPk,
-    );
+    )) as MarketMatchingPoolAccount;
   }
 
   async getTokenBalance(tokenPk: PublicKey) {

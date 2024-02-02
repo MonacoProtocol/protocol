@@ -33,6 +33,19 @@ export type Order = {
   productCommissionRate: number;
 };
 
+export type OrderRequest = {
+  purchaser: PublicKey;
+  marketOutcomeIndex: number;
+  forOutcome: boolean;
+  product: PublicKey | null;
+  stake: BN;
+  expectedPrice: number;
+  delayExpirationTimestamp: BN;
+  productCommissionRate: number;
+  distinctSeed: number[];
+  creationTimestamp: BN;
+};
+
 export type OrderInstructionResponse = {
   orderPk: PublicKey;
   instruction: TransactionInstruction;
@@ -67,4 +80,13 @@ export type orderPdaResponse = {
 
 export type StakeInteger = {
   stakeInteger: BN;
+};
+
+export type OrderRequestQueueAccount = {
+  market: PublicKey;
+  orderRequests: {
+    front: number;
+    len: number;
+    items: OrderRequest[];
+  };
 };

@@ -164,3 +164,18 @@ export type MarketPricesAndPendingOrders = {
 } & MarketOutcomeAccounts &
   MarketPrices &
   PendingOrders;
+
+export type MarketPaymentsQueueAccount = {
+  market: PublicKey;
+  paymentQueue: {
+    front: number;
+    len: number;
+    items: PaymentInfo[];
+  };
+};
+
+export type PaymentInfo = {
+  from: PublicKey;
+  to: PublicKey;
+  amount: BN;
+};

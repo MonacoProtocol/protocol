@@ -33,6 +33,8 @@ import {
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
+  MarketPaymentsQueueAccount,
+  PaymentInfo,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
@@ -45,7 +47,6 @@ import {
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
-  PaymentInfo,
 } from "../../npm-admin-client";
 import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
 
@@ -632,7 +633,9 @@ export async function processCommissionPayments(
   const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
 
   const queue = (
-    await monaco.account.marketPaymentsQueue.fetch(commissionQueuePk)
+    (await monaco.account.marketPaymentsQueue.fetch(
+      commissionQueuePk,
+    )) as MarketPaymentsQueueAccount
   ).paymentQueue;
   if (queue.len == 0) {
     return;
