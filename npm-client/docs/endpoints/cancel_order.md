@@ -8,6 +8,9 @@
 *   [cancelOrdersForMarket][4]
     *   [Parameters][5]
     *   [Examples][6]
+*   [calculateOrderCancellationRefund][7]
+    *   [Parameters][8]
+    *   [Examples][9]
 
 ## cancelOrder
 
@@ -59,6 +62,27 @@ const cancelledOrders = await cancelOrdersForMarket(program, marketPk)
 
 Returns **CancelOrdersResponse** list of all the successfully submitted transactionIDs, list of all the failed-to-cancel order publicKeys
 
+## calculateOrderCancellationRefund
+
+For the provided order and market position calculate amount that will be refunded if order gets canceled.
+
+### Parameters
+
+*   `order` **Order** {Order} order to be canceled
+*   `marketPosition` **MarketPosition** {MarketPosition} market position of the order's owner
+
+### Examples
+
+```javascript
+const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+const order = await getOrder(program, orderPk);
+const marketPositionPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+const marketPosition = await getMarketPosition(program, marketPositionPk);
+const refundAmount = await calculateOrderCancellationRefund(order, marketPosition);
+```
+
+Returns **[number][10]** the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
+
 [1]: #cancelorder
 
 [2]: #parameters
@@ -70,3 +94,11 @@ Returns **CancelOrdersResponse** list of all the successfully submitted transact
 [5]: #parameters-1
 
 [6]: #examples-1
+
+[7]: #calculateordercancellationrefund
+
+[8]: #parameters-2
+
+[9]: #examples-2
+
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number

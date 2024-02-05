@@ -15,8 +15,6 @@ import {
   getMarket,
   getMintInfo,
   findEscrowPda,
-  findCommissionPaymentsQueuePda,
-  findMarketMatchingQueuePda,
 } from "./market_helpers";
 import { findMarketTypePda } from "./market_type_create";
 import { MarketInstructionResponse } from "../types/transactions";
@@ -90,18 +88,10 @@ export async function buildCreateMarketInstruction(
     )
   ).data.pda;
 
-  const [
-    escrowPda,
-    authorisedOperators,
-    mintInfo,
-    paymentsQueuePda,
-    matchingQueuePda,
-  ] = await Promise.all([
+  const [escrowPda, authorisedOperators, mintInfo] = await Promise.all([
     findEscrowPda(program, marketPda),
     findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
     getMintInfo(program, marketTokenPk),
-    findCommissionPaymentsQueuePda(program, marketPda),
-    findMarketMatchingQueuePda(program, marketPda),
   ]);
 
   try {
@@ -125,15 +115,13 @@ export async function buildCreateMarketInstruction(
         existingMarket: existingMarketPk,
         market: marketPda,
         marketType: marketTypePk,
-        systemProgram: SystemProgram.programId,
         escrow: escrowPda.data.pda,
-        mint: marketTokenPk,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
-        commissionPaymentQueue: paymentsQueuePda.data.pda,
-        matchingQueue: matchingQueuePda.data.pda,
+        rent: web3.SYSVAR_RENT_PUBKEY,
+        mint: marketTokenPk,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 

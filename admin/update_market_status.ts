@@ -7,9 +7,12 @@ import {
   unsuspendMarket,
   voidMarket as setMarketReadyToVoidClient,
   setMarketReadyToClose as setMarketReadyToCloseClient,
+  updateMarketLocktimeToNow,
+  findMarketMatchingQueuePda,
 } from "../npm-admin-client/src";
 import { checkResponse, getProtocolProgram } from "./util";
 import { PublicKey } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
 
 // yarn run settleMarket <MARKET_ID> <WINNING_OUTCOME_INDEX>
 // or tsc; ANCHOR_WALLET=~/.config/solana/id.json yarn ts-node client.ts settle_market <MARKET_ID> <WINNING_OUTCOME_INDEX>
@@ -40,8 +43,17 @@ export async function settle_market() {
   const marketPk = new PublicKey(marketID);
 
   const protocolProgram = await getProtocolProgram();
+  const marketMatchingQueuePdaResponse = await findMarketMatchingQueuePda(
+    protocolProgram,
+    marketPk,
+  );
   checkResponse(
-    await settleMarket(protocolProgram, marketPk, winningOutcomeIndex),
+    await settleMarket(
+      protocolProgram,
+      marketPk,
+      marketMatchingQueuePdaResponse.data.pda,
+      winningOutcomeIndex,
+    ),
   );
 }
 
@@ -121,4 +133,17 @@ export async function unsuspend_market() {
 
   const protocolProgram = await getProtocolProgram();
   checkResponse(await unsuspendMarket(protocolProgram, marketPk));
+}
+
+export async function lockMarket() {
+  if (process.argv.length != 4) {
+    console.log("Usage: yarn run lockMarket <MARKET_ID>");
+    process.exit(1);
+  }
+
+  const marketID = process.argv[3];
+  const marketPk = new PublicKey(marketID);
+
+  const protocolProgram = (await getProtocolProgram()) as Program;
+  checkResponse(await updateMarketLocktimeToNow(protocolProgram, marketPk));
 }

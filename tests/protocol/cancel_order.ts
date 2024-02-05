@@ -47,36 +47,6 @@ describe("Security: Cancel Order", () => {
     }
   });
 
-  it("cannot cancel inplay order during inplay delay", async () => {
-    const inplayDelay = 100;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    // Set up Market and related accounts
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [price],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    await market.airdrop(purchaser, 10_000);
-
-    const orderPk = await market.forOrder(0, stake, price, purchaser);
-
-    try {
-      await market.cancel(orderPk, purchaser);
-      assert.fail("expected InplayDelay");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "InplayDelay");
-    }
-  });
-
   it("can cancel inplay order after inplay delay", async () => {
     const inplayDelay = 0;
 
@@ -98,103 +68,8 @@ describe("Security: Cancel Order", () => {
     await market.airdrop(purchaser, 10_000);
 
     const orderPk = await market.forOrder(0, stake, price, purchaser);
-    await market.processDelayExpiredOrders(0, price, true);
 
     await market.cancel(orderPk, purchaser);
-
-    // check order was deleted
-    try {
-      await monaco.program.account.order.fetch(orderPk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
-      );
-    }
-  });
-
-  it("can cancel inplay order after inplay delay but before liquidity is added", async () => {
-    const inplayDelay = 0;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    // Set up Market and related accounts
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [price],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    await market.airdrop(purchaser, 10_000);
-
-    const orderPk = await market.forOrder(0, stake, price, purchaser);
-
-    let matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, 0);
-
-    // This should succeed and no error should be thrown
-    await market.cancel(orderPk, purchaser);
-
-    // check liquidity is unchanged
-    matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, 0);
-
-    // check order was deleted
-    try {
-      await monaco.program.account.order.fetch(orderPk);
-      assert.fail("Account should not exist");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Account does not exist or has no data " + orderPk,
-      );
-    }
-  });
-
-  it("liquidity doesn't change if inplay order cancelled after inplay delay but before liquidity is added", async () => {
-    const inplayDelay = 0;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    // Set up Market and related accounts
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [price],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    await market.airdrop(purchaser, 10_000);
-
-    await market.forOrder(0, stake, price, purchaser);
-    await market.processDelayExpiredOrders(0, price, true);
-
-    let matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, stake);
-
-    const orderPk = await market.forOrder(0, stake, price, purchaser);
-
-    // check liquidity is unchanged
-    matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, stake);
-
-    await market.cancel(orderPk, purchaser);
-
-    // check liquidity is unchanged
-    matchingPool = await market.getForMatchingPool(0, price);
-    assert.equal(matchingPool.liquidity, stake);
 
     // check order was deleted
     try {
@@ -232,6 +107,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -296,6 +173,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -355,6 +234,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -419,6 +300,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -486,6 +369,8 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: purchaserInvalidTokenPk, // invalid
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -588,6 +473,8 @@ describe("Security: Cancel Order", () => {
           ),
           market: marketOther.marketPda, // invalid
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -654,6 +541,8 @@ describe("Security: Cancel Order", () => {
           ),
           market: market.pk,
           marketEscrow: marketOther.escrowPda, // invalid
+          marketLiquidities: market.liquiditiesPk,
+          marketOutcome: market.outcomePks[outcomeIndex],
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -696,7 +585,7 @@ describe("Security: Cancel Order", () => {
     const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
     const againstOrderPk = await market.againstOrder(0, 10.0, price, purchaser);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue(); // TODO move this lower after cancel method updated
 
     try {
       await market.cancel(forOrderPk, purchaser);

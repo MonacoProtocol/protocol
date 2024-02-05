@@ -37,7 +37,7 @@ describe("Order Wholesale Payment 05", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [0, 40, 40] },
-        { matched: [0, 0, 0], unmatched: [20, 0, 0] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         60,
         80,
         60,
@@ -46,7 +46,7 @@ describe("Order Wholesale Payment 05", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.match(orderForA, orderAgainstA);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -116,7 +116,7 @@ describe("Order Wholesale Payment 05", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [0, 40, 40] },
-        { matched: [0, 0, 0], unmatched: [20, 0, 0] },
+        { matched: [-20, 10, 10], unmatched: [0, 0, 0] },
         60,
         80,
         60,
@@ -125,7 +125,7 @@ describe("Order Wholesale Payment 05", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.match(orderForA, orderAgainstA);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

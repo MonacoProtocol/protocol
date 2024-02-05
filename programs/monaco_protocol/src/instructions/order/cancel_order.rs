@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::context::CancelOrder;
 use crate::error::CoreError;
-use crate::instructions::{current_timestamp, market_position, matching, transfer};
+use crate::instructions::{market_position, matching, transfer};
 use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
@@ -24,12 +24,27 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         CoreError::CancelOrderNotCancellable
     );
 
-    let now = current_timestamp();
-    require!(
-        !ctx.accounts.market.is_inplay() || order.delay_expiration_timestamp <= now,
-        CoreError::InplayDelay
-    );
-
+    // update liquidity
+    match order.for_outcome {
+        true => ctx
+            .accounts
+            .market_liquidities
+            .remove_liquidity_for(
+                order.market_outcome_index,
+                order.expected_price,
+                order.stake_unmatched,
+            )
+            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+        false => ctx
+            .accounts
+            .market_liquidities
+            .remove_liquidity_against(
+                order.market_outcome_index,
+                order.expected_price,
+                order.stake_unmatched,
+            )
+            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+    }
     ctx.accounts.order.void_stake_unmatched();
 
     let order = &ctx.accounts.order;

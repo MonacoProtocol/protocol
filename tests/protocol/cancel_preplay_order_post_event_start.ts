@@ -24,7 +24,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    // Update Market's evenet start time
+    // Update Market's event start time
+    await new Promise((e) => setTimeout(e, 1000));
     await market.updateMarketEventStartTimeToNow();
     await market.moveMarketToInplay();
 
@@ -44,12 +45,6 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
         10000,
       ],
     );
-
-    const marketMatchingPool =
-      await monaco.program.account.marketMatchingPool.fetch(
-        market.matchingPools[outcomeIndex][price].forOutcome,
-      );
-    assert.ok(marketMatchingPool.inplay);
   });
 
   it("success: partially matched order", async () => {
@@ -61,13 +56,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    const matchingOrderPk = await market.againstOrder(
-      outcomeIndex,
-      stake / 2,
-      price,
-      purchaser,
-    );
-    await market.match(orderPk, matchingOrderPk);
+    await market.againstOrder(outcomeIndex, stake / 2, price, purchaser);
+    await market.processMatchingQueue();
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
@@ -102,13 +92,8 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
       stake,
     );
 
-    const matchingOrderPk = await market.againstOrder(
-      outcomeIndex,
-      stake,
-      price,
-      purchaser,
-    );
-    await market.match(orderPk, matchingOrderPk);
+    await market.againstOrder(outcomeIndex, stake, price, purchaser);
+    await market.processMatchingQueue();
 
     // Update Market's evenet start time
     await market.updateMarketEventStartTimeToNow();
@@ -210,7 +195,7 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     // Create market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarketWithInplay([price]),
+      monaco.create3WayMarket([price], true, 0),
     ]);
     await market.airdrop(purchaser, 10_000);
 
@@ -278,9 +263,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -339,9 +327,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationPurchaserMismatch");
@@ -395,9 +386,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -456,9 +450,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserImpostorTokenPk, // impostor
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintTokenOwner");
@@ -520,9 +517,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           purchaserToken: purchaserInvalidTokenPk, // invalid
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintAssociated");
@@ -583,9 +583,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           ),
           market: marketOther.marketPda, // invalid
           marketEscrow: market.escrowPk,
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected CancelationMarketMismatch");
@@ -646,9 +649,12 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
           ),
           market: market.pk,
           marketEscrow: marketOther.escrowPda, // invalid
+          marketLiquidities: market.liquiditiesPk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
+          orderRequestQueue: market.orderRequestQueuePk,
+          matchingQueue: market.matchingQueuePk,
         })
         .rpc();
       assert.fail("expected ConstraintSeeds");

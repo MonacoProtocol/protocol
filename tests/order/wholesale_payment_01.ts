@@ -34,7 +34,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,
@@ -50,7 +50,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const c1ForPk = await market.forOrder(outcomeB, 10, price, purchaserC);
 
-    await market.match(c1ForPk, a2AgainstPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -135,7 +135,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,
@@ -151,7 +151,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const c1ForPk = await market.forOrder(outcomeB, 10, price, purchaserC);
 
-    await market.match(c1ForPk, a2AgainstPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -236,7 +236,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,
@@ -252,7 +252,7 @@ describe("Order Wholesale Payment 01", () => {
     );
     const c1ForPk = await market.forOrder(outcomeB, 10, price, purchaserC);
 
-    await market.match(c1ForPk, a2AgainstPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

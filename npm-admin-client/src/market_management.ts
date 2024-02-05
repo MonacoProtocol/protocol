@@ -62,6 +62,7 @@ async function sendManagementTransaction(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
+ * @param marketMatchingQueuePk {PublicKey} publicKey of the market's matching queue
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
  * @param options {TransactionOptions} optional parameters:
  *   <ul>
@@ -73,12 +74,14 @@ async function sendManagementTransaction(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const winningOutcomeIndex = 0
- * const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
+ * const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
  */
 export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
+  marketMatchingQueuePk: PublicKey,
   winningOutcomeIndex: number,
   options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
@@ -384,6 +387,51 @@ export async function updateMarketLocktime(
     instruction.errors,
     options,
   );
+}
+
+/**
+ * For the given market, update the lock time to now
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const update = await updateMarketLocktimeToNow(program, marketPk)
+ */
+export async function updateMarketLocktimeToNow(
+  program: Program,
+  marketPk: PublicKey,
+): Promise<ClientResponse<TransactionResponse>> {
+  const { response, provider, authorisedOperators } =
+    await setupManagementRequest(program);
+
+  if (!authorisedOperators.success) {
+    response.addErrors(authorisedOperators.errors);
+    return response.body;
+  }
+
+  try {
+    const tnxId = await program.methods
+      .updateMarketLocktimeToNow()
+      .accounts({
+        market: marketPk,
+        authorisedOperators: authorisedOperators.data.pda,
+        marketOperator: provider.wallet.publicKey,
+      })
+      .rpc();
+
+    response.addResponseData({
+      tnxId: tnxId,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+
+  return response.body;
 }
 
 /**

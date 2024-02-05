@@ -17,7 +17,7 @@ Constructs the instruction required to perform a cancel order transaction.
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `orderPk` **PublicKey** {PublicKey} publicKey of the order to cancel
-*   `mintPk` **PublicKey?**&#x20;
+*   `mintPk` **PublicKey?** {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
 
 ### Examples
 

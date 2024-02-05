@@ -134,7 +134,6 @@ mod tests {
             payer: Default::default(),
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             product_commission_rate: 0.0,
         }
     }

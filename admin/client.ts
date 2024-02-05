@@ -6,6 +6,7 @@ import {
 } from "./create_market";
 import { create_order } from "./create_order";
 import {
+  lockMarket,
   openMarket,
   publish_market,
   setMarketReadyToClose,
@@ -97,6 +98,9 @@ switch (script) {
     break;
   case "unsuspend_market":
     unsuspend_market();
+    break;
+  case "lockMarket":
+    lockMarket();
     break;
   case "getAllOrders":
     getAllOrders();

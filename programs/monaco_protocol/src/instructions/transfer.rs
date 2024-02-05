@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token;
 use anchor_spl::token::{Token, TokenAccount};
 
-use crate::context::{
-    CancelOrder, CreateOrder, MatchOrders, SettleMarketPosition, VoidMarketPosition,
-};
+use crate::context::{CancelOrder, MatchOrders, SettleMarketPosition, VoidMarketPosition};
 use crate::state::market_account::Market;
 
 pub fn order_creation_payment<'info>(
@@ -23,14 +21,18 @@ pub fn order_creation_payment<'info>(
     )
 }
 
-pub fn order_creation_refund(ctx: Context<CreateOrder>, amount: u64) -> Result<()> {
-    let accounts = &ctx.accounts;
-
+pub fn order_creation_refund<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    purchaser_token_account: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    market: &Account<Market>,
+    amount: u64,
+) -> Result<()> {
     transfer_from_market_escrow(
-        &accounts.market_escrow,
-        &accounts.purchaser_token,
-        &accounts.token_program,
-        &accounts.market,
+        market_escrow,
+        purchaser_token_account,
+        token_program,
+        market,
         amount,
     )
 }

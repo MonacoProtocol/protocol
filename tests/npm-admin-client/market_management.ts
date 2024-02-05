@@ -28,6 +28,7 @@ describe("Settle market", () => {
     const settleMarketResponse = await settleMarket(
       protocolProgram,
       market.pk,
+      market.matchingQueuePk,
       0,
     );
     const updatedMarket = await monaco.fetchMarket(market.pk);
@@ -44,6 +45,7 @@ describe("Settle market", () => {
     const settleMarketResponse = await settleMarket(
       protocolProgram,
       market.pk,
+      market.matchingQueuePk,
       5,
     );
     const updatedMarket = await monaco.fetchMarket(market.pk);

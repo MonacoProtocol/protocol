@@ -1,41 +1,46 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import {
-  Mint,
-  TOKEN_PROGRAM_ID,
   getMint,
   getOrCreateAssociatedTokenAccount,
+  Mint,
   mintTo,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import { Program, BN } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
   findMarketOutcomePda,
-  findMarketPositionPda,
-  findTradePda,
   findMarketPda,
+  findMarketPositionPda,
+  findOrderPda,
+  findTradePda,
 } from "../../npm-client/src/";
 import {
   authoriseOperator,
-  createOrder,
-  getMarketMatchingPoolsPks,
   createNewMint,
-  OperatorType,
-  getProtocolProductProgram,
-  processCommissionPayments,
   executeTransactionMaxCompute,
+  getMarketMatchingPoolsPks,
   getOrCreateMarketType,
+  getProtocolProductProgram,
+  OperatorType,
+  processCommissionPayments,
 } from "../util/test_util";
 import { findAuthorisedOperatorsPda, findProductPda } from "../util/pdas";
 import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
+  findMarketLiquiditiesPda,
   findCommissionPaymentsQueuePda,
+  findOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
+  MarketAccount,
 } from "../../npm-admin-client";
+import console from "console";
+import { MarketMatchingPoolAccount } from "../../npm-client/types";
 
 const { SystemProgram } = anchor.web3;
 
@@ -120,16 +125,18 @@ export class Monaco {
     return await this.program.account.marketOutcome.fetch(marketOutcomePk);
   }
 
-  async fetchMarketMatchingPool(marketMatchingPoolPk: PublicKey) {
-    return await this.program.account.marketMatchingPool.fetch(
-      marketMatchingPoolPk,
-    );
+  async fetchMarketOrderRequestQueue(pk: PublicKey) {
+    return await this.program.account.marketOrderRequestQueue.fetch(pk);
   }
 
-  async fetchMarketMatchingQueue(marketMatchingQueuePk: PublicKey) {
-    return await this.program.account.marketMatchingQueue.fetch(
-      marketMatchingQueuePk,
-    );
+  async fetchMarketMatchingQueue(pk: PublicKey) {
+    return await this.program.account.marketMatchingQueue.fetch(pk);
+  }
+
+  async fetchMarketMatchingPool(marketMatchingPoolPk: PublicKey) {
+    return (await this.program.account.marketMatchingPool.fetch(
+      marketMatchingPoolPk,
+    )) as MarketMatchingPoolAccount;
   }
 
   async getTokenBalance(tokenPk: PublicKey) {
@@ -175,6 +182,61 @@ export class Monaco {
     };
   }
 
+  async getMarketOrderRequestQueueHead(marketOrderRequestQueuePk: PublicKey) {
+    const marketOrderRequestQueue = await this.fetchMarketOrderRequestQueue(
+      marketOrderRequestQueuePk,
+    );
+
+    const front = marketOrderRequestQueue.orderRequests.front;
+    const orderRequest = marketOrderRequestQueue.orderRequests.items[front];
+
+    return {
+      purchaser: orderRequest.purchaser,
+      distinctSeed: orderRequest.distinctSeed,
+      forOutcome: orderRequest.forOutcome,
+      marketOutcomeIndex: orderRequest.marketOutcomeIndex,
+      expectedPrice: orderRequest.expectedPrice,
+    };
+  }
+
+  async getMarketMatchingQueueHead(
+    marketMatchingQueuePk: PublicKey,
+    decimals = TOKEN_DECIMALS,
+  ) {
+    const decimalsMultiplier = 10 ** decimals;
+    const marketMatchingQueue = await this.fetchMarketMatchingQueue(
+      marketMatchingQueuePk,
+    );
+
+    const matchesFront = marketMatchingQueue.matches.front;
+    const matchesHead = marketMatchingQueue.matches.items[matchesFront];
+
+    return {
+      pk: matchesHead.pk,
+      purchaser: matchesHead.purchaser,
+      forOutcome: matchesHead.forOutcome,
+      outcomeIndex: matchesHead.outcomeIndex,
+      price: matchesHead.price,
+      stake: matchesHead.stake.toNumber() / decimalsMultiplier,
+    };
+  }
+
+  async getMarketMatchingQueueLength(marketMatchingQueuePk: PublicKey) {
+    const marketMatchingQueue = await this.fetchMarketMatchingQueue(
+      marketMatchingQueuePk,
+    );
+    return marketMatchingQueue.matches.len;
+  }
+
+  async getMarketMatchingPoolHead(marketMatchingPoolPk: PublicKey) {
+    const marketMatchingPool = await this.fetchMarketMatchingPool(
+      marketMatchingPoolPk,
+    );
+
+    const ordersFront = marketMatchingPool.orders.front;
+    return marketMatchingPool.orders.items[ordersFront];
+  }
+
   async getMarketMatchingPool(
     marketMatchingPoolPk: PublicKey,
     decimals = TOKEN_DECIMALS,
@@ -193,7 +255,7 @@ export class Monaco {
 
   async getOrder(orderPk: PublicKey, decimals = TOKEN_DECIMALS) {
     const decimalsMultiplier = 10 ** decimals;
-    const order = await this.program.account.order.fetch(orderPk);
+    const order = await this.fetchOrder(orderPk);
     return {
       status: order.orderStatus,
       stakeUnmatched: order.stakeUnmatched.toNumber() / decimalsMultiplier,
@@ -226,6 +288,7 @@ export class Monaco {
     eventStartTimestamp?: number,
     marketLockTimestamp?: number,
     eventStartOrderBehaviour?: object,
+    marketLockOrderBehaviour?: object,
   ) {
     const market = await this.createMarket(
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
@@ -236,6 +299,7 @@ export class Monaco {
       eventStartTimestamp,
       marketLockTimestamp,
       eventStartOrderBehaviour,
+      marketLockOrderBehaviour,
     );
     await market.open();
     return market;
@@ -266,6 +330,7 @@ export class Monaco {
     inplayEnabled?: boolean;
     inplayOrderDelay?: number;
     eventStartOrderBehaviour?: object;
+    marketLockOrderBehaviour?: object;
     marketOperatorKeypair?: Keypair;
   }) {
     /* eslint-disable */
@@ -302,6 +367,9 @@ export class Monaco {
     const eventStartOrderBehaviour = options.eventStartOrderBehaviour
       ? options.eventStartOrderBehaviour
       : { cancelUnmatched: {} };
+    const marketLockOrderBehaviour = options.marketLockOrderBehaviour
+      ? options.marketLockOrderBehaviour
+      : { none: {} };
     // prettier-ignore-end
     /* eslint-enable */
 
@@ -332,16 +400,6 @@ export class Monaco {
       marketPk,
     );
 
-    const matchingQueuePk = await findMarketMatchingQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
-    const commissionQueuePk = await findCommissionPaymentsQueuePda(
-      this.program as Program,
-      marketPk,
-    );
-
     // invoke core program to call operations required for creating an order
     await this.program.methods
       .createMarket(
@@ -350,20 +408,18 @@ export class Monaco {
         marketTypeValue,
         marketTitle,
         decimals,
-        new anchor.BN(marketLockTimestamp),
-        new anchor.BN(eventStartTimestamp),
+        new BN(marketLockTimestamp),
+        new BN(eventStartTimestamp),
         inplayEnabled,
         inplayOrderDelay,
         eventStartOrderBehaviour,
-        { none: {} },
+        marketLockOrderBehaviour,
       )
       .accounts({
         existingMarket: null,
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
-        matchingQueue: matchingQueuePk.data.pda,
-        commissionPaymentQueue: commissionQueuePk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -459,23 +515,36 @@ export class Monaco {
 
     let matchingPools: { against: PublicKey; forOutcome: PublicKey }[][] = [];
     matchingPools = await Promise.all(
-      outcomePks.map(async (outcomePk, index) => {
+      outcomePks.map(async (_, index) => {
         return await getMarketMatchingPoolsPks(
           marketPk,
           index,
-          outcomePk,
           options.priceLadder,
         );
       }),
     );
 
-    const bmarket = new MonacoMarket(
+    const [
+      liquiditiesPk,
+      matchingQueuePk,
+      commissionQueuePk,
+      orderRequestQueuePk,
+    ] = await Promise.all([
+      findMarketLiquiditiesPda(this.program as Program, marketPk),
+      findMarketMatchingQueuePda(this.program as Program, marketPk),
+      findCommissionPaymentsQueuePda(this.program as Program, marketPk),
+      findOrderRequestQueuePda(this.program as Program as Program, marketPk),
+    ]);
+
+    return new MonacoMarket(
       this,
       externalPrograms,
       marketPk,
       marketEscrowPk.data.pda,
+      liquiditiesPk.data.pda,
       matchingQueuePk.data.pda,
       commissionQueuePk.data.pda,
+      orderRequestQueuePk.data.pda,
       outcomePks,
       matchingPools,
       eventPk,
@@ -484,7 +553,6 @@ export class Monaco {
       mintInfo,
       options.marketOperatorKeypair,
     );
-    return bmarket;
   }
 
   async createMarket(
@@ -496,6 +564,7 @@ export class Monaco {
     eventStartTimestamp = 1924254038,
     marketLockTimestamp = 1924254038,
     eventStartOrderBehaviour: object = { cancelUnmatched: {} },
+    marketLockOrderBehaviour: object = { none: {} },
   ) {
     return await this.createMarketWithOptions({
       outcomes,
@@ -506,6 +575,7 @@ export class Monaco {
       eventStartTimestamp,
       marketLockTimestamp,
       eventStartOrderBehaviour,
+      marketLockOrderBehaviour,
     });
   }
 
@@ -534,8 +604,10 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly liquiditiesPk: PublicKey;
   readonly matchingQueuePk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
+  readonly orderRequestQueuePk: PublicKey;
   readonly outcomePks: PublicKey[];
   readonly matchingPools: {
     against: PublicKey;
@@ -559,8 +631,10 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    liquiditiesPk: PublicKey,
     matchingQueuePk: PublicKey,
     paymentsQueuePk: PublicKey,
+    orderRequestQueuePk: PublicKey,
     outcomePks: PublicKey[],
     matchingPools: {
       against: PublicKey;
@@ -576,8 +650,10 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.liquiditiesPk = liquiditiesPk;
     this.matchingQueuePk = matchingQueuePk;
     this.paymentsQueuePk = paymentsQueuePk;
+    this.orderRequestQueuePk = orderRequestQueuePk;
     this.outcomePks = outcomePks;
     this.matchingPools = matchingPools;
     this.eventPk = eventPk;
@@ -704,6 +780,20 @@ export class MonacoMarket {
     );
   }
 
+  async getMarketMatchingQueueHead() {
+    return await this.monaco.getMarketMatchingQueueHead(this.matchingQueuePk);
+  }
+
+  async getMarketMatchingQueueLength() {
+    return await this.monaco.getMarketMatchingQueueLength(this.matchingQueuePk);
+  }
+
+  async getOrderRequestQueue() {
+    return await this.monaco.program.account.marketOrderRequestQueue.fetch(
+      this.orderRequestQueuePk,
+    );
+  }
+
   async getMarketOutcome(outcome: number) {
     return await this.monaco.getMarketOutcome(this.outcomePks[outcome]);
   }
@@ -715,21 +805,18 @@ export class MonacoMarket {
     purchaser: Keypair,
     productPk?: PublicKey,
   ) {
-    const purchaserTokenPk = await this.cachePurchaserTokenPk(
-      purchaser.publicKey,
-    );
-    const result = await createOrder(
-      this.pk,
-      purchaser,
+    const result = await this._createOrderRequest(
       outcome,
       true,
-      price,
       stake,
-      purchaserTokenPk,
-      productPk,
+      price,
+      purchaser,
+      {
+        productPk,
+      },
     );
-    await new Promise((e) => setTimeout(e, 1000));
-    return result;
+    await this.processNextOrderRequest();
+    return result.data.orderPk;
   }
 
   async againstOrder(
@@ -739,28 +826,220 @@ export class MonacoMarket {
     purchaser: Keypair,
     productPk?: PublicKey,
   ) {
-    const purchaserTokenPk = await this.cachePurchaserTokenPk(
-      purchaser.publicKey,
-    );
-    const result = await createOrder(
-      this.pk,
-      purchaser,
+    const result = await this._createOrderRequest(
       outcome,
       false,
-      price,
       stake,
-      purchaserTokenPk,
-      productPk,
+      price,
+      purchaser,
+      {
+        productPk,
+      },
+    );
+    await this.processNextOrderRequest();
+    return result.data.orderPk;
+  }
+
+  async forOrderRequest(
+    outcome: number,
+    stake: number,
+    price: number,
+    purchaser: Keypair,
+    productPk?: PublicKey,
+  ) {
+    const result = await this._createOrderRequest(
+      outcome,
+      true,
+      stake,
+      price,
+      purchaser,
+      {
+        productPk,
+      },
     );
     await new Promise((e) => setTimeout(e, 1000));
     return result;
   }
 
+  async againstOrderRequest(
+    outcome: number,
+    stake: number,
+    price: number,
+    purchaser: Keypair,
+    productPk?: PublicKey,
+  ) {
+    const result = await this._createOrderRequest(
+      outcome,
+      false,
+      stake,
+      price,
+      purchaser,
+      {
+        productPk,
+      },
+    );
+    await new Promise((e) => setTimeout(e, 1000));
+    return result;
+  }
+
+  async _createOrderRequest(
+    outcome: number,
+    forOutcome: boolean,
+    stake: number,
+    price: number,
+    purchaser: Keypair,
+    overrides?: {
+      marketOutcome?: PublicKey;
+      productPk?: PublicKey;
+      purchaserToken?: PublicKey;
+    },
+  ) {
+    const orderPk = await findOrderPda(
+      this.monaco.program as Program,
+      this.pk,
+      purchaser.publicKey,
+    );
+    await this.monaco.program.methods
+      .createOrderRequest({
+        marketOutcomeIndex: outcome,
+        forOutcome: forOutcome,
+        stake: new BN(this.toAmountInteger(stake)),
+        price: price,
+        distinctSeed: Array.from(orderPk.data.distinctSeed),
+      })
+      .accounts({
+        reservedOrder: orderPk.data.orderPk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        marketPosition: await this.cacheMarketPositionPk(purchaser.publicKey),
+        purchaser: purchaser.publicKey,
+        purchaserToken: overrides.purchaserToken
+          ? overrides.purchaserToken
+          : await this.cachePurchaserTokenPk(purchaser.publicKey),
+        market: this.pk,
+        marketOutcome: overrides.marketOutcome
+          ? overrides.marketOutcome
+          : this.outcomePks[outcome],
+        priceLadder: null,
+        marketEscrow: this.escrowPk,
+        product: overrides.productPk ? overrides.productPk : null,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers(purchaser instanceof Keypair ? [purchaser] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    await new Promise((e) => setTimeout(e, 1000));
+    return orderPk;
+  }
+
+  async processNextOrderRequest(): Promise<PublicKey> {
+    const firstOrderRequest = await this.monaco.getMarketOrderRequestQueueHead(
+      this.orderRequestQueuePk,
+    );
+    const orderPk = (
+      await findOrderPda(
+        this.monaco.program,
+        this.pk,
+        firstOrderRequest.purchaser,
+        Uint8Array.from(firstOrderRequest.distinctSeed),
+      )
+    ).data.orderPk;
+
+    const marketMatchingPoolPk = firstOrderRequest.forOutcome
+      ? this.matchingPools[firstOrderRequest.marketOutcomeIndex][
+          firstOrderRequest.expectedPrice
+        ].forOutcome
+      : this.matchingPools[firstOrderRequest.marketOutcomeIndex][
+          firstOrderRequest.expectedPrice
+        ].against;
+
+    await this.monaco.program.methods
+      .processOrderRequest()
+      .accounts({
+        order: orderPk,
+        purchaserTokenAccount: await this.cachePurchaserTokenPk(
+          firstOrderRequest.purchaser,
+        ),
+        marketPosition: await this.cacheMarketPositionPk(
+          firstOrderRequest.purchaser,
+        ),
+        marketMatchingPool: marketMatchingPoolPk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketLiquidities: this.liquiditiesPk,
+        marketMatchingQueue: this.matchingQueuePk,
+        crankOperator: this.monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+
+    return orderPk;
+  }
+
+  async processOrderRequests(): Promise<PublicKey[]> {
+    const marketOrderRequestQueue =
+      await this.monaco.fetchMarketOrderRequestQueue(this.orderRequestQueuePk);
+
+    const orderPks: PublicKey[] = [];
+    for (let i = 0; i < marketOrderRequestQueue.orderRequests.len; i++) {
+      const orderPk = await this.processNextOrderRequest();
+      orderPks.push(orderPk);
+    }
+
+    return orderPks;
+  }
+
+  async dequeueOrderRequest() {
+    const orderRequestQueue =
+      await this.monaco.program.account.marketOrderRequestQueue.fetch(
+        this.orderRequestQueuePk,
+      );
+    const firstOrderRequest =
+      orderRequestQueue.orderRequests.items[
+        orderRequestQueue.orderRequests.front
+      ];
+
+    await monaco.program.methods
+      .dequeueOrderRequest()
+      .accounts({
+        orderRequestQueue: this.orderRequestQueuePk,
+        marketPosition: await this.cacheMarketPositionPk(
+          firstOrderRequest.purchaser,
+        ),
+        purchaserToken: await this.cachePurchaserTokenPk(
+          firstOrderRequest.purchaser,
+        ),
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketOperator: this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async cancel(orderPk: PublicKey, purchaser: Keypair) {
-    const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
+    const order = await this.monaco.fetchOrder(orderPk);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(
       purchaser.publicKey,
     );
+    const outcomePk = this.outcomePks[order.marketOutcomeIndex];
     const matchingPoolPk = order.forOutcome
       ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
           .forOutcome
@@ -775,6 +1054,8 @@ export class MonacoMarket {
         purchaserTokenAccount: purchaserTokenPk,
         market: this.pk,
         marketEscrow: this.escrowPk,
+        marketLiquidities: this.liquiditiesPk,
+        marketOutcome: outcomePk,
         marketMatchingPool: matchingPoolPk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -803,7 +1084,39 @@ export class MonacoMarket {
         purchaserToken: purchaserTokenPk,
         market: this.pk,
         marketEscrow: this.escrowPk,
+        marketLiquidities: this.liquiditiesPk,
         marketMatchingPool: matchingPoolPk,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        orderRequestQueue: this.orderRequestQueuePk,
+        matchingQueue: this.matchingQueuePk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async cancelOrderPostMarketLock(orderPk: PublicKey) {
+    const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
+    const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
+    const matchingPoolPk = order.forOutcome
+      ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .forOutcome
+      : this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .against;
+    await this.monaco.program.methods
+      .cancelOrderPostMarketLock()
+      .accounts({
+        order: orderPk,
+        marketPosition: await this.cacheMarketPositionPk(order.purchaser),
+        purchaser: order.purchaser,
+        purchaserToken: purchaserTokenPk,
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketMatchingPool: matchingPoolPk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        matchingQueue: this.matchingQueuePk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc()
@@ -813,77 +1126,62 @@ export class MonacoMarket {
       });
   }
 
-  async match(
-    forOrderPk: PublicKey,
-    againstOrderPk: PublicKey,
-    crankOperatorKeypair?: Keypair,
-  ) {
-    const [forOrder, againstOrder, authorisedOperatorsPk] = await Promise.all([
-      this.monaco.fetchOrder(forOrderPk),
-      this.monaco.fetchOrder(againstOrderPk),
-      this.monaco.findCrankAuthorisedOperatorsPda(),
-    ]);
+  async processMatchingQueue(crankOperatorKeypair?: Keypair) {
+    const takerOrder = await this.getMarketMatchingQueueHead();
 
-    const forPurchaserTokenPk = await this.cachePurchaserTokenPk(
-      forOrder.purchaser,
-    );
-    const againstPurchaserTokenPk = await this.cachePurchaserTokenPk(
-      againstOrder.purchaser,
-    );
-    const outcomePk = this.outcomePks[forOrder.marketOutcomeIndex];
-    const forMatchingPoolPk =
-      this.matchingPools[forOrder.marketOutcomeIndex][forOrder.expectedPrice]
-        .forOutcome;
-    const againstMatchingPoolPk =
-      this.matchingPools[againstOrder.marketOutcomeIndex][
-        againstOrder.expectedPrice
-      ].against;
+    const matchingPools =
+      this.matchingPools[takerOrder.outcomeIndex][takerOrder.price];
+    const matchingPoolPk = takerOrder.forOutcome
+      ? matchingPools.against
+      : matchingPools.forOutcome;
 
-    const [forTradePk, againstTradePk] = (
+    const makerOrderPk = await this.monaco.getMarketMatchingPoolHead(
+      matchingPoolPk,
+    );
+
+    const makerOrder = await this.monaco.fetchOrder(makerOrderPk);
+    const makerPurchaserTokenPk = await this.cachePurchaserTokenPk(
+      makerOrder.purchaser,
+    );
+
+    const [orderTradePk, orderOppositeTradePk] = (
       await Promise.all([
         findTradePda(
           this.monaco.getRawProgram(),
-          againstOrderPk,
-          forOrderPk,
-          true,
+          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
+          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
+          makerOrder.forOutcome,
         ),
         findTradePda(
           this.monaco.getRawProgram(),
-          againstOrderPk,
-          forOrderPk,
-          false,
+          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
+          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
+          !makerOrder.forOutcome,
         ),
       ])
     ).map((result) => result.data.tradePk);
 
     const ix = await this.monaco.program.methods
-      .matchOrders()
+      .processOrderMatch()
       .accounts({
-        orderFor: forOrderPk,
-        orderAgainst: againstOrderPk,
-        tradeFor: forTradePk,
-        tradeAgainst: againstTradePk,
-        marketPositionFor: await this.cacheMarketPositionPk(forOrder.purchaser),
-        marketPositionAgainst: await this.cacheMarketPositionPk(
-          againstOrder.purchaser,
-        ),
-        purchaserTokenAccountFor: forPurchaserTokenPk,
-        purchaserTokenAccountAgainst: againstPurchaserTokenPk,
         market: this.pk,
         marketEscrow: this.escrowPk,
-        marketOutcome: outcomePk,
-        marketMatchingPoolFor: forMatchingPoolPk,
-        marketMatchingPoolAgainst: againstMatchingPoolPk,
+        marketMatchingPool: matchingPoolPk,
+        marketMatchingQueue: this.matchingQueuePk,
+        makerOrder: makerOrderPk,
+        marketPosition: await this.cacheMarketPositionPk(makerOrder.purchaser),
+        purchaserToken: makerPurchaserTokenPk,
+        makerOrderTrade: orderTradePk,
+        takerOrderTrade: orderOppositeTradePk,
         crankOperator:
           crankOperatorKeypair instanceof Keypair
             ? crankOperatorKeypair.publicKey
             : this.monaco.operatorPk,
-        authorisedOperators: authorisedOperatorsPk,
-        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .signers(
-        crankOperatorKeypair instanceof Keypair ? [crankOperatorKeypair] : [],
+        crankOperatorKeypair instanceof Keypair ? [crankOperatorKeypair] : null,
       )
       .instruction();
 
@@ -896,20 +1194,33 @@ export class MonacoMarket {
       console.error(e);
       throw e;
     }
+
+    return {
+      matchingPool: matchingPoolPk,
+      makerOrder: makerOrderPk,
+      makerOrderTrade: orderTradePk,
+      takerOrderTrade: orderOppositeTradePk,
+    };
   }
 
   async settle(outcome: number) {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
+    const orderRequestQueuePk = (
+      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+    ).data.pda;
+
     await this.monaco.program.methods
       .settleMarket(outcome)
       .accounts({
         market: this.pk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
+        orderRequestQueue: orderRequestQueuePk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
@@ -923,6 +1234,15 @@ export class MonacoMarket {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
+    const market = (await this.monaco
+      .getRawProgram()
+      .account.market.fetch(this.pk)) as MarketAccount;
+
+    const orderRequestQueuePk = market.marketStatus.initializing
+      ? null
+      : (await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk))
+          .data.pda;
+
     await this.monaco.program.methods
       .voidMarket()
       .accounts({
@@ -931,6 +1251,7 @@ export class MonacoMarket {
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
+        orderRequestQueue: orderRequestQueuePk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])
       .rpc()
@@ -1031,6 +1352,30 @@ export class MonacoMarket {
       .openMarket()
       .accounts({
         market: this.pk,
+        liquidities: this.liquiditiesPk,
+        matchingQueue: this.matchingQueuePk,
+        commissionPaymentQueue: this.paymentsQueuePk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async updateMarketLockTimeToNow() {
+    await this.monaco.program.methods
+      .updateMarketLocktimeToNow()
+      .accounts({
+        market: this.pk,
         authorisedOperators:
           await this.monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: this.marketAuthority
@@ -1103,6 +1448,7 @@ export class MonacoMarket {
       .completeMarketSettlement()
       .accounts({
         market: this.pk,
+        commissionPaymentsQueue: this.paymentsQueuePk,
       })
       .rpc()
       .catch((e) => {
@@ -1162,6 +1508,21 @@ export class MonacoMarket {
       .catch((e) => console.log(e));
   }
 
+  async closeMarketQueues() {
+    await this.monaco.program.methods
+      .closeMarketQueues()
+      .accounts({
+        market: this.pk,
+        liquidities: this.liquiditiesPk,
+        matchingQueue: this.matchingQueuePk,
+        commissionPaymentQueue: this.paymentsQueuePk,
+        orderRequestQueue: this.orderRequestQueuePk,
+        authority: this.marketAuthority.publicKey,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
   async settleMarketPositionForPurchaser(purchaser: PublicKey) {
     const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
@@ -1193,29 +1554,6 @@ export class MonacoMarket {
       this.externalPrograms.protocolProduct as Program,
       this.pk,
     );
-  }
-
-  async processDelayExpiredOrders(
-    outcomeIndex: number,
-    price: number,
-    forOutcome: boolean,
-  ) {
-    const matchingPools = this.matchingPools[outcomeIndex][price];
-    const marketMatchingPool = forOutcome
-      ? matchingPools.forOutcome
-      : matchingPools.against;
-    try {
-      await this.monaco.program.methods
-        .processDelayExpiredOrders()
-        .accounts({
-          market: this.pk,
-          marketMatchingPool,
-        })
-        .rpc();
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
   }
 
   async voidMarketPositionForPurchaser(purchaser: PublicKey) {

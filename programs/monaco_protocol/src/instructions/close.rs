@@ -3,8 +3,12 @@ use anchor_lang::prelude::*;
 use crate::error::CoreError;
 use crate::state::market_account::MarketStatus::ReadyToClose;
 use crate::state::market_account::{Market, MarketStatus};
+use crate::state::market_liquidities::MarketLiquidities;
+use crate::state::market_matching_queue_account::MatchingQueue;
+use crate::state::market_order_request_queue::OrderRequestQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
+use crate::state::payments_queue::PaymentQueue;
 
 pub fn close_market_child_account(market: &mut Market) -> Result<()> {
     require!(
@@ -30,18 +34,41 @@ pub fn close_market_position(market: &mut Market, market_position: &MarketPositi
     close_market_child_account(market)
 }
 
-pub fn close_market(
-    market_status: &MarketStatus,
-    payment_queue_len: u32,
-    unclosed_accounts_count: u32,
+pub fn close_market_queues(
+    market: &mut Market,
+    // nothing really to check or do for now for this account
+    _liquidities: &MarketLiquidities,
+    payment_queue: &PaymentQueue,
+    matching_queue: &MatchingQueue,
+    order_requests: &OrderRequestQueue,
 ) -> Result<()> {
     require!(
-        ReadyToClose.eq(market_status),
+        ReadyToClose.eq(&market.market_status),
         CoreError::MarketNotReadyToClose
     );
     require!(
-        payment_queue_len == 0,
+        payment_queue.is_empty(),
         CoreError::CloseAccountMarketPaymentQueueNotEmpty
+    );
+    require!(
+        matching_queue.is_empty(),
+        CoreError::CloseAccountMarketMatchingQueueNotEmpty
+    );
+    require!(
+        order_requests.is_empty(),
+        CoreError::CloseAccountOrderRequestQueueNotEmpty
+    );
+
+    market.decrement_unclosed_accounts_count()?; // liquidities
+    market.decrement_unclosed_accounts_count()?; // payment_queue
+    market.decrement_unclosed_accounts_count()?; // matching_queue
+    market.decrement_unclosed_accounts_count() // order_request_queue
+}
+
+pub fn close_market(market_status: &MarketStatus, unclosed_accounts_count: u32) -> Result<()> {
+    require!(
+        ReadyToClose.eq(market_status),
+        CoreError::MarketNotReadyToClose
     );
     require!(
         unclosed_accounts_count == 0,
@@ -55,7 +82,10 @@ mod tests {
     use super::*;
     use crate::state::market_account::MarketOrderBehaviour;
     use crate::state::market_account::MarketStatus::Open;
+    use crate::state::market_liquidities::mock_market_liquidities;
+    use crate::state::market_matching_queue_account::OrderMatch;
     use crate::state::order_account::OrderStatus;
+    use crate::state::payments_queue::PaymentInfo;
 
     // generic close account validation
 
@@ -77,6 +107,118 @@ mod tests {
         let result = close_market_child_account(market);
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::MarketNotReadyToClose)), result);
+    }
+
+    // close queues validation
+
+    #[test]
+    fn test_close_market_queues() {
+        let market = &mut test_market();
+        market.market_status = ReadyToClose;
+        market.unclosed_accounts_count = 4;
+
+        let liquidities = mock_market_liquidities(Pubkey::default());
+        let payment_queue = PaymentQueue::new(1);
+        let matching_queue = MatchingQueue::new(1);
+        let request_queue = OrderRequestQueue::new(1);
+
+        let result = close_market_queues(
+            market,
+            &liquidities,
+            &payment_queue,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_ok());
+        assert_eq!(market.unclosed_accounts_count, 0);
+    }
+
+    #[test]
+    fn test_close_market_queues_incorrect_status() {
+        let market = &mut test_market();
+        market.unclosed_accounts_count = 3;
+
+        let liquidities = mock_market_liquidities(Pubkey::default());
+        let payment_queue = PaymentQueue::new(1);
+        let matching_queue = MatchingQueue::new(1);
+        let request_queue = OrderRequestQueue::new(1);
+
+        let result = close_market_queues(
+            market,
+            &liquidities,
+            &payment_queue,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_err());
+        assert_eq!(Err(error!(CoreError::MarketNotReadyToClose)), result);
+    }
+
+    #[test]
+    fn test_close_market_queues_not_empty() {
+        let market = &mut test_market();
+        market.market_status = ReadyToClose;
+        market.unclosed_accounts_count = 4;
+
+        let liquidities = mock_market_liquidities(Pubkey::default());
+
+        let payment_queue = &mut PaymentQueue::new(1);
+        payment_queue.enqueue(PaymentInfo {
+            to: Pubkey::new_unique(),
+            from: Pubkey::new_unique(),
+            amount: 0,
+        });
+
+        let matching_queue = &mut MatchingQueue::new(1);
+        matching_queue.enqueue(OrderMatch {
+            pk: Pubkey::new_unique(),
+            purchaser: Pubkey::new_unique(),
+            for_outcome: false,
+            outcome_index: 0,
+            price: 0.0,
+            stake: 0,
+        });
+        let request_queue = OrderRequestQueue::new(1);
+
+        let result = close_market_queues(
+            market,
+            &liquidities,
+            &payment_queue,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_err());
+        assert_eq!(
+            Err(error!(CoreError::CloseAccountMarketPaymentQueueNotEmpty)),
+            result
+        );
+
+        payment_queue.dequeue();
+
+        let result = close_market_queues(
+            market,
+            &liquidities,
+            &payment_queue,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_err());
+        assert_eq!(
+            Err(error!(CoreError::CloseAccountMarketMatchingQueueNotEmpty)),
+            result
+        );
+
+        matching_queue.dequeue();
+
+        let result = close_market_queues(
+            market,
+            &liquidities,
+            &payment_queue,
+            &matching_queue,
+            &request_queue,
+        );
+        assert!(result.is_ok());
+        assert_eq!(market.unclosed_accounts_count, 0);
     }
 
     // close order validation
@@ -145,29 +287,19 @@ mod tests {
 
     #[test]
     fn test_close_market() {
-        assert!(close_market(&ReadyToClose, 0, 0).is_ok());
+        assert!(close_market(&ReadyToClose, 0).is_ok());
     }
 
     #[test]
     fn test_close_market_incorrect_status() {
-        let result = close_market(&Open, 0, 0);
+        let result = close_market(&Open, 0);
         assert!(result.is_err());
         assert_eq!(Err(error!(CoreError::MarketNotReadyToClose)), result);
     }
 
     #[test]
-    fn test_close_market_payment_queue_not_empty() {
-        let result = close_market(&ReadyToClose, 1, 0);
-        assert!(result.is_err());
-        assert_eq!(
-            Err(error!(CoreError::CloseAccountMarketPaymentQueueNotEmpty)),
-            result
-        );
-    }
-
-    #[test]
     fn test_close_market_unclosed_accounts() {
-        let result = close_market(&ReadyToClose, 0, 1);
+        let result = close_market(&ReadyToClose, 1);
         assert!(result.is_err());
         assert_eq!(
             Err(error!(CoreError::MarketUnclosedAccountsCountNonZero)),
@@ -217,7 +349,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),

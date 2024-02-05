@@ -17,6 +17,7 @@ describe("Close market accounts (settled)", () => {
       [price],
       marketOperator,
     );
+    await market.open();
 
     const balanceMarketCreated = await monaco.provider.connection.getBalance(
       marketOperator.publicKey,
@@ -27,17 +28,8 @@ describe("Close market accounts (settled)", () => {
     const outcomeBRent = await monaco.provider.connection.getBalance(
       market.outcomePks[0],
     );
-
-    await market.open();
-    await market.settle(0);
-    await market.completeSettlement();
-    await market.readyToClose();
-    await market.closeOutcome(0);
-    await market.closeOutcome(1);
-
-    const marketRent = await monaco.provider.connection.getBalance(market.pk);
-    const escrowRent = await monaco.provider.connection.getBalance(
-      market.escrowPk,
+    const liquiditiesRent = await monaco.provider.connection.getBalance(
+      market.liquiditiesPk,
     );
     const matchingQueueRent = await monaco.provider.connection.getBalance(
       market.matchingQueuePk,
@@ -45,14 +37,27 @@ describe("Close market accounts (settled)", () => {
     const paymentsQueueRent = await monaco.provider.connection.getBalance(
       market.paymentsQueuePk,
     );
+    const orderRequestQueueRent = await monaco.provider.connection.getBalance(
+      market.orderRequestQueuePk,
+    );
+
+    await market.settle(0);
+    await market.completeSettlement();
+    await market.readyToClose();
+    await market.closeOutcome(0);
+    await market.closeOutcome(1);
+    await market.closeMarketQueues();
+
+    const marketRent = await monaco.provider.connection.getBalance(market.pk);
+    const escrowRent = await monaco.provider.connection.getBalance(
+      market.escrowPk,
+    );
 
     await monaco.program.methods
       .closeMarket()
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        matchingQueue: market.matchingQueuePk,
-        commissionPaymentQueue: market.paymentsQueuePk,
         authority: marketOperator.publicKey,
       })
       .rpc()
@@ -66,8 +71,10 @@ describe("Close market accounts (settled)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      liquiditiesRent +
       matchingQueueRent +
       paymentsQueueRent +
+      orderRequestQueueRent +
       outcomeARent +
       outcomeBRent;
     assert.equal(balanceAfterMarketClosed, expectedBalanceAfterMarketClosed);
@@ -106,19 +113,19 @@ describe("Close market accounts (settled)", () => {
     await market.settle(0);
     await market.completeSettlement();
 
-    await monaco.program.methods
-      .closeMarket()
-      .accounts({
-        market: market.pk,
-        marketEscrow: market.escrowPk,
-        matchingQueue: market.matchingQueuePk,
-        commissionPaymentQueue: market.paymentsQueuePk,
-        authority: marketOperator.publicKey,
-      })
-      .rpc()
-      .catch((e) => {
-        assert.equal(e.error.errorCode.code, "MarketNotReadyToClose");
-      });
+    try {
+      await monaco.program.methods
+        .closeMarket()
+        .accounts({
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          authority: marketOperator.publicKey,
+        })
+        .rpc();
+      assert.fail("MarketNotReadyToClose expected");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "MarketNotReadyToClose");
+    }
   });
 
   it("close market: purchaser mismatch", async () => {
@@ -139,22 +146,22 @@ describe("Close market accounts (settled)", () => {
     await market.completeSettlement();
     await market.readyToClose();
 
-    await monaco.program.methods
-      .closeMarket()
-      .accounts({
-        market: market.pk,
-        marketEscrow: market.escrowPk,
-        matchingQueue: market.matchingQueuePk,
-        commissionPaymentQueue: market.paymentsQueuePk,
-        authority: monaco.operatorPk,
-      })
-      .rpc()
-      .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
-      });
+    try {
+      await monaco.program.methods
+        .closeMarket()
+        .accounts({
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          authority: monaco.operatorPk,
+        })
+        .rpc();
+      assert.fail("CloseAccountPurchaserMismatch expected");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
+    }
   });
 
-  it("close market: market mismatch", async () => {
+  it("close market queues: market mismatch", async () => {
     const price = 2.0;
     const marketOperator = await createWalletWithBalance(monaco.provider);
     await authoriseMarketOperator(
@@ -186,19 +193,22 @@ describe("Close market accounts (settled)", () => {
     await marketB.closeOutcome(0);
     await marketB.closeOutcome(1);
 
-    await monaco.program.methods
-      .closeMarket()
-      .accounts({
-        market: marketB.pk,
-        marketEscrow: marketB.escrowPk,
-        matchingQueue: marketB.matchingQueuePk,
-        commissionPaymentQueue: marketB.paymentsQueuePk,
-        authority: marketOperator.publicKey,
-      })
-      .rpc()
-      .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountMarketMismatch");
-      });
+    try {
+      await monaco.program.methods
+        .closeMarketQueues()
+        .accounts({
+          market: marketB.pk,
+          liquidities: marketB.liquiditiesPk,
+          matchingQueue: marketB.matchingQueuePk,
+          commissionPaymentQueue: marketA.paymentsQueuePk,
+          orderRequestQueue: marketB.orderRequestQueuePk,
+          authority: marketOperator.publicKey,
+        })
+        .rpc();
+      assert.fail("CloseAccountMarketMismatch expected");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CloseAccountMarketMismatch");
+    }
   });
 
   it("close market: unclosed accounts", async () => {
@@ -220,21 +230,21 @@ describe("Close market accounts (settled)", () => {
     await market.readyToClose();
     await market.closeOutcome(0);
 
-    await monaco.program.methods
-      .closeMarket()
-      .accounts({
-        market: market.pk,
-        marketEscrow: market.escrowPk,
-        matchingQueue: market.matchingQueuePk,
-        commissionPaymentQueue: market.paymentsQueuePk,
-        authority: marketOperator.publicKey,
-      })
-      .rpc()
-      .catch((e) => {
-        assert.equal(
-          e.error.errorCode.code,
-          "MarketUnclosedAccountsCountNonZero",
-        );
-      });
+    try {
+      await monaco.program.methods
+        .closeMarket()
+        .accounts({
+          market: market.pk,
+          marketEscrow: market.escrowPk,
+          authority: marketOperator.publicKey,
+        })
+        .rpc();
+      assert.fail("MarketUnclosedAccountsCountNonZero expected");
+    } catch (e) {
+      assert.equal(
+        e.error.errorCode.code,
+        "MarketUnclosedAccountsCountNonZero",
+      );
+    }
   });
 });

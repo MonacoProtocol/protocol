@@ -45,16 +45,16 @@ describe("Order Matching Refunds 1", () => {
       ]),
       [
         { stakeUnmatched: 11, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 11.11, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [-10, 10.1, -10], unmatched: [0, 11.11, 0] },
+        { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 11, matched: 0 },
         11.11,
         988.89,
       ],
     );
 
-    await market.match(for_10_at_1_96, against_11_at_2_01);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -108,12 +108,12 @@ describe("Order Matching Refunds 1", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 11, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 1, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], unmatched: [11, 13.01, 11] },
+        { matched: [-11, 13.01, -11], unmatched: [0, 13.01, 0] },
         { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 11, matched: 0 },
+        { len: 0, liquidity: 0, matched: 11 },
         { len: 1, liquidity: 1, matched: 10 },
         { len: 1, liquidity: 10, matched: 0 },
         13.01,
@@ -121,8 +121,8 @@ describe("Order Matching Refunds 1", () => {
       ],
     );
 
-    await market.match(for_11_at_2_01, against_10_at_2_20);
-    await market.match(for_11_at_2_01, against_11_at_2_01);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -186,14 +186,14 @@ describe("Order Matching Refunds 1", () => {
       ]),
       [
         { stakeUnmatched: 11, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 13.2, 10] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [-10, 12, -10], unmatched: [0, 13.2, 0] },
         { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 10, matched: 11 },
+        { len: 0, liquidity: 0, matched: 21 },
         { len: 0, liquidity: 0, matched: 11 },
         { len: 1, liquidity: 11, matched: 10 },
         13.2,
@@ -201,7 +201,7 @@ describe("Order Matching Refunds 1", () => {
       ],
     );
 
-    await market.match(for_10_at_2_01, against_11_at_2_20);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

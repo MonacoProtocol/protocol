@@ -1,24 +1,11 @@
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
-use std::fmt;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq)]
-pub struct OrderData {
-    pub market_outcome_index: u16,
-    pub for_outcome: bool,
+#[account]
+pub struct ReservedOrder {}
 
-    pub stake: u64,
-    pub price: f64,
-}
-
-impl fmt::Display for OrderData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "OrderData market_outcome:{} for_outcome:{} stake:{} price:{}",
-            self.market_outcome_index, self.for_outcome, self.stake, self.price
-        )
-    }
+impl ReservedOrder {
+    pub const SIZE: usize = DISCRIMINATOR_SIZE;
 }
 
 #[account]
@@ -33,7 +20,6 @@ pub struct Order {
     pub voided_stake: u64, // stake amount returned to purchaser due to cancelation or settlement for partially matched orders
     pub expected_price: f64, // expected price provided by purchaser
     pub creation_timestamp: i64,
-    pub delay_expiration_timestamp: i64,
     // matching data
     pub stake_unmatched: u64,         // stake amount available for matching
     pub payout: u64, // amount paid to purchaser during settlement for winning orders
@@ -51,7 +37,6 @@ impl Order {
         + (U64_SIZE * 4) // stake, payout, stake_unmatched, voided_stake
         + (F64_SIZE  * 2)// expected_price & product_commission_rate
         + I64_SIZE // creation_timestamp
-        + I64_SIZE // delay_expiration_timestamp
         + PUB_KEY_SIZE; // payer
 
     pub fn is_completed(&self) -> bool {

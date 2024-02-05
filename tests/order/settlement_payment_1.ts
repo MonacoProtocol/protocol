@@ -3,7 +3,7 @@ import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
 /*
- * Order Creation Payment 2
+ * Order Settlement Payment 1
  *
  * This test case covers situation when patron creates only for orders for different outcomes and recieves refund while doing so.
  *
@@ -26,7 +26,7 @@ import { monaco } from "../util/wrappers";
  * First two orders should each take payment of X, while third should refund 2*X. Total payment taken should be 0.
  *
  */
-describe("Order Creation Payment 2", () => {
+describe("Order Settlement Payment 1", () => {
   it("Scenario 1: for all outcomes 10.00 @ 2.00", async () => {
     // Given
     const outcomeA = 0;

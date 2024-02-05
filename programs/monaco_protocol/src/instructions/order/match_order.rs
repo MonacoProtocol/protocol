@@ -35,7 +35,11 @@ pub fn match_order(
     Ok(refund)
 }
 
-fn match_order_internal(order: &mut Order, stake_matched: u64, price_matched: f64) -> Result<()> {
+pub fn match_order_internal(
+    order: &mut Order,
+    stake_matched: u64,
+    price_matched: f64,
+) -> Result<()> {
     if stake_matched <= order.stake_unmatched {
         order.order_status = OrderStatus::Matched;
         order.stake_unmatched -= stake_matched;
@@ -62,12 +66,10 @@ mod tests {
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
@@ -94,12 +96,10 @@ mod tests {
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,
@@ -126,12 +126,10 @@ mod tests {
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Open,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 0_u64,
             voided_stake: 0,

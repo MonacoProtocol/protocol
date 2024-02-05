@@ -40,16 +40,16 @@ describe("Order Payments: Settlement Set 05", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 20, 20] },
-        { matched: [0, 0, 0], unmatched: [10, 10, 10] },
-        30,
+        { matched: [10, 10, 10], unmatched: [0, 0, 0] },
+        20,
         180,
-        190,
+        200,
       ],
     );
 
-    await market.match(orderAA, orderBA);
-    await market.match(orderAB, orderBB);
-    await market.match(orderAC, orderBC);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -73,8 +73,8 @@ describe("Order Payments: Settlement Set 05", () => {
     await market.settleMarketPositionForPurchaser(userA.publicKey);
     await market.settleMarketPositionForPurchaser(userB.publicKey);
     await market.settleOrder(orderAA);
-    await market.settleOrder(orderAA);
     await market.settleOrder(orderAB);
+    await market.settleOrder(orderAC);
     await market.settleOrder(orderBA);
     await market.settleOrder(orderBB);
     await market.settleOrder(orderBC);
@@ -131,16 +131,16 @@ describe("Order Payments: Settlement Set 05", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 20, 20] },
-        { matched: [0, 0, 0], unmatched: [20, 20, 20] },
-        40,
+        { matched: [0, 0, 0], unmatched: [0, 0, 0] },
+        20,
         180,
-        180,
+        200,
       ],
     );
 
-    await market.match(orderAA, orderBA);
-    await market.match(orderAB, orderBB);
-    await market.match(orderAC, orderBC);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -164,8 +164,8 @@ describe("Order Payments: Settlement Set 05", () => {
     await market.settleMarketPositionForPurchaser(userA.publicKey);
     await market.settleMarketPositionForPurchaser(userB.publicKey);
     await market.settleOrder(orderAA);
-    await market.settleOrder(orderAA);
     await market.settleOrder(orderAB);
+    await market.settleOrder(orderAC);
     await market.settleOrder(orderBA);
     await market.settleOrder(orderBB);
     await market.settleOrder(orderBC);
@@ -222,16 +222,16 @@ describe("Order Payments: Settlement Set 05", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 20, 20] },
-        { matched: [0, 0, 0], unmatched: [30, 30, 30] },
-        50,
+        { matched: [-10, -10, -10], unmatched: [0, 0, 0] },
+        30,
         180,
-        170,
+        190,
       ],
     );
 
-    await market.match(orderAA, orderBA);
-    await market.match(orderAB, orderBB);
-    await market.match(orderAC, orderBC);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -255,8 +255,8 @@ describe("Order Payments: Settlement Set 05", () => {
     await market.settleMarketPositionForPurchaser(userA.publicKey);
     await market.settleMarketPositionForPurchaser(userB.publicKey);
     await market.settleOrder(orderAA);
-    await market.settleOrder(orderAA);
     await market.settleOrder(orderAB);
+    await market.settleOrder(orderAC);
     await market.settleOrder(orderBA);
     await market.settleOrder(orderBB);
     await market.settleOrder(orderBC);

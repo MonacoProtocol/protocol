@@ -29,18 +29,21 @@
 *   [updateMarketLocktime][25]
     *   [Parameters][26]
     *   [Examples][27]
-*   [openMarket][28]
+*   [updateMarketLocktimeToNow][28]
     *   [Parameters][29]
     *   [Examples][30]
-*   [setMarketReadyToClose][31]
+*   [openMarket][31]
     *   [Parameters][32]
     *   [Examples][33]
-*   [voidMarket][34]
+*   [setMarketReadyToClose][34]
     *   [Parameters][35]
     *   [Examples][36]
-*   [transferMarketEscrowSurplus][37]
+*   [voidMarket][37]
     *   [Parameters][38]
     *   [Examples][39]
+*   [transferMarketEscrowSurplus][40]
+    *   [Parameters][41]
+    *   [Examples][42]
 
 ## settleMarket
 
@@ -50,7 +53,8 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `winningOutcomeIndex` **[number][40]** {number} index representing the winning outcome of the event associated with the market
+*   `marketMatchingQueuePk` **PublicKey** {PublicKey} publicKey of the market's matching queue
+*   `winningOutcomeIndex` **[number][43]** {number} index representing the winning outcome of the event associated with the market
 *   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
         <li> computeUnitLimit - number of compute units to limit the transaction to</li>
         <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
@@ -60,8 +64,9 @@ Settle a market by setting the winningOutcomeIndex
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
 const winningOutcomeIndex = 0
-const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
+const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -162,7 +167,7 @@ For the given market, update the title
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
-*   `title` **[string][41]** {string} new title to apply to the provided market
+*   `title` **[string][44]** {string} new title to apply to the provided market
 *   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
         <li> computeUnitLimit - number of compute units to limit the transaction to</li>
         <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
@@ -244,6 +249,24 @@ For the given market, update the lock time
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketLock = 1633042800
 const update = await updateMarketLocktime(program, marketPk, marketLock)
+```
+
+Returns **TransactionResponse** transaction ID of the request
+
+## updateMarketLocktimeToNow
+
+For the given market, update the lock time to now
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const update = await updateMarketLocktimeToNow(program, marketPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -398,30 +421,36 @@ Returns **TransactionResponse** transaction ID of the request
 
 [27]: #examples-8
 
-[28]: #openmarket
+[28]: #updatemarketlocktimetonow
 
 [29]: #parameters-9
 
 [30]: #examples-9
 
-[31]: #setmarketreadytoclose
+[31]: #openmarket
 
 [32]: #parameters-10
 
 [33]: #examples-10
 
-[34]: #voidmarket
+[34]: #setmarketreadytoclose
 
 [35]: #parameters-11
 
 [36]: #examples-11
 
-[37]: #transfermarketescrowsurplus
+[37]: #voidmarket
 
 [38]: #parameters-12
 
 [39]: #examples-12
 
-[40]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[40]: #transfermarketescrowsurplus
 
-[41]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[41]: #parameters-13
+
+[42]: #examples-13
+
+[43]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

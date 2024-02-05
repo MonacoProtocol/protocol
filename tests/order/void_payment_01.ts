@@ -86,17 +86,13 @@ describe("Void market position accounts", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk, CforPk, DAgainstPk] = await Promise.all([
-      market.forOrder(0, stake, price, purchaserA),
-      market.againstOrder(0, stake, price, purchaserB),
-      market.forOrder(1, stake, price, purchaserC),
-      market.againstOrder(1, stake, price, purchaserD),
-    ]);
+    await market.forOrder(0, stake, price, purchaserA);
+    await market.againstOrder(0, stake, price, purchaserB);
+    await market.forOrder(1, stake, price, purchaserC);
+    await market.againstOrder(1, stake, price, purchaserD);
 
-    await Promise.all([
-      market.match(AforPk, BAgainstPk),
-      market.match(CforPk, DAgainstPk),
-    ]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // VOID ----------------------------------------------------------------------
 
@@ -153,19 +149,11 @@ describe("Void market position accounts", () => {
 
     // CREATE --------------------------------------------------------------------
 
-    const [AforPk, BAgainstPk, CforPk, DAgainstPk] = await Promise.all([
-      market.forOrder(0, stake, price, purchaserA),
-      market.againstOrder(0, stake, price, purchaserB),
-      market.forOrder(1, stake, price, purchaserC),
-      market.againstOrder(1, stake, price, purchaserD),
-    ]);
-
-    await Promise.all([
-      market.cancel(AforPk, purchaserA),
-      market.cancel(BAgainstPk, purchaserB),
-      market.cancel(CforPk, purchaserC),
-      market.cancel(DAgainstPk, purchaserD),
-    ]);
+    // TODO this test needs rewrite as now orders are matched on creation and there is nothing to cancel
+    await market.forOrder(0, stake, price, purchaserA);
+    await market.againstOrder(0, stake, price, purchaserB);
+    await market.forOrder(1, stake, price, purchaserC);
+    await market.againstOrder(1, stake, price, purchaserD);
 
     // VOID ----------------------------------------------------------------------
 

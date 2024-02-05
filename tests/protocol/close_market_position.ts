@@ -22,7 +22,7 @@ describe("Close market position accounts", () => {
       purchaserA.publicKey,
     );
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -75,7 +75,7 @@ describe("Close market position accounts", () => {
     const forOrder = await market.forOrder(0, 10, price, purchaserA);
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -116,7 +116,7 @@ describe("Close market position accounts", () => {
     const forOrder = await market.forOrder(0, 10, price, purchaserA);
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleOrder(forOrder);
     await market.settleOrder(againstOrder);
@@ -159,7 +159,7 @@ describe("Close market position accounts", () => {
     const forOrder = await marketA.forOrder(0, 10, price, purchaserA);
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
-    await marketA.match(forOrder, againstOrder);
+    await marketA.processMatchingQueue();
     await marketA.settle(0);
     await marketA.settleOrder(forOrder);
     await marketA.settleOrder(againstOrder);

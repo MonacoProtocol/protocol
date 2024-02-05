@@ -8,7 +8,13 @@ import {
   MarketInstructionResponse,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
-import { findEscrowPda } from "./market_helpers";
+import {
+  findCommissionPaymentsQueuePda,
+  findEscrowPda,
+  findMarketLiquiditiesPda,
+  findMarketMatchingQueuePda,
+  findOrderRequestQueuePda,
+} from "./market_helpers";
 
 export enum MarketManagementInstructionType {
   PUBLISH = 0,
@@ -135,16 +141,43 @@ export async function buildMarketManagementInstruction(
       break;
     }
     case MarketManagementInstructionType.OPEN: {
-      const marketEscrow = await findEscrowPda(program, marketPk);
-      if (!marketEscrow.success) {
-        response.addErrors(marketEscrow.errors);
+      const [
+        liquiditiesPk,
+        matchingQueuePk,
+        commissionQueuePk,
+        orderRequestQueuePk,
+      ] = await Promise.all([
+        findMarketLiquiditiesPda(program, marketPk),
+        findMarketMatchingQueuePda(program, marketPk),
+        findCommissionPaymentsQueuePda(program, marketPk),
+        findOrderRequestQueuePda(program, marketPk),
+      ]);
+      if (
+        !liquiditiesPk.success ||
+        !matchingQueuePk.success ||
+        !commissionQueuePk.success ||
+        !orderRequestQueuePk.success
+      ) {
+        liquiditiesPk.errors ? response.addErrors(liquiditiesPk.errors) : null;
+        matchingQueuePk.errors
+          ? response.addErrors(matchingQueuePk.errors)
+          : null;
+        commissionQueuePk.errors
+          ? response.addErrors(commissionQueuePk.errors)
+          : null;
+        orderRequestQueuePk.errors
+          ? response.addErrors(orderRequestQueuePk.errors)
+          : null;
         return response.body;
       }
       const instruction = await program.methods
         .openMarket()
         .accounts({
           market: new PublicKey(marketPk),
-          marketEscrow: marketEscrow.data.pda,
+          liquidities: liquiditiesPk.data.pda,
+          matchingQueue: matchingQueuePk.data.pda,
+          commissionPaymentQueue: commissionQueuePk.data.pda,
+          orderRequestQueue: orderRequestQueuePk.data.pda,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
         })

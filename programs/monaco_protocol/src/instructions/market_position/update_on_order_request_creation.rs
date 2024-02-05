@@ -1,18 +1,19 @@
-use crate::error::CoreError;
-use crate::instructions::calculate_risk_from_stake;
-use crate::state::market_position_account::MarketPosition;
-use crate::state::order_account::*;
 use anchor_lang::prelude::*;
 
-pub fn update_on_order_creation(
+use crate::error::CoreError;
+use crate::instructions::calculate_risk_from_stake;
+use crate::state::market_order_request_queue::OrderRequest;
+use crate::state::market_position_account::MarketPosition;
+
+pub fn update_on_order_request_creation(
     market_position: &mut MarketPosition,
-    order: &Order,
+    order_request: &OrderRequest,
 ) -> Result<u64> {
-    let outcome_index = order.market_outcome_index as usize;
-    let for_outcome = order.for_outcome;
+    let outcome_index = order_request.market_outcome_index as usize;
+    let for_outcome = order_request.for_outcome;
     let order_exposure = match for_outcome {
-        true => order.stake,
-        false => calculate_risk_from_stake(order.stake, order.expected_price),
+        true => order_request.stake,
+        false => calculate_risk_from_stake(order_request.stake, order_request.expected_price),
     };
 
     let total_exposure_before = market_position.total_exposure();

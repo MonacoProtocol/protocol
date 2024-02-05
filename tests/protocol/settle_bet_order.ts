@@ -1,8 +1,11 @@
+import { BN } from "@coral-xyz/anchor";
 import assert from "assert";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
-async function mapOrder(orderPromise: Promise<any>) {
+async function mapOrder(
+  orderPromise: Promise<{ stake: BN; stakeUnmatched: BN; voidedStake: BN }>,
+) {
   const order = await orderPromise;
   return {
     stake: order.stake.toNumber(),
@@ -39,7 +42,7 @@ describe("Security: Settle Order", () => {
       purchaserB,
     );
 
-    await market.match(orderForA, orderAgainstA);
+    await market.processMatchingQueue();
     await market.cancel(orderAgainstA, purchaserB);
 
     assert.deepEqual(
@@ -106,15 +109,10 @@ describe("Security: Settle Order", () => {
 
     const pA_forA_pk = await market.forOrder(outcomeA, 1, price, purchaserA);
     const pB_forA_pk = await market.forOrder(outcomeA, 10, price, purchaserB);
-    const pC_againstA_pk = await market.againstOrder(
-      outcomeA,
-      11,
-      price,
-      purchaserC,
-    );
+    await market.againstOrder(outcomeA, 11, price, purchaserC);
 
-    await market.match(pA_forA_pk, pC_againstA_pk);
-    await market.match(pB_forA_pk, pC_againstA_pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

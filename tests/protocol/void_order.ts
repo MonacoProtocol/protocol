@@ -1,6 +1,7 @@
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
+import { authoriseMarketOperator } from "../../npm-admin-client";
 
 describe("Void order", () => {
   it("success", async () => {
@@ -14,7 +15,7 @@ describe("Void order", () => {
     const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
     const againstOrderPk = await market.againstOrder(0, 20.0, price, purchaser);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     await market.voidMarket();
     await market.voidOrder(forOrderPk);
@@ -47,5 +48,82 @@ describe("Void order", () => {
     } catch (e) {
       assert.equal(e.error.errorCode.code, "VoidMarketNotReadyForVoid");
     }
+  });
+
+  it("order already voided", async () => {
+    const price = 2.0;
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(purchaser, 100.0);
+
+    const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
+
+    await market.voidMarket();
+    await market.voidOrder(forOrderPk);
+
+    try {
+      await market.voidOrder(forOrderPk);
+      assert.fail("expected VoidOrderIsVoided");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "VoidOrderIsVoided");
+    }
+  });
+
+  it("complete void: unsettled accounts", async () => {
+    const price = 2.0;
+    const marketOperator = await createWalletWithBalance(monaco.provider);
+    await authoriseMarketOperator(
+      monaco.getRawProgram(),
+      marketOperator.publicKey,
+    );
+    const market = await monaco.createMarket(
+      ["A", "B"],
+      [price],
+      marketOperator,
+    );
+
+    const purchaser = await createWalletWithBalance(monaco.provider);
+    await market.airdrop(purchaser, 100.0);
+    await market.open();
+    await market.forOrder(0, 10, price, purchaser);
+    await market.voidMarket();
+
+    try {
+      await monaco.program.methods
+        .completeMarketVoid()
+        .accounts({
+          market: market.pk,
+        })
+        .rpc();
+      assert.fail("MarketUnsettledAccountsCountNonZero expected");
+    } catch (e) {
+      assert.equal(
+        e.error.errorCode.code,
+        "MarketUnsettledAccountsCountNonZero",
+      );
+    }
+  });
+
+  it("void market: initializing market", async () => {
+    const market = await monaco.createMarket(["A", "B"], [2.0]);
+
+    try {
+      await monaco.program.account.marketOrderRequestQueue.fetch(
+        market.orderRequestQueuePk,
+      );
+      assert.fail("Account should not exist");
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Account does not exist or has no data " + market.orderRequestQueuePk,
+      );
+    }
+
+    await market.voidMarket();
+
+    const voidedMarket = await monaco.fetchMarket(market.pk);
+    assert.ok(voidedMarket.marketStatus.readyToVoid);
   });
 });

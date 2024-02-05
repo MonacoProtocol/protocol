@@ -14,13 +14,16 @@ import {
 } from "../types";
 import { findMarketPositionPda } from "./market_position";
 import { findMarketMatchingPoolPda } from "./market_matching_pools";
+import { findMarketOutcomePda } from "./market_outcomes";
 import { getCancellableOrdersByMarketForProviderWallet } from "./order_query";
+import { findMarketLiquiditiesPda } from "./market_liquidities";
 
 /**
  * Constructs the instruction required to perform a cancel order transaction.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param orderPk {PublicKey} publicKey of the order to cancel
+ * @param mintPk {PublicKey} Optional: publicKey of the mint account used for market entry (e.g. USDT), if not provided the market token account will be fetched from the market
  * @returns {OrderInstructionResponse} provided order publicKey and the instruction to perform a cancel order transaction
  *
  * @example
@@ -57,8 +60,10 @@ export async function buildCancelOrderInstruction(
 
   const [
     marketPositionPda,
-    marketMatchingPool,
+    marketMatchingPoolPda,
+    marketOutcomePda,
     escrowPda,
+    liquiditiesPda,
     purchaserTokenAccount,
   ] = await Promise.all([
     findMarketPositionPda(program, order.market, provider.wallet.publicKey),
@@ -69,7 +74,9 @@ export async function buildCancelOrderInstruction(
       order.expectedPrice,
       order.forOutcome,
     ),
+    findMarketOutcomePda(program, order.market, order.marketOutcomeIndex),
     findEscrowPda(program, order.market),
+    findMarketLiquiditiesPda(program, order.market),
     getWalletTokenAccount(program, mintPk),
   ]);
 
@@ -80,9 +87,11 @@ export async function buildCancelOrderInstruction(
       marketPosition: marketPositionPda.data.pda,
       purchaser: provider.wallet.publicKey,
       purchaserTokenAccount: purchaserTokenAccount.data.associatedTokenAccount,
-      marketMatchingPool: marketMatchingPool.data.pda,
+      marketMatchingPool: marketMatchingPoolPda.data.pda,
+      marketOutcome: marketOutcomePda.data.pda,
       market: order.market,
       marketEscrow: escrowPda.data.pda,
+      marketLiquidities: liquiditiesPda.data.pda,
       mint: mintPk,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
@@ -121,13 +130,19 @@ export async function buildCancelOrdersForMarketInstructions(
   const market = marketResponse.data.account;
   const marketTokenPk = new PublicKey(market.mintAccount);
 
-  const [marketPositionPda, escrowPda, purchaserTokenAccount, ordersResponse] =
-    await Promise.all([
-      findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
-      findEscrowPda(program, marketPk),
-      getWalletTokenAccount(program, marketTokenPk),
-      getCancellableOrdersByMarketForProviderWallet(program, marketPk),
-    ]);
+  const [
+    marketPositionPda,
+    escrowPda,
+    liquiditiesPda,
+    purchaserTokenAccount,
+    ordersResponse,
+  ] = await Promise.all([
+    findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
+    findEscrowPda(program, marketPk),
+    findMarketLiquiditiesPda(program, marketPk),
+    getWalletTokenAccount(program, marketTokenPk),
+    getCancellableOrdersByMarketForProviderWallet(program, marketPk),
+  ]);
 
   const orders = ordersResponse.data.orderAccounts;
 
@@ -139,13 +154,20 @@ export async function buildCancelOrdersForMarketInstructions(
   const instructions = await Promise.all(
     orders.map(async (order) => {
       const orderPk = order.publicKey;
-      const marketMatchingPool = await findMarketMatchingPoolPda(
-        program,
-        order.account.market,
-        order.account.marketOutcomeIndex,
-        order.account.expectedPrice,
-        order.account.forOutcome,
-      );
+      const [marketOutcomePda, marketMatchingPoolPda] = await Promise.all([
+        findMarketOutcomePda(
+          program,
+          order.account.market,
+          order.account.marketOutcomeIndex,
+        ),
+        findMarketMatchingPoolPda(
+          program,
+          order.account.market,
+          order.account.marketOutcomeIndex,
+          order.account.expectedPrice,
+          order.account.forOutcome,
+        ),
+      ]);
       const instruction = await program.methods
         .cancelOrder()
         .accounts({
@@ -154,9 +176,11 @@ export async function buildCancelOrdersForMarketInstructions(
           purchaser: provider.wallet.publicKey,
           purchaserTokenAccount:
             purchaserTokenAccount.data.associatedTokenAccount,
-          marketMatchingPool: marketMatchingPool.data.pda,
+          marketMatchingPool: marketMatchingPoolPda.data.pda,
+          marketOutcome: marketOutcomePda.data.pda,
           market: order.account.market,
           marketEscrow: escrowPda.data.pda,
+          marketLiquidities: liquiditiesPda.data.pda,
           mint: market.mintAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         })

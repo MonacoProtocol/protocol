@@ -51,26 +51,41 @@ export type MarketAccounts = {
   markets: GetAccount<MarketAccount>[];
 };
 
-export type MatchingQueueItem = {
-  order: PublicKey;
-  delayExpirationTimestamp: BN;
-  liquidityToAdd: BN;
+export type MarketMatchingQueueAccount = {
+  market: PublicKey;
+  matches: MarketMatchingQueue;
+};
+
+export type MarketMatchingQueue = {
+  front: number;
+  len: number;
+  items: MarketMatchingQueueOrderMatch[];
+};
+
+export type MarketMatchingQueueOrderMatch = {
+  pk: PublicKey;
+  purchaser: PublicKey;
+
+  forOutcome: boolean;
+  outcomeIndex: number;
+  price: number;
+  stake: number;
 };
 
 export type MarketMatchingPoolAccount = {
   market: PublicKey;
+  inplay: boolean;
+  forOutcome: boolean;
+  marketOutcomeIndex: number;
+  price: number;
   orders: {
     front: number;
     len: number;
-    items: MatchingQueueItem[];
+    items: PublicKey[];
   };
-  inplay: boolean;
   liquidityAmount: BN;
   matchedAmount: BN;
   payer: PublicKey;
-  marketOutcomeIndex: number;
-  price: number;
-  forOutcome: boolean;
 };
 
 export type MarketMatchingPoolAccounts = {
@@ -121,8 +136,10 @@ export type MarketOutcomeTitlesResponse = {
 
 export type MarketAccountsForCreateOrder = {
   escrowPda: PublicKey;
+  marketOrderRequestQueuePda: PublicKey;
   marketOutcomePda: PublicKey;
   marketOutcomePoolPda: PublicKey;
+  marketMatchingQueuePda: PublicKey;
   marketPositionPda: PublicKey;
   market: MarketAccount;
 };
@@ -147,3 +164,18 @@ export type MarketPricesAndPendingOrders = {
 } & MarketOutcomeAccounts &
   MarketPrices &
   PendingOrders;
+
+export type MarketPaymentsQueueAccount = {
+  market: PublicKey;
+  paymentQueue: {
+    front: number;
+    len: number;
+    items: PaymentInfo[];
+  };
+};
+
+export type PaymentInfo = {
+  from: PublicKey;
+  to: PublicKey;
+  amount: BN;
+};

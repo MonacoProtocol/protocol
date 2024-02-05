@@ -8,35 +8,43 @@
     *   [Properties][4]
 *   [MarketAccounts][5]
     *   [Properties][6]
-*   [MatchingQueueItem][7]
+*   [MarketMatchingQueueAccount][7]
     *   [Properties][8]
-*   [MarketMatchingPoolAccount][9]
+*   [MarketMatchingQueue][9]
     *   [Properties][10]
-*   [MarketMatchingPoolAccounts][11]
+*   [MarketMatchingQueueOrderMatch][11]
     *   [Properties][12]
-*   [MarketMatchingPoolsWithSeeds][13]
+*   [MarketMatchingPoolAccount][13]
     *   [Properties][14]
-*   [MarketMatchingPoolWithSeeds][15]
+*   [MarketMatchingPoolAccounts][15]
     *   [Properties][16]
-*   [MarketMatchingPoolPublicKeysWithSeeds][17]
+*   [MarketMatchingPoolsWithSeeds][17]
     *   [Properties][18]
-*   [MarketMatchingPoolPublicKeyWithSeeds][19]
+*   [MarketMatchingPoolWithSeeds][19]
     *   [Properties][20]
-*   [MarketMatchingPoolSeeds][21]
+*   [MarketMatchingPoolPublicKeysWithSeeds][21]
     *   [Properties][22]
-*   [MarketOutcomeAccount][23]
+*   [MarketMatchingPoolPublicKeyWithSeeds][23]
     *   [Properties][24]
-*   [MarketOutcomeAccounts][25]
+*   [MarketMatchingPoolSeeds][25]
     *   [Properties][26]
-*   [MarketOutcomeTitlesResponse][27]
+*   [MarketOutcomeAccount][27]
     *   [Properties][28]
-*   [MarketAccountsForCreateOrder][29]
+*   [MarketOutcomeAccounts][29]
     *   [Properties][30]
-*   [MarketPrice][31]
+*   [MarketOutcomeTitlesResponse][31]
     *   [Properties][32]
-*   [MarketPrices][33]
+*   [MarketAccountsForCreateOrder][33]
     *   [Properties][34]
-*   [MarketPricesAndPendingOrders][35]
+*   [MarketPrice][35]
+    *   [Properties][36]
+*   [MarketPrices][37]
+    *   [Properties][38]
+*   [MarketPricesAndPendingOrders][39]
+*   [MarketPaymentsQueueAccount][40]
+    *   [Properties][41]
+*   [PaymentInfo][42]
+    *   [Properties][43]
 
 ## MarketStatus
 
@@ -44,190 +52,233 @@
 
 ## MarketAccount
 
-Type: {authority: PublicKey, decimalLimit: [number][36], escrowAccountBump: [number][36], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][36], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: PublicKey, marketTypeDiscriminator: [string][37], marketTypeValue: [string][37], marketWinningOutcomeIndex: [number][36]?, mintAccount: PublicKey, published: [boolean][38], suspended: [boolean][38], title: [string][37], inplay: [boolean][38], inplayEnabled: [boolean][38], inplayOrderDelay: [number][36], eventStartOrderBehaviour: [MarketOrderBehaviour][2], marketLockOrderBehaviour: [MarketOrderBehaviour][2], eventStartTimestamp: BN, unsettledAccountsCount: [number][36], unclosedAccountsCount: [number][36], version: [number][36]}
+Type: {authority: PublicKey, decimalLimit: [number][44], escrowAccountBump: [number][44], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][44], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: PublicKey, marketTypeDiscriminator: [string][45], marketTypeValue: [string][45], marketWinningOutcomeIndex: [number][44]?, mintAccount: PublicKey, published: [boolean][46], suspended: [boolean][46], title: [string][45], inplay: [boolean][46], inplayEnabled: [boolean][46], inplayOrderDelay: [number][44], eventStartOrderBehaviour: [MarketOrderBehaviour][2], marketLockOrderBehaviour: [MarketOrderBehaviour][2], eventStartTimestamp: BN, unsettledAccountsCount: [number][44], unclosedAccountsCount: [number][44], version: [number][44]}
 
 ### Properties
 
 *   `authority` **PublicKey**&#x20;
-*   `decimalLimit` **[number][36]**&#x20;
-*   `escrowAccountBump` **[number][36]**&#x20;
+*   `decimalLimit` **[number][44]**&#x20;
+*   `escrowAccountBump` **[number][44]**&#x20;
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
-*   `marketOutcomesCount` **[number][36]**&#x20;
+*   `marketOutcomesCount` **[number][44]**&#x20;
 *   `marketSettleTimestamp` **BN?**&#x20;
 *   `marketStatus` **[MarketStatus][1]**&#x20;
 *   `marketType` **PublicKey**&#x20;
-*   `marketTypeDiscriminator` **[string][37]**&#x20;
-*   `marketTypeValue` **[string][37]**&#x20;
-*   `marketWinningOutcomeIndex` **[number][36]?**&#x20;
+*   `marketTypeDiscriminator` **[string][45]**&#x20;
+*   `marketTypeValue` **[string][45]**&#x20;
+*   `marketWinningOutcomeIndex` **[number][44]?**&#x20;
 *   `mintAccount` **PublicKey**&#x20;
-*   `published` **[boolean][38]**&#x20;
-*   `suspended` **[boolean][38]**&#x20;
-*   `title` **[string][37]**&#x20;
-*   `inplay` **[boolean][38]**&#x20;
-*   `inplayEnabled` **[boolean][38]**&#x20;
-*   `inplayOrderDelay` **[number][36]**&#x20;
+*   `published` **[boolean][46]**&#x20;
+*   `suspended` **[boolean][46]**&#x20;
+*   `title` **[string][45]**&#x20;
+*   `inplay` **[boolean][46]**&#x20;
+*   `inplayEnabled` **[boolean][46]**&#x20;
+*   `inplayOrderDelay` **[number][44]**&#x20;
 *   `eventStartOrderBehaviour` **[MarketOrderBehaviour][2]**&#x20;
 *   `marketLockOrderBehaviour` **[MarketOrderBehaviour][2]**&#x20;
 *   `eventStartTimestamp` **BN**&#x20;
-*   `unsettledAccountsCount` **[number][36]**&#x20;
-*   `unclosedAccountsCount` **[number][36]**&#x20;
-*   `version` **[number][36]**&#x20;
+*   `unsettledAccountsCount` **[number][44]**&#x20;
+*   `unclosedAccountsCount` **[number][44]**&#x20;
+*   `version` **[number][44]**&#x20;
 
 ## MarketAccounts
 
-Type: {markets: [Array][39]\<GetAccount<[MarketAccount][3]>>}
+Type: {markets: [Array][47]\<GetAccount<[MarketAccount][3]>>}
 
 ### Properties
 
-*   `markets` **[Array][39]\<GetAccount<[MarketAccount][3]>>**&#x20;
+*   `markets` **[Array][47]\<GetAccount<[MarketAccount][3]>>**&#x20;
 
-## MatchingQueueItem
+## MarketMatchingQueueAccount
 
-Type: {order: PublicKey, delayExpirationTimestamp: BN, liquidityToAdd: BN}
-
-### Properties
-
-*   `order` **PublicKey**&#x20;
-*   `delayExpirationTimestamp` **BN**&#x20;
-*   `liquidityToAdd` **BN**&#x20;
-
-## MarketMatchingPoolAccount
-
-Type: {market: PublicKey, orders: {front: [number][36], len: [number][36], items: [Array][39]<[MatchingQueueItem][7]>}, inplay: [boolean][38], liquidityAmount: BN, matchedAmount: BN, payer: PublicKey, marketOutcomeIndex: [number][36], price: [number][36], forOutcome: [boolean][38]}
+Type: {market: PublicKey, matches: [MarketMatchingQueue][9]}
 
 ### Properties
 
 *   `market` **PublicKey**&#x20;
-*   `orders` **{front: [number][36], len: [number][36], items: [Array][39]<[MatchingQueueItem][7]>}**&#x20;
-*   `inplay` **[boolean][38]**&#x20;
+*   `matches` **[MarketMatchingQueue][9]**&#x20;
+
+## MarketMatchingQueue
+
+Type: {front: [number][44], len: [number][44], items: [Array][47]<[MarketMatchingQueueOrderMatch][11]>}
+
+### Properties
+
+*   `front` **[number][44]**&#x20;
+*   `len` **[number][44]**&#x20;
+*   `items` **[Array][47]<[MarketMatchingQueueOrderMatch][11]>**&#x20;
+
+## MarketMatchingQueueOrderMatch
+
+Type: {pk: PublicKey, purchaser: PublicKey, forOutcome: [boolean][46], outcomeIndex: [number][44], price: [number][44], stake: [number][44]}
+
+### Properties
+
+*   `pk` **PublicKey**&#x20;
+*   `purchaser` **PublicKey**&#x20;
+*   `forOutcome` **[boolean][46]**&#x20;
+*   `outcomeIndex` **[number][44]**&#x20;
+*   `price` **[number][44]**&#x20;
+*   `stake` **[number][44]**&#x20;
+
+## MarketMatchingPoolAccount
+
+Type: {market: PublicKey, inplay: [boolean][46], forOutcome: [boolean][46], marketOutcomeIndex: [number][44], price: [number][44], orders: {front: [number][44], len: [number][44], items: [Array][47]\<PublicKey>}, liquidityAmount: BN, matchedAmount: BN, payer: PublicKey}
+
+### Properties
+
+*   `market` **PublicKey**&#x20;
+*   `inplay` **[boolean][46]**&#x20;
+*   `forOutcome` **[boolean][46]**&#x20;
+*   `marketOutcomeIndex` **[number][44]**&#x20;
+*   `price` **[number][44]**&#x20;
+*   `orders` **{front: [number][44], len: [number][44], items: [Array][47]\<PublicKey>}**&#x20;
 *   `liquidityAmount` **BN**&#x20;
 *   `matchedAmount` **BN**&#x20;
 *   `payer` **PublicKey**&#x20;
-*   `marketOutcomeIndex` **[number][36]**&#x20;
-*   `price` **[number][36]**&#x20;
-*   `forOutcome` **[boolean][38]**&#x20;
 
 ## MarketMatchingPoolAccounts
 
-Type: {marketMatchingPools: [Array][39]\<GetAccount<[MarketMatchingPoolAccount][9]>>}
+Type: {marketMatchingPools: [Array][47]\<GetAccount<[MarketMatchingPoolAccount][13]>>}
 
 ### Properties
 
-*   `marketMatchingPools` **[Array][39]\<GetAccount<[MarketMatchingPoolAccount][9]>>**&#x20;
+*   `marketMatchingPools` **[Array][47]\<GetAccount<[MarketMatchingPoolAccount][13]>>**&#x20;
 
 ## MarketMatchingPoolsWithSeeds
 
-Type: {marketMatchingPoolsWithSeeds: [Array][39]\<GetAccount<[MarketMatchingPoolWithSeeds][15]>>}
+Type: {marketMatchingPoolsWithSeeds: [Array][47]\<GetAccount<[MarketMatchingPoolWithSeeds][19]>>}
 
 ### Properties
 
-*   `marketMatchingPoolsWithSeeds` **[Array][39]\<GetAccount<[MarketMatchingPoolWithSeeds][15]>>**&#x20;
+*   `marketMatchingPoolsWithSeeds` **[Array][47]\<GetAccount<[MarketMatchingPoolWithSeeds][19]>>**&#x20;
 
 ## MarketMatchingPoolWithSeeds
 
-Type: {seeds: [MarketMatchingPoolSeeds][21], marketMatchingPool: [MarketMatchingPoolAccount][9]}
+Type: {seeds: [MarketMatchingPoolSeeds][25], marketMatchingPool: [MarketMatchingPoolAccount][13]}
 
 ### Properties
 
-*   `seeds` **[MarketMatchingPoolSeeds][21]**&#x20;
-*   `marketMatchingPool` **[MarketMatchingPoolAccount][9]**&#x20;
+*   `seeds` **[MarketMatchingPoolSeeds][25]**&#x20;
+*   `marketMatchingPool` **[MarketMatchingPoolAccount][13]**&#x20;
 
 ## MarketMatchingPoolPublicKeysWithSeeds
 
-Type: {marketMatchingPoolPksWithSeeds: [Array][39]<[MarketMatchingPoolPublicKeyWithSeeds][19]>}
+Type: {marketMatchingPoolPksWithSeeds: [Array][47]<[MarketMatchingPoolPublicKeyWithSeeds][23]>}
 
 ### Properties
 
-*   `marketMatchingPoolPksWithSeeds` **[Array][39]<[MarketMatchingPoolPublicKeyWithSeeds][19]>**&#x20;
+*   `marketMatchingPoolPksWithSeeds` **[Array][47]<[MarketMatchingPoolPublicKeyWithSeeds][23]>**&#x20;
 
 ## MarketMatchingPoolPublicKeyWithSeeds
 
-Type: {seeds: [MarketMatchingPoolSeeds][21], publicKey: PublicKey}
+Type: {seeds: [MarketMatchingPoolSeeds][25], publicKey: PublicKey}
 
 ### Properties
 
-*   `seeds` **[MarketMatchingPoolSeeds][21]**&#x20;
+*   `seeds` **[MarketMatchingPoolSeeds][25]**&#x20;
 *   `publicKey` **PublicKey**&#x20;
 
 ## MarketMatchingPoolSeeds
 
-Type: {outcomeIndex: [string][37], price: [string][37], forOutcome: [string][37]}
+Type: {outcomeIndex: [string][45], price: [string][45], forOutcome: [string][45]}
 
 ### Properties
 
-*   `outcomeIndex` **[string][37]**&#x20;
-*   `price` **[string][37]**&#x20;
-*   `forOutcome` **[string][37]**&#x20;
+*   `outcomeIndex` **[string][45]**&#x20;
+*   `price` **[string][45]**&#x20;
+*   `forOutcome` **[string][45]**&#x20;
 
 ## MarketOutcomeAccount
 
-Type: {index: [number][36], title: [string][37], market: PublicKey, latestMatchedPrice: [number][36], matchedTotal: BN, prices: PublicKey, priceLadder: [Array][39]<[number][36]>}
+Type: {index: [number][44], title: [string][45], market: PublicKey, latestMatchedPrice: [number][44], matchedTotal: BN, prices: PublicKey, priceLadder: [Array][47]<[number][44]>}
 
 ### Properties
 
-*   `index` **[number][36]**&#x20;
-*   `title` **[string][37]**&#x20;
+*   `index` **[number][44]**&#x20;
+*   `title` **[string][45]**&#x20;
 *   `market` **PublicKey**&#x20;
-*   `latestMatchedPrice` **[number][36]**&#x20;
+*   `latestMatchedPrice` **[number][44]**&#x20;
 *   `matchedTotal` **BN**&#x20;
 *   `prices` **PublicKey**&#x20;
-*   `priceLadder` **[Array][39]<[number][36]>**&#x20;
+*   `priceLadder` **[Array][47]<[number][44]>**&#x20;
 
 ## MarketOutcomeAccounts
 
-Type: {marketOutcomeAccounts: [Array][39]\<GetAccount<[MarketOutcomeAccount][23]>>}
+Type: {marketOutcomeAccounts: [Array][47]\<GetAccount<[MarketOutcomeAccount][27]>>}
 
 ### Properties
 
-*   `marketOutcomeAccounts` **[Array][39]\<GetAccount<[MarketOutcomeAccount][23]>>**&#x20;
+*   `marketOutcomeAccounts` **[Array][47]\<GetAccount<[MarketOutcomeAccount][27]>>**&#x20;
 
 ## MarketOutcomeTitlesResponse
 
-Type: {marketOutcomeTitles: [Array][39]<[string][37]>}
+Type: {marketOutcomeTitles: [Array][47]<[string][45]>}
 
 ### Properties
 
-*   `marketOutcomeTitles` **[Array][39]<[string][37]>**&#x20;
+*   `marketOutcomeTitles` **[Array][47]<[string][45]>**&#x20;
 
 ## MarketAccountsForCreateOrder
 
-Type: {escrowPda: PublicKey, marketOutcomePda: PublicKey, marketOutcomePoolPda: PublicKey, marketPositionPda: PublicKey, market: [MarketAccount][3]}
+Type: {escrowPda: PublicKey, marketOrderRequestQueuePda: PublicKey, marketOutcomePda: PublicKey, marketOutcomePoolPda: PublicKey, marketMatchingQueuePda: PublicKey, marketPositionPda: PublicKey, market: [MarketAccount][3]}
 
 ### Properties
 
 *   `escrowPda` **PublicKey**&#x20;
+*   `marketOrderRequestQueuePda` **PublicKey**&#x20;
 *   `marketOutcomePda` **PublicKey**&#x20;
 *   `marketOutcomePoolPda` **PublicKey**&#x20;
+*   `marketMatchingQueuePda` **PublicKey**&#x20;
 *   `marketPositionPda` **PublicKey**&#x20;
 *   `market` **[MarketAccount][3]**&#x20;
 
 ## MarketPrice
 
-Type: {marketOutcome: [string][37], marketOutcomeIndex: [number][36], price: [number][36], forOutcome: [boolean][38], matchingPoolPda: PublicKey, matchingPool: [MarketMatchingPoolAccount][9]}
+Type: {marketOutcome: [string][45], marketOutcomeIndex: [number][44], price: [number][44], forOutcome: [boolean][46], matchingPoolPda: PublicKey, matchingPool: [MarketMatchingPoolAccount][13]}
 
 ### Properties
 
-*   `marketOutcome` **[string][37]**&#x20;
-*   `marketOutcomeIndex` **[number][36]**&#x20;
-*   `price` **[number][36]**&#x20;
-*   `forOutcome` **[boolean][38]**&#x20;
+*   `marketOutcome` **[string][45]**&#x20;
+*   `marketOutcomeIndex` **[number][44]**&#x20;
+*   `price` **[number][44]**&#x20;
+*   `forOutcome` **[boolean][46]**&#x20;
 *   `matchingPoolPda` **PublicKey**&#x20;
-*   `matchingPool` **[MarketMatchingPoolAccount][9]**&#x20;
+*   `matchingPool` **[MarketMatchingPoolAccount][13]**&#x20;
 
 ## MarketPrices
 
-Type: {market: [MarketAccount][3], pendingOrders: [Array][39]\<GetAccount\<Order>>, marketPrices: [Array][39]<[MarketPrice][31]>}
+Type: {market: [MarketAccount][3], pendingOrders: [Array][47]\<GetAccount\<Order>>, marketPrices: [Array][47]<[MarketPrice][35]>}
 
 ### Properties
 
 *   `market` **[MarketAccount][3]**&#x20;
-*   `pendingOrders` **[Array][39]\<GetAccount\<Order>>**&#x20;
-*   `marketPrices` **[Array][39]<[MarketPrice][31]>**&#x20;
+*   `pendingOrders` **[Array][47]\<GetAccount\<Order>>**&#x20;
+*   `marketPrices` **[Array][47]<[MarketPrice][35]>**&#x20;
 
 ## MarketPricesAndPendingOrders
 
 Type: any
+
+## MarketPaymentsQueueAccount
+
+Type: {market: PublicKey, paymentQueue: {front: [number][44], len: [number][44], items: [Array][47]<[PaymentInfo][42]>}}
+
+### Properties
+
+*   `market` **PublicKey**&#x20;
+*   `paymentQueue` **{front: [number][44], len: [number][44], items: [Array][47]<[PaymentInfo][42]>}**&#x20;
+
+## PaymentInfo
+
+Type: {from: PublicKey, to: PublicKey, amount: BN}
+
+### Properties
+
+*   `from` **PublicKey**&#x20;
+*   `to` **PublicKey**&#x20;
+*   `amount` **BN**&#x20;
 
 [1]: #marketstatus
 
@@ -241,68 +292,84 @@ Type: any
 
 [6]: #properties-1
 
-[7]: #matchingqueueitem
+[7]: #marketmatchingqueueaccount
 
 [8]: #properties-2
 
-[9]: #marketmatchingpoolaccount
+[9]: #marketmatchingqueue
 
 [10]: #properties-3
 
-[11]: #marketmatchingpoolaccounts
+[11]: #marketmatchingqueueordermatch
 
 [12]: #properties-4
 
-[13]: #marketmatchingpoolswithseeds
+[13]: #marketmatchingpoolaccount
 
 [14]: #properties-5
 
-[15]: #marketmatchingpoolwithseeds
+[15]: #marketmatchingpoolaccounts
 
 [16]: #properties-6
 
-[17]: #marketmatchingpoolpublickeyswithseeds
+[17]: #marketmatchingpoolswithseeds
 
 [18]: #properties-7
 
-[19]: #marketmatchingpoolpublickeywithseeds
+[19]: #marketmatchingpoolwithseeds
 
 [20]: #properties-8
 
-[21]: #marketmatchingpoolseeds
+[21]: #marketmatchingpoolpublickeyswithseeds
 
 [22]: #properties-9
 
-[23]: #marketoutcomeaccount
+[23]: #marketmatchingpoolpublickeywithseeds
 
 [24]: #properties-10
 
-[25]: #marketoutcomeaccounts
+[25]: #marketmatchingpoolseeds
 
 [26]: #properties-11
 
-[27]: #marketoutcometitlesresponse
+[27]: #marketoutcomeaccount
 
 [28]: #properties-12
 
-[29]: #marketaccountsforcreateorder
+[29]: #marketoutcomeaccounts
 
 [30]: #properties-13
 
-[31]: #marketprice
+[31]: #marketoutcometitlesresponse
 
 [32]: #properties-14
 
-[33]: #marketprices
+[33]: #marketaccountsforcreateorder
 
 [34]: #properties-15
 
-[35]: #marketpricesandpendingorders
+[35]: #marketprice
 
-[36]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[36]: #properties-16
 
-[37]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[37]: #marketprices
 
-[38]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[38]: #properties-17
 
-[39]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[39]: #marketpricesandpendingorders
+
+[40]: #marketpaymentsqueueaccount
+
+[41]: #properties-18
+
+[42]: #paymentinfo
+
+[43]: #properties-19
+
+[44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[45]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[46]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[47]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

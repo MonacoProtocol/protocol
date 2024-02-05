@@ -60,6 +60,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -84,7 +85,7 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: stake, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: stake, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
       ],
     );
   });
@@ -97,7 +98,7 @@ describe("Matching Crank", () => {
     const { market, purchaser, forOrderPk, againstOrderPk } =
       await setupMatchedOrders(monaco, outcome, price, stake);
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -218,16 +219,16 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { matched: [0, 0, 0], unmatched: [2, 0, 2] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 0] },
+        { matched: [2, -10, 2], unmatched: [0, 0, 0] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         12,
       ],
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -369,6 +370,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -396,10 +398,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -458,6 +460,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -485,10 +488,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -540,6 +543,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -568,10 +572,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [4, 10, 4] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [4, 0, 4] },
         { len: 2, liquidity: 4, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -638,6 +642,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -661,10 +666,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 20, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 10, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 2, liquidity: 4, matched: 0 },
+        { len: 1, liquidity: 2, matched: 2 },
         20,
       ],
     );
@@ -727,6 +732,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -754,10 +760,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 2, liquidity: 4, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         12,
       ],
     );
@@ -826,6 +832,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -849,10 +856,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 2, liquidity: 4, matched: 0 },
+        { len: 1, liquidity: 2, matched: 2 },
         20,
       ],
     );
@@ -903,6 +910,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market1.pk,
         marketEscrow: market1.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -926,10 +934,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -981,6 +989,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market1.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -1004,10 +1013,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -1059,6 +1068,7 @@ describe("Matching Crank", () => {
         purchaserTokenAccountAgainst: purchaserToken,
         market: market1.pk,
         marketEscrow: market1.escrowPk,
+        marketLiquidities: market.liquiditiesPk,
         marketOutcome: market1.outcomePks[outcome],
         marketMatchingPoolFor: marketMatchingPools.forOutcome,
         marketMatchingPoolAgainst: marketMatchingPools.against,
@@ -1082,10 +1092,10 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 2, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [2, 10, 2] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [2, -10, 2], unmatched: [2, 0, 2] },
         { len: 1, liquidity: 2, matched: 0 },
-        { len: 1, liquidity: 2, matched: 0 },
+        { len: 0, liquidity: 0, matched: 2 },
         10,
       ],
     );
@@ -1154,19 +1164,19 @@ describe("Matching Crank", () => {
       [
         { stakeUnmatched: 100, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 40, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 60, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 70, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 20, stakeVoided: 0, status: { matched: {} } },
         { matched: [0, 0, 0], unmatched: [140, 0, 140] },
-        { matched: [0, 0, 0], unmatched: [0, 339, 0] },
-        479,
+        { matched: [140, -284, 140], unmatched: [0, 44, 0] },
+        468,
         860,
-        661,
+        672,
       ],
     );
 
     // CRANK 1
-    await market.match(for01OrderPK, against01OrderPK);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -1185,18 +1195,18 @@ describe("Matching Crank", () => {
         { stakeUnmatched: 40, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 40, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 70, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 20, stakeVoided: 0, status: { matched: {} } },
         { matched: [-60, 120, -60], unmatched: [80, 0, 80] },
-        { matched: [60, -120, 60], unmatched: [0, 213, 0] },
-        473,
+        { matched: [140, -284, 140], unmatched: [0, 44, 0] },
+        468,
         860,
-        667,
+        672,
       ],
     );
 
     // CRANK 2
-    await market.match(for01OrderPK, against02OrderPK);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -1215,18 +1225,18 @@ describe("Matching Crank", () => {
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 40, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 20, stakeVoided: 0, status: { matched: {} } },
         { matched: [-100, 200, -100], unmatched: [40, 0, 40] },
-        { matched: [100, -200, 100], unmatched: [0, 129, 0] },
-        469,
+        { matched: [140, -284, 140], unmatched: [0, 44, 0] },
+        468,
         860,
-        671,
+        672,
       ],
     );
 
     // CRANK 3
-    await market.match(for02OrderPK, against02OrderPK);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -1246,17 +1256,17 @@ describe("Matching Crank", () => {
         { stakeUnmatched: 10, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 20, stakeVoided: 0, status: { matched: {} } },
         { matched: [-130, 263, -130], unmatched: [10, 0, 10] },
-        { matched: [130, -263, 130], unmatched: [0, 66, 0] },
-        469,
+        { matched: [140, -284, 140], unmatched: [0, 44, 0] },
+        468,
         860,
-        671,
+        672,
       ],
     );
 
     // CRANK 4
-    await market.match(for02OrderPK, against03OrderPK);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -1328,16 +1338,16 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 100, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 100, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { matched: [0, 0, 0], unmatched: [100, 0, 100] },
-        { matched: [0, 0, 0], unmatched: [0, 70, 0] },
-        170,
+        { matched: [100, -60, 100], unmatched: [0, 0, 0] },
+        160,
         0,
-        30,
+        40,
       ],
     );
 
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1409,18 +1419,18 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 5, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 5, stakeVoided: 0, status: { matched: {} } },
         { matched: [0, 0, 0], unmatched: [10, 0, 10] },
-        { matched: [0, 0, 0], unmatched: [0, 45, 0] },
+        { matched: [10, -30, 10], unmatched: [0, 15, 0] },
         55,
         90,
         55,
       ],
     );
 
-    await market.match(forOrderPk, againstOrder1Pk);
-    await market.match(forOrderPk, againstOrder2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1494,18 +1504,18 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 5, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 30, 10] },
-        { matched: [0, 0, 0], unmatched: [0, 15, 0] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 5, stakeVoided: 0, status: { matched: {} } },
+        { matched: [5, -15, 5], unmatched: [10, 15, 10] },
+        { matched: [5, -15, 5], unmatched: [0, 0, 0] },
         45,
         70,
         85,
       ],
     );
 
-    await market.match(forOrderPk, againstOrder1Pk);
-    await market.match(forOrderPk, againstOrder2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1577,17 +1587,17 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 5, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 45, 10] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 5, stakeVoided: 0, status: { matched: {} } },
+        { matched: [10, -30, 10], unmatched: [10, 15, 10] },
         45,
         55,
         100,
       ],
     );
 
-    await market.match(forOrderPk, againstOrder1Pk);
-    await market.match(forOrderPk, againstOrder2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1609,80 +1619,6 @@ describe("Matching Crank", () => {
         15,
         85,
         100,
-      ],
-    );
-  });
-
-  it("Matching order within delay should error", async () => {
-    const inplayDelay = 100;
-
-    const now = Math.floor(new Date().getTime() / 1000);
-    const eventStartTimestamp = now - 1000;
-    const marketLockTimestamp = now + 1000;
-
-    const [purchaser, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket(
-        [2.0],
-        true,
-        inplayDelay,
-        eventStartTimestamp,
-        marketLockTimestamp,
-      ),
-    ]);
-    const purchaserToken = await market.airdrop(purchaser, 100_000);
-
-    const forOrderPk = await market.forOrder(0, 1, 2.0, purchaser);
-    const againstOrderPk = await market.againstOrder(0, 1, 2.0, purchaser);
-
-    const marketMatchingPools = market.matchingPools[0][2.0];
-    const marketPositionPda = await market.cacheMarketPositionPk(
-      purchaser.publicKey,
-    );
-
-    const [forTradePk, againstTradePk] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), againstOrderPk, forOrderPk, true),
-        findTradePda(monaco.getRawProgram(), againstOrderPk, forOrderPk, false),
-      ])
-    ).map((result) => result.data.tradePk);
-
-    //
-    // CRANK
-    //
-    const ix = await monaco.program.methods
-      .matchOrders()
-      .accounts({
-        orderFor: forOrderPk,
-        orderAgainst: againstOrderPk,
-        tradeFor: forTradePk,
-        tradeAgainst: againstTradePk,
-        marketPositionFor: marketPositionPda,
-        marketPositionAgainst: marketPositionPda,
-        purchaserTokenAccountFor: purchaserToken,
-        purchaserTokenAccountAgainst: purchaserToken,
-        market: market.pk,
-        marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[0],
-        marketMatchingPoolFor: marketMatchingPools.forOutcome,
-        marketMatchingPoolAgainst: marketMatchingPools.against,
-        crankOperator: monaco.operatorPk,
-        authorisedOperators: await monaco.findCrankAuthorisedOperatorsPda(),
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .instruction();
-
-    await assertTransactionThrowsErrorCode(ix, "InplayDelay");
-
-    // Check that the orders have not been matched.
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(forOrderPk),
-        monaco.getOrder(againstOrderPk),
-      ]),
-      [
-        { stakeUnmatched: 1, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 1, stakeVoided: 0, status: { open: {} } },
       ],
     );
   });
@@ -1725,10 +1661,13 @@ async function setupMatchedOrders(
     ]),
     [
       { stakeUnmatched: stake, stakeVoided: 0, status: { open: {} } },
-      { stakeUnmatched: stake, stakeVoided: 0, status: { open: {} } },
-      { matched: [0, 0, 0], unmatched: [stake, stake * (price - 1), stake] },
+      { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+      {
+        matched: [stake, -stake * (price - 1), stake],
+        unmatched: [stake, 0, stake],
+      },
       { len: 1, liquidity: stake, matched: 0 },
-      { len: 1, liquidity: stake, matched: 0 },
+      { len: 0, liquidity: 0, matched: stake },
       stake * (price - 1),
     ],
   );
