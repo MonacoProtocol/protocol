@@ -261,6 +261,7 @@ For the given market, update the lock time to now
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?**&#x20;
 
 ### Examples
 

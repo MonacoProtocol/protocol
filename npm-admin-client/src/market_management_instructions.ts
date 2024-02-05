@@ -6,6 +6,7 @@ import {
   ResponseFactory,
   ClientResponse,
   MarketInstructionResponse,
+  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -29,12 +30,14 @@ export enum MarketManagementInstructionType {
   UPDATE_LOCK_TIME = 9,
   UPDATE_MARKET_EVENT_START_TIME = 10,
   UPDATE_MARKET_EVENT_START_TIME_TO_NOW = 11,
+  UPDATE_MARKET_LOCK_TIME_TO_NOW = 12,
 }
 
 export type MarketUpdateInstructionData = {
   winningOutcomeIndex?: number;
   title?: string;
   marketLockTimestamp?: number;
+  marketMatchingQueuePk?: PublicKey;
   eventStartTimeTimestamp?: number;
 };
 
@@ -57,6 +60,12 @@ export async function buildMarketManagementInstruction(
       if (instructionData?.winningOutcomeIndex === undefined) {
         throw new Error(
           "winningOutcomeIndex is required in instructionData. Received: " +
+            JSON.stringify(instructionData),
+        );
+      }
+      if (instructionData?.marketMatchingQueuePk === undefined) {
+        throw new Error(
+          "marketMatchingQueuePk is required in instructionData. Received: " +
             JSON.stringify(instructionData),
         );
       }
@@ -204,11 +213,17 @@ export async function buildMarketManagementInstruction(
       break;
     }
     case MarketManagementInstructionType.VOID: {
-      const marketEscrow = await findEscrowPda(program, marketPk);
+      const [marketEscrow, market] = await Promise.all([
+        findEscrowPda(program, marketPk),
+        (await program.account.market.fetch(marketPk)) as MarketAccount,
+      ]);
       if (!marketEscrow.success) {
         response.addErrors(marketEscrow.errors);
         return response.body;
       }
+      const orderRequestQueuePk = market.marketStatus.initializing
+        ? null
+        : (await findOrderRequestQueuePda(program, marketPk)).data.pda;
       const instruction = await program.methods
         .voidMarket()
         .accounts({
@@ -216,6 +231,9 @@ export async function buildMarketManagementInstruction(
           marketEscrow: marketEscrow.data.pda,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          orderRequestQueue: orderRequestQueuePk,
         })
         .instruction();
       response.addResponseData({ instruction: instruction });
@@ -226,8 +244,12 @@ export async function buildMarketManagementInstruction(
         .settleMarket(instructionData?.winningOutcomeIndex)
         .accounts({
           market: marketPk,
+          marketMatchingQueue: instructionData?.marketMatchingQueuePk,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
+          orderRequestQueue: (
+            await findOrderRequestQueuePda(program, marketPk)
+          ).data.pda,
         })
         .instruction();
       response.addResponseData({ instruction: instruction });
@@ -274,6 +296,18 @@ export async function buildMarketManagementInstruction(
     case MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW: {
       const instruction = await program.methods
         .updateMarketEventStartTimeToNow()
+        .accounts({
+          market: marketPk,
+          authorisedOperators: authorisedOperators.data.pda,
+          marketOperator: provider.wallet.publicKey,
+        })
+        .instruction();
+      response.addResponseData({ instruction: instruction });
+      break;
+    }
+    case MarketManagementInstructionType.UPDATE_MARKET_LOCK_TIME_TO_NOW: {
+      const instruction = await program.methods
+        .updateMarketLocktimeToNow()
         .accounts({
           market: marketPk,
           authorisedOperators: authorisedOperators.data.pda,

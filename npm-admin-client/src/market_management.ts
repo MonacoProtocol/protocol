@@ -89,7 +89,7 @@ export async function settleMarket(
     program,
     marketPk,
     MarketManagementInstructionType.SETTLE,
-    { winningOutcomeIndex },
+    { marketMatchingQueuePk, winningOutcomeIndex },
   );
   return await sendManagementTransaction(
     program,
@@ -404,34 +404,19 @@ export async function updateMarketLocktime(
 export async function updateMarketLocktimeToNow(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketLocktimeToNow()
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_MARKET_LOCK_TIME_TO_NOW,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
