@@ -13,7 +13,7 @@ import {
   MarketOutcomesInstructionsResponse,
 } from "../types/transactions";
 
-async function buildInitialiseOutcomeInstruction(
+export async function buildInitialiseOutcomeInstruction(
   program: Program,
   marketPk: PublicKey,
   outcome: string,
