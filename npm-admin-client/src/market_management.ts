@@ -621,6 +621,9 @@ export async function voidMarket(
   const market = (await program.account.market.fetch(
     marketPk,
   )) as MarketAccount;
+  const marketMatchingQueuePk = market.marketStatus.initializing
+    ? null
+    : (await findMarketMatchingQueuePda(program, marketPk)).data.pda;
   const orderRequestQueuePk = market.marketStatus.initializing
     ? null
     : (await findOrderRequestQueuePda(program, marketPk)).data.pda;
@@ -633,6 +636,9 @@ export async function voidMarket(
         marketEscrow: marketEscrow.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        marketMatchingQueue: marketMatchingQueuePk,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         orderRequestQueue: orderRequestQueuePk,

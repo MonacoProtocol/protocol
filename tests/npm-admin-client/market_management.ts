@@ -273,10 +273,10 @@ describe("Market ready to void", () => {
     const response = await voidMarket(protocolProgram, market.pk);
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
-    assert(response.success);
-    assert(response.data.tnxId);
     assert.deepEqual(response.errors, []);
     assert.deepEqual(updatedMarket.marketStatus, { readyToVoid: {} });
+    assert(response.success);
+    assert(response.data.tnxId);
   });
 
   it("Fails if market not initializing or open", async () => {

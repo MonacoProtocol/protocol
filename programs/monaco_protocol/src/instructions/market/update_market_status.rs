@@ -82,6 +82,7 @@ fn intialize_order_request_queue(
 pub fn void(
     market: &mut Market,
     void_time: UnixTimestamp,
+    market_matching_queue: &Option<MarketMatchingQueue>,
     order_request_queue: &Option<MarketOrderRequestQueue>,
 ) -> Result<()> {
     require!(
@@ -90,6 +91,14 @@ pub fn void(
     );
 
     if market.market_status != Initializing {
+        require!(
+            market_matching_queue.is_some(),
+            CoreError::VoidMarketMatchingQueueNotProvided
+        );
+        require!(
+            market_matching_queue.as_ref().unwrap().matches.is_empty(),
+            CoreError::MatchingQueueIsNotEmpty
+        );
         require!(
             order_request_queue.is_some(),
             CoreError::VoidMarketRequestQueueNotProvided
@@ -616,13 +625,15 @@ mod void_market_tests {
     use crate::error::CoreError;
     use crate::instructions::market::void;
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
     use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use crate::Market;
     use anchor_lang::error;
     use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn status_initializing() {
+    fn status_initializing_with_queues() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -650,11 +661,55 @@ mod void_market_tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
-        let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
+        let market_matching_queue = mock_market_matching_queue(market_pk);
+        let order_request_queue = mock_order_request_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time, &Option::from(order_request_queue));
+        let result = void(
+            &mut market,
+            settle_time,
+            &Option::from(market_matching_queue),
+            &Option::from(order_request_queue),
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
+    }
+
+    #[test]
+    fn status_initializing_without_queues() {
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Initializing,
+            inplay_enabled: false,
+            market_type: Default::default(),
+            market_type_discriminator: None,
+            market_type_value: None,
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        };
+
+        let settle_time = 1665483869;
+
+        let result = void(&mut market, settle_time, &None, &None);
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
@@ -662,6 +717,7 @@ mod void_market_tests {
 
     #[test]
     fn status_open() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -689,11 +745,17 @@ mod void_market_tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
-        let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
+        let market_matching_queue = mock_market_matching_queue(market_pk);
+        let order_request_queue = mock_order_request_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time, &Option::from(order_request_queue));
+        let result = void(
+            &mut market,
+            settle_time,
+            &Option::from(market_matching_queue),
+            &Option::from(order_request_queue),
+        );
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::ReadyToVoid, market.market_status)
@@ -701,6 +763,7 @@ mod void_market_tests {
 
     #[test]
     fn not_open_or_initializing() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -728,11 +791,17 @@ mod void_market_tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
-        let order_request_queue = mock_order_request_queue(Pubkey::new_unique());
+        let market_matching_queue = mock_market_matching_queue(market_pk);
+        let order_request_queue = mock_order_request_queue(market_pk);
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time, &Option::from(order_request_queue));
+        let result = void(
+            &mut market,
+            settle_time,
+            &Option::from(market_matching_queue),
+            &Option::from(order_request_queue),
+        );
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
@@ -741,6 +810,7 @@ mod void_market_tests {
 
     #[test]
     fn request_queue_not_empty() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -768,7 +838,8 @@ mod void_market_tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
-        let order_request_queue = &mut mock_order_request_queue(Pubkey::new_unique());
+        let market_matching_queue = mock_market_matching_queue(market_pk);
+        let order_request_queue = &mut mock_order_request_queue(market_pk);
         order_request_queue
             .order_requests
             .enqueue(OrderRequest::new_unique());
@@ -778,6 +849,7 @@ mod void_market_tests {
         let result = void(
             &mut market,
             settle_time,
+            &Option::from(market_matching_queue.clone()),
             &Option::from(order_request_queue.clone()),
         );
 
@@ -787,7 +859,8 @@ mod void_market_tests {
     }
 
     #[test]
-    fn open_market_request_queue_not_provided() {
+    fn matching_queue_not_empty() {
+        let market_pk = Pubkey::new_unique();
         let mut market = Market {
             authority: Default::default(),
             event_account: Default::default(),
@@ -815,13 +888,115 @@ mod void_market_tests {
             escrow_account_bump: 0,
             event_start_timestamp: 0,
         };
+        let market_matching_queue = &mut mock_market_matching_queue(market_pk);
+        let order_request_queue = mock_order_request_queue(market_pk);
+        market_matching_queue
+            .matches
+            .enqueue(OrderMatch::new_unique());
 
         let settle_time = 1665483869;
 
-        let result = void(&mut market, settle_time, &None);
+        let result = void(
+            &mut market,
+            settle_time,
+            &Option::from(market_matching_queue.clone()),
+            &Option::from(order_request_queue.clone()),
+        );
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::MatchingQueueIsNotEmpty));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn open_market_request_queue_not_provided() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            inplay_enabled: false,
+            market_type: Default::default(),
+            market_type_discriminator: None,
+            market_type_value: None,
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        };
+        let market_matching_queue = mock_market_matching_queue(market_pk);
+
+        let settle_time = 1665483869;
+
+        let result = void(
+            &mut market,
+            settle_time,
+            &Option::from(market_matching_queue),
+            &None,
+        );
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketRequestQueueNotProvided));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn open_market_matching_queue_not_provided() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = Market {
+            authority: Default::default(),
+            event_account: Default::default(),
+            mint_account: Default::default(),
+            market_status: MarketStatus::Open,
+            inplay_enabled: false,
+            market_type: Default::default(),
+            market_type_discriminator: None,
+            market_type_value: None,
+            version: 0,
+            decimal_limit: 0,
+            published: false,
+            suspended: false,
+            market_outcomes_count: 0,
+            market_winning_outcome_index: None,
+            market_lock_timestamp: 0,
+            market_settle_timestamp: None,
+            event_start_order_behaviour: MarketOrderBehaviour::None,
+            market_lock_order_behaviour: MarketOrderBehaviour::None,
+            inplay: false,
+            inplay_order_delay: 0,
+            title: "".to_string(),
+            unsettled_accounts_count: 0,
+            unclosed_accounts_count: 0,
+            escrow_account_bump: 0,
+            event_start_timestamp: 0,
+        };
+        let order_request_queue = mock_order_request_queue(market_pk);
+
+        let settle_time = 1665483869;
+
+        let result = void(
+            &mut market,
+            settle_time,
+            &None,
+            &Option::from(order_request_queue),
+        );
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::VoidMarketMatchingQueueNotProvided));
         assert_eq!(expected_error, result)
     }
 }
