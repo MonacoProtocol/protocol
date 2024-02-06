@@ -5,6 +5,7 @@ use crate::instructions::matching::create_trade::create_trade;
 use crate::instructions::{calculate_risk_from_stake, current_timestamp, market_position, order};
 
 use crate::error::CoreError;
+use crate::events::trade::TradeEvent;
 use crate::state::market_account::Market;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
@@ -15,6 +16,7 @@ use crate::state::trade_account::Trade;
 use super::update_matching_pool_with_matched_order;
 
 pub fn on_order_match(
+    market_pk: &Pubkey,
     market: &mut Market,
     market_matching_queue: &mut MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
@@ -97,6 +99,12 @@ pub fn on_order_match(
             );
             market.increment_unclosed_accounts_count()?;
 
+            emit!(TradeEvent {
+                amount: stake,
+                price: taker_order.price,
+                market: *market_pk,
+            });
+
             // dequeue empty matches (needs to be last due to borrowing)
             if taker_order.stake == 0_u64 {
                 market_matching_queue.matches.dequeue();
@@ -167,6 +175,7 @@ mod test {
         let mut taker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match(
+            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,
@@ -263,6 +272,7 @@ mod test {
         let mut taker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match(
+            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,
@@ -355,6 +365,7 @@ mod test {
         let mut taker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match(
+            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,

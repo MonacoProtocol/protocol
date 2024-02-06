@@ -221,6 +221,9 @@ export async function buildMarketManagementInstruction(
         response.addErrors(marketEscrow.errors);
         return response.body;
       }
+      const marketMatchingQueuePk = market.marketStatus.initializing
+        ? null
+        : (await findMarketMatchingQueuePda(program, marketPk)).data.pda;
       const orderRequestQueuePk = market.marketStatus.initializing
         ? null
         : (await findOrderRequestQueuePda(program, marketPk)).data.pda;
@@ -231,6 +234,9 @@ export async function buildMarketManagementInstruction(
           marketEscrow: marketEscrow.data.pda,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          marketMatchingQueue: marketMatchingQueuePk,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           orderRequestQueue: orderRequestQueuePk,

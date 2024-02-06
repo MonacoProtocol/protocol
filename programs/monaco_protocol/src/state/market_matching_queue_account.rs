@@ -123,6 +123,17 @@ impl OrderMatch {
          U16_SIZE + // outcome_index
          F64_SIZE + // price
          U64_SIZE; // stake
+
+    pub fn new_unique() -> Self {
+        OrderMatch {
+            pk: Pubkey::new_unique(),
+            purchaser: Pubkey::new_unique(),
+            for_outcome: false,
+            outcome_index: 0,
+            price: 0.0,
+            stake: 0,
+        }
+    }
 }
 
 impl PartialEq for OrderMatch {

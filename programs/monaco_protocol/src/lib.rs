@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_matching_queue_account::MarketMatchingQueue;
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -258,6 +259,7 @@ pub mod monaco_protocol {
         // otherwise just do the matching
         } else {
             let refund_amount = instructions::matching::on_order_match(
+                &ctx.accounts.market.key(),
                 &mut ctx.accounts.market,
                 &mut ctx.accounts.market_matching_queue,
                 &mut ctx.accounts.market_matching_pool,
@@ -592,6 +594,10 @@ pub mod monaco_protocol {
         instructions::market::void(
             &mut ctx.accounts.market,
             void_time,
+            &ctx.accounts
+                .market_matching_queue
+                .clone()
+                .map(|queue: Account<MarketMatchingQueue>| queue.into_inner()),
             &ctx.accounts
                 .order_request_queue
                 .clone()

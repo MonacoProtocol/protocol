@@ -973,12 +973,11 @@ pub struct VoidMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(
-        mut,
-        seeds = [
-            b"order_request".as_ref(),
-            market.key().as_ref()
-        ],
-        bump,
+        has_one = market @ CoreError::VoidMarketMismatch,
+    )]
+    pub market_matching_queue: Option<Account<'info, MarketMatchingQueue>>,
+    #[account(
+        has_one = market @ CoreError::VoidMarketMismatch,
     )]
     pub order_request_queue: Option<Account<'info, MarketOrderRequestQueue>>,
 
