@@ -47,7 +47,7 @@ export async function findPdaWithSeeds(
  */
 export async function confirmTransaction(
   program: Program,
-  signature: string | void,
+  signature: string,
 ): Promise<ClientResponse<unknown>> {
   const response = new ResponseFactory({});
   const provider = program.provider as AnchorProvider;
@@ -56,7 +56,7 @@ export async function confirmTransaction(
     const confirmRequest = {
       blockhash: blockHash.blockhash,
       lastValidBlockHeight: blockHash.lastValidBlockHeight,
-      signature: signature as string,
+      signature: signature,
     };
     await provider.connection.confirmTransaction(confirmRequest);
   } catch (e) {
@@ -182,6 +182,7 @@ export async function signAndSendInstructionsBatch(
         if (!confirmResponse.success) {
           response.addErrors(confirmResponse.errors);
           failedInstructions.push(...slicedInstructions);
+          response.addResponseData({ signatures, failedInstructions });
           return response.body;
         }
       }
