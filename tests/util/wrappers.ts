@@ -1195,7 +1195,10 @@ export class MonacoMarket {
       throw e;
     }
 
+    const remainingMatches = await this.getMarketMatchingQueueLength();
+
     return {
+      remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
       makerOrderTrade: orderTradePk,
@@ -1238,6 +1241,10 @@ export class MonacoMarket {
       .getRawProgram()
       .account.market.fetch(this.pk)) as MarketAccount;
 
+    const marketMatchingQueuePk = market.marketStatus.initializing
+      ? null
+      : (await findMarketMatchingQueuePda(this.monaco.getRawProgram(), this.pk))
+          .data.pda;
     const orderRequestQueuePk = market.marketStatus.initializing
       ? null
       : (await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk))
@@ -1251,6 +1258,7 @@ export class MonacoMarket {
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,
         authorisedOperators: authorisedOperatorsPk,
+        marketMatchingQueue: marketMatchingQueuePk,
         orderRequestQueue: orderRequestQueuePk,
       })
       .signers(this.marketAuthority ? [this.marketAuthority] : [])

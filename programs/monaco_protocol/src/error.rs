@@ -121,6 +121,8 @@ pub enum CoreError {
     VoidPaymentCalculation,
     #[msg("Void: order is already voided.")]
     VoidOrderIsVoided,
+    #[msg("Void: matching queue must be provided for non Initializing markets")]
+    VoidMarketMatchingQueueNotProvided,
     #[msg("Void: request queue must be provided for non Initializing markets")]
     VoidMarketRequestQueueNotProvided,
 

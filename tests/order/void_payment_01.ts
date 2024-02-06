@@ -155,6 +155,11 @@ describe("Void market position accounts", () => {
     await market.forOrder(1, stake, price, purchaserC);
     await market.againstOrder(1, stake, price, purchaserD);
 
+    let matches = true;
+    while (matches) {
+      matches = (await market.processMatchingQueue()).remainingMatches > 0;
+    }
+
     // VOID ----------------------------------------------------------------------
 
     await market.voidMarket();

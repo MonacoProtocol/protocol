@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_matching_queue_account::MarketMatchingQueue;
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -593,6 +594,10 @@ pub mod monaco_protocol {
         instructions::market::void(
             &mut ctx.accounts.market,
             void_time,
+            &ctx.accounts
+                .market_matching_queue
+                .clone()
+                .map(|queue: Account<MarketMatchingQueue>| queue.into_inner()),
             &ctx.accounts
                 .order_request_queue
                 .clone()
