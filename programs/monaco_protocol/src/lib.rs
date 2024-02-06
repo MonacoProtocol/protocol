@@ -258,6 +258,7 @@ pub mod monaco_protocol {
         // otherwise just do the matching
         } else {
             let refund_amount = instructions::matching::on_order_match(
+                &ctx.accounts.market.key(),
                 &mut ctx.accounts.market,
                 &mut ctx.accounts.market_matching_queue,
                 &mut ctx.accounts.market_matching_pool,
