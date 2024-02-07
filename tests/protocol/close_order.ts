@@ -14,8 +14,22 @@ describe("Close order accounts", () => {
 
     await market.airdrop(purchaserA, 100.0);
     await market.airdrop(purchaserB, 100.0);
-    const forOrder = await market.forOrder(0, 10, price, purchaserA);
-    const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
+    const forOrder = await market.forOrder(
+      0,
+      10,
+      price,
+      purchaserA,
+      undefined,
+      purchaserA,
+    );
+    const againstOrder = await market.againstOrder(
+      0,
+      10,
+      price,
+      purchaserB,
+      undefined,
+      purchaserB,
+    );
 
     const balanceOrderCreated = await monaco.provider.connection.getBalance(
       purchaserA.publicKey,
@@ -38,7 +52,7 @@ describe("Close order accounts", () => {
       .closeOrder()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         order: forOrder,
       })
       .rpc()
@@ -78,7 +92,7 @@ describe("Close order accounts", () => {
       .closeOrder()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         order: forOrder,
       })
       .rpc()
@@ -87,7 +101,7 @@ describe("Close order accounts", () => {
       });
   });
 
-  it("close order: purchaser mismatch", async () => {
+  it("close order: payer mismatch", async () => {
     const price = 2.0;
     const [purchaserA, purchaserB, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
@@ -113,12 +127,12 @@ describe("Close order accounts", () => {
       .closeOrder()
       .accounts({
         market: market.pk,
-        purchaser: purchaserB.publicKey,
+        payer: monaco.operatorPk,
         order: forOrder,
       })
       .rpc()
       .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
+        assert.equal(e.error.errorCode.code, "CloseAccountPayerMismatch");
       });
   });
 
@@ -153,7 +167,7 @@ describe("Close order accounts", () => {
       .closeOrder()
       .accounts({
         market: marketB.pk,
-        purchaser: purchaserA.publicKey,
+        payer: monaco.operatorPk,
         order: forOrder,
       })
       .rpc()
@@ -182,7 +196,7 @@ describe("Close order accounts", () => {
       .closeOrder()
       .accounts({
         market: market.pk,
-        purchaser: purchaser.publicKey,
+        payer: monaco.operatorPk,
         order: forOrderPk,
       })
       .rpc()

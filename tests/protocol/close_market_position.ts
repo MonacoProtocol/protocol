@@ -45,7 +45,7 @@ describe("Close market position accounts", () => {
       .closeMarketPosition()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketPosition: marketPositionPk,
       })
       .rpc()
@@ -94,7 +94,7 @@ describe("Close market position accounts", () => {
       .closeMarketPosition()
       .accounts({
         market: market.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketPosition: marketPositionPk,
       })
       .rpc()
@@ -103,7 +103,7 @@ describe("Close market position accounts", () => {
       });
   });
 
-  it("close market position: purchaser mismatch", async () => {
+  it("close market position: payer mismatch", async () => {
     const price = 2.0;
     const [purchaserA, purchaserB, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
@@ -136,12 +136,12 @@ describe("Close market position accounts", () => {
       .closeMarketPosition()
       .accounts({
         market: market.pk,
-        purchaser: purchaserB.publicKey,
+        payer: purchaserB.publicKey,
         marketPosition: marketPositionPk,
       })
       .rpc()
       .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
+        assert.equal(e.error.errorCode.code, "CloseAccountPayerMismatch");
       });
   });
 
@@ -183,7 +183,7 @@ describe("Close market position accounts", () => {
       .closeMarketPosition()
       .accounts({
         market: marketB.pk,
-        purchaser: purchaserA.publicKey,
+        payer: purchaserA.publicKey,
         marketPosition: marketPositionPk,
       })
       .rpc()

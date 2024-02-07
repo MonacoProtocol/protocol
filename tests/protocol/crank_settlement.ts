@@ -104,7 +104,7 @@ describe("Settlement Crank", () => {
         .settleOrder()
         .accounts({
           order: forOrderPda,
-          purchaser: wallet1.publicKey,
+          payer: monaco.operatorPk,
           market: marketOther.marketPda,
         })
         .rpc();
@@ -123,7 +123,7 @@ describe("Settlement Crank", () => {
         .settleOrder()
         .accounts({
           order: againstOrderPda,
-          purchaser: wallet2.publicKey,
+          payer: monaco.operatorPk,
           market: marketOther.marketPda,
         })
         .rpc();

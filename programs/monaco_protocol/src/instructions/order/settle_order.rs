@@ -35,7 +35,7 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         return ctx
             .accounts
             .order
-            .close(ctx.accounts.purchaser.to_account_info());
+            .close(ctx.accounts.payer.to_account_info());
     }
 
     if ctx.accounts.order.stake_unmatched > 0_u64 {

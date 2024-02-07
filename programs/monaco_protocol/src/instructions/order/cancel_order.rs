@@ -62,7 +62,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         ctx.accounts.market.decrement_account_counts()?;
         ctx.accounts
             .order
-            .close(ctx.accounts.purchaser.to_account_info())?;
+            .close(ctx.accounts.payer.to_account_info())?;
     }
 
     Ok(())
