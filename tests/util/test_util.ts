@@ -33,6 +33,7 @@ import {
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
+  MarketAccount,
   MarketPaymentsQueueAccount,
   PaymentInfo,
 } from "../../npm-client";
@@ -641,7 +642,7 @@ export async function processCommissionPayments(
     return;
   }
 
-  const market = await monaco.account.market.fetch(marketPk);
+  const market = (await monaco.account.market.fetch(marketPk)) as MarketAccount;
   const queuedItems = getPaymentInfoQueueItems(queue);
 
   const tx = new Transaction();
@@ -649,7 +650,7 @@ export async function processCommissionPayments(
     const productPk = item.to;
     const productEscrowPk = (
       await productProgram.account.product.fetch(productPk)
-    ).commissionEscrow;
+    ).commissionEscrow as PublicKey;
     const productEscrowTokenPk = await getOrCreateAssociatedTokenAccount(
       getAnchorProvider().connection,
       (getAnchorProvider().wallet as NodeWallet).payer,

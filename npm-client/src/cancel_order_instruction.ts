@@ -87,6 +87,7 @@ export async function buildCancelOrderInstruction(
       marketPosition: marketPositionPda.data.pda,
       purchaser: provider.wallet.publicKey,
       purchaserTokenAccount: purchaserTokenAccount.data.associatedTokenAccount,
+      payer: order.payer,
       marketMatchingPool: marketMatchingPoolPda.data.pda,
       marketOutcome: marketOutcomePda.data.pda,
       market: order.market,
@@ -176,6 +177,7 @@ export async function buildCancelOrdersForMarketInstructions(
           purchaser: provider.wallet.publicKey,
           purchaserTokenAccount:
             purchaserTokenAccount.data.associatedTokenAccount,
+          payer: order.account.payer,
           marketMatchingPool: marketMatchingPoolPda.data.pda,
           marketOutcome: marketOutcomePda.data.pda,
           market: order.account.market,

@@ -53,6 +53,8 @@ pub enum CoreError {
     CancelOrderNotCancellable,
     #[msg("Core Cancelation: purchaser mismatch")]
     CancelationPurchaserMismatch,
+    #[msg("Core Cancelation: payer mismatch")]
+    CancelationPayerMismatch,
     #[msg("Core Cancelation: market mismatch")]
     CancelationMarketMismatch,
     #[msg("Core Cancelation: market liquidities mismatch")]
@@ -81,8 +83,8 @@ pub enum CoreError {
      */
     #[msg("Core Settlement: market outcome index is not valid for market")]
     SettlementInvalidMarketOutcomeIndex,
-    #[msg("Core Settlement: purchaser mismatch")]
-    SettlementPurchaserMismatch,
+    #[msg("Core Settlement: payer mismatch")]
+    SettlementPayerMismatch,
     #[msg("Core Settlement: market mismatch")]
     SettlementMarketMismatch,
     #[msg("Core Settlement: market not open")]
@@ -324,8 +326,8 @@ pub enum CoreError {
     CloseAccountOrderNotComplete,
     #[msg("CloseAccount: MarketPosition not paid")]
     CloseAccountMarketPositionNotPaid,
-    #[msg("CloseAccount: Purchaser does not match")]
-    CloseAccountPurchaserMismatch,
+    #[msg("CloseAccount: Market authority does not match")]
+    CloseAccountMarketAuthorityMismatch,
     #[msg("CloseAccount: Payer does not match")]
     CloseAccountPayerMismatch,
     #[msg("CloseAccount: Market does not match")]

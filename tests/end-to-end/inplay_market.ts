@@ -217,7 +217,7 @@ describe("End to end test of", () => {
             .accounts({
               market: market.pk,
               order: order,
-              purchaser: purchaser.publicKey,
+              payer: monaco.operatorPk,
             })
             .rpc()
             .catch((e) => {
@@ -237,7 +237,7 @@ describe("End to end test of", () => {
             .accounts({
               market: market.pk,
               marketPosition: marketPosition,
-              purchaser: purchaser.publicKey,
+              payer: purchaser.publicKey,
             })
             .rpc()
             .catch((e) => {

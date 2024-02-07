@@ -257,6 +257,9 @@ pub struct CancelOrder<'info> {
     )]
     pub purchaser_token_account: Account<'info, TokenAccount>,
 
+    #[account(mut, address = order.payer @ CoreError::CancelationPayerMismatch)]
+    pub payer: SystemAccount<'info>,
+
     #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
     pub market: Account<'info, Market>,
     #[account(
@@ -695,8 +698,8 @@ pub struct MatchOrders<'info> {
 pub struct SettleOrder<'info> {
     #[account(mut)]
     pub order: Account<'info, Order>,
-    #[account(mut, address = order.purchaser @ CoreError::SettlementPurchaserMismatch)]
-    pub purchaser: SystemAccount<'info>,
+    #[account(mut, address = order.payer @ CoreError::SettlementPayerMismatch)]
+    pub payer: SystemAccount<'info>,
     #[account(mut, address = order.market @ CoreError::SettlementMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
 }
@@ -1174,22 +1177,22 @@ Close accounts
 pub struct CloseOrder<'info> {
     #[account(
         mut,
-        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = payer @ CoreError::CloseAccountPayerMismatch,
         has_one = market @ CoreError::CloseAccountMarketMismatch,
-        close = purchaser,
+        close = payer,
     )]
     pub order: Account<'info, Order>,
     #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
-    pub purchaser: SystemAccount<'info>,
+    pub payer: SystemAccount<'info>,
 }
 
 #[derive(Accounts)]
 pub struct CloseTrade<'info> {
     #[account(
         mut,
-        has_one = payer @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = payer @ CoreError::CloseAccountPayerMismatch,
         has_one = market @ CoreError::CloseAccountMarketMismatch,
         close = payer,
     )]
@@ -1204,15 +1207,15 @@ pub struct CloseTrade<'info> {
 pub struct CloseMarketPosition<'info> {
     #[account(
         mut,
-        has_one = purchaser @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = payer @ CoreError::CloseAccountPayerMismatch,
         has_one = market @ CoreError::CloseAccountMarketMismatch,
-        close = purchaser,
+        close = payer,
     )]
     pub market_position: Account<'info, MarketPosition>,
     #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(mut)]
-    pub purchaser: SystemAccount<'info>,
+    pub payer: SystemAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -1240,7 +1243,7 @@ pub struct CloseMarketOutcome<'info> {
     pub market_outcome: Account<'info, MarketOutcome>,
     #[account(
         mut,
-        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = authority @ CoreError::CloseAccountMarketAuthorityMismatch,
     )]
     pub market: Account<'info, Market>,
     #[account(mut)]
@@ -1275,7 +1278,7 @@ pub struct CloseMarketQueues<'info> {
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
     #[account(
         mut,
-        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = authority @ CoreError::CloseAccountMarketAuthorityMismatch,
     )]
     pub market: Account<'info, Market>,
     #[account(mut)]
@@ -1286,7 +1289,7 @@ pub struct CloseMarketQueues<'info> {
 pub struct CloseMarket<'info> {
     #[account(
         mut,
-        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+        has_one = authority @ CoreError::CloseAccountMarketAuthorityMismatch,
         close = authority,
     )]
     pub market: Account<'info, Market>,

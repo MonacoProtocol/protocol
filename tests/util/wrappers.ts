@@ -804,6 +804,7 @@ export class MonacoMarket {
     price: number,
     purchaser: Keypair,
     productPk?: PublicKey,
+    crankKeypair?: Keypair,
   ) {
     const result = await this._createOrderRequest(
       outcome,
@@ -815,7 +816,7 @@ export class MonacoMarket {
         productPk,
       },
     );
-    await this.processNextOrderRequest();
+    await this.processNextOrderRequest(crankKeypair);
     return result.data.orderPk;
   }
 
@@ -825,6 +826,7 @@ export class MonacoMarket {
     price: number,
     purchaser: Keypair,
     productPk?: PublicKey,
+    crankKeypair?: Keypair,
   ) {
     const result = await this._createOrderRequest(
       outcome,
@@ -836,7 +838,7 @@ export class MonacoMarket {
         productPk,
       },
     );
-    await this.processNextOrderRequest();
+    await this.processNextOrderRequest(crankKeypair);
     return result.data.orderPk;
   }
 
@@ -936,7 +938,7 @@ export class MonacoMarket {
     return orderPk;
   }
 
-  async processNextOrderRequest(): Promise<PublicKey> {
+  async processNextOrderRequest(crankKeypair?: Keypair): Promise<PublicKey> {
     const firstOrderRequest = await this.monaco.getMarketOrderRequestQueueHead(
       this.orderRequestQueuePk,
     );
@@ -973,11 +975,13 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         marketLiquidities: this.liquiditiesPk,
         marketMatchingQueue: this.matchingQueuePk,
-        crankOperator: this.monaco.operatorPk,
+        crankOperator: crankKeypair
+          ? crankKeypair.publicKey
+          : this.monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([])
+      .signers(crankKeypair ? [crankKeypair] : [])
       .rpc()
       .catch((e) => {
         console.error(e);
@@ -1052,6 +1056,7 @@ export class MonacoMarket {
         marketPosition: await this.cacheMarketPositionPk(purchaser.publicKey),
         purchaser: purchaser.publicKey,
         purchaserTokenAccount: purchaserTokenPk,
+        payer: order.payer,
         market: this.pk,
         marketEscrow: this.escrowPk,
         marketLiquidities: this.liquiditiesPk,
@@ -1346,7 +1351,7 @@ export class MonacoMarket {
       .accounts({
         order: orderPk,
         market: this.pk,
-        purchaser: order.purchaser,
+        payer: order.payer,
       })
       .rpc()
       .catch((e) => {

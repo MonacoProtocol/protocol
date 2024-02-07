@@ -105,6 +105,7 @@ describe("Security: Cancel Order", () => {
           ),
           purchaser: purchaserImpostor.publicKey, // impostor
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          payer: purchaser.publicKey,
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -171,6 +172,7 @@ describe("Security: Cancel Order", () => {
           ),
           purchaser: purchaserImpostor.publicKey, // impostor
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          payer: purchaser.publicKey,
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -232,6 +234,7 @@ describe("Security: Cancel Order", () => {
           ),
           purchaser: purchaser.publicKey,
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          payer: purchaser.publicKey,
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -298,6 +301,7 @@ describe("Security: Cancel Order", () => {
           ),
           purchaser: purchaser.publicKey,
           purchaserTokenAccount: purchaserImpostorTokenPk, // impostor
+          payer: purchaser.publicKey,
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -367,6 +371,7 @@ describe("Security: Cancel Order", () => {
           ),
           purchaser: purchaser.publicKey,
           purchaserTokenAccount: purchaserInvalidTokenPk, // invalid
+          payer: purchaser.publicKey,
           market: market.pk,
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -471,6 +476,7 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),
+          payer: monaco.operatorPk,
           market: marketOther.marketPda, // invalid
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
@@ -539,6 +545,7 @@ describe("Security: Cancel Order", () => {
           purchaserTokenAccount: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),
+          payer: monaco.operatorPk,
           market: market.pk,
           marketEscrow: marketOther.escrowPda, // invalid
           marketLiquidities: market.liquiditiesPk,

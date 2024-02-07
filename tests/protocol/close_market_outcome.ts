@@ -81,7 +81,7 @@ describe("Close market outcome accounts", () => {
       });
   });
 
-  it("close market outcome: purchaser mismatch", async () => {
+  it("close market outcome: authority mismatch", async () => {
     const price = 2.0;
     const marketOperator = await createWalletWithBalance(monaco.provider);
     await authoriseMarketOperator(
@@ -108,7 +108,10 @@ describe("Close market outcome accounts", () => {
       })
       .rpc()
       .catch((e) => {
-        assert.equal(e.error.errorCode.code, "CloseAccountPurchaserMismatch");
+        assert.equal(
+          e.error.errorCode.code,
+          "CloseAccountMarketAuthorityMismatch",
+        );
       });
   });
 
