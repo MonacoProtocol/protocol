@@ -63,12 +63,6 @@ export async function buildMarketManagementInstruction(
             JSON.stringify(instructionData),
         );
       }
-      if (instructionData?.marketMatchingQueuePk === undefined) {
-        throw new Error(
-          "marketMatchingQueuePk is required in instructionData. Received: " +
-            JSON.stringify(instructionData),
-        );
-      }
       break;
     }
     case MarketManagementInstructionType.UPDATE_TITLE: {
@@ -246,11 +240,15 @@ export async function buildMarketManagementInstruction(
       break;
     }
     case MarketManagementInstructionType.SETTLE: {
+      const marketMatchingQueuePk = await findMarketMatchingQueuePda(
+        program,
+        marketPk,
+      );
       const instruction = await program.methods
         .settleMarket(instructionData?.winningOutcomeIndex)
         .accounts({
           market: marketPk,
-          marketMatchingQueue: instructionData?.marketMatchingQueuePk,
+          marketMatchingQueue: marketMatchingQueuePk.data.pda,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
           orderRequestQueue: (

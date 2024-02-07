@@ -53,12 +53,12 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `marketMatchingQueuePk` **PublicKey** {PublicKey} publicKey of the market's matching queue
 *   `winningOutcomeIndex` **[number][43]** {number} index representing the winning outcome of the event associated with the market
 *   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
         <li> computeUnitLimit - number of compute units to limit the transaction to</li>
         <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
       </ul>
+*   `marketMatchingQueuePk`  {PublicKey} publicKey of the market's matching queue
 
 ### Examples
 

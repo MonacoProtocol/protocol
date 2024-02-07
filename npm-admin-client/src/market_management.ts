@@ -81,7 +81,6 @@ async function sendManagementTransaction(
 export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
-  marketMatchingQueuePk: PublicKey,
   winningOutcomeIndex: number,
   options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
@@ -89,7 +88,7 @@ export async function settleMarket(
     program,
     marketPk,
     MarketManagementInstructionType.SETTLE,
-    { marketMatchingQueuePk, winningOutcomeIndex },
+    { winningOutcomeIndex },
   );
   return await sendManagementTransaction(
     program,
