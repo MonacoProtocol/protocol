@@ -2,42 +2,9 @@
 
 ### Table of Contents
 
-*   [initialiseOutcome][1]
+*   [initialiseOutcomes][1]
     *   [Parameters][2]
     *   [Examples][3]
-*   [initialiseOutcomes][4]
-    *   [Parameters][5]
-    *   [Examples][6]
-*   [findMarketOutcomePda][7]
-    *   [Parameters][8]
-    *   [Examples][9]
-*   [findNextOutcomePda][10]
-    *   [Parameters][11]
-    *   [Examples][12]
-
-## initialiseOutcome
-
-For the given market account, initialise an outcome account for the provided outcome.
-
-**Note** To add prices to an outcome use `batchAddPricesToOutcomePool` (deprecated).
-
-### Parameters
-
-*   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
-*   `outcome` **[string][13]** {string} string representation of the outcome
-*   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the reusable price ladder to associate with the outcome - if null, the protocol's default price ladder will be used. Price ladders can be shared by multiple outcomes
-
-### Examples
-
-```javascript
-const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const outcome = "Draw"
-const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
-const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome, priceLadderPk)
-```
-
-Returns **OutcomeInitialisationResponse** the outcome provided, the pda for the outcome account and the transaction ID of the request
 
 ## initialiseOutcomes
 
@@ -47,8 +14,14 @@ For the given market account, initialise outcome accounts for the provided outco
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
-*   `outcomes` **[Array][14]<[string][13]>** {string\[]} list of strings representing the market outcomes
+*   `outcomes` **[Array][4]<[string][5]>** {string\[]} list of strings representing the market outcomes
 *   `priceLadderPk` **PublicKey?** {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
+*   `options` **TransactionOptionsBatch?** {TransactionOptionsBatch} optional parameters:  <ul>
+        <li> batchSize - number of outcomes to create in single transaction (defaults to 2)</li>
+        <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -61,71 +34,12 @@ const initialiseOutcomeRequest = await initialiseOutcomes(program, marketPk, out
 
 Returns **OutcomeInitialisationsResponse** list of the outcomes provided, their pdas and the transaction IDs performed in the request
 
-## findMarketOutcomePda
-
-For the given market and outcome index, returns the pda for that outcome account
-
-### Parameters
-
-*   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
-*   `marketOutcomeIndex` **[number][15]** {number} number representing the index of the outcome
-
-### Examples
-
-```javascript
-const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const outcomeIndex = 2
-const outcomePda = await findMarketOutcomePda(program, marketPk, outcomeIndex)
-```
-
-Returns **FindPdaResponse** pda of the market outcome account
-
-## findNextOutcomePda
-
-For the given market, return the pda for the next possible outcome account based off how many outcomes already exist on that market account
-
-### Parameters
-
-*   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to initialise the outcome for
-
-### Examples
-
-```javascript
-const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const outcomeIndex = 2
-const outcomePda = await findNextOutcomePda(program, marketPk)
-```
-
-Returns **FindPdaResponse** pda of the next possible market outcome account
-
-[1]: #initialiseoutcome
+[1]: #initialiseoutcomes
 
 [2]: #parameters
 
 [3]: #examples
 
-[4]: #initialiseoutcomes
+[4]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
-[5]: #parameters-1
-
-[6]: #examples-1
-
-[7]: #findmarketoutcomepda
-
-[8]: #parameters-2
-
-[9]: #examples-2
-
-[10]: #findnextoutcomepda
-
-[11]: #parameters-3
-
-[12]: #examples-3
-
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
-
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

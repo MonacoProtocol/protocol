@@ -53,8 +53,12 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `marketMatchingQueuePk` **PublicKey** {PublicKey} publicKey of the market's matching queue
 *   `winningOutcomeIndex` **[number][43]** {number} index representing the winning outcome of the event associated with the market
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
+*   `marketMatchingQueuePk`  {PublicKey} publicKey of the market's matching queue
 
 ### Examples
 
@@ -75,6 +79,10 @@ Set the published flag on a market to `true`
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -93,6 +101,10 @@ Set the published flag on a market to `false`
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -111,6 +123,10 @@ Set the suspended flag on a market to `true` - no orders can be placed against a
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -129,6 +145,10 @@ Set the suspended flag on a market to `false` - allowing for orders to be placed
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -148,6 +168,10 @@ For the given market, update the title
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
 *   `title` **[string][44]** {string} new title to apply to the provided market
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -168,6 +192,10 @@ For the given market, update the event start time
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
 *   `eventStartTimeTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing the new time when the market event will start (moving in-play markets to in-play)
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -187,6 +215,10 @@ For the given market, update the event start time to now
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -206,6 +238,10 @@ For the given market, update the lock time
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing the new time when the market can no longer accept orders
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -225,6 +261,7 @@ For the given market, update the lock time to now
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?**&#x20;
 
 ### Examples
 
@@ -245,6 +282,10 @@ Once Open, outcomes can no longer be added to a market.
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to open
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -263,6 +304,10 @@ Set a Settled market to the Ready to Close status
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -281,6 +326,10 @@ Set an Open or Intializing market to the Ready to Void status
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -304,6 +353,10 @@ The token balance will only be transferred into an ATA belonging to the market a
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market with a surplus escrow balance
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 

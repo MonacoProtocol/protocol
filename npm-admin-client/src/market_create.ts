@@ -1,28 +1,22 @@
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Program, web3, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 import {
-  Operator,
   CreateMarketResponse,
   CreateMarketWithOutcomesAndPriceLadderResponse,
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
-  MarketOrderBehaviour,
-  MarketOrderBehaviourValue,
-  MarketAccount,
+  MarketCreateOptions,
 } from "../types";
-import { findAuthorisedOperatorsAccountPda } from "./operators";
+import { getMarket } from "./market_helpers";
 import {
-  findMarketPda,
-  getMarket,
-  getMintInfo,
-  findEscrowPda,
-} from "./market_helpers";
-import { initialiseOutcomes } from "./market_outcome";
+  confirmTransaction,
+  signAndSendInstructions,
+  signAndSendInstructionsBatch,
+} from "./utils";
+import { buildCreateMarketInstruction } from "./market_create_instruction";
+import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
 import { batchAddPricesToAllOutcomePools } from "./market_outcome_prices";
-import { confirmTransaction } from "./utils";
-import { findMarketTypePda } from "./market_type_create";
 
 /**
  * For the given parameters:
@@ -39,7 +33,7 @@ import { findMarketTypePda } from "./market_type_create";
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
  * @param outcomes {string[]} list of possible outcomes for the market
  * @param priceLadder {number[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
- * @param options {object} optional parameters:
+ * @param options {MarketCreateOptions} optional parameters:
  *   <ul>
  *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
  *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
@@ -51,7 +45,10 @@ import { findMarketTypePda } from "./market_type_create";
  *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> batchSize - number of prices to add in a single request (defaults to 50)</li>
- *    </ul>
+ *     <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  *
  * @returns {CreateMarketWithOutcomesAndPriceLadderResponse} containing the newly-created market account publicKey, creation transaction ID, the market account and the results of the batched requests to add prices to the outcome accounts
  *
@@ -66,8 +63,7 @@ import { findMarketTypePda } from "./market_type_create";
  * const eventAccountPk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const outcomes = ["Red", "Draw", "Blue"]
  * const priceLadder = DEFAULT_PRICE_LADDER
- * const batchSize = 100
- * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder, batchSize)
+ * const newMarket = await createMarket(program, name, marketType, marketTypeDiscriminator, marketTypeValue, marketTokenPk, marketLock, eventAccountPk, outcomes, priceLadder)
  */
 export async function createMarketWithOutcomesAndPriceLadder(
   program: Program,
@@ -78,23 +74,14 @@ export async function createMarketWithOutcomesAndPriceLadder(
   eventAccountPk: PublicKey,
   outcomes: string[],
   priceLadder?: number[] | PublicKey,
-  options?: {
-    marketTypeDiscriminator?: string;
-    marketTypeValue?: string;
-    existingMarketPk?: PublicKey;
-    existingMarket?: MarketAccount;
-    eventStartTimestamp?: EpochTimeStamp;
-    inplayEnabled?: boolean;
-    inplayOrderDelay?: number;
-    eventStartOrderBehaviour?: MarketOrderBehaviour;
-    marketLockOrderBehaviour?: MarketOrderBehaviour;
-    batchSize?: number;
-  },
+  options?: MarketCreateOptions,
 ): Promise<ClientResponse<CreateMarketWithOutcomesAndPriceLadderResponse>> {
   const response = new ResponseFactory({});
   const batchSize = options?.batchSize ? options.batchSize : 50;
+  const outcomesBatchSize = 2;
+  const confirmBatchSuccess = true;
 
-  const marketResponse = await createMarket(
+  const createMarketResponse = await createMarket(
     program,
     marketName,
     marketType,
@@ -104,31 +91,56 @@ export async function createMarketWithOutcomesAndPriceLadder(
     options,
   );
 
-  if (!marketResponse.success) {
-    response.addErrors(marketResponse.errors);
+  if (!createMarketResponse.success) {
+    response.addErrors(createMarketResponse.errors);
     return response.body;
   }
 
-  const marketPk = marketResponse.data.marketPk;
+  const instructionInitialiseOutcomes =
+    await buildInitialiseOutcomesInstructions(
+      program,
+      createMarketResponse.data.marketPk,
+      outcomes,
+      priceLadder instanceof PublicKey ? priceLadder : undefined,
+    );
 
-  const initialiseOutcomePoolsResponse = await initialiseOutcomes(
+  if (!instructionInitialiseOutcomes.success) {
+    response.addErrors(instructionInitialiseOutcomes.errors);
+    return response.body;
+  }
+
+  const signAndSendOutcomesResponse = await signAndSendInstructionsBatch(
     program,
-    marketPk,
-    outcomes,
-    priceLadder instanceof Array<number>
-      ? undefined
-      : (priceLadder as PublicKey),
+    [
+      ...instructionInitialiseOutcomes.data.instructions.map(
+        (i) => i.instruction,
+      ),
+    ],
+    {
+      batchSize: outcomesBatchSize,
+      confirmBatchSuccess,
+      computeUnitLimit: options?.computeUnitLimit,
+      computeUnitPrice: options?.computeUnitPrice,
+    },
   );
 
-  if (!initialiseOutcomePoolsResponse.success) {
-    response.addErrors(initialiseOutcomePoolsResponse.errors);
+  response.addResponseData({
+    signatures: signAndSendOutcomesResponse.data.signatures,
+    failedInstructions: signAndSendOutcomesResponse.data.failedInstructions,
+  });
+
+  if (!signAndSendOutcomesResponse.success) {
+    response.addErrors(signAndSendOutcomesResponse.errors);
     return response.body;
   }
 
-  if (priceLadder instanceof Array<number>) {
+  if (
+    Array.isArray(priceLadder) &&
+    priceLadder.every((element) => typeof element === "number")
+  ) {
     const addPriceLaddersResponse = await batchAddPricesToAllOutcomePools(
       program,
-      marketPk,
+      createMarketResponse.data.marketPk,
       priceLadder,
       batchSize,
     );
@@ -141,12 +153,12 @@ export async function createMarketWithOutcomesAndPriceLadder(
     });
   }
 
-  const market = await getMarket(program, marketPk);
+  const market = await getMarket(program, createMarketResponse.data.marketPk);
 
   response.addResponseData({
-    marketPk: marketPk,
+    marketPk: createMarketResponse.data.marketPk,
     market: market.data.account,
-    tnxId: marketResponse.data.tnxId,
+    tnxId: createMarketResponse.data.tnxId,
   });
   return response.body;
 }
@@ -160,7 +172,7 @@ export async function createMarketWithOutcomesAndPriceLadder(
  * @param marketTokenPk {PublicKey} publicKey of the mint token being used to place an order on a market
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
  * @param eventAccountPk {PublicKey} publicKey of the event the market is associated with
- * @param options {object} optional parameters:
+ * @param options {MarketCreateOptions} optional parameters:
  *   <ul>
  *     <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
  *     <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
@@ -171,7 +183,9 @@ export async function createMarketWithOutcomesAndPriceLadder(
  *     <li> inplayOrderDelay - number of seconds an inplay order must wait before its liquidity is added to the market and can be matched (defaults to 0)</li>
  *     <li> eventStartOrderBehaviour - protocol behaviour to perform when the event start timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
  *     <li> marketLockOrderBehaviour - protocol behaviour to perform when the market lock timestamp is reached (defaults to MarketOrderBehaviour.None)</li>
- *    </ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  *
  *  @returns {CreateMarketResponse} containing the newly-created market account publicKey, creation transaction ID and the market account
  *
@@ -193,123 +207,58 @@ export async function createMarket(
   marketTokenPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
   eventAccountPk: PublicKey,
-  options?: {
-    marketTypeDiscriminator?: string;
-    marketTypeValue?: string;
-    existingMarketPk?: PublicKey;
-    existingMarket?: MarketAccount;
-    eventStartTimestamp?: EpochTimeStamp;
-    inplayEnabled?: boolean;
-    inplayOrderDelay?: number;
-    eventStartOrderBehaviour?: MarketOrderBehaviour;
-    marketLockOrderBehaviour?: MarketOrderBehaviour;
-  },
+  options?: MarketCreateOptions,
 ): Promise<ClientResponse<CreateMarketResponse>> {
   const response = new ResponseFactory({});
-
-  /* eslint-disable */
-  // prettier-ignore-start
-  const marketTypeDiscriminator = options?.marketTypeDiscriminator
-    ? options.marketTypeDiscriminator
-    : null;
-  const marketTypeValue = options?.marketTypeValue
-    ? options.marketTypeValue
-    : null;
-  const existingMarketPk = options?.existingMarketPk
-    ? options.existingMarketPk
-    : null;
-  const eventStartTimestamp = options?.eventStartTimestamp
-    ? options.eventStartTimestamp
-    : marketLockTimestamp;
-  const inplayEnabled = options?.inplayEnabled ? options.inplayEnabled : false;
-  const inplayOrderDelay = options?.inplayOrderDelay
-    ? options.inplayOrderDelay
-    : 0;
-  const eventStartOrderBehaviour = options?.eventStartOrderBehaviour
-    ? options.eventStartOrderBehaviour
-    : MarketOrderBehaviourValue.none;
-  const marketLockOrderBehaviour = options?.marketLockOrderBehaviour
-    ? options.marketLockOrderBehaviour
-    : MarketOrderBehaviourValue.none;
-  // prettier-ignore-end
-  /* eslint-enable */
-
-  const provider = program.provider as AnchorProvider;
-  const mintDecimalOffset = 3;
-
-  const marketTypePk = findMarketTypePda(program, marketType).data.pda;
-
-  let version = 0;
-  if (existingMarketPk) {
-    let existingMarket = options?.existingMarket;
-    if (!existingMarket) {
-      const existingMarketResponse = await getMarket(program, existingMarketPk);
-      if (!existingMarketResponse.success) {
-        response.addErrors(existingMarketResponse.errors);
-        return response.body;
-      }
-      existingMarket = existingMarketResponse.data.account;
-    }
-    version = existingMarket.version + 1;
-  }
-
-  const marketPda = (
-    await findMarketPda(
-      program,
-      eventAccountPk,
-      marketTypePk,
-      marketTypeDiscriminator,
-      marketTypeValue,
-      marketTokenPk,
-      version,
-    )
-  ).data.pda;
-
-  const [escrowPda, authorisedOperators, mintInfo] = await Promise.all([
-    findEscrowPda(program, marketPda),
-    findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
-    getMintInfo(program, marketTokenPk),
-  ]);
-
   try {
-    const tnxId = await program.methods
-      .createMarket(
-        eventAccountPk,
-        marketTypeDiscriminator,
-        marketTypeValue,
-        marketName,
-        mintInfo.data.decimals - mintDecimalOffset,
-        new BN(marketLockTimestamp),
-        new BN(eventStartTimestamp),
-        inplayEnabled,
-        inplayOrderDelay,
-        eventStartOrderBehaviour,
-        marketLockOrderBehaviour,
-      )
-      .accounts({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        existingMarket: existingMarketPk,
-        market: marketPda,
-        marketType: marketTypePk,
-        escrow: escrowPda.data.pda,
+    const instruction = await buildCreateMarketInstruction(
+      program,
+      marketName,
+      marketType,
+      marketTokenPk,
+      marketLockTimestamp,
+      eventAccountPk,
+      options,
+    );
 
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
+    if (!instruction.success) {
+      response.addErrors(instruction.errors);
+      return response.body;
+    }
 
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        mint: marketTokenPk,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
+    const transaction = await signAndSendInstructions(
+      program,
+      [instruction.data.instruction],
+      {
+        computeUnitLimit: options?.computeUnitLimit,
+        computeUnitPrice: options?.computeUnitPrice,
+      },
+    );
 
-    await confirmTransaction(program, tnxId);
-    const market = await getMarket(program, marketPda);
+    if (!transaction.success) {
+      response.addErrors(transaction.errors);
+      return response.body;
+    }
+
+    const confirm = await confirmTransaction(
+      program,
+      transaction.data.signature,
+    );
+
+    if (!confirm.success) {
+      response.addErrors(confirm.errors);
+      return response.body;
+    }
+
+    const market = await getMarket(program, instruction.data.marketPk);
+
+    if (!market.success) {
+      response.addErrors(market.errors);
+    }
 
     response.addResponseData({
-      marketPk: marketPda,
-      tnxId: tnxId,
+      marketPk: instruction.data.marketPk,
+      tnxId: transaction.data.signature,
       market: market.data.account,
     });
   } catch (e) {
