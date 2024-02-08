@@ -62,7 +62,6 @@ async function sendManagementTransaction(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
- * @param marketMatchingQueuePk {PublicKey} publicKey of the market's matching queue
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
  * @param options {TransactionOptions} optional parameters:
  *   <ul>
@@ -74,7 +73,6 @@ async function sendManagementTransaction(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const marketMatchingQueuePk = new PublicKey('E4YEQpkedH8SbcRkN1iByoRnH8HZeBcTnqrrWkjpqLXA')
  * const winningOutcomeIndex = 0
  * const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
  */
@@ -393,6 +391,11 @@ export async function updateMarketLocktime(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ * <ul>
+ *   <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *   <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ * </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
