@@ -64,7 +64,7 @@ Settle a market by setting the winningOutcomeIndex
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const winningOutcomeIndex = 0
-const settledMarket = await settleMarket(program, marketPk, marketMatchingQueuePk, winningOutcomeIndex)
+const settledMarket = await settleMarket(program, marketPk, winningOutcomeIndex)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
