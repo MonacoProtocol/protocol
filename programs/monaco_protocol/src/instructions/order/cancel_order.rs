@@ -7,7 +7,7 @@ use crate::state::market_account::MarketStatus;
 use crate::state::order_account::*;
 
 pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
-    let order = &ctx.accounts.order;
+    let order = &mut ctx.accounts.order;
 
     require!(
         [OrderStatus::Open, OrderStatus::Matched].contains(&order.order_status),
@@ -24,26 +24,32 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         CoreError::CancelOrderNotCancellable
     );
 
-    // update liquidity
-    match order.for_outcome {
-        true => ctx
-            .accounts
-            .market_liquidities
-            .remove_liquidity_for(
-                order.market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
-        false => ctx
-            .accounts
-            .market_liquidities
-            .remove_liquidity_against(
-                order.market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+    // remove from matching pool
+    let removed_from_queue =
+        matching::matching_pool::update_on_cancel(order, &mut ctx.accounts.market_matching_pool)?;
+
+    // update liquidity iff the order was still present in the liquidity pool
+    if removed_from_queue {
+        match order.for_outcome {
+            true => ctx
+                .accounts
+                .market_liquidities
+                .remove_liquidity_for(
+                    order.market_outcome_index,
+                    order.expected_price,
+                    order.stake_unmatched,
+                )
+                .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+            false => ctx
+                .accounts
+                .market_liquidities
+                .remove_liquidity_against(
+                    order.market_outcome_index,
+                    order.expected_price,
+                    order.stake_unmatched,
+                )
+                .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+        }
     }
     ctx.accounts.order.void_stake_unmatched();
 

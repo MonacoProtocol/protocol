@@ -147,13 +147,14 @@ pub fn update_matching_pool_with_matched_order(
 pub fn update_on_cancel(
     order: &Account<Order>,
     matching_pool: &mut MarketMatchingPool,
-) -> Result<()> {
+) -> Result<bool> {
     if matching_pool.orders.remove(&order.key()).is_some() {
         matching_pool.liquidity_amount = matching_pool
             .liquidity_amount
             .checked_sub(order.voided_stake)
             .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+        Ok(true)
+    } else {
+        Ok(false)
     }
-
-    Ok(())
 }
