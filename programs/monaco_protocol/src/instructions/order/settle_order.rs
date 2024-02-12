@@ -116,6 +116,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -167,6 +168,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -218,6 +220,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -269,6 +272,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then

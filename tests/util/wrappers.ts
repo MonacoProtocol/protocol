@@ -38,6 +38,7 @@ import {
   findMarketMatchingQueuePda,
   findPriceLadderPda,
   MarketAccount,
+  findMarketFundingPda,
 } from "../../npm-admin-client";
 import console from "console";
 import { MarketMatchingPoolAccount } from "../../npm-client/types";
@@ -399,6 +400,10 @@ export class Monaco {
       this.program as Program,
       marketPk,
     );
+    const fundingPda = await findMarketFundingPda(
+      this.program as Program,
+      marketPk,
+    );
 
     // invoke core program to call operations required for creating an order
     await this.program.methods
@@ -420,6 +425,7 @@ export class Monaco {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
+        pdaFunding: fundingPda.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -914,6 +920,7 @@ export class MonacoMarket {
         orderRequestQueue: this.orderRequestQueuePk,
         marketPosition: await this.cacheMarketPositionPk(purchaser.publicKey),
         purchaser: purchaser.publicKey,
+        payer: purchaser.publicKey,
         purchaserToken: overrides.purchaserToken
           ? overrides.purchaserToken
           : await this.cachePurchaserTokenPk(purchaser.publicKey),

@@ -41,6 +41,8 @@ pub enum CoreError {
     OrderRequestCreationQueueFull,
     #[msg("Order Request Creation: duplicate request already queued")]
     OrderRequestCreationDuplicateRequest,
+    #[msg("Order Request Creation: invalid payer token account")]
+    OrderRequestCreationInvalidPayerTokenAccount,
     #[msg("Order Request Processing: request queue is empty")]
     OrderRequestQueueIsEmpty,
     #[msg("Order Request Processing: request queue is not empty")]

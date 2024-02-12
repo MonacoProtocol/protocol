@@ -63,6 +63,7 @@ mod tests {
             inplay: false,
             version: 0,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
         return market;
     }

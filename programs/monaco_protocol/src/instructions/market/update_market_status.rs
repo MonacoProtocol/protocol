@@ -455,6 +455,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -529,6 +530,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -587,6 +589,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -659,6 +662,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -704,6 +708,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
 
@@ -743,6 +748,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -789,6 +795,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -836,6 +843,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -886,6 +894,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = &mut mock_market_matching_queue(market_pk);
@@ -936,6 +945,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -982,6 +992,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let order_request_queue = mock_order_request_queue(market_pk);

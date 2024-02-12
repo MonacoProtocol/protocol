@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
+use crate::instructions::market_position;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
@@ -42,6 +43,7 @@ pub mod monaco_protocol {
         let payment = instructions::order_request::create_order_request(
             ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            &ctx.accounts.payer,
             &ctx.accounts.purchaser,
             &ctx.accounts.product,
             &mut ctx.accounts.market_position,
@@ -51,17 +53,60 @@ pub mod monaco_protocol {
             data,
         )?;
 
-        transfer::order_creation_payment(
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.purchaser,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            payment,
-        )?;
+        // if PDA owner then do PDA transfer else do regular token account transfer
+        if ctx.accounts.purchaser_token.owner == ctx.accounts.purchaser_token.key() {
+            // Verify PDA is the correct account
+            let market = ctx.accounts.market.key();
+            Pubkey::create_program_address(
+                &[
+                    b"pda_funding",
+                    market.key().as_ref(),
+                    &[ctx.accounts.market.funding_account_bump],
+                ],
+                &monaco_protocol::ID,
+            )
+            .map_or_else(
+                |_| Err(CoreError::OrderRequestCreationInvalidPayerTokenAccount.into()),
+                |pk| {
+                    require!(
+                        pk == ctx.accounts.purchaser_token.key(),
+                        CoreError::OrderRequestCreationInvalidPayerTokenAccount
+                    );
+                    Ok(())
+                },
+            )?;
 
+            transfer::order_creation_payment_pda(
+                &ctx.accounts.market_escrow,
+                &ctx.accounts.purchaser_token,
+                &ctx.accounts.token_program,
+                &ctx.accounts.market.key(),
+                ctx.accounts.market.funding_account_bump,
+                payment,
+            )?;
+        } else {
+            transfer::order_creation_payment(
+                &ctx.accounts.market_escrow,
+                &ctx.accounts.purchaser,
+                &ctx.accounts.purchaser_token,
+                &ctx.accounts.token_program,
+                payment,
+            )?;
+        }
         ctx.accounts
             .reserved_order
-            .close(ctx.accounts.purchaser.to_account_info())
+            .close(ctx.accounts.payer.to_account_info())
+    }
+
+    pub fn create_market_position(ctx: Context<CreateMarketPosition>) -> Result<()> {
+        market_position::create_market_position(
+            &ctx.accounts.purchaser.key(),
+            &ctx.accounts.payer.key(),
+            ctx.accounts.market.key(),
+            &ctx.accounts.market,
+            &mut ctx.accounts.market_position,
+        )?;
+        ctx.accounts.market.increment_account_counts()
     }
 
     pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {

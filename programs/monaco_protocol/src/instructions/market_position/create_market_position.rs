@@ -4,15 +4,16 @@ use crate::state::market_account::*;
 use crate::state::market_position_account::*;
 
 pub fn create_market_position(
-    purchaser: &Signer,
+    purchaser: &Pubkey,
+    payer: &Pubkey,
     market_pk: Pubkey,
     market: &Market,
     market_position: &mut MarketPosition,
 ) -> Result<()> {
     let market_outcomes_len = usize::from(market.market_outcomes_count);
 
-    market_position.purchaser = purchaser.key();
-    market_position.payer = purchaser.key();
+    market_position.purchaser = *purchaser;
+    market_position.payer = *payer;
     market_position.market = market_pk;
     market_position
         .market_outcome_sums

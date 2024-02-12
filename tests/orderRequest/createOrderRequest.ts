@@ -164,6 +164,7 @@ describe("Order Request Creation", () => {
           ).data.pda,
           marketPosition: marketPositionPk.data.pda,
           purchaser: purchaser.publicKey,
+          payer: purchaser.publicKey,
           purchaserToken: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),
@@ -248,6 +249,7 @@ describe("Order Request Creation", () => {
           ).data.pda,
           marketPosition: marketPositionPk.data.pda,
           purchaser: purchaser.publicKey,
+          payer: purchaser.publicKey,
           purchaserToken: await market.cachePurchaserTokenPk(
             purchaser.publicKey,
           ),

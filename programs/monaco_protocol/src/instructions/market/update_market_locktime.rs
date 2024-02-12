@@ -66,6 +66,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
         let now = 1575975177;
         let time_in_future = 43041841910;
@@ -102,6 +103,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
         let now = 1575975177;
         let time_in_future = 43041841910;
@@ -138,6 +140,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
         let now = 1575975177;
         let time_in_future = 43041841910;
@@ -174,6 +177,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
         let now = 1575975177;
         let time_in_past = 1418209910;

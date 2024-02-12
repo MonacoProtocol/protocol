@@ -40,6 +40,7 @@ pub struct Market {
     pub unclosed_accounts_count: u32,
 
     pub escrow_account_bump: u8,
+    pub funding_account_bump: u8,
     pub event_start_timestamp: i64,
 }
 
@@ -65,7 +66,7 @@ impl Market {
         + ENUM_SIZE * 2 // event_start and market_lock _order_behaviour
         + U8_SIZE // inplay_order_delay
         + vec_size(CHAR_SIZE, Market::TITLE_MAX_LENGTH) // title
-        + U8_SIZE // bump
+        + U8_SIZE * 2// bumps
         + I64_SIZE // event_start_timestamp
         + U32_SIZE * 2; // unsettled_accounts + unclosed_accounts
 
@@ -187,6 +188,7 @@ mod tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
 
@@ -224,6 +226,7 @@ mod tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: now + 1000,
         };
 
@@ -261,6 +264,7 @@ mod tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: now,
         };
 
@@ -298,6 +302,7 @@ mod tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: now,
         };
 
@@ -386,6 +391,7 @@ pub fn mock_market(market_status: MarketStatus) -> Market {
         unsettled_accounts_count: 0,
         unclosed_accounts_count: 0,
         escrow_account_bump: 0,
+        funding_account_bump: 0,
         event_start_timestamp: 0,
     }
 }

@@ -7,7 +7,7 @@ use crate::state::market_account::Market;
 
 pub fn order_creation_payment<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    purchaser: &Signer<'info>,
+    purchaser: &AccountInfo<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
@@ -17,6 +17,24 @@ pub fn order_creation_payment<'info>(
         purchaser,
         purchaser_token_account,
         token_program,
+        amount,
+    )
+}
+
+pub fn order_creation_payment_pda<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    pda_funding: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    market: &Pubkey,
+    pda_funding_bump: u8,
+    amount: u64,
+) -> Result<()> {
+    transfer_to_market_escrow_pda(
+        market_escrow,
+        pda_funding,
+        token_program,
+        market,
+        pda_funding_bump,
         amount,
     )
 }
@@ -116,7 +134,7 @@ pub fn transfer_market_escrow_surplus<'info>(
 
 pub fn transfer_to_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    purchaser: &Signer<'info>,
+    purchaser: &AccountInfo<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
@@ -131,8 +149,35 @@ pub fn transfer_to_market_escrow<'info>(
             token::Transfer {
                 from: purchaser_token_account.to_account_info(),
                 to: market_escrow.to_account_info(),
-                authority: purchaser.to_account_info(),
+                authority: purchaser.to_account_info().clone(),
             },
+        ),
+        amount,
+    )
+}
+
+pub fn transfer_to_market_escrow_pda<'info>(
+    market_escrow: &Account<'info, TokenAccount>,
+    pda_funding: &Account<'info, TokenAccount>,
+    token_program: &Program<'info, Token>,
+    market: &Pubkey,
+    pda_funding_bump: u8,
+    amount: u64,
+) -> Result<()> {
+    if amount == 0_u64 {
+        return Ok(());
+    }
+    msg!("Transferring to escrow");
+
+    token::transfer(
+        CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            token::Transfer {
+                from: pda_funding.to_account_info(),
+                to: market_escrow.to_account_info(),
+                authority: pda_funding.to_account_info(),
+            },
+            &[&["pda_funding".as_ref(), market.as_ref(), &[pda_funding_bump]]],
         ),
         amount,
     )

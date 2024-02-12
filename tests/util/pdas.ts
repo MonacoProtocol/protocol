@@ -12,6 +12,7 @@ import {
   getMintInfo,
   MarketAccount,
 } from "../../npm-client";
+import { findMarketFundingPda } from "../../npm-admin-client";
 
 export async function findAuthorisedOperatorsPda(
   operatorType: string,
@@ -54,6 +55,7 @@ export async function findMarketPdas(
   marketMatchingPoolPk: PublicKey;
   marketMatchingQueuePk: PublicKey;
   marketLiquiditiesPk: PublicKey;
+  marketFundingPk: PublicKey;
 }> {
   const marketResponse = await getMarket(program, marketPk);
   const market = marketResponse.data.account;
@@ -65,6 +67,7 @@ export async function findMarketPdas(
     marketMatchingPoolPkResponse,
     marketMatchingQueuePkResponse,
     marketLiquiditiesPkResponse,
+    marketFundingPkResponse,
   ] = await Promise.all([
     getMintInfo(program, market.mintAccount),
     findEscrowPda(program, marketPk),
@@ -78,6 +81,7 @@ export async function findMarketPdas(
     ),
     findMarketMatchingQueuePda(program, marketPk),
     findMarketLiquiditiesPda(program, marketPk),
+    findMarketFundingPda(program, marketPk),
   ]);
 
   const marketMintInfo = marketMintInfoResponse.data;
@@ -86,6 +90,7 @@ export async function findMarketPdas(
   const marketMatchingPoolPk = marketMatchingPoolPkResponse.data.pda;
   const marketMatchingQueuePk = marketMatchingQueuePkResponse.data.pda;
   const marketLiquiditiesPk = marketLiquiditiesPkResponse.data.pda;
+  const marketFundingPk = marketFundingPkResponse.data.pda;
 
   const uiAmountToAmount = (uiAmount: number) =>
     uiAmount * 10 ** marketMintInfo.decimals;
@@ -98,6 +103,7 @@ export async function findMarketPdas(
     marketMatchingPoolPk,
     marketMatchingQueuePk,
     marketLiquiditiesPk,
+    marketFundingPk,
   };
 }
 

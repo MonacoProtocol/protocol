@@ -28,7 +28,7 @@ pub struct CreateOrderRequest<'info> {
             &data.distinct_seed,
         ],
         bump,
-        payer = purchaser,
+        payer = payer,
         space = ReservedOrder::SIZE,
     )]
     pub reserved_order: Account<'info, ReservedOrder>,
@@ -46,16 +46,17 @@ pub struct CreateOrderRequest<'info> {
             market.key().as_ref()
         ],
         bump,
-        payer = purchaser,
+        payer = payer,
         space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
     )]
     pub market_position: Box<Account<'info, MarketPosition>>,
     #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut)]
     pub purchaser: Signer<'info>,
     #[account(
         mut,
-        associated_token::mint = market.mint_account,
-        associated_token::authority = purchaser,
+        token::mint = market.mint_account,
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
@@ -91,6 +92,33 @@ pub struct CreateOrderRequest<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct CreateMarketPosition<'info> {
+    #[account(
+        init,
+        seeds = [
+            purchaser.key().as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+        payer = payer,
+        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
+    )]
+    pub market_position: Box<Account<'info, MarketPosition>>,
+
+    #[account(mut)]
+    pub market: Box<Account<'info, Market>>,
+
+    /// CHECK: this can either be a SystemAccount or PDA, only key is used so using AccountInfo should be safe
+    #[account(mut)]
+    pub purchaser: AccountInfo<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -839,6 +867,18 @@ pub struct CreateMarket<'info> {
     pub escrow: Account<'info, TokenAccount>,
 
     pub market_type: Box<Account<'info, MarketType>>,
+    #[account(
+        init,
+        seeds = [
+            b"pda_funding".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        token::mint = mint,
+        token::authority = pda_funding
+    )]
+    pub pda_funding: Account<'info, TokenAccount>,
 
     pub rent: Sysvar<'info, Rent>,
 
