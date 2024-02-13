@@ -147,7 +147,12 @@ pub fn update_matching_pool_with_matched_order(
 pub fn update_on_cancel(
     order: &Account<Order>,
     matching_pool: &mut MarketMatchingPool,
+    market: &Market,
 ) -> Result<bool> {
+    if market.is_inplay() && !matching_pool.inplay {
+        matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    }
+
     if matching_pool.orders.remove(&order.key()).is_some() {
         matching_pool.liquidity_amount = matching_pool
             .liquidity_amount

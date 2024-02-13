@@ -1068,9 +1068,11 @@ pub struct SettleMarket<'info> {
 }
 
 #[derive(Accounts)]
-pub struct UpdateMarketUnauthorized<'info> {
+pub struct MoveMarketToInplay<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+    #[account(mut, has_one = market)]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
 }
 
 #[derive(Accounts)]

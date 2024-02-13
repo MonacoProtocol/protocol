@@ -528,9 +528,11 @@ pub mod monaco_protocol {
         instructions::market::update_market_event_start_time_to_now(market)
     }
 
-    pub fn move_market_to_inplay(ctx: Context<UpdateMarketUnauthorized>) -> Result<()> {
-        let market = &mut ctx.accounts.market;
-        instructions::market::move_market_to_inplay(market)
+    pub fn move_market_to_inplay(ctx: Context<MoveMarketToInplay>) -> Result<()> {
+        instructions::market::move_market_to_inplay(
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.market_liquidities,
+        )
     }
 
     pub fn open_market(ctx: Context<OpenMarket>) -> Result<()> {
