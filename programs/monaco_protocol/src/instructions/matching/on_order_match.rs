@@ -165,8 +165,6 @@ mod test {
             matches: MatchingQueue::new(10),
         };
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
@@ -260,8 +258,6 @@ mod test {
             purchaser: Pubkey::new_unique(),
         });
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
@@ -351,8 +347,6 @@ mod test {
             purchaser: Pubkey::new_unique(),
         });
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
