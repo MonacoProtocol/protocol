@@ -30,6 +30,7 @@ impl MarketLiquidities {
                 outcome,
                 price,
                 liquidity: 0,
+                cross: false,
             },
         }
     }
@@ -44,6 +45,7 @@ impl MarketLiquidities {
                 outcome,
                 price,
                 liquidity: 0,
+                cross: false,
             },
         }
     }
@@ -96,6 +98,7 @@ impl MarketLiquidities {
                     outcome,
                     price,
                     liquidity,
+                    cross: false,
                 },
             ),
         }
@@ -190,6 +193,7 @@ pub struct MarketOutcomePriceLiquidity {
     pub outcome: u16,
     pub price: f64,
     pub liquidity: u64,
+    pub cross: bool,
 }
 
 impl MarketOutcomePriceLiquidity {
@@ -250,21 +254,25 @@ mod total_exposure_tests {
                 outcome: 0,
                 price: 2.111,
                 liquidity: 1001,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 0,
                 price: 2.112,
                 liquidity: 499,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 1,
                 price: 2.111,
                 liquidity: 2001,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 2,
                 price: 2.111,
                 liquidity: 3001,
+                cross: false,
             },
         ];
         assert_eq!(expected_for, market_liquidities.liquidities_for);
@@ -273,21 +281,25 @@ mod total_exposure_tests {
                 outcome: 2,
                 price: 2.111,
                 liquidity: 3001,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 1,
                 price: 2.111,
                 liquidity: 2001,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 0,
                 price: 2.112,
                 liquidity: 499,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 0,
                 price: 2.111,
                 liquidity: 1001,
+                cross: false,
             },
         ];
         assert_eq!(expected_against, market_liquidities.liquidities_against);
@@ -302,16 +314,19 @@ mod total_exposure_tests {
                     outcome: 0,
                     price: 2.111,
                     liquidity: 1001,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 1,
                     price: 2.111,
                     liquidity: 2001,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 2,
                     price: 2.111,
                     liquidity: 3001,
+                    cross: false,
                 },
             ],
             liquidities_against: vec![
@@ -319,16 +334,19 @@ mod total_exposure_tests {
                     outcome: 2,
                     price: 2.111,
                     liquidity: 3001,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 1,
                     price: 2.111,
                     liquidity: 2001,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.111,
                     liquidity: 1001,
+                    cross: false,
                 },
             ],
         };
@@ -358,16 +376,19 @@ mod total_exposure_tests {
                 outcome: 0,
                 price: 2.111,
                 liquidity: 801,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 1,
                 price: 2.111,
                 liquidity: 1801,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 2,
                 price: 2.111,
                 liquidity: 2801,
+                cross: false,
             },
         ];
         assert_eq!(expected_for, market_liquidities.liquidities_for);
@@ -376,16 +397,19 @@ mod total_exposure_tests {
                 outcome: 2,
                 price: 2.111,
                 liquidity: 2801,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 1,
                 price: 2.111,
                 liquidity: 1801,
+                cross: false,
             },
             MarketOutcomePriceLiquidity {
                 outcome: 0,
                 price: 2.111,
                 liquidity: 801,
+                cross: false,
             },
         ];
         assert_eq!(expected_against, market_liquidities.liquidities_against);
@@ -400,21 +424,25 @@ mod total_exposure_tests {
                     outcome: 0,
                     price: 2.30,
                     liquidity: 1001,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.31,
                     liquidity: 1002,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.32,
                     liquidity: 1003,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.33,
                     liquidity: 1004,
+                    cross: false,
                 },
             ],
             liquidities_against: vec![],
@@ -441,21 +469,25 @@ mod total_exposure_tests {
                     outcome: 0,
                     price: 2.33,
                     liquidity: 1004,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.32,
                     liquidity: 1003,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.31,
                     liquidity: 1002,
+                    cross: false,
                 },
                 MarketOutcomePriceLiquidity {
                     outcome: 0,
                     price: 2.30,
                     liquidity: 1001,
+                    cross: false,
                 },
             ],
         };
