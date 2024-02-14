@@ -7,7 +7,6 @@ pub fn create_trade(
     purchaser_pk: &Pubkey,
     market_pk: &Pubkey,
     order_pk: &Pubkey,
-    opposite_trade_pk: &Pubkey,
     outcome_index: u16,
     for_outcome: bool,
     stake: u64,
@@ -18,7 +17,6 @@ pub fn create_trade(
     trade.purchaser = *purchaser_pk;
     trade.market = *market_pk;
     trade.order = *order_pk;
-    trade.opposite_trade = *opposite_trade_pk;
     trade.for_outcome = for_outcome;
     trade.market_outcome_index = outcome_index;
     trade.stake = stake;

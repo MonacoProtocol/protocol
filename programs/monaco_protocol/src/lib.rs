@@ -266,9 +266,7 @@ pub mod monaco_protocol {
                 &ctx.accounts.maker_order.key(),
                 &mut ctx.accounts.maker_order,
                 &mut ctx.accounts.market_position,
-                &ctx.accounts.maker_order_trade.key(),
                 &mut ctx.accounts.maker_order_trade,
-                &ctx.accounts.taker_order_trade.key(),
                 &mut ctx.accounts.taker_order_trade,
                 &ctx.accounts.crank_operator.key(),
             )?;

@@ -7,7 +7,6 @@ pub struct Trade {
     pub purchaser: Pubkey,
     pub market: Pubkey,
     pub order: Pubkey,
-    pub opposite_trade: Pubkey,
     pub market_outcome_index: u16,
     pub for_outcome: bool,
     pub stake: u64,
