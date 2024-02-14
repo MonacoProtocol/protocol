@@ -52,10 +52,6 @@ pub fn cancel_preplay_order_post_event_start(
             CoreError::CancelationPreplayOrderRequestsExist
         );
     }
-    require!(
-        matching_queue.matches.is_empty(),
-        CoreError::MatchingQueueIsNotEmpty
-    );
 
     // if market is inplay, but the inplay flag hasn't been flipped yet, do it now
     // and zero liquidities before cancelling the order if that's what the market is
@@ -64,7 +60,7 @@ pub fn cancel_preplay_order_post_event_start(
         move_market_to_inplay(market, market_liquidities)?;
     }
     if !market_matching_pool.inplay {
-        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+        market_matching_pool.move_to_inplay(matching_queue, &market.event_start_order_behaviour)?;
     }
 
     order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
@@ -475,7 +471,7 @@ mod test {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            error!(CoreError::MatchingQueueIsNotEmpty)
+            error!(CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty)
         );
     }
 

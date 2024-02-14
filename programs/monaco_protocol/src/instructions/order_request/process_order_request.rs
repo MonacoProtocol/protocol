@@ -57,6 +57,9 @@ pub fn process_order_request(
         market::initialize_market_matching_pool(matching_pool, market, order)?;
         market.increment_unclosed_accounts_count()?;
     }
+    if market.is_inplay() && !matching_pool.inplay {
+        matching_pool.move_to_inplay(market_matching_queue, &market.event_start_order_behaviour)?;
+    }
 
     let order_matches = matching::on_order_creation(
         market_liquidities,
@@ -64,7 +67,7 @@ pub fn process_order_request(
         &order.key(),
         order,
     )?;
-    matching::update_matching_pool_with_new_order(market, matching_pool, order)?;
+    matching::update_matching_pool_with_new_order(matching_pool, order)?;
 
     // calculate payment
     let mut total_refund = 0_u64;

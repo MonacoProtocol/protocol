@@ -17,6 +17,7 @@ import { findMarketMatchingPoolPda } from "./market_matching_pools";
 import { findMarketOutcomePda } from "./market_outcomes";
 import { getCancellableOrdersByMarketForProviderWallet } from "./order_query";
 import { findMarketLiquiditiesPda } from "./market_liquidities";
+import { findMarketMatchingQueuePda } from "./market_matching_queues";
 
 /**
  * Constructs the instruction required to perform a cancel order transaction.
@@ -64,6 +65,7 @@ export async function buildCancelOrderInstruction(
     marketOutcomePda,
     escrowPda,
     liquiditiesPda,
+    matchingQueuePda,
     purchaserTokenAccount,
   ] = await Promise.all([
     findMarketPositionPda(program, order.market, provider.wallet.publicKey),
@@ -77,6 +79,7 @@ export async function buildCancelOrderInstruction(
     findMarketOutcomePda(program, order.market, order.marketOutcomeIndex),
     findEscrowPda(program, order.market),
     findMarketLiquiditiesPda(program, order.market),
+    findMarketMatchingQueuePda(program, order.market),
     getWalletTokenAccount(program, mintPk),
   ]);
 
@@ -93,6 +96,7 @@ export async function buildCancelOrderInstruction(
       market: order.market,
       marketEscrow: escrowPda.data.pda,
       marketLiquidities: liquiditiesPda.data.pda,
+      marketMatchingQueue: matchingQueuePda.data.pda,
       mint: mintPk,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
@@ -135,12 +139,14 @@ export async function buildCancelOrdersForMarketInstructions(
     marketPositionPda,
     escrowPda,
     liquiditiesPda,
+    matchingQueuePda,
     purchaserTokenAccount,
     ordersResponse,
   ] = await Promise.all([
     findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
     findEscrowPda(program, marketPk),
     findMarketLiquiditiesPda(program, marketPk),
+    findMarketMatchingQueuePda(program, marketPk),
     getWalletTokenAccount(program, marketTokenPk),
     getCancellableOrdersByMarketForProviderWallet(program, marketPk),
   ]);
@@ -183,6 +189,7 @@ export async function buildCancelOrdersForMarketInstructions(
           market: order.account.market,
           marketEscrow: escrowPda.data.pda,
           marketLiquidities: liquiditiesPda.data.pda,
+          marketMatchingQueue: matchingQueuePda.data.pda,
           mint: market.mintAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         })

@@ -114,6 +114,7 @@ pub mod monaco_protocol {
     ) -> Result<()> {
         instructions::matching::move_market_matching_pool_to_inplay(
             &ctx.accounts.market,
+            &ctx.accounts.market_matching_queue,
             &mut ctx.accounts.market_matching_pool,
         )
     }

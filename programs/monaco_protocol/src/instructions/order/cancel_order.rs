@@ -37,13 +37,15 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
 
     ctx.accounts.order.void_stake_unmatched();
 
+    let market_matching_queue = &ctx.accounts.market_matching_queue;
     let order = &ctx.accounts.order;
 
     // remove from matching pool
     let removed_from_queue = matching::matching_pool::update_on_cancel(
-        order,
-        &mut ctx.accounts.market_matching_pool,
         market,
+        market_matching_queue,
+        &mut ctx.accounts.market_matching_pool,
+        order,
     )?;
 
     // update liquidity iff the order was still present in the liquidity pool

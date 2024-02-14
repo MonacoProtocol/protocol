@@ -1,3 +1,5 @@
+use crate::error::CoreError;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 use std::string::ToString;
@@ -31,13 +33,23 @@ impl MarketMatchingPool {
         BOOL_SIZE + // inplay
         Cirque::size_for(MarketMatchingPool::QUEUE_LENGTH); //orders
 
-    pub fn move_to_inplay(&mut self, market_event_start_order_behaviour: &MarketOrderBehaviour) {
+    pub fn move_to_inplay(
+        &mut self,
+        market_matching_queue: &MarketMatchingQueue,
+        market_event_start_order_behaviour: &MarketOrderBehaviour,
+    ) -> Result<()> {
+        require!(
+            market_matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+
         self.inplay = true;
 
         if market_event_start_order_behaviour.eq(&MarketOrderBehaviour::CancelUnmatched) {
             self.orders.set_length_to_zero();
             self.liquidity_amount = 0_u64;
         }
+        Ok(())
     }
 }
 

@@ -1074,6 +1074,7 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         marketLiquidities: this.liquiditiesPk,
         marketOutcome: outcomePk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketMatchingPool: matchingPoolPk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -1464,6 +1465,7 @@ export class MonacoMarket {
       .moveMarketMatchingPoolToInplay()
       .accounts({
         market: this.pk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketMatchingPool,
       })
       .rpc()
