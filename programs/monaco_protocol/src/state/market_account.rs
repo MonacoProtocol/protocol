@@ -129,6 +129,10 @@ impl Market {
     pub fn market_is_inplay(market: &Market, now: UnixTimestamp) -> bool {
         market.inplay || (market.inplay_enabled && market.event_start_timestamp <= now)
     }
+
+    pub fn move_to_inplay(&mut self) {
+        self.inplay = true;
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]

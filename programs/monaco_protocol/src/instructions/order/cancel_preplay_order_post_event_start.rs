@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
+use crate::instructions::market::move_market_to_inplay;
 use crate::instructions::market_position;
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_liquidities::MarketLiquidities;
@@ -51,32 +52,21 @@ pub fn cancel_preplay_order_post_event_start(
             CoreError::CancelationPreplayOrderRequestsExist
         );
     }
-    require!(
-        matching_queue.matches.is_empty(),
-        CoreError::MatchingQueueIsNotEmpty
-    );
 
+    // if market is inplay, but the inplay flag hasn't been flipped yet, do it now
+    // and zero liquidities before cancelling the order if that's what the market is
+    // configured for
+    if market.is_inplay() && !market.inplay {
+        move_market_to_inplay(market, market_liquidities)?;
+    }
     if !market_matching_pool.inplay {
+        require!(
+            matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    // update liquidity
-    match order.for_outcome {
-        true => market_liquidities
-            .remove_liquidity_for(
-                order.market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .map_err(|_| CoreError::CancelationLowLiquidity)?,
-        false => market_liquidities
-            .remove_liquidity_against(
-                order.market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .map_err(|_| CoreError::CancelationLowLiquidity)?,
-    }
     order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
     let refund = market_position::update_on_order_cancellation(market_position, order)?;
 
@@ -92,6 +82,7 @@ pub fn cancel_preplay_order_post_event_start(
 #[cfg(test)]
 mod test {
     use crate::state::market_account::MarketStatus;
+    use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_pool_account::Cirque;
     use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
     use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
@@ -107,6 +98,7 @@ mod test {
 
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
+
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
         let order_request = OrderRequest {
@@ -144,10 +136,6 @@ mod test {
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
-        market_liquidities
-            .add_liquidity_against(market_outcome_index, matched_price, order.stake)
-            .unwrap();
-
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
@@ -172,81 +160,6 @@ mod test {
         assert_eq!(
             result.unwrap_err(),
             error!(CoreError::CancelationOrderStatusInvalid)
-        );
-    }
-
-    #[test]
-    fn error_not_enough_liquidity() {
-        let market_outcome_index = 1;
-        let matched_price = 2.2_f64;
-        let payer_pk = Pubkey::new_unique();
-
-        let market_pk = Pubkey::new_unique();
-        let mut market = mock_market();
-        let mut market_liquidities = mock_market_liquidities(market_pk);
-
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
-
-        let mut order = Order {
-            purchaser: Pubkey::new_unique(),
-            market: market_pk,
-            market_outcome_index,
-            for_outcome: false,
-            order_status: OrderStatus::Matched,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            stake_unmatched: 10_u64,
-            voided_stake: 0_u64,
-            payout: 0_u64,
-            creation_timestamp: 0,
-            payer: payer_pk,
-        };
-        let matching_queue = &mock_market_matching_queue(market_pk);
-        let order_request_queue = &mock_order_request_queue(market_pk);
-
-        let mut market_matching_pool =
-            mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
-
-        market_liquidities
-            .add_liquidity_against(market_outcome_index, matched_price, order.stake)
-            .unwrap();
-        let mut market_position = MarketPosition::default();
-        market_position.market_outcome_sums.resize(3, 0_i128);
-        market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
-        assert!(update_on_order_creation.is_ok());
-        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
-
-        // when
-        let result = cancel_preplay_order_post_event_start(
-            &mut market,
-            &mut market_liquidities,
-            &mut market_matching_pool,
-            &mut order,
-            &mut market_position,
-            &matching_queue,
-            &order_request_queue,
-        );
-
-        // then
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            error!(CoreError::CancelationLowLiquidity)
         );
     }
 
@@ -297,13 +210,6 @@ mod test {
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
-        market_liquidities
-            .add_liquidity_against(
-                market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .unwrap();
         market_position::update_on_order_request_creation(&mut market_position, &order_request)
             .unwrap();
         market_position::update_on_order_match(
@@ -404,14 +310,6 @@ mod test {
 
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
-
-        market_liquidities
-            .add_liquidity_against(
-                market_outcome_index,
-                order.expected_price,
-                order.stake_unmatched,
-            )
-            .unwrap();
 
         let result = cancel_preplay_order_post_event_start(
             &mut market,
@@ -577,7 +475,7 @@ mod test {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            error!(CoreError::MatchingQueueIsNotEmpty)
+            error!(CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty)
         );
     }
 
@@ -609,14 +507,6 @@ mod test {
             escrow_account_bump: 0,
             funding_account_bump: 0,
             event_start_timestamp: 100,
-        }
-    }
-
-    fn mock_market_liquidities(market: Pubkey) -> MarketLiquidities {
-        MarketLiquidities {
-            market,
-            liquidities_for: vec![],
-            liquidities_against: vec![],
         }
     }
 
