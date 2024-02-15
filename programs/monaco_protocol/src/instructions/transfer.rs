@@ -23,18 +23,18 @@ pub fn order_creation_payment<'info>(
 
 pub fn order_creation_payment_pda<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    pda_funding: &Account<'info, TokenAccount>,
+    funding: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     market: &Pubkey,
-    pda_funding_bump: u8,
+    funding_bump: u8,
     amount: u64,
 ) -> Result<()> {
     transfer_to_market_escrow_pda(
         market_escrow,
-        pda_funding,
+        funding,
         token_program,
         market,
-        pda_funding_bump,
+        funding_bump,
         amount,
     )
 }
@@ -162,10 +162,10 @@ pub fn transfer_to_market_escrow<'info>(
 
 pub fn transfer_to_market_escrow_pda<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    pda_funding: &Account<'info, TokenAccount>,
+    funding: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     market: &Pubkey,
-    pda_funding_bump: u8,
+    funding_bump: u8,
     amount: u64,
 ) -> Result<()> {
     if amount == 0_u64 {
@@ -177,11 +177,11 @@ pub fn transfer_to_market_escrow_pda<'info>(
         CpiContext::new_with_signer(
             token_program.to_account_info(),
             token::Transfer {
-                from: pda_funding.to_account_info(),
+                from: funding.to_account_info(),
                 to: market_escrow.to_account_info(),
-                authority: pda_funding.to_account_info(),
+                authority: funding.to_account_info(),
             },
-            &[&["pda_funding".as_ref(), market.as_ref(), &[pda_funding_bump]]],
+            &[&["funding".as_ref(), market.as_ref(), &[funding_bump]]],
         ),
         amount,
     )

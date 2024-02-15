@@ -119,7 +119,7 @@ export async function buildCreateMarketInstruction(
         market: marketPda,
         marketType: marketTypePk,
         escrow: escrowPda.data.pda,
-        pdaFunding: fundingPda.data.pda,
+        funding: fundingPda.data.pda,
         authorisedOperators: authorisedOperators.data.pda,
         marketOperator: provider.wallet.publicKey,
         rent: web3.SYSVAR_RENT_PUBKEY,

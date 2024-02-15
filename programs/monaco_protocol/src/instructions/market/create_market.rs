@@ -125,7 +125,7 @@ pub fn create(
     ctx.accounts.market.mint_account = ctx.accounts.mint.key();
     ctx.accounts.market.decimal_limit = decimal_limit;
     ctx.accounts.market.escrow_account_bump = ctx.bumps.escrow;
-    ctx.accounts.market.funding_account_bump = ctx.bumps.pda_funding;
+    ctx.accounts.market.funding_account_bump = ctx.bumps.funding;
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;

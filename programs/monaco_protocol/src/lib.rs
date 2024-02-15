@@ -59,7 +59,7 @@ pub mod monaco_protocol {
             let market = ctx.accounts.market.key();
             Pubkey::create_program_address(
                 &[
-                    b"pda_funding",
+                    b"funding",
                     market.key().as_ref(),
                     &[ctx.accounts.market.funding_account_bump],
                 ],

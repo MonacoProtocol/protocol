@@ -187,7 +187,7 @@ export async function findMarketFundingPda(
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
     const [pda, _] = PublicKey.findProgramAddressSync(
-      [Buffer.from("pda_funding"), marketPk.toBuffer()],
+      [Buffer.from("funding"), marketPk.toBuffer()],
       program.programId,
     );
     response.addResponseData({

@@ -413,7 +413,7 @@ export class Monaco {
       this.program as Program,
       marketPk,
     );
-    const fundingPda = await findMarketFundingPda(
+    const fundingPk = await findMarketFundingPda(
       this.program as Program,
       marketPk,
     );
@@ -438,7 +438,7 @@ export class Monaco {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
-        pdaFunding: fundingPda.data.pda,
+        funding: fundingPk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,

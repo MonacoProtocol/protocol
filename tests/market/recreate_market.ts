@@ -41,7 +41,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const fundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -67,7 +67,7 @@ describe("Recreate markets", () => {
         matchingQueue: matchingQueuePk,
         commissionPaymentQueue: paymentsQueuePk,
         orderRequestQueue: orderRequestQueuePk,
-        pdaFunding: marketFundingPda,
+        funding: fundingPk,
         mint: existingMarket.mintAccount,
         marketOperator: monaco.operatorPk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -105,7 +105,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -132,7 +132,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: marketFundingPk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -176,7 +176,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -203,7 +203,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: marketFundingPk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -256,7 +256,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -283,7 +283,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: marketFundingPk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -337,7 +337,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -364,7 +364,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: marketFundingPk,
           mint: existingMarket.mintAccount,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -410,7 +410,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -437,7 +437,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: marketFundingPk,
           mint: mint,
           marketOperator: monaco.operatorPk,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
@@ -480,7 +480,7 @@ describe("Recreate markets", () => {
     const orderRequestQueuePk = (
       await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
-    const marketFundingPda = (
+    const fundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
@@ -507,7 +507,7 @@ describe("Recreate markets", () => {
           matchingQueue: matchingQueuePk,
           commissionPaymentQueue: paymentsQueuePk,
           orderRequestQueue: orderRequestQueuePk,
-          pdaFunding: marketFundingPda,
+          funding: fundingPk,
           mint: existingMarket.mintAccount,
           marketOperator: newOperator.publicKey,
           authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),

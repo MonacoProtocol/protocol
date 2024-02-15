@@ -874,15 +874,15 @@ pub struct CreateMarket<'info> {
     #[account(
         init,
         seeds = [
-            b"pda_funding".as_ref(),
+            b"funding".as_ref(),
             market.key().as_ref(),
         ],
         bump,
         payer = market_operator,
         token::mint = mint,
-        token::authority = pda_funding
+        token::authority = funding
     )]
-    pub pda_funding: Account<'info, TokenAccount>,
+    pub funding: Account<'info, TokenAccount>,
 
     pub rent: Sysvar<'info, Rent>,
 

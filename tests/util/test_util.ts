@@ -182,7 +182,7 @@ export async function createMarket(
       marketType: marketTypePk,
       systemProgram: SystemProgram.programId,
       escrow: escrowPda,
-      pdaFunding: fundingPda,
+      funding: fundingPda,
       mint: mintPk,
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
