@@ -882,7 +882,7 @@ pub struct CreateMarket<'info> {
         token::mint = mint,
         token::authority = funding
     )]
-    pub funding: Account<'info, TokenAccount>,
+    pub funding: Box<Account<'info, TokenAccount>>,
 
     pub rent: Sysvar<'info, Rent>,
 
