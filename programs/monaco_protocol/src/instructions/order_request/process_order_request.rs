@@ -58,7 +58,11 @@ pub fn process_order_request(
         market.increment_unclosed_accounts_count()?;
     }
     if market.is_inplay() && !matching_pool.inplay {
-        matching_pool.move_to_inplay(market_matching_queue, &market.event_start_order_behaviour)?;
+        require!(
+            market_matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+        matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
     let order_matches = matching::on_order_creation(

@@ -102,8 +102,12 @@ pub fn move_market_matching_pool_to_inplay(
         !market_matching_pool.inplay,
         CoreError::MatchingMarketMatchingPoolAlreadyInplay
     );
-
-    market_matching_pool.move_to_inplay(market_matching_queue, &market.event_start_order_behaviour)
+    require!(
+        market_matching_queue.matches.is_empty(),
+        CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+    );
+    market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    Ok(())
 }
 
 pub fn update_matching_pool_with_matched_order(
@@ -146,7 +150,11 @@ pub fn update_on_cancel(
     order: &Account<Order>,
 ) -> Result<bool> {
     if market.is_inplay() && !matching_pool.inplay {
-        matching_pool.move_to_inplay(market_matching_queue, &market.event_start_order_behaviour)?;
+        require!(
+            market_matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+        matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
     if matching_pool.orders.remove(&order.key()).is_some() {

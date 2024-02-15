@@ -60,7 +60,11 @@ pub fn cancel_preplay_order_post_event_start(
         move_market_to_inplay(market, market_liquidities)?;
     }
     if !market_matching_pool.inplay {
-        market_matching_pool.move_to_inplay(matching_queue, &market.event_start_order_behaviour)?;
+        require!(
+            matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
     order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
