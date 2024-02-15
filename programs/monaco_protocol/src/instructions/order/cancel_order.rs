@@ -48,7 +48,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
         order,
     )?;
 
-    // update liquidity iff the order was still present in the liquidity pool
+    // update liquidity if the order was still present in the matching pool
     if removed_from_queue {
         match order.for_outcome {
             true => market_liquidities
