@@ -229,6 +229,8 @@ pub enum CoreError {
      */
     #[msg("The order is currently within the inplay delay period and the operation cannot be completed")]
     InplayDelay,
+    #[msg("Operation cannot currently be completed - market matching queue is not yet empty for inplay transition")]
+    InplayTransitionMarketMatchingQueueIsNotEmpty,
 
     /*
     Market Type

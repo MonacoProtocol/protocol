@@ -110,6 +110,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -177,6 +178,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -239,6 +241,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -306,6 +309,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -376,6 +380,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -481,6 +486,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: market.escrowPk,
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -550,6 +556,7 @@ describe("Security: Cancel Order", () => {
           marketEscrow: marketOther.escrowPda, // invalid
           marketLiquidities: market.liquiditiesPk,
           marketOutcome: market.outcomePks[outcomeIndex],
+          marketMatchingQueue: market.matchingQueuePk,
           marketMatchingPool:
             market.matchingPools[outcomeIndex][price].forOutcome,
           tokenProgram: TOKEN_PROGRAM_ID,
