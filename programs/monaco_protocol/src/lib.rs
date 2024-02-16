@@ -719,7 +719,11 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::ready_to_close(&mut ctx.accounts.market, &ctx.accounts.market_escrow)
+        instructions::market::ready_to_close(
+            &mut ctx.accounts.market,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.market_funding,
+        )
     }
 
     pub fn transfer_market_escrow_surplus(ctx: Context<TransferMarketEscrowSurplus>) -> Result<()> {
@@ -732,9 +736,10 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::transfer_market_escrow_surplus(
+        instructions::market::transfer_market_token_surplus(
             &ctx.accounts.market,
             &ctx.accounts.market_escrow,
+            &ctx.accounts.market_funding,
             &ctx.accounts.market_authority_token,
             &ctx.accounts.token_program,
         )
@@ -794,6 +799,7 @@ pub mod monaco_protocol {
             ctx.accounts.market.unclosed_accounts_count,
         )?;
 
-        instructions::market::close_escrow_token_account(&ctx)
+        instructions::market::close_escrow_token_account(&ctx)?;
+        instructions::market::close_funding_token_account(&ctx)
     }
 }

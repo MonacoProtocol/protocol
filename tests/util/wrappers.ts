@@ -560,6 +560,7 @@ export class Monaco {
       externalPrograms,
       marketPk,
       marketEscrowPk.data.pda,
+      fundingPk.data.pda,
       liquiditiesPk.data.pda,
       matchingQueuePk.data.pda,
       commissionQueuePk.data.pda,
@@ -623,6 +624,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly fundingPk: PublicKey;
   readonly liquiditiesPk: PublicKey;
   readonly matchingQueuePk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
@@ -650,6 +652,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    fundingPk: PublicKey,
     liquiditiesPk: PublicKey,
     matchingQueuePk: PublicKey,
     paymentsQueuePk: PublicKey,
@@ -669,6 +672,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.fundingPk = fundingPk;
     this.liquiditiesPk = liquiditiesPk;
     this.matchingQueuePk = matchingQueuePk;
     this.paymentsQueuePk = paymentsQueuePk;
@@ -1515,6 +1519,7 @@ export class MonacoMarket {
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
+        marketFunding: this.fundingPk,
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,

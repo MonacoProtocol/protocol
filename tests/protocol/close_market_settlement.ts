@@ -52,12 +52,16 @@ describe("Close market accounts (settled)", () => {
     const escrowRent = await monaco.provider.connection.getBalance(
       market.escrowPk,
     );
+    const fundingRent = await monaco.provider.connection.getBalance(
+      market.fundingPk,
+    );
 
     await monaco.program.methods
       .closeMarket()
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketFunding: market.fundingPk,
         authority: marketOperator.publicKey,
       })
       .rpc()
@@ -71,6 +75,7 @@ describe("Close market accounts (settled)", () => {
       balanceMarketCreated +
       marketRent +
       escrowRent +
+      fundingRent +
       liquiditiesRent +
       matchingQueueRent +
       paymentsQueueRent +
@@ -119,6 +124,7 @@ describe("Close market accounts (settled)", () => {
         .accounts({
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketFunding: market.fundingPk,
           authority: marketOperator.publicKey,
         })
         .rpc();
@@ -152,6 +158,7 @@ describe("Close market accounts (settled)", () => {
         .accounts({
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketFunding: market.fundingPk,
           authority: monaco.operatorPk,
         })
         .rpc();
@@ -239,6 +246,7 @@ describe("Close market accounts (settled)", () => {
         .accounts({
           market: market.pk,
           marketEscrow: market.escrowPk,
+          marketFunding: market.fundingPk,
           authority: marketOperator.publicKey,
         })
         .rpc();

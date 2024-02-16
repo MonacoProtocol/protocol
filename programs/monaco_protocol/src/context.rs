@@ -1130,6 +1130,13 @@ pub struct SetMarketReadyToClose<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
@@ -1164,6 +1171,14 @@ pub struct TransferMarketEscrowSurplus<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -1347,6 +1362,14 @@ pub struct CloseMarket<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,

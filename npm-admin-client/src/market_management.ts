@@ -12,7 +12,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { findEscrowPda } from "./market_helpers";
+import { findEscrowPda, findMarketFundingPda } from "./market_helpers";
 import {
   MarketManagementInstructionType,
   buildMarketManagementInstruction,
@@ -571,6 +571,12 @@ export async function transferMarketEscrowSurplus(
     return response.body;
   }
 
+  const marketFunding = await findMarketFundingPda(program, marketPk);
+  if (!marketFunding.success) {
+    response.addErrors(marketEscrow.errors);
+    return response.body;
+  }
+
   const tokenAccount = await getOrCreateAssociatedTokenAccount(
     provider.connection,
     (provider.wallet as NodeWallet).payer,
@@ -584,6 +590,7 @@ export async function transferMarketEscrowSurplus(
       .accounts({
         market: marketPk,
         marketEscrow: marketEscrow.data.pda,
+        marketFunding: marketFunding.data.pda,
         marketAuthorityToken: tokenAccount.address,
         marketOperator: provider.wallet.publicKey,
         authorisedOperators: authorisedOperators.data.pda,
