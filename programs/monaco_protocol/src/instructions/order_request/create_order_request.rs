@@ -51,7 +51,13 @@ pub fn create_order_request(
         .enqueue(order_request)
         .ok_or(CoreError::OrderRequestCreationQueueFull)?;
 
-    market_position::update_on_order_request_creation(market_position, &order_request)
+    market_position::update_on_order_request_creation(
+        market_position,
+        order_request.market_outcome_index,
+        order_request.for_outcome,
+        order_request.stake,
+        order_request.expected_price,
+    )
 }
 
 fn initialize_order_request(

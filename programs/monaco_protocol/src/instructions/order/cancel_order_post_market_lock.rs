@@ -115,8 +115,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let _ =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let _ = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
 
         let result = cancel_order_post_market_lock(
             &mut market,
@@ -195,8 +200,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -253,8 +263,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -311,8 +326,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -369,8 +389,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -429,8 +454,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -505,8 +535,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 

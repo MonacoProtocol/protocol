@@ -235,8 +235,14 @@ mod tests {
                 order_data.price,
             );
 
-            market_position::update_on_order_request_creation(&mut market_position, &order_request)
-                .expect("not expecting failure");
+            market_position::update_on_order_request_creation(
+                &mut market_position,
+                order_request.market_outcome_index,
+                order_request.for_outcome,
+                order_request.stake,
+                order_request.expected_price,
+            )
+            .expect("not expecting failure");
 
             let order = order(order_request);
             update_on_order_match(
