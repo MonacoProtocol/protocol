@@ -1,4 +1,7 @@
+use crate::instructions::current_timestamp;
+use crate::instructions::order_request::validate_market_for_order_creation;
 use anchor_lang::prelude::*;
+use solana_program::clock::UnixTimestamp;
 
 use crate::state::market_account::*;
 use crate::state::market_position_account::*;
@@ -10,6 +13,9 @@ pub fn create_market_position(
     market: &Market,
     market_position: &mut MarketPosition,
 ) -> Result<()> {
+    let now: UnixTimestamp = current_timestamp();
+    validate_market_for_order_creation(market, now)?;
+
     let market_outcomes_len = usize::from(market.market_outcomes_count);
 
     market_position.purchaser = *purchaser;
