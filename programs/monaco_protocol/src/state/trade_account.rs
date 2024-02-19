@@ -7,7 +7,6 @@ pub struct Trade {
     pub purchaser: Pubkey,
     pub market: Pubkey,
     pub order: Pubkey,
-    pub opposite_trade: Pubkey,
     pub market_outcome_index: u16,
     pub for_outcome: bool,
     pub stake: u64,
@@ -19,7 +18,7 @@ pub struct Trade {
 
 impl Trade {
     pub const SIZE: usize = DISCRIMINATOR_SIZE
-        + (PUB_KEY_SIZE * 4) // purchaser, market, order, opposite_trade
+        + (PUB_KEY_SIZE * 3) // purchaser, market, order
         + U16_SIZE // market_outcome_index
         + BOOL_SIZE // for outcome
         + U64_SIZE // stake

@@ -23,9 +23,7 @@ pub fn on_order_match(
     maker_order_pk: &Pubkey,
     maker_order: &mut Order,
     market_position: &mut MarketPosition,
-    maker_order_trade_pk: &Pubkey,
     maker_order_trade: &mut Trade,
-    taker_order_trade_pk: &Pubkey,
     taker_order_trade: &mut Trade,
     payer: &Pubkey,
 ) -> Result<u64> {
@@ -74,7 +72,6 @@ pub fn on_order_match(
                 &maker_order.purchaser,
                 &maker_order.market,
                 maker_order_pk,
-                taker_order_trade_pk,
                 maker_order.market_outcome_index,
                 maker_order.for_outcome,
                 stake,
@@ -89,7 +86,6 @@ pub fn on_order_match(
                 &taker_order.purchaser,
                 &maker_order.market,
                 &taker_order.pk,
-                maker_order_trade_pk,
                 taker_order.outcome_index,
                 taker_order.for_outcome,
                 stake,
@@ -169,8 +165,6 @@ mod test {
             matches: MatchingQueue::new(10),
         };
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
@@ -182,9 +176,7 @@ mod test {
             &order_pk,
             &mut order,
             &mut market_position,
-            &maker_order_trade_pk,
             &mut maker_order_trade,
-            &taker_order_trade_pk,
             &mut taker_order_trade,
             &payer_pk,
         );
@@ -266,8 +258,6 @@ mod test {
             purchaser: Pubkey::new_unique(),
         });
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
@@ -279,9 +269,7 @@ mod test {
             &order_pk,
             &mut order,
             &mut market_position,
-            &maker_order_trade_pk,
             &mut maker_order_trade,
-            &taker_order_trade_pk,
             &mut taker_order_trade,
             &payer_pk,
         );
@@ -359,8 +347,6 @@ mod test {
             purchaser: Pubkey::new_unique(),
         });
 
-        let maker_order_trade_pk = Pubkey::new_unique();
-        let taker_order_trade_pk = Pubkey::new_unique();
         let mut maker_order_trade = Trade::default();
         let mut taker_order_trade = Trade::default();
 
@@ -372,9 +358,7 @@ mod test {
             &order_pk,
             &mut order,
             &mut market_position,
-            &maker_order_trade_pk,
             &mut maker_order_trade,
-            &taker_order_trade_pk,
             &mut taker_order_trade,
             &payer_pk,
         );
