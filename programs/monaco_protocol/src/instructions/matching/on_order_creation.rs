@@ -45,6 +45,7 @@ pub fn on_order_creation(
                 // record the match
                 let order_match = OrderMatch {
                     pk: *order_pk,
+                    trade_index: order.get_and_increment_trade_count()?,
                     purchaser: order.purchaser.key(),
                     for_outcome: order.for_outcome,
                     outcome_index: order.market_outcome_index,
@@ -102,6 +103,7 @@ pub fn on_order_creation(
                 // record the match
                 let order_match = OrderMatch {
                     pk: *order_pk,
+                    trade_index: order.get_and_increment_trade_count()?,
                     purchaser: order.purchaser.key(),
                     for_outcome: order.for_outcome,
                     outcome_index: order.market_outcome_index,
@@ -819,32 +821,6 @@ mod test {
 
         assert_eq!(100_u64, order.stake_unmatched);
         assert_eq!(0_u64, order.payout);
-    }
-
-    fn mock_order(
-        market: Pubkey,
-        market_outcome_index: u16,
-        for_outcome: bool,
-        expected_price: f64,
-        stake: u64,
-        payer: Pubkey,
-    ) -> Order {
-        Order {
-            purchaser: Pubkey::new_unique(),
-            market,
-            market_outcome_index,
-            for_outcome,
-            order_status: OrderStatus::Open,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price,
-            stake,
-            stake_unmatched: stake,
-            voided_stake: 0_u64,
-            payout: 0_u64,
-            creation_timestamp: 0,
-            payer,
-        }
     }
 
     fn mock_market_liquidities(market: Pubkey) -> MarketLiquidities {

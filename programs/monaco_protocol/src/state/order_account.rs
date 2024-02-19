@@ -1,3 +1,4 @@
+use crate::error::CoreError;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 
@@ -25,13 +26,14 @@ pub struct Order {
     pub payout: u64, // amount paid to purchaser during settlement for winning orders
     pub payer: Pubkey, // solana account fee payer
     pub product_commission_rate: f64, // product commission rate at time of order creation
+    pub trade_count: u16,
 }
 
 impl Order {
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + (PUB_KEY_SIZE * 2) // purchaser, market
         + option_size(PUB_KEY_SIZE) // product
-        + U16_SIZE // market_outcome_index
+        + (U16_SIZE *2) // market_outcome_index, trade_count
         + BOOL_SIZE // for outcome
         + ENUM_SIZE // order_status
         + (U64_SIZE * 4) // stake, payout, stake_unmatched, voided_stake
@@ -53,6 +55,15 @@ impl Order {
             self.order_status = OrderStatus::Cancelled;
         }
     }
+
+    pub fn get_and_increment_trade_count(&mut self) -> Result<u16> {
+        let trade_count_old = self.trade_count;
+        self.trade_count = self
+            .trade_count
+            .checked_add(1_u16)
+            .ok_or(CoreError::ArithmeticError)?;
+        Ok(trade_count_old)
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]
@@ -63,4 +74,65 @@ pub enum OrderStatus {
     SettledLose, // order lost, nothing to pay out
     Cancelled,   // order cancelled
     Voided,      // order voided
+}
+
+#[cfg(test)]
+use crate::state::market_order_request_queue::OrderRequest;
+
+#[cfg(test)]
+pub fn mock_order_default() -> Order {
+    mock_order(Pubkey::new_unique(), 0, true, 0.0, 0, Pubkey::new_unique())
+}
+
+#[cfg(test)]
+pub fn mock_order_from_order_request(
+    market: Pubkey,
+    order_request: OrderRequest,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        market,
+        purchaser: order_request.purchaser,
+        market_outcome_index: order_request.market_outcome_index,
+        for_outcome: order_request.for_outcome,
+        stake: order_request.stake,
+        expected_price: order_request.expected_price,
+        stake_unmatched: order_request.stake,
+        voided_stake: 0_u64,
+        payout: 0_u64,
+        order_status: OrderStatus::Open,
+        product: order_request.product,
+        product_commission_rate: order_request.product_commission_rate,
+        creation_timestamp: 0,
+        payer,
+        trade_count: 0,
+    }
+}
+
+#[cfg(test)]
+pub fn mock_order(
+    market: Pubkey,
+    market_outcome_index: u16,
+    for_outcome: bool,
+    expected_price: f64,
+    stake: u64,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        purchaser: Pubkey::new_unique(),
+        market,
+        market_outcome_index,
+        for_outcome,
+        order_status: OrderStatus::Open,
+        product: None,
+        product_commission_rate: 0.0,
+        stake,
+        voided_stake: 0,
+        expected_price,
+        creation_timestamp: 0,
+        stake_unmatched: stake,
+        payout: 0,
+        payer,
+        trade_count: 0,
+    }
 }

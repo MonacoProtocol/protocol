@@ -238,7 +238,12 @@ mod tests {
             market_position::update_on_order_request_creation(&mut market_position, &order_request)
                 .expect("not expecting failure");
 
-            let order = order(order_request);
+            let order = mock_order_from_order_request(
+                Pubkey::new_unique(),
+                order_request,
+                Pubkey::new_unique(),
+            );
+
             update_on_order_match(
                 &mut market_position,
                 &order,
@@ -250,25 +255,6 @@ mod tests {
 
         // Check market position
         assert_eq!(market_position.market_outcome_sums, expected_position);
-    }
-
-    fn order(order_request: OrderRequest) -> Order {
-        Order {
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: order_request.market_outcome_index,
-            for_outcome: order_request.for_outcome,
-            order_status: OrderStatus::Open,
-            product: None,
-            stake: order_request.stake,
-            voided_stake: 0u64,
-            expected_price: order_request.expected_price,
-            creation_timestamp: 0,
-            stake_unmatched: 0u64,
-            payout: 0u64,
-            payer: Pubkey::new_unique(),
-            product_commission_rate: 0f64,
-        }
     }
 
     fn order_request(

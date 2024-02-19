@@ -79,27 +79,31 @@ pub fn on_order_match(
                 now,
                 *payer,
             );
+            maker_order.get_and_increment_trade_count()?;
             market.increment_unclosed_accounts_count()?;
 
-            create_trade(
-                taker_order_trade,
-                &taker_order.purchaser,
-                &maker_order.market,
-                &taker_order.pk,
-                taker_order.outcome_index,
-                taker_order.for_outcome,
-                stake,
-                taker_order.price,
-                now,
-                *payer,
-            );
-            market.increment_unclosed_accounts_count()?;
+            if taker_order_trade.stake == 0 {
+                // prevent duplicates
+                create_trade(
+                    taker_order_trade,
+                    &taker_order.purchaser,
+                    &maker_order.market,
+                    &taker_order.pk,
+                    taker_order.outcome_index,
+                    taker_order.for_outcome,
+                    stake,
+                    taker_order.price,
+                    now,
+                    *payer,
+                );
+                market.increment_unclosed_accounts_count()?;
 
-            emit!(TradeEvent {
-                amount: stake,
-                price: taker_order.price,
-                market: *market_pk,
-            });
+                emit!(TradeEvent {
+                    amount: stake,
+                    price: taker_order.price,
+                    market: *market_pk,
+                });
+            }
 
             // dequeue empty matches (needs to be last due to borrowing)
             if taker_order.stake == 0_u64 {
@@ -114,6 +118,7 @@ pub fn on_order_match(
 #[cfg(test)]
 mod test {
     use crate::state::market_order_request_queue::OrderRequest;
+    use crate::state::order_account::mock_order_from_order_request;
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
         market_matching_pool_account::Cirque,
@@ -138,7 +143,7 @@ mod test {
             2.4_f64,
         );
         let order_pk = Pubkey::new_unique();
-        let mut order = mock_order(market_pk, order_request, payer_pk);
+        let mut order = mock_order_from_order_request(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
         let update_on_order_creation =
@@ -223,7 +228,7 @@ mod test {
             2.4_f64,
         );
         let order_pk = Pubkey::new_unique();
-        let mut order = mock_order(market_pk, order_request, payer_pk);
+        let mut order = mock_order_from_order_request(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
         let update_on_order_creation =
@@ -255,6 +260,7 @@ mod test {
             price: matched_price,
             stake: matched_stake,
             pk: Pubkey::new_unique(),
+            trade_index: 0,
             purchaser: Pubkey::new_unique(),
         });
 
@@ -312,7 +318,7 @@ mod test {
             2.4_f64,
         );
         let order_pk = Pubkey::new_unique();
-        let mut order = mock_order(market_pk, order_request, payer_pk);
+        let mut order = mock_order_from_order_request(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
         let update_on_order_creation =
@@ -344,6 +350,7 @@ mod test {
             price: matched_price,
             stake: matched_stake,
             pk: Pubkey::new_unique(),
+            trade_index: 0,
             purchaser: Pubkey::new_unique(),
         });
 
@@ -432,25 +439,6 @@ mod test {
             delay_expiration_timestamp: 0,
             distinct_seed: [0; 16],
             creation_timestamp: 0,
-        }
-    }
-
-    fn mock_order(market_pk: Pubkey, order_request: OrderRequest, payer_pk: Pubkey) -> Order {
-        Order {
-            market: market_pk,
-            purchaser: order_request.purchaser,
-            market_outcome_index: order_request.market_outcome_index,
-            for_outcome: order_request.for_outcome,
-            stake: order_request.stake,
-            stake_unmatched: order_request.stake,
-            expected_price: order_request.expected_price,
-            voided_stake: 0_u64,
-            payout: 0_u64,
-            order_status: crate::state::order_account::OrderStatus::Open,
-            product: order_request.product,
-            product_commission_rate: order_request.product_commission_rate,
-            creation_timestamp: 0,
-            payer: payer_pk,
         }
     }
 

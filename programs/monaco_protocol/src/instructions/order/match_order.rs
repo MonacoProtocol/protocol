@@ -75,6 +75,7 @@ mod tests {
             voided_stake: 0,
             product: None,
             product_commission_rate: 0.0,
+            trade_count: 0,
         };
         let stake_matched = 100000100;
 
@@ -105,6 +106,7 @@ mod tests {
             voided_stake: 0,
             product: None,
             product_commission_rate: 0.0,
+            trade_count: 0,
         };
         let stake_matched = order.stake_unmatched - 100;
 
@@ -135,6 +137,7 @@ mod tests {
             voided_stake: 0,
             product: None,
             product_commission_rate: 0.0,
+            trade_count: 0,
         };
         let stake_matched = order.stake_unmatched;
 

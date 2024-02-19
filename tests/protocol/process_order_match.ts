@@ -3,6 +3,7 @@ import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
 import { SystemProgram } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { findTradePda } from "../../npm-client";
 
 describe("Matching Crank", () => {
   it("Success", async () => {
@@ -64,6 +65,13 @@ describe("Matching Crank", () => {
       ],
     );
 
+    const [makerOrderTradePk, takerOrderTradePk] = (
+      await Promise.all([
+        findTradePda(monaco.getRawProgram(), makerOrderPk, 1),
+        findTradePda(monaco.getRawProgram(), takerOrderPk, 0),
+      ])
+    ).map((result) => result.data.tradePk);
+
     // THEN
     await monaco.program.methods
       .processOrderMatch()
@@ -79,8 +87,8 @@ describe("Matching Crank", () => {
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: result.makerOrderTrade,
-        takerOrderTrade: result.takerOrderTrade,
+        makerOrderTrade: makerOrderTradePk,
+        takerOrderTrade: takerOrderTradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -90,11 +98,8 @@ describe("Matching Crank", () => {
         function (_) {
           assert.fail("This test should have thrown an error");
         },
-        function (e: Error) {
-          assert.equal(
-            e,
-            "Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x0",
-          );
+        function (e) {
+          assert.equal(e.error.errorCode.code, "MatchingMakerOrderMismatch");
         },
       );
   });

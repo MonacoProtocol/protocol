@@ -54,18 +54,8 @@ describe("Matching Crank", () => {
     const marketMatchingPools = market.matchingPools[outcome][price];
 
     const [forTradePk, againstTradePk] = await Promise.all([
-      findTradePda(
-        monaco.getRawProgram(),
-        againstOrder2Pk.data.orderPk,
-        forOrder1Pk.data.orderPk,
-        true,
-      ),
-      findTradePda(
-        monaco.getRawProgram(),
-        againstOrder2Pk.data.orderPk,
-        forOrder1Pk.data.orderPk,
-        false,
-      ),
+      findTradePda(monaco.getRawProgram(), forOrder1Pk.data.orderPk, 0),
+      findTradePda(monaco.getRawProgram(), againstOrder2Pk.data.orderPk, 0),
     ]);
 
     //

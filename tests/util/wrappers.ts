@@ -213,6 +213,7 @@ export class Monaco {
 
     return {
       pk: matchesHead.pk,
+      tradeIndex: matchesHead.tradeIndex,
       purchaser: matchesHead.purchaser,
       forOutcome: matchesHead.forOutcome,
       outcomeIndex: matchesHead.outcomeIndex,
@@ -1149,19 +1150,17 @@ export class MonacoMarket {
       makerOrder.purchaser,
     );
 
-    const [orderTradePk, orderOppositeTradePk] = (
+    const [makerOrderTradePk, takerOrderTradePk] = (
       await Promise.all([
         findTradePda(
           this.monaco.getRawProgram(),
-          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
-          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
-          makerOrder.forOutcome,
+          makerOrderPk,
+          makerOrder.tradeCount,
         ),
         findTradePda(
           this.monaco.getRawProgram(),
-          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
-          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
-          !makerOrder.forOutcome,
+          takerOrder.pk,
+          takerOrder.tradeIndex,
         ),
       ])
     ).map((result) => result.data.tradePk);
@@ -1176,8 +1175,8 @@ export class MonacoMarket {
         makerOrder: makerOrderPk,
         marketPosition: await this.cacheMarketPositionPk(makerOrder.purchaser),
         purchaserToken: makerPurchaserTokenPk,
-        makerOrderTrade: orderTradePk,
-        takerOrderTrade: orderOppositeTradePk,
+        makerOrderTrade: makerOrderTradePk,
+        takerOrderTrade: takerOrderTradePk,
         crankOperator:
           crankOperatorKeypair instanceof Keypair
             ? crankOperatorKeypair.publicKey
@@ -1206,8 +1205,8 @@ export class MonacoMarket {
       remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
-      makerOrderTrade: orderTradePk,
-      takerOrderTrade: orderOppositeTradePk,
+      makerOrderTrade: makerOrderPk,
+      takerOrderTrade: takerOrderTradePk,
     };
   }
 

@@ -5,36 +5,29 @@ import { ClientResponse, ResponseFactory } from "../types/client";
 import { GetAccount } from "../types/get_account";
 
 /**
- * For a given against and for order PublicKey, add a boolean indicating the for or against trade and return a Program Derived Address (PDA) and the seed used. This PDA is used for trade creation.
+ * For a given order PublicKey and trade index return a Program Derived Address (PDA) and the seed used. This PDA is used for trade creation.
  *
  * @param program {program} anchor program initialized by the consuming client
- * @param againstOrderPk {PublicKey} publicKey of the against order
- * @param forOrderPk {PublicKey} publicKey of the for order
- * @param forOutcome {boolean} whether the trade is for or against
+ * @param orderPk {PublicKey} publicKey of the order
+ * @param orderTradeIndex {number} index representing a trade count
  * @returns {TradePdaResponse} publicKey (PDA) and the seed used to generate it
  *
  * @example
  *
- * const againstOrderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const forOrderPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
- * const forOutcome = false;
- * const tradePda = await findTradePda(program, againstOrderPk, forOrderPk, forOutcome)
+ * const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const orderTradeIndex = 0;
+ * const tradePda = await findTradePda(program, orderPk, orderTradeIndex)
  */
 export async function findTradePda(
   program: Program,
-  againstOrderPk: PublicKey,
-  forOrderPk: PublicKey,
-  forOutcome: boolean,
+  orderPk: PublicKey,
+  orderTradeIndex: number,
 ): Promise<ClientResponse<TradePdaResponse>> {
   const response = new ResponseFactory({} as TradePdaResponse);
 
   try {
-    const [tradePk, _] = await PublicKey.findProgramAddress(
-      [
-        againstOrderPk.toBuffer(),
-        forOrderPk.toBuffer(),
-        Buffer.from(forOutcome.toString()),
-      ],
+    const [tradePk, _] = PublicKey.findProgramAddressSync(
+      [orderPk.toBuffer(), Buffer.from(orderTradeIndex.toString())],
       program.programId,
     );
 

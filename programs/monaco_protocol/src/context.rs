@@ -458,38 +458,20 @@ pub struct AuthoriseOperator<'info> {
     pub system_program: Program<'info, System>,
 }
 
-fn order_against_pk(
-    order: &Account<Order>,
-    market_matching_queue: &Account<MarketMatchingQueue>,
-) -> Result<Pubkey> {
-    let order_against_pk = match order.for_outcome {
-        true => {
-            market_matching_queue
-                .matches
-                .peek()
-                .ok_or(CoreError::MatchingQueueIsEmpty)?
-                .pk
-        }
-        false => order.key(),
-    };
-    Ok(order_against_pk)
+fn taker_order_pk(market_matching_queue: &Account<MarketMatchingQueue>) -> Result<Pubkey> {
+    Ok(market_matching_queue
+        .matches
+        .peek()
+        .ok_or(CoreError::MatchingQueueIsEmpty)?
+        .pk)
 }
 
-fn order_for_pk(
-    order: &Account<Order>,
-    market_matching_queue: &Account<MarketMatchingQueue>,
-) -> Result<Pubkey> {
-    let order_for_pk = match order.for_outcome {
-        true => order.key(),
-        false => {
-            market_matching_queue
-                .matches
-                .peek()
-                .ok_or(CoreError::MatchingQueueIsEmpty)?
-                .pk
-        }
-    };
-    Ok(order_for_pk)
+fn taker_order_trade_index(market_matching_queue: &Account<MarketMatchingQueue>) -> Result<u16> {
+    Ok(market_matching_queue
+        .matches
+        .peek()
+        .ok_or(CoreError::MatchingQueueIsEmpty)?
+        .trade_index)
 }
 
 #[derive(Accounts)]
@@ -519,7 +501,7 @@ pub struct ProcessOrderMatch<'info> {
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = *market_matching_pool.orders.peek(0)
-            .ok_or(CoreError::MatchingQueueIsEmpty)? == maker_order.key() @ CoreError::MatchingPurchaserMismatch,
+            .ok_or(CoreError::MatchingQueueIsEmpty)? == maker_order.key() @ CoreError::MatchingMakerOrderMismatch,
     )]
     pub maker_order: Account<'info, Order>,
     #[account(
@@ -538,9 +520,8 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         init,
         seeds = [
-            order_against_pk(&maker_order, &market_matching_queue)?.as_ref(),
-            order_for_pk(&maker_order, &market_matching_queue)?.as_ref(),
-            maker_order.for_outcome.to_string().as_ref(),
+            maker_order.key().as_ref(),
+            maker_order.trade_count.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -548,11 +529,10 @@ pub struct ProcessOrderMatch<'info> {
     )]
     pub maker_order_trade: Box<Account<'info, Trade>>,
     #[account(
-        init,
+        init_if_needed,
         seeds = [
-            order_against_pk(&maker_order, &market_matching_queue)?.as_ref(),
-            order_for_pk(&maker_order, &market_matching_queue)?.as_ref(),
-            (!maker_order.for_outcome).to_string().as_ref(),
+            taker_order_pk(&market_matching_queue)?.as_ref(),
+            taker_order_trade_index(&market_matching_queue)?.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -582,8 +562,7 @@ pub struct MatchOrders<'info> {
         init,
         seeds = [
             order_against.key().as_ref(),
-            order_for.key().as_ref(),
-            false.to_string().as_ref(),
+            order_against.trade_count.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -621,9 +600,8 @@ pub struct MatchOrders<'info> {
     #[account(
         init,
         seeds = [
-            order_against.key().as_ref(),
             order_for.key().as_ref(),
-            true.to_string().as_ref(),
+            order_for.trade_count.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,

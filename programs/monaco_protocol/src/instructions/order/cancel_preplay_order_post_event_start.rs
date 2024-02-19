@@ -137,6 +137,7 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
         let matching_queue = &mock_market_matching_queue(market_pk);
         let order_request_queue = &mock_order_request_queue(market_pk);
@@ -213,6 +214,7 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
         let matching_queue = &mock_market_matching_queue(market_pk);
         let order_request_queue = &mock_order_request_queue(market_pk);
@@ -289,6 +291,7 @@ mod test {
             payout: 216_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
 
         let matching_queue = &mock_market_matching_queue(market_pk);
@@ -388,6 +391,7 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
 
         let matching_queue = &mock_market_matching_queue(market_pk);
@@ -466,6 +470,7 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
         let matching_queue = &mock_market_matching_queue(market_pk);
         let order_request_queue = &mut mock_order_request_queue(market_pk);
@@ -539,10 +544,12 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: payer_pk,
+            trade_count: 0,
         };
         let matching_queue = &mut mock_market_matching_queue(market_pk);
         matching_queue.matches.enqueue(OrderMatch {
             pk: Default::default(),
+            trade_index: 0,
             purchaser: Default::default(),
             for_outcome: false,
             outcome_index: 0,

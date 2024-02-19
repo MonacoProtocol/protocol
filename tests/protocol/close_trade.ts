@@ -30,9 +30,8 @@ describe("Close trade accounts", () => {
 
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
-      againstOrder,
       forOrder,
-      true,
+      0,
     );
     const tradePk = tradeResponse.data.tradePk;
     const tradeAccountRent = await monaco.provider.connection.getBalance(
@@ -87,9 +86,8 @@ describe("Close trade accounts", () => {
     await market.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
-      againstOrder,
       forOrder,
-      true,
+      0,
     );
 
     await market.settle(0);
@@ -135,9 +133,8 @@ describe("Close trade accounts", () => {
     await marketA.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
-      againstOrder,
       forOrder,
-      true,
+      0,
     );
 
     await marketA.settle(0);
@@ -184,9 +181,8 @@ describe("Close trade accounts", () => {
     await marketA.processMatchingQueue(crankOperator);
     const tradeResponse = await findTradePda(
       monaco.getRawProgram(),
-      againstOrder,
       forOrder,
-      true,
+      0,
     );
 
     await marketA.settle(0);

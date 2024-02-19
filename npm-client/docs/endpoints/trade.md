@@ -11,22 +11,20 @@
 
 ## findTradePda
 
-For a given against and for order PublicKey, add a boolean indicating the for or against trade and return a Program Derived Address (PDA) and the seed used. This PDA is used for trade creation.
+For a given order PublicKey and trade index return a Program Derived Address (PDA) and the seed used. This PDA is used for trade creation.
 
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `againstOrderPk` **PublicKey** {PublicKey} publicKey of the against order
-*   `forOrderPk` **PublicKey** {PublicKey} publicKey of the for order
-*   `forOutcome` **[boolean][7]** {boolean} whether the trade is for or against
+*   `orderPk` **PublicKey** {PublicKey} publicKey of the order
+*   `orderTradeIndex` **[number][7]** {number} index representing a trade count
 
 ### Examples
 
 ```javascript
-const againstOrderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const forOrderPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
-const forOutcome = false;
-const tradePda = await findTradePda(program, againstOrderPk, forOrderPk, forOutcome)
+const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const orderTradeIndex = 0;
+const tradePda = await findTradePda(program, orderPk, orderTradeIndex)
 ```
 
 Returns **TradePdaResponse** publicKey (PDA) and the seed used to generate it
@@ -61,4 +59,4 @@ Returns **Trade** trade account details
 
 [6]: #examples-1
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
