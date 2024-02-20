@@ -1,4 +1,5 @@
 use crate::error::CoreError;
+use crate::error::CoreError::MatchingQueueIsFull;
 use crate::instructions::order;
 use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_queue_account::*;
@@ -46,7 +47,10 @@ pub fn on_order_creation(
                 stake: stake_matched,
             };
             order_matches.push(order_match);
-            market_matching_queue.matches.enqueue(order_match);
+            market_matching_queue
+                .matches
+                .enqueue(order_match)
+                .ok_or(MatchingQueueIsFull)?;
 
             order::match_order_internal(order, order_match.stake, order_match.price)?;
         }
@@ -101,7 +105,10 @@ pub fn on_order_creation(
                 stake: stake_matched,
             };
             order_matches.push(order_match);
-            market_matching_queue.matches.enqueue(order_match);
+            market_matching_queue
+                .matches
+                .enqueue(order_match)
+                .ok_or(MatchingQueueIsFull)?;
 
             order::match_order_internal(order, order_match.stake, order_match.price)?;
         }
