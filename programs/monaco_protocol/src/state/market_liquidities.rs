@@ -4,6 +4,7 @@ use std::string::ToString;
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
+use crate::state::market_account::MarketOrderBehaviour;
 use crate::state::type_size::*;
 
 #[account]
@@ -184,6 +185,14 @@ impl MarketLiquidities {
             }
 
             Ordering::Equal
+        }
+    }
+
+    pub fn move_to_inplay(&mut self, market_event_start_order_behaviour: &MarketOrderBehaviour) {
+        // Reset liquidities when market moves to inplay if that's the desired behaviour
+        if market_event_start_order_behaviour.eq(&MarketOrderBehaviour::CancelUnmatched) {
+            self.liquidities_for = Vec::new();
+            self.liquidities_against = Vec::new();
         }
     }
 }

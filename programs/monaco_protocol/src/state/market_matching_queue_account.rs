@@ -160,106 +160,144 @@ mod tests_matching_queue {
     use super::*;
 
     #[test]
-    fn enqueue_empty_queue() {
-        let mut queue = MatchingQueue::new(10);
+    fn test_enqueue() {
+        let mut queue = MatchingQueue::new(3);
         assert_eq!(0, queue.len());
 
-        let result = queue.enqueue(OrderMatch::default());
-        assert!(result.is_some());
-        assert_eq!(0, result.unwrap());
+        // 1/3
+        let index1 = queue.enqueue(OrderMatch::default());
+        assert!(index1.is_some());
+        assert_eq!(0, index1.unwrap());
         assert_eq!(1, queue.len());
-    }
 
-    #[test]
-    fn enqueue_some_queue() {
-        let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
+        // 2/3
+        let index2 = queue.enqueue(OrderMatch::default());
+        assert!(index2.is_some());
+        assert_eq!(1, index2.unwrap());
         assert_eq!(2, queue.len());
 
-        let result = queue.enqueue(OrderMatch::default());
-        assert!(result.is_some());
-        assert_eq!(2, result.unwrap());
+        // 3/3
+        let index3 = queue.enqueue(OrderMatch::default());
+        assert!(index3.is_some());
+        assert_eq!(2, index3.unwrap());
+        assert_eq!(3, queue.len());
+
+        // full
+        let index4 = queue.enqueue(OrderMatch::default());
+        assert!(index4.is_none());
         assert_eq!(3, queue.len());
     }
 
     #[test]
-    fn enqueue_full_queue() {
-        let mut queue = MatchingQueue::new(10);
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        queue.enqueue(OrderMatch::default());
-        assert_eq!(10, queue.len());
-
-        let result = queue.enqueue(OrderMatch::default());
-        assert!(result.is_none());
-        assert_eq!(10, queue.len());
-    }
-
-    #[test]
-    fn dequeue_empty_queue() {
-        let mut queue = MatchingQueue::new(10);
-        assert_eq!(0, queue.len());
-
-        let result = queue.dequeue();
-        assert!(result.is_none());
-        assert_eq!(0, queue.len());
-    }
-
-    #[test]
-    fn dequeue_full_queue() {
-        let mut queue = MatchingQueue::new(10);
+    fn test_dequeue() {
+        let mut queue = MatchingQueue::new(3);
         queue.enqueue(OrderMatch::default());
         queue.enqueue(OrderMatch::default());
         queue.enqueue(OrderMatch::default());
         assert_eq!(3, queue.len());
 
-        let result = queue.dequeue();
-        assert!(result.is_some());
+        // 1/3
+        let item1 = queue.dequeue();
+        assert!(item1.is_some());
+        assert_eq!(2, queue.len());
+
+        // 2/3
+        let item2 = queue.dequeue();
+        assert!(item2.is_some());
+        assert_eq!(1, queue.len());
+
+        // 3/3
+        let item3 = queue.dequeue();
+        assert!(item3.is_some());
+        assert_eq!(0, queue.len());
+
+        // empty
+        let item4 = queue.dequeue();
+        assert!(item4.is_none());
+        assert_eq!(0, queue.len());
     }
 
     #[test]
-    fn peek_empty_queue() {
-        let mut queue = MatchingQueue::new(10);
-        assert_eq!(0, queue.len());
+    fn test_wandering_head() {
+        let mut queue = MatchingQueue::new(3);
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        assert_eq!(3, queue.len());
 
-        let result = queue.peek();
-        assert!(result.is_none());
-        assert_eq!(0, queue.len());
+        assert_eq!(0, queue.front); // < front ofr the queue is moving
+        assert_eq!(0, queue.back());
 
-        let result_mut = queue.peek_mut();
-        assert!(result_mut.is_none());
-        assert_eq!(0, queue.len());
+        // 1
+        let item1 = queue.dequeue();
+        assert!(item1.is_some());
+        assert_eq!(2, queue.len());
+        let index1 = queue.enqueue(OrderMatch::default());
+        assert!(index1.is_some());
+        assert_eq!(0, index1.unwrap());
+        assert_eq!(3, queue.len());
+
+        assert_eq!(1, queue.front);
+        assert_eq!(1, queue.back());
+
+        // 2
+        let item2 = queue.dequeue();
+        assert!(item2.is_some());
+        assert_eq!(2, queue.len());
+        let index2 = queue.enqueue(OrderMatch::default());
+        assert!(index2.is_some());
+        assert_eq!(1, index2.unwrap());
+        assert_eq!(3, queue.len());
+
+        assert_eq!(2, queue.front);
+        assert_eq!(2, queue.back());
+
+        // 3 full circle
+        let item3 = queue.dequeue();
+        assert!(item3.is_some());
+        assert_eq!(2, queue.len());
+        let index3 = queue.enqueue(OrderMatch::default());
+        assert!(index3.is_some());
+        assert_eq!(2, index3.unwrap());
+        assert_eq!(3, queue.len());
+
+        assert_eq!(0, queue.front);
+        assert_eq!(0, queue.back());
     }
 
     #[test]
-    fn peek_full_queue() {
-        let mut queue = MatchingQueue::new(10);
-        let item = OrderMatch::default();
-        queue.enqueue(item);
+    fn test_peek() {
+        let mut queue = MatchingQueue::new(3);
+        assert_eq!(0, queue.len());
+
+        // peek empty
+        let peek1 = queue.peek();
+        assert!(peek1.is_none());
+        assert_eq!(0, queue.len());
+
+        let peek1_mut = queue.peek_mut();
+        assert!(peek1_mut.is_none());
+        assert_eq!(0, queue.len());
+
+        // peek first
+        let item1 = OrderMatch::default();
+        queue.enqueue(item1);
         assert_eq!(1, queue.len());
 
         let result = queue.peek();
         assert!(result.is_some());
-        assert_eq!(item, *result.unwrap());
+        assert_eq!(item1, *result.unwrap());
         assert_eq!(1, queue.len());
 
         let result_mut = queue.peek_mut();
         assert!(result_mut.is_some());
-        assert_eq!(item, *result_mut.unwrap());
+        assert_eq!(item1, *result_mut.unwrap());
         assert_eq!(1, queue.len());
     }
 
     #[test]
-    fn peek_edit_in_place() {
-        let mut queue = MatchingQueue::new(10);
+    fn test_peek_edit() {
+        let mut queue = MatchingQueue::new(3);
         queue.enqueue(OrderMatch::default());
         queue.enqueue(OrderMatch::default());
         assert_eq!(2, queue.len());

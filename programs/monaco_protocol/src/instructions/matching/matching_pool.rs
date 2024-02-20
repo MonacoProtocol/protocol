@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::state::market_account::{Market, MarketStatus};
 use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::{CoreError, Order};
 
@@ -55,14 +56,9 @@ pub fn update_on_match(
 }
 
 pub fn update_matching_pool_with_new_order(
-    market: &Market,
     market_matching_pool: &mut MarketMatchingPool,
     order_account: &Account<Order>,
 ) -> Result<()> {
-    if market.is_inplay() && !market_matching_pool.inplay {
-        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
-    }
-
     market_matching_pool.liquidity_amount = market_matching_pool
         .liquidity_amount
         .checked_add(order_account.stake_unmatched)
@@ -90,6 +86,7 @@ pub fn update_matching_pool_with_new_order(
 
 pub fn move_market_matching_pool_to_inplay(
     market: &Market,
+    market_matching_queue: &MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
 ) -> Result<()> {
     require!(
@@ -105,9 +102,11 @@ pub fn move_market_matching_pool_to_inplay(
         !market_matching_pool.inplay,
         CoreError::MatchingMarketMatchingPoolAlreadyInplay
     );
-
+    require!(
+        market_matching_queue.matches.is_empty(),
+        CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+    );
     market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
-
     Ok(())
 }
 
@@ -145,15 +144,26 @@ pub fn update_matching_pool_with_matched_order(
 }
 
 pub fn update_on_cancel(
-    order: &Account<Order>,
+    market: &Market,
+    market_matching_queue: &MarketMatchingQueue,
     matching_pool: &mut MarketMatchingPool,
-) -> Result<()> {
+    order: &Account<Order>,
+) -> Result<bool> {
+    if market.is_inplay() && !matching_pool.inplay {
+        require!(
+            market_matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+        matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    }
+
     if matching_pool.orders.remove(&order.key()).is_some() {
         matching_pool.liquidity_amount = matching_pool
             .liquidity_amount
             .checked_sub(order.voided_stake)
             .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+        Ok(true)
+    } else {
+        Ok(false)
     }
-
-    Ok(())
 }

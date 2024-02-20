@@ -187,6 +187,10 @@ export class Monaco {
       marketOrderRequestQueuePk,
     );
 
+    if (marketOrderRequestQueue.orderRequests.len == 0) {
+      return null;
+    }
+
     const front = marketOrderRequestQueue.orderRequests.front;
     const orderRequest = marketOrderRequestQueue.orderRequests.items[front];
 
@@ -196,6 +200,7 @@ export class Monaco {
       forOutcome: orderRequest.forOutcome,
       marketOutcomeIndex: orderRequest.marketOutcomeIndex,
       expectedPrice: orderRequest.expectedPrice,
+      delayExpirationTimestamp: orderRequest.delayExpirationTimestamp,
     };
   }
 
@@ -207,6 +212,10 @@ export class Monaco {
     const marketMatchingQueue = await this.fetchMarketMatchingQueue(
       marketMatchingQueuePk,
     );
+
+    if (marketMatchingQueue.matches.len == 0) {
+      return null;
+    }
 
     const matchesFront = marketMatchingQueue.matches.front;
     const matchesHead = marketMatchingQueue.matches.items[matchesFront];
@@ -233,6 +242,10 @@ export class Monaco {
     const marketMatchingPool = await this.fetchMarketMatchingPool(
       marketMatchingPoolPk,
     );
+
+    if (marketMatchingPool.orders.len == 0) {
+      return null;
+    }
 
     const ordersFront = marketMatchingPool.orders.front;
     return marketMatchingPool.orders.items[ordersFront];
@@ -1062,6 +1075,7 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         marketLiquidities: this.liquiditiesPk,
         marketOutcome: outcomePk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketMatchingPool: matchingPoolPk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -1134,6 +1148,9 @@ export class MonacoMarket {
 
   async processMatchingQueue(crankOperatorKeypair?: Keypair) {
     const takerOrder = await this.getMarketMatchingQueueHead();
+    if (takerOrder == null) {
+      return;
+    }
 
     const matchingPools =
       this.matchingPools[takerOrder.outcomeIndex][takerOrder.price];
@@ -1426,6 +1443,7 @@ export class MonacoMarket {
       .moveMarketToInplay()
       .accounts({
         market: this.pk,
+        marketLiquidities: this.liquiditiesPk,
       })
       .rpc()
       .catch((e) => {
@@ -1446,6 +1464,7 @@ export class MonacoMarket {
       .moveMarketMatchingPoolToInplay()
       .accounts({
         market: this.pk,
+        marketMatchingQueue: this.matchingQueuePk,
         marketMatchingPool,
       })
       .rpc()

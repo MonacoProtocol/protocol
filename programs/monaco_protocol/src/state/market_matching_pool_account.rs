@@ -103,7 +103,7 @@ impl Cirque {
             let old_back = self.back();
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
-            if self.items.len() < self.capacity() as usize {
+            if old_back as usize == self.items.len() {
                 self.items.push(item);
             } else {
                 self.items[old_back as usize] = item;
@@ -868,5 +868,25 @@ mod tests {
         assert!(result.is_some());
         assert_eq!(item, *result.unwrap());
         assert_eq!(1, queue.len());
+    }
+
+    #[test]
+    fn test_cirque_enqueue_after_removal() {
+        let mut queue = Cirque::new(3);
+
+        let index_0 = Pubkey::new_unique();
+        let to_remove = Pubkey::new_unique();
+        let replacement = Pubkey::new_unique();
+
+        queue.enqueue(index_0);
+        queue.enqueue(to_remove);
+        queue.remove(&to_remove);
+        queue.enqueue(replacement);
+
+        assert_eq!(0, queue.front);
+        assert_eq!(2, queue.len());
+
+        let expected_items = vec![index_0, replacement];
+        assert_eq!(expected_items, queue.items);
     }
 }

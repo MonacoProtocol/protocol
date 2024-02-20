@@ -239,6 +239,8 @@ pub struct DequeueOrderRequest<'info> {
 #[derive(Accounts)]
 pub struct UpdateMarketMatchingPool<'info> {
     pub market: Account<'info, Market>,
+    #[account(has_one = market)]
+    pub market_matching_queue: Account<'info, MarketMatchingQueue>,
     #[account(mut, has_one = market)]
     pub market_matching_pool: Account<'info, MarketMatchingPool>,
 }
@@ -273,6 +275,8 @@ pub struct CancelOrder<'info> {
         constraint = market_outcome.index == order.market_outcome_index @ CoreError::CancelationMarketOutcomeMismatch,
     )]
     pub market_outcome: Account<'info, MarketOutcome>,
+    #[account(has_one = market)]
+    pub market_matching_queue: Account<'info, MarketMatchingQueue>,
     #[account(
         mut,
         seeds = [
@@ -1046,9 +1050,11 @@ pub struct SettleMarket<'info> {
 }
 
 #[derive(Accounts)]
-pub struct UpdateMarketUnauthorized<'info> {
+pub struct MoveMarketToInplay<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
+    #[account(mut, has_one = market)]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
 }
 
 #[derive(Accounts)]

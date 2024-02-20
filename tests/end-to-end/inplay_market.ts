@@ -26,21 +26,20 @@ describe("End to end test of", () => {
       inplayDelay,
       eventStartTimestamp,
       marketLockTimestamp,
+      { cancelUnmatched: {} },
+      { cancelUnmatched: {} },
     );
     const purchaser = await createWalletWithBalance(monaco.provider);
     await market.airdrop(purchaser, 100.0);
 
     // Liquidity, prior match & No liquidity, prior match
-    const prePlayOrder01 = await market.forOrder(0, 1, 2.0, purchaser);
-    const prePlayOrder02 = await market.againstOrder(0, 1, 2.0, purchaser);
+    await market.forOrder(0, 1, 2.0, purchaser);
+    await market.againstOrder(0, 1, 2.0, purchaser);
     await market.processMatchingQueue();
-    const prePlayOrder03 = await market.forOrder(0, 1, 2.0, purchaser);
+    const prePlayOrder0_2 = await market.forOrder(0, 1, 2.0, purchaser);
 
     // No liquidity, no matches
-    const prePlayOrder10 = await market.forOrder(1, 1, 2.0, purchaser);
-
-    // Additional order to be placed after event start time but before market is moved to inplay
-    await market.forOrder(1, 1, 3.0, purchaser);
+    const prePlayOrder1_2 = await market.forOrder(1, 1, 2.0, purchaser);
 
     try {
       await market.moveMarketToInplay();
@@ -50,6 +49,7 @@ describe("End to end test of", () => {
     }
 
     // Move start time up to now
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     await market.updateMarketEventStartTimeToNow();
 
     // Create an inplay order request before the market inplay flag has been updated
@@ -68,12 +68,14 @@ describe("End to end test of", () => {
 
     await market.moveMarketToInplay();
 
+    // Changes below will be validated after all requests are processed
+    //
     // 1. Inplay order into existing non-zero'd preplay matching pool
     // With existing liquidity
     matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
 
-    await market.forOrderRequest(0, 1, 2.0, purchaser);
+    await market.forOrderRequest(0, 2, 2.0, purchaser);
     matchingPool = await market.getForMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 1);
 
@@ -81,7 +83,7 @@ describe("End to end test of", () => {
     matchingPool = await market.getAgainstMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
-    await market.againstOrderRequest(0, 1, 2.0, purchaser);
+    await market.againstOrderRequest(0, 3, 2.0, purchaser);
     matchingPool = await market.getAgainstMatchingPool(0, 2.0);
     assert.equal(matchingPool.liquidity, 0);
 
@@ -124,9 +126,9 @@ describe("End to end test of", () => {
 
     // Check liquidity that should be visible is visible
     matchingPool = await market.getForMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 1);
+    assert.equal(matchingPool.liquidity, 2);
     matchingPool = await market.getAgainstMatchingPool(0, 2.0);
-    assert.equal(matchingPool.liquidity, 0);
+    assert.equal(matchingPool.liquidity, 1);
 
     matchingPool = await market.getForMatchingPool(1, 2.0);
     assert.equal(matchingPool.liquidity, 1);
@@ -153,20 +155,24 @@ describe("End to end test of", () => {
     assert.equal(order.stakeUnmatched, 0);
 
     // Close orders due to event start
-    assert.deepEqual((await market.getAccount()).unsettledAccountsCount, 13);
-    //    await market.cancelPreplayOrderPostEventStart(prePlayOrder03);
-    await market.cancelPreplayOrderPostEventStart(prePlayOrder10);
-    // await market.cancelPreplayOrderPostEventStart(prePlayOrder11);
     assert.deepEqual((await market.getAccount()).unsettledAccountsCount, 12);
+    order = await monaco.getOrder(prePlayOrder0_2);
+    assert.equal(order.stakeUnmatched, 1);
+    assert.equal(order.stakeVoided, 0);
+    order = await monaco.getOrder(prePlayOrder1_2);
+    assert.equal(order.stakeUnmatched, 1);
+    assert.equal(order.stakeVoided, 0);
 
-    order = await monaco.getOrder(prePlayOrder01);
+    await market.cancelPreplayOrderPostEventStart(prePlayOrder0_2);
+    await market.cancelPreplayOrderPostEventStart(prePlayOrder1_2);
+
+    assert.deepEqual((await market.getAccount()).unsettledAccountsCount, 10);
+    order = await monaco.getOrder(prePlayOrder0_2);
     assert.equal(order.stakeUnmatched, 0);
-    order = await monaco.getOrder(prePlayOrder02);
+    assert.equal(order.stakeVoided, 1);
+    order = await monaco.getOrder(prePlayOrder1_2);
     assert.equal(order.stakeUnmatched, 0);
-    order = await monaco.getOrder(prePlayOrder03);
-    assert.equal(order.stakeUnmatched, 0);
-    order = await monaco.getOrder(prePlayOrder10);
-    assert.equal(order.stakeUnmatched, 0);
+    assert.equal(order.stakeVoided, 1);
 
     // Settle market and market positions and orders
     await market.settle(0);
@@ -182,7 +188,7 @@ describe("End to end test of", () => {
     await market.completeSettlement();
     const marketAccount = await market.getAccount();
     assert.equal(marketAccount.unsettledAccountsCount, 0);
-    assert.equal(marketAccount.unclosedAccountsCount, 28);
+    assert.equal(marketAccount.unclosedAccountsCount, 29);
 
     // Close accounts
     await market.readyToClose();
