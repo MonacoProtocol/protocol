@@ -10,7 +10,7 @@ pub struct MarketMatchingQueue {
 }
 
 impl MarketMatchingQueue {
-    pub const QUEUE_LENGTH: usize = 10;
+    pub const QUEUE_LENGTH: usize = 20;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
