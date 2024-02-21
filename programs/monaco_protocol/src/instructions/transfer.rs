@@ -7,7 +7,7 @@ use crate::state::market_account::Market;
 
 pub fn order_creation_payment<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    purchaser: &AccountInfo<'info>,
+    purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
@@ -126,12 +126,19 @@ pub fn transfer_market_escrow_surplus<'info>(
     market: &Account<Market>,
 ) -> Result<()> {
     let amount: u64 = market_escrow.amount;
+    if amount == 0_u64 {
+        return Ok(());
+    }
     msg!("Transferring surplus of {} from escrow", amount);
-    transfer_from_market_escrow(
+    transfer_from_market_token_account(
         market_escrow,
         purchaser_token_account,
         token_program,
-        market,
+        &[
+            "escrow".as_ref(),
+            market.key().as_ref(),
+            &[market.escrow_account_bump],
+        ],
         amount,
     )
 }
@@ -143,19 +150,26 @@ pub fn transfer_market_funding_surplus<'info>(
     market: &Account<Market>,
 ) -> Result<()> {
     let amount: u64 = market_funding.amount;
+    if amount == 0_u64 {
+        return Ok(());
+    }
     msg!("Transferring surplus of {} from funding", amount);
-    transfer_from_market_escrow(
+    transfer_from_market_token_account(
         market_funding,
         purchaser_token_account,
         token_program,
-        market,
+        &[
+            "funding".as_ref(),
+            market.key().as_ref(),
+            &[market.funding_account_bump],
+        ],
         amount,
     )
 }
 
 pub fn transfer_to_market_escrow<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    purchaser: &AccountInfo<'info>,
+    purchaser: &Signer<'info>,
     purchaser_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
@@ -170,7 +184,7 @@ pub fn transfer_to_market_escrow<'info>(
             token::Transfer {
                 from: purchaser_token_account.to_account_info(),
                 to: market_escrow.to_account_info(),
-                authority: purchaser.to_account_info().clone(),
+                authority: purchaser.to_account_info(),
             },
         ),
         amount,
@@ -215,49 +229,33 @@ pub fn transfer_from_market_escrow<'info>(
         return Ok(());
     }
     msg!("Transferring from escrow");
-    token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            token::Transfer {
-                from: market_escrow.to_account_info(),
-                to: purchaser_token_account.to_account_info(),
-                authority: market_escrow.to_account_info(),
-            },
-            &[&[
-                "escrow".as_ref(),
-                market.key().as_ref(),
-                &[market.escrow_account_bump],
-            ]],
-        ),
+    transfer_from_market_token_account(
+        market_escrow,
+        purchaser_token_account,
+        token_program,
+        &[
+            "escrow".as_ref(),
+            market.key().as_ref(),
+            &[market.escrow_account_bump],
+        ],
         amount,
     )
 }
 
-pub fn transfer_from_market_funding<'info>(
-    market_funding: &Account<'info, TokenAccount>,
-    purchaser_token_account: &Account<'info, TokenAccount>,
+pub fn transfer_from_market_token_account<'info>(
+    from_token_account: &Account<'info, TokenAccount>,
+    to_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-    market: &Account<Market>,
+    seeds: &[&[u8]],
     amount: u64,
 ) -> Result<()> {
-    if amount == 0_u64 {
-        return Ok(());
-    }
-    msg!("Transferring from funding");
+    let accounts = token::Transfer {
+        from: from_token_account.to_account_info(),
+        to: to_token_account.to_account_info(),
+        authority: from_token_account.to_account_info(),
+    };
     token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            token::Transfer {
-                from: market_funding.to_account_info(),
-                to: purchaser_token_account.to_account_info(),
-                authority: market_funding.to_account_info(),
-            },
-            &[&[
-                "funding".as_ref(),
-                market.key().as_ref(),
-                &[market.funding_account_bump],
-            ]],
-        ),
+        CpiContext::new_with_signer(token_program.to_account_info(), accounts, &[seeds]),
         amount,
     )
 }

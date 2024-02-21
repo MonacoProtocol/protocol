@@ -139,7 +139,7 @@ describe("Market: update status", () => {
     );
 
     await monaco.program.methods
-      .transferMarketEscrowSurplus()
+      .transferMarketTokenSurplus()
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,

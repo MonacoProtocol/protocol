@@ -549,9 +549,9 @@ export async function voidMarket(
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
- * const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+ * const transferTxn = await transferMarketTokenSurplus(program, marketPk, mintPk)
  */
-export async function transferMarketEscrowSurplus(
+export async function transferMarketTokenSurplus(
   program: Program,
   marketPk: PublicKey,
   mintPk: PublicKey,
@@ -586,7 +586,7 @@ export async function transferMarketEscrowSurplus(
 
   try {
     const instruction = await program.methods
-      .transferMarketEscrowSurplus()
+      .transferMarketTokenSurplus()
       .accounts({
         market: marketPk,
         marketEscrow: marketEscrow.data.pda,

@@ -16,7 +16,7 @@ pub fn create_order_request(
     market_pk: Pubkey,
     market: &mut Market,
     payer: &Signer,
-    purchaser: &AccountInfo,
+    purchaser: &Signer,
     product: &Option<Account<Product>>,
     market_position: &mut MarketPosition,
     market_outcome: &MarketOutcome,
@@ -104,7 +104,7 @@ fn validate_order_request(
     data: &OrderRequestData,
     now: UnixTimestamp,
 ) -> Result<()> {
-    validate_market_for_order_creation(market, now)?;
+    validate_market_for_order_request(market, now)?;
 
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
@@ -140,7 +140,7 @@ fn validate_order_request(
     Ok(())
 }
 
-pub fn validate_market_for_order_creation(market: &Market, now: UnixTimestamp) -> Result<()> {
+pub fn validate_market_for_order_request(market: &Market, now: UnixTimestamp) -> Result<()> {
     let market_lock_timestamp = &market.market_lock_timestamp;
     let status = &market.market_status;
 
@@ -176,7 +176,7 @@ mod tests {
 
         let market = create_test_market(time_in_future, false, MarketStatus::Open, None);
 
-        let result = validate_market_for_order_creation(&market, now);
+        let result = validate_market_for_order_request(&market, now);
         assert!(result.is_ok());
     }
 
@@ -187,7 +187,7 @@ mod tests {
 
         let market = create_test_market(time_in_past, false, MarketStatus::Open, None);
 
-        let result = validate_market_for_order_creation(&market, time_in_future);
+        let result = validate_market_for_order_request(&market, time_in_future);
 
         assert!(result
             .err()
@@ -203,7 +203,7 @@ mod tests {
 
         let market = create_test_market(time_in_future, false, MarketStatus::Settled, None);
 
-        let result = validate_market_for_order_creation(&market, now);
+        let result = validate_market_for_order_request(&market, now);
 
         assert!(result
             .err()
@@ -219,7 +219,7 @@ mod tests {
 
         let market = create_test_market(time_in_future, true, MarketStatus::Open, None);
 
-        let result = validate_market_for_order_creation(&market, now);
+        let result = validate_market_for_order_request(&market, now);
 
         assert!(result
             .err()
@@ -235,7 +235,7 @@ mod tests {
 
         let market = create_test_market(time_in_future, false, MarketStatus::Open, Some(1));
 
-        let result = validate_market_for_order_creation(&market, now);
+        let result = validate_market_for_order_request(&market, now);
 
         assert!(result
             .err()

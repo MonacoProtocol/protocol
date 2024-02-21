@@ -726,7 +726,7 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn transfer_market_escrow_surplus(ctx: Context<TransferMarketEscrowSurplus>) -> Result<()> {
+    pub fn transfer_market_token_surplus(ctx: Context<TransferMarketTokenSurplus>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,

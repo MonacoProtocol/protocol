@@ -106,14 +106,12 @@ pub struct CreateMarketPosition<'info> {
         payer = payer,
         space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
     )]
-    pub market_position: Box<Account<'info, MarketPosition>>,
+    pub market_position: Account<'info, MarketPosition>,
 
     #[account(mut)]
-    pub market: Box<Account<'info, Market>>,
+    pub market: Account<'info, Market>,
 
-    /// CHECK: this can either be a SystemAccount or PDA, only key is used so using AccountInfo should be safe
-    #[account(mut)]
-    pub purchaser: AccountInfo<'info>,
+    pub purchaser: SystemAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -1159,7 +1157,7 @@ pub struct CompleteMarketVoid<'info> {
 }
 
 #[derive(Accounts)]
-pub struct TransferMarketEscrowSurplus<'info> {
+pub struct TransferMarketTokenSurplus<'info> {
     #[account()]
     pub market: Account<'info, Market>,
 

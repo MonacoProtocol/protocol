@@ -41,7 +41,7 @@
 *   [voidMarket][37]
     *   [Parameters][38]
     *   [Examples][39]
-*   [transferMarketEscrowSurplus][40]
+*   [transferMarketTokenSurplus][40]
     *   [Parameters][41]
     *   [Examples][42]
 
@@ -341,7 +341,7 @@ const voidMarket = await voidMarket(program, marketPk)
 
 Returns **TransactionResponse** transaction ID of the request
 
-## transferMarketEscrowSurplus
+## transferMarketTokenSurplus
 
 Attempts to transfer any surplus token balance in a market's escrow account into an associated token account belonging to the calling client.
 
@@ -364,7 +364,7 @@ The token balance will only be transferred into an ATA belonging to the market a
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
-const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+const transferTxn = await transferMarketTokenSurplus(program, marketPk, mintPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -447,7 +447,7 @@ Returns **TransactionResponse** transaction ID of the request
 
 [39]: #examples-12
 
-[40]: #transfermarketescrowsurplus
+[40]: #transfermarkettokensurplus
 
 [41]: #parameters-13
 
