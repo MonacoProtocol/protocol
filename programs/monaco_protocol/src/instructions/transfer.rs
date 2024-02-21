@@ -29,12 +29,21 @@ pub fn order_creation_payment_pda<'info>(
     funding_bump: u8,
     amount: u64,
 ) -> Result<()> {
-    transfer_to_market_escrow_pda(
-        market_escrow,
-        funding,
-        token_program,
-        market,
-        funding_bump,
+    if amount == 0_u64 {
+        return Ok(());
+    }
+    msg!("Transferring to escrow");
+
+    token::transfer(
+        CpiContext::new_with_signer(
+            token_program.to_account_info(),
+            token::Transfer {
+                from: funding.to_account_info(),
+                to: market_escrow.to_account_info(),
+                authority: funding.to_account_info(),
+            },
+            &[&["funding".as_ref(), market.as_ref(), &[funding_bump]]],
+        ),
         amount,
     )
 }
@@ -126,19 +135,12 @@ pub fn transfer_market_escrow_surplus<'info>(
     market: &Account<Market>,
 ) -> Result<()> {
     let amount: u64 = market_escrow.amount;
-    if amount == 0_u64 {
-        return Ok(());
-    }
     msg!("Transferring surplus of {} from escrow", amount);
-    transfer_from_market_token_account(
+    transfer_from_market_escrow(
         market_escrow,
         purchaser_token_account,
         token_program,
-        &[
-            "escrow".as_ref(),
-            market.key().as_ref(),
-            &[market.escrow_account_bump],
-        ],
+        market,
         amount,
     )
 }
@@ -186,33 +188,6 @@ pub fn transfer_to_market_escrow<'info>(
                 to: market_escrow.to_account_info(),
                 authority: purchaser.to_account_info(),
             },
-        ),
-        amount,
-    )
-}
-
-pub fn transfer_to_market_escrow_pda<'info>(
-    market_escrow: &Account<'info, TokenAccount>,
-    funding: &Account<'info, TokenAccount>,
-    token_program: &Program<'info, Token>,
-    market: &Pubkey,
-    funding_bump: u8,
-    amount: u64,
-) -> Result<()> {
-    if amount == 0_u64 {
-        return Ok(());
-    }
-    msg!("Transferring to escrow");
-
-    token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            token::Transfer {
-                from: funding.to_account_info(),
-                to: market_escrow.to_account_info(),
-                authority: funding.to_account_info(),
-            },
-            &[&["funding".as_ref(), market.as_ref(), &[funding_bump]]],
         ),
         amount,
     )
