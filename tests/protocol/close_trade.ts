@@ -83,11 +83,8 @@ describe("Close trade accounts", () => {
     const againstOrder = await market.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await market.processMatchingQueue(crankOperator);
-    const tradeResponse = await findTradePda(
-      monaco.getRawProgram(),
-      forOrder,
-      0,
+    const processMatchingQueueResponse = await market.processMatchingQueue(
+      crankOperator,
     );
 
     await market.settle(0);
@@ -102,7 +99,7 @@ describe("Close trade accounts", () => {
       .accounts({
         market: market.pk,
         payer: crankOperator.publicKey,
-        trade: tradeResponse.data.tradePk,
+        trade: processMatchingQueueResponse.makerOrderTrade,
       })
       .rpc()
       .catch((e) => {
@@ -130,11 +127,8 @@ describe("Close trade accounts", () => {
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await marketA.processMatchingQueue(crankOperator);
-    const tradeResponse = await findTradePda(
-      monaco.getRawProgram(),
-      forOrder,
-      0,
+    const processMatchingQueueResponse = await marketA.processMatchingQueue(
+      crankOperator,
     );
 
     await marketA.settle(0);
@@ -150,7 +144,7 @@ describe("Close trade accounts", () => {
       .accounts({
         market: marketB.pk,
         payer: crankOperator.publicKey,
-        trade: tradeResponse.data.tradePk,
+        trade: processMatchingQueueResponse.makerOrderTrade,
       })
       .rpc()
       .catch((e) => {
@@ -178,11 +172,8 @@ describe("Close trade accounts", () => {
     const againstOrder = await marketA.againstOrder(0, 10, price, purchaserB);
 
     // match orders, creating the new trade accounts
-    await marketA.processMatchingQueue(crankOperator);
-    const tradeResponse = await findTradePda(
-      monaco.getRawProgram(),
-      forOrder,
-      0,
+    const processMatchingQueueResponse = await marketA.processMatchingQueue(
+      crankOperator,
     );
 
     await marketA.settle(0);
@@ -198,7 +189,7 @@ describe("Close trade accounts", () => {
       .accounts({
         market: marketB.pk,
         payer: purchaserA.publicKey,
-        trade: tradeResponse.data.tradePk,
+        trade: processMatchingQueueResponse.makerOrderTrade,
       })
       .rpc()
       .catch((e) => {

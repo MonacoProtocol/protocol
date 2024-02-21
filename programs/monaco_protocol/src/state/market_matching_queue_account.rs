@@ -108,7 +108,6 @@ impl MatchingQueue {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
 pub struct OrderMatch {
     pub pk: Pubkey,
-    pub trade_index: u16,
     pub purchaser: Pubkey,
 
     pub for_outcome: bool,
@@ -119,7 +118,6 @@ pub struct OrderMatch {
 
 impl OrderMatch {
     pub const SIZE: usize = PUB_KEY_SIZE +  // pk
-        U16_SIZE +  // trade_index
         PUB_KEY_SIZE + // purchaser
         BOOL_SIZE + //for_outcome
         U16_SIZE + // outcome_index
@@ -129,7 +127,6 @@ impl OrderMatch {
     pub fn new_unique() -> Self {
         OrderMatch {
             pk: Pubkey::new_unique(),
-            trade_index: 0,
             purchaser: Pubkey::new_unique(),
             for_outcome: false,
             outcome_index: 0,
@@ -141,7 +138,7 @@ impl OrderMatch {
 
 impl PartialEq for OrderMatch {
     fn eq(&self, other: &Self) -> bool {
-        self.pk.eq(&other.pk) && self.trade_index.eq(&other.trade_index)
+        self.pk.eq(&other.pk)
     }
 }
 

@@ -172,7 +172,6 @@ mod tests {
         let matching_queue = &mut MatchingQueue::new(1);
         matching_queue.enqueue(OrderMatch {
             pk: Pubkey::new_unique(),
-            trade_index: 0,
             purchaser: Pubkey::new_unique(),
             for_outcome: false,
             outcome_index: 0,

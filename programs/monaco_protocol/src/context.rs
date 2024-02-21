@@ -470,15 +470,11 @@ fn taker_order_pk(market_matching_queue: &Account<MarketMatchingQueue>) -> Resul
         .pk)
 }
 
-fn taker_order_trade_index(market_matching_queue: &Account<MarketMatchingQueue>) -> Result<u16> {
-    Ok(market_matching_queue
-        .matches
-        .peek()
-        .ok_or(CoreError::MatchingQueueIsEmpty)?
-        .trade_index)
-}
-
 #[derive(Accounts)]
+#[instruction(
+    maker_order_trade_seed: u16,
+    taker_order_trade_seed: u16,
+)]
 pub struct ProcessOrderMatch<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
@@ -525,7 +521,7 @@ pub struct ProcessOrderMatch<'info> {
         init,
         seeds = [
             maker_order.key().as_ref(),
-            maker_order.trade_count.to_string().as_ref(),
+            maker_order_trade_seed.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -536,7 +532,7 @@ pub struct ProcessOrderMatch<'info> {
         init_if_needed,
         seeds = [
             taker_order_pk(&market_matching_queue)?.as_ref(),
-            taker_order_trade_index(&market_matching_queue)?.to_string().as_ref(),
+            taker_order_trade_seed.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -554,6 +550,10 @@ pub struct ProcessOrderMatch<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(
+    trade_for_seed: u16,
+    trade_against_seed: u16,
+)]
 pub struct MatchOrders<'info> {
     #[account(
         mut,
@@ -566,7 +566,7 @@ pub struct MatchOrders<'info> {
         init,
         seeds = [
             order_against.key().as_ref(),
-            order_against.trade_count.to_string().as_ref(),
+            trade_against_seed.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,
@@ -605,7 +605,7 @@ pub struct MatchOrders<'info> {
         init,
         seeds = [
             order_for.key().as_ref(),
-            order_for.trade_count.to_string().as_ref(),
+            trade_for_seed.to_string().as_ref(),
         ],
         bump,
         payer = crank_operator,

@@ -222,7 +222,6 @@ export class Monaco {
 
     return {
       pk: matchesHead.pk,
-      tradeIndex: matchesHead.tradeIndex,
       purchaser: matchesHead.purchaser,
       forOutcome: matchesHead.forOutcome,
       outcomeIndex: matchesHead.outcomeIndex,
@@ -675,6 +674,10 @@ export class MonacoMarket {
     this.mintPk = mintPk;
     this.mintInfo = mintInfo;
     this.marketAuthority = marketAuthority;
+  }
+
+  randomNumber() {
+    return Math.floor(Math.random() * 65535);
   }
 
   async getAccount() {
@@ -1167,23 +1170,25 @@ export class MonacoMarket {
       makerOrder.purchaser,
     );
 
+    const makerOrderTradeSeed = this.randomNumber();
+    const takerOrderTradeSeed = this.randomNumber();
     const [makerOrderTradePk, takerOrderTradePk] = (
       await Promise.all([
         findTradePda(
           this.monaco.getRawProgram(),
           makerOrderPk,
-          makerOrder.tradeCount,
+          makerOrderTradeSeed,
         ),
         findTradePda(
           this.monaco.getRawProgram(),
           takerOrder.pk,
-          takerOrder.tradeIndex,
+          takerOrderTradeSeed,
         ),
       ])
     ).map((result) => result.data.tradePk);
 
     const ix = await this.monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatch(makerOrderTradeSeed, takerOrderTradeSeed)
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
@@ -1222,7 +1227,7 @@ export class MonacoMarket {
       remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
-      makerOrderTrade: makerOrderPk,
+      makerOrderTrade: makerOrderTradePk,
       takerOrderTrade: takerOrderTradePk,
     };
   }

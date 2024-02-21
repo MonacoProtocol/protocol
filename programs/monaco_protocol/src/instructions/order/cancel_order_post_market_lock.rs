@@ -98,12 +98,10 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = &mut mock_market_matching_queue(order.market);
         matching_queue.matches.enqueue(OrderMatch {
             pk: Default::default(),
-            trade_index: 0,
             purchaser: Default::default(),
             for_outcome: false,
             outcome_index: 0,
@@ -190,7 +188,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);
@@ -249,7 +246,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);
@@ -308,7 +304,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);
@@ -367,7 +362,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);
@@ -428,7 +422,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);
@@ -505,7 +498,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer: Pubkey::new_unique(),
-            trade_count: 0,
         };
         let matching_queue = mock_market_matching_queue(order.market);
         let request_queue = mock_order_request_queue(order.market);

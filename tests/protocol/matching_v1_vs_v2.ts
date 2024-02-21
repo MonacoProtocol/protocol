@@ -62,7 +62,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 0)
       .accounts({
         orderFor: forOrder1Pk.data.orderPk,
         orderAgainst: againstOrder2Pk.data.orderPk,

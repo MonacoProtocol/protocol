@@ -1,4 +1,3 @@
-use crate::error::CoreError;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 
@@ -26,14 +25,13 @@ pub struct Order {
     pub payout: u64, // amount paid to purchaser during settlement for winning orders
     pub payer: Pubkey, // solana account fee payer
     pub product_commission_rate: f64, // product commission rate at time of order creation
-    pub trade_count: u16,
 }
 
 impl Order {
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + (PUB_KEY_SIZE * 2) // purchaser, market
         + option_size(PUB_KEY_SIZE) // product
-        + (U16_SIZE *2) // market_outcome_index, trade_count
+        + U16_SIZE // market_outcome_index
         + BOOL_SIZE // for outcome
         + ENUM_SIZE // order_status
         + (U64_SIZE * 4) // stake, payout, stake_unmatched, voided_stake
@@ -54,15 +52,6 @@ impl Order {
         if self.order_status == OrderStatus::Open {
             self.order_status = OrderStatus::Cancelled;
         }
-    }
-
-    pub fn get_and_increment_trade_count(&mut self) -> Result<u16> {
-        let trade_count_old = self.trade_count;
-        self.trade_count = self
-            .trade_count
-            .checked_add(1_u16)
-            .ok_or(CoreError::ArithmeticError)?;
-        Ok(trade_count_old)
     }
 }
 
@@ -105,7 +94,6 @@ pub fn mock_order_from_order_request(
         product_commission_rate: order_request.product_commission_rate,
         creation_timestamp: 0,
         payer,
-        trade_count: 0,
     }
 }
 
@@ -133,6 +121,5 @@ pub fn mock_order(
         stake_unmatched: stake,
         payout: 0,
         payer,
-        trade_count: 0,
     }
 }

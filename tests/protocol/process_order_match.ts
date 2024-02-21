@@ -74,7 +74,7 @@ describe("Matching Crank", () => {
 
     // THEN
     await monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatch(1, 0)
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,

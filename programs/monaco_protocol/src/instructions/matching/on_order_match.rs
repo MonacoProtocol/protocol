@@ -79,7 +79,6 @@ pub fn on_order_match(
                 now,
                 *payer,
             );
-            maker_order.get_and_increment_trade_count()?;
             market.increment_unclosed_accounts_count()?;
 
             if taker_order_trade.stake == 0 {
@@ -260,7 +259,6 @@ mod test {
             price: matched_price,
             stake: matched_stake,
             pk: Pubkey::new_unique(),
-            trade_index: 0,
             purchaser: Pubkey::new_unique(),
         });
 
@@ -350,7 +348,6 @@ mod test {
             price: matched_price,
             stake: matched_stake,
             pk: Pubkey::new_unique(),
-            trade_index: 0,
             purchaser: Pubkey::new_unique(),
         });
 

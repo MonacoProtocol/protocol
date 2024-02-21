@@ -48,7 +48,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 1)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: againstOrderPk,
@@ -98,7 +98,7 @@ describe("Matching Crank", () => {
     const { market, purchaser, forOrderPk, againstOrderPk } =
       await setupMatchedOrders(monaco, outcome, price, stake);
 
-    await market.processMatchingQueue();
+    const processMatchingQueueResponse = await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -121,19 +121,16 @@ describe("Matching Crank", () => {
       ],
     );
 
-    const [forTradePk, againstTradePk] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), forOrderPk, 0),
-        findTradePda(monaco.getRawProgram(), againstOrderPk, 0),
-      ])
-    ).map((result) => result.data.tradePk);
-
     const integerStake = (
       await uiStakeToInteger(monaco.getRawProgram(), stake, market.pk)
     ).data.stakeInteger.toNumber();
 
-    const againstTrade = await monaco.fetchTrade(againstTradePk);
-    const forTrade = await monaco.fetchTrade(forTradePk);
+    const againstTrade = await monaco.fetchTrade(
+      processMatchingQueueResponse.takerOrderTrade,
+    );
+    const forTrade = await monaco.fetchTrade(
+      processMatchingQueueResponse.makerOrderTrade,
+    );
 
     assert.deepEqual(
       [
@@ -224,7 +221,7 @@ describe("Matching Crank", () => {
       ],
     );
 
-    await market.processMatchingQueue();
+    const processMatchingQueueResponse = await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -249,19 +246,16 @@ describe("Matching Crank", () => {
       ],
     );
 
-    const [forTradePk, againstTradePk] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), forOrderPk, 0),
-        findTradePda(monaco.getRawProgram(), againstOrderPk, 0),
-      ])
-    ).map((result) => result.data.tradePk);
-
     const integerStake = (
       await uiStakeToInteger(monaco.getRawProgram(), stake, market.pk)
     ).data.stakeInteger.toNumber();
 
-    const againstTrade = await monaco.fetchTrade(againstTradePk);
-    const forTrade = await monaco.fetchTrade(forTradePk);
+    const againstTrade = await monaco.fetchTrade(
+      processMatchingQueueResponse.takerOrderTrade,
+    );
+    const forTrade = await monaco.fetchTrade(
+      processMatchingQueueResponse.makerOrderTrade,
+    );
 
     assert.deepEqual(
       [
@@ -337,7 +331,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(1, 1)
       .accounts({
         orderFor: againstOrderPk,
         orderAgainst: againstOrderPk,
@@ -417,7 +411,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 0)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: forOrderPk,
@@ -503,7 +497,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 0)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: forOrder2Pk,
@@ -592,7 +586,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 1)
       .accounts({
         orderFor: againstOrder2Pk,
         orderAgainst: againstOrderPk,
@@ -682,7 +676,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 0)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: forOrder2Pk,
@@ -772,7 +766,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 1)
       .accounts({
         orderFor: againstOrder2Pk,
         orderAgainst: againstOrderPk,
@@ -850,7 +844,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 1)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: againstOrderPk,
@@ -929,7 +923,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 0)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: againstOrderPk,
@@ -1008,7 +1002,7 @@ describe("Matching Crank", () => {
     // CRANK
     //
     const ix = await monaco.program.methods
-      .matchOrders()
+      .matchOrders(0, 1)
       .accounts({
         orderFor: forOrderPk,
         orderAgainst: againstOrderPk,

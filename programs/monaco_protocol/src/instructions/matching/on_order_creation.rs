@@ -46,7 +46,6 @@ pub fn on_order_creation(
                 // record the match
                 let order_match = OrderMatch {
                     pk: *order_pk,
-                    trade_index: order.get_and_increment_trade_count()?,
                     purchaser: order.purchaser.key(),
                     for_outcome: order.for_outcome,
                     outcome_index: order.market_outcome_index,
@@ -107,7 +106,6 @@ pub fn on_order_creation(
                 // record the match
                 let order_match = OrderMatch {
                     pk: *order_pk,
-                    trade_index: order.get_and_increment_trade_count()?,
                     purchaser: order.purchaser.key(),
                     for_outcome: order.for_outcome,
                     outcome_index: order.market_outcome_index,
