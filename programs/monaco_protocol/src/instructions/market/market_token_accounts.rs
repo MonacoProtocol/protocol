@@ -23,25 +23,8 @@ pub fn transfer_market_token_surplus<'info>(
         TRANSFER_SURPLUS_ALLOWED_STATUSES.contains(&market.market_status),
         CoreError::MarketInvalidStatus
     );
-    if market_escrow.amount > 0 {
-        transfer::transfer_market_escrow_surplus(
-            market_escrow,
-            destination,
-            token_program,
-            market,
-        )?;
-    }
-
-    if market_funding.amount > 0 {
-        transfer::transfer_market_funding_surplus(
-            market_funding,
-            destination,
-            token_program,
-            market,
-        )?;
-    }
-
-    Ok(())
+    transfer::transfer_market_escrow_surplus(market_escrow, destination, token_program, market)?;
+    transfer::transfer_market_funding_surplus(market_funding, destination, token_program, market)
 }
 
 pub fn close_escrow_token_account(ctx: &Context<CloseMarket>) -> Result<()> {

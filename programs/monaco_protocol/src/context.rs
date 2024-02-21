@@ -52,7 +52,6 @@ pub struct CreateOrderRequest<'info> {
     pub market_position: Box<Account<'info, MarketPosition>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut)]
     pub purchaser: Signer<'info>,
     #[account(
         mut,
