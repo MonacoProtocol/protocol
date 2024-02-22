@@ -52,13 +52,14 @@
 
 ## MarketAccount
 
-Type: {authority: PublicKey, decimalLimit: [number][44], escrowAccountBump: [number][44], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][44], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: PublicKey, marketTypeDiscriminator: [string][45], marketTypeValue: [string][45], marketWinningOutcomeIndex: [number][44]?, mintAccount: PublicKey, published: [boolean][46], suspended: [boolean][46], title: [string][45], inplay: [boolean][46], inplayEnabled: [boolean][46], inplayOrderDelay: [number][44], eventStartOrderBehaviour: [MarketOrderBehaviour][2], marketLockOrderBehaviour: [MarketOrderBehaviour][2], eventStartTimestamp: BN, unsettledAccountsCount: [number][44], unclosedAccountsCount: [number][44], version: [number][44]}
+Type: {authority: PublicKey, decimalLimit: [number][44], escrowAccountBump: [number][44], fundingAccountBump: [number][44], eventAccount: PublicKey, marketLockTimestamp: BN, marketOutcomesCount: [number][44], marketSettleTimestamp: BN?, marketStatus: [MarketStatus][1], marketType: PublicKey, marketTypeDiscriminator: [string][45], marketTypeValue: [string][45], marketWinningOutcomeIndex: [number][44]?, mintAccount: PublicKey, published: [boolean][46], suspended: [boolean][46], title: [string][45], inplay: [boolean][46], inplayEnabled: [boolean][46], inplayOrderDelay: [number][44], eventStartOrderBehaviour: [MarketOrderBehaviour][2], marketLockOrderBehaviour: [MarketOrderBehaviour][2], eventStartTimestamp: BN, unsettledAccountsCount: [number][44], unclosedAccountsCount: [number][44], version: [number][44]}
 
 ### Properties
 
 *   `authority` **PublicKey**&#x20;
 *   `decimalLimit` **[number][44]**&#x20;
 *   `escrowAccountBump` **[number][44]**&#x20;
+*   `fundingAccountBump` **[number][44]**&#x20;
 *   `eventAccount` **PublicKey**&#x20;
 *   `marketLockTimestamp` **BN**&#x20;
 *   `marketOutcomesCount` **[number][44]**&#x20;
