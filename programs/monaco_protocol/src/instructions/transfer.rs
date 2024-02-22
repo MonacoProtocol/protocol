@@ -32,18 +32,12 @@ pub fn order_creation_payment_pda<'info>(
     if amount == 0_u64 {
         return Ok(());
     }
-    msg!("Transferring to escrow");
-
-    token::transfer(
-        CpiContext::new_with_signer(
-            token_program.to_account_info(),
-            token::Transfer {
-                from: funding.to_account_info(),
-                to: market_escrow.to_account_info(),
-                authority: funding.to_account_info(),
-            },
-            &[&["funding".as_ref(), market.as_ref(), &[funding_bump]]],
-        ),
+    msg!("Transferring from funding to escrow");
+    transfer_from_market_token_account(
+        funding,
+        market_escrow,
+        token_program,
+        &["funding".as_ref(), market.as_ref(), &[funding_bump]],
         amount,
     )
 }
@@ -130,7 +124,7 @@ pub fn transfer_market_position_void(ctx: &Context<VoidMarketPosition>, amount: 
 
 pub fn transfer_market_escrow_surplus<'info>(
     market_escrow: &Account<'info, TokenAccount>,
-    purchaser_token_account: &Account<'info, TokenAccount>,
+    destination_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     market: &Account<Market>,
 ) -> Result<()> {
@@ -138,7 +132,7 @@ pub fn transfer_market_escrow_surplus<'info>(
     msg!("Transferring surplus of {} from escrow", amount);
     transfer_from_market_escrow(
         market_escrow,
-        purchaser_token_account,
+        destination_token_account,
         token_program,
         market,
         amount,
@@ -147,7 +141,7 @@ pub fn transfer_market_escrow_surplus<'info>(
 
 pub fn transfer_market_funding_surplus<'info>(
     market_funding: &Account<'info, TokenAccount>,
-    purchaser_token_account: &Account<'info, TokenAccount>,
+    destination_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     market: &Account<Market>,
 ) -> Result<()> {
@@ -158,7 +152,7 @@ pub fn transfer_market_funding_surplus<'info>(
     msg!("Transferring surplus of {} from funding", amount);
     transfer_from_market_token_account(
         market_funding,
-        purchaser_token_account,
+        destination_token_account,
         token_program,
         &[
             "funding".as_ref(),
