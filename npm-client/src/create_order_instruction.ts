@@ -138,6 +138,7 @@ export async function buildOrderInstruction(
     })
     .accounts({
       reservedOrder: orderPk,
+      payer: provider.wallet.publicKey,
       purchaser: provider.wallet.publicKey,
       marketPosition: marketAccounts.data.marketPositionPda,
       systemProgram: SystemProgram.programId,
