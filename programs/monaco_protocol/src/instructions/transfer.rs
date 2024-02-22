@@ -21,7 +21,7 @@ pub fn order_creation_payment<'info>(
     )
 }
 
-pub fn order_creation_payment_pda<'info>(
+pub fn funding_account_order_creation_payment<'info>(
     market_escrow: &Account<'info, TokenAccount>,
     funding: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,

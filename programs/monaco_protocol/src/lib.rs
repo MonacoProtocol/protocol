@@ -76,7 +76,7 @@ pub mod monaco_protocol {
                 },
             )?;
 
-            transfer::order_creation_payment_pda(
+            transfer::funding_account_order_creation_payment(
                 &ctx.accounts.market_escrow,
                 &ctx.accounts.purchaser_token,
                 &ctx.accounts.token_program,
