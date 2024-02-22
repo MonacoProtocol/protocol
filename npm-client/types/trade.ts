@@ -6,7 +6,6 @@ export type Trade = {
   purchaser: PublicKey;
   market: PublicKey;
   order: PublicKey;
-  oppositeTrade: PublicKey;
   marketOutcomeIndex: number;
   forOutcome: boolean;
   stake: BN;

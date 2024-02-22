@@ -7,12 +7,7 @@ import assert from "assert";
 import { findEscrowPda, findMarketPda } from "../../npm-client/src/";
 import { createNewMint, createWalletWithBalance } from "../util/test_util";
 import { Monaco, monaco } from "../util/wrappers";
-import {
-  findCommissionPaymentsQueuePda,
-  findOrderRequestQueuePda,
-  findMarketMatchingQueuePda,
-  findMarketFundingPda,
-} from "../../npm-admin-client";
+import { findMarketFundingPda } from "../../npm-admin-client";
 import { getOrCreateMarketType } from "../../npm-admin-client/src/market_type_create";
 
 describe("Create markets with inplay features", () => {
@@ -143,12 +138,6 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -172,9 +161,7 @@ describe("Market: creation", () => {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk,
-        matchingQueue: matchingQueuePk,
         funding: marketFundingPk,
-        commissionPaymentQueue: marketPaymentQueuePk,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -232,12 +219,6 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -262,9 +243,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
-          matchingQueue: matchingQueuePk,
           funding: marketFundingPk,
-          commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -329,18 +308,8 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
-    ).data.pda;
-
-    const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
 
     try {
@@ -363,10 +332,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
-          matchingQueue: matchingQueuePk,
           funding: marketFundingPk,
-          commissionPaymentQueue: marketPaymentQueuePk,
-          orderRequestQueue: orderRequestQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -431,12 +397,6 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
@@ -461,9 +421,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
-          matchingQueue: matchingQueuePk,
           funding: marketFundingPk,
-          commissionPaymentQueue: marketPaymentQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -529,18 +487,8 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
-    ).data.pda;
-
-    const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
 
     try {
@@ -563,10 +511,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
-          matchingQueue: matchingQueuePk,
           funding: marketFundingPk,
-          commissionPaymentQueue: marketPaymentQueuePk,
-          orderRequestQueue: orderRequestQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
@@ -628,19 +573,10 @@ describe("Market: creation", () => {
     const marketEscrowPk = (
       await findEscrowPda(monaco.program as Program, marketPk)
     ).data.pda;
-    const matchingQueuePk = (
-      await findMarketMatchingQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
-    const marketPaymentQueuePk = (
-      await findCommissionPaymentsQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
     ).data.pda;
 
-    const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
-    ).data.pda;
     try {
       await monaco.program.methods
         .createMarket(
@@ -661,10 +597,7 @@ describe("Market: creation", () => {
           market: marketPk,
           marketType: marketTypePk,
           escrow: marketEscrowPk,
-          matchingQueue: matchingQueuePk,
           funding: marketFundingPk,
-          commissionPaymentQueue: marketPaymentQueuePk,
-          orderRequestQueue: orderRequestQueuePk,
           mint: mintPk,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           authorisedOperators: authorisedOperatorsPk,
