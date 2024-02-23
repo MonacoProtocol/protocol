@@ -28,7 +28,7 @@ pub struct CreateOrderRequest<'info> {
             &data.distinct_seed,
         ],
         bump,
-        payer = purchaser,
+        payer = payer,
         space = ReservedOrder::SIZE,
     )]
     pub reserved_order: Account<'info, ReservedOrder>,
@@ -46,16 +46,16 @@ pub struct CreateOrderRequest<'info> {
             market.key().as_ref()
         ],
         bump,
-        payer = purchaser,
+        payer = payer,
         space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
     )]
     pub market_position: Box<Account<'info, MarketPosition>>,
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub purchaser: Signer<'info>,
     #[account(
         mut,
-        associated_token::mint = market.mint_account,
-        associated_token::authority = purchaser,
+        token::mint = market.mint_account,
     )]
     pub purchaser_token: Account<'info, TokenAccount>,
 
@@ -91,6 +91,31 @@ pub struct CreateOrderRequest<'info> {
     pub system_program: Program<'info, System>,
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct CreateMarketPosition<'info> {
+    #[account(
+        init,
+        seeds = [
+            purchaser.key().as_ref(),
+            market.key().as_ref()
+        ],
+        bump,
+        payer = payer,
+        space = MarketPosition::size_for(usize::from(market.market_outcomes_count))
+    )]
+    pub market_position: Account<'info, MarketPosition>,
+
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+
+    pub purchaser: SystemAccount<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -843,6 +868,18 @@ pub struct CreateMarket<'info> {
     pub escrow: Account<'info, TokenAccount>,
 
     pub market_type: Box<Account<'info, MarketType>>,
+    #[account(
+        init,
+        seeds = [
+            b"funding".as_ref(),
+            market.key().as_ref(),
+        ],
+        bump,
+        payer = market_operator,
+        token::mint = mint,
+        token::authority = funding
+    )]
+    pub funding: Box<Account<'info, TokenAccount>>,
 
     pub rent: Sysvar<'info, Rent>,
 
@@ -1090,6 +1127,13 @@ pub struct SetMarketReadyToClose<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub market_operator: Signer<'info>,
@@ -1112,7 +1156,7 @@ pub struct CompleteMarketVoid<'info> {
 }
 
 #[derive(Accounts)]
-pub struct TransferMarketEscrowSurplus<'info> {
+pub struct TransferMarketTokenSurplus<'info> {
     #[account()]
     pub market: Account<'info, Market>,
 
@@ -1124,6 +1168,14 @@ pub struct TransferMarketEscrowSurplus<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -1307,6 +1359,14 @@ pub struct CloseMarket<'info> {
         bump,
     )]
     pub market_escrow: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_funding,
+        seeds = [b"funding".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_funding: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub authority: SystemAccount<'info>,

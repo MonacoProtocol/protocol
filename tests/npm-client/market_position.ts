@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "@coral-xyz/anchor";
 import assert from "assert";
-import { getMarketPosition } from "../../npm-client/src";
+import { getMarketPosition, createMarketPosition } from "../../npm-client/src";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
@@ -118,5 +118,27 @@ describe("Market Position", () => {
         order.expectedPosition,
       );
     }
+  });
+
+  it("create market position", async () => {
+    const [wallet1, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([3.0]),
+    ]);
+    await market.airdrop(wallet1, 10_000.0);
+
+    await createMarketPosition(monaco.program, market.pk, wallet1.publicKey);
+
+    const marketPosition = (
+      await getMarketPosition(
+        monaco.program as anchor.Program<anchor.Idl>,
+        market.pk,
+        wallet1.publicKey,
+      )
+    ).data;
+
+    // Check that payer is the default provider, and purchaser is the wallet we just created
+    assert.deepEqual(marketPosition.payer, monaco.provider.wallet.publicKey);
+    assert.deepEqual(marketPosition.purchaser, wallet1.publicKey);
   });
 });

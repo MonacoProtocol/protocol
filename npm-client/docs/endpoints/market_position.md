@@ -8,6 +8,9 @@
 *   [getMarketPosition][4]
     *   [Parameters][5]
     *   [Examples][6]
+*   [createMarketPosition][7]
+    *   [Parameters][8]
+    *   [Examples][9]
 
 ## findMarketPositionPda
 
@@ -49,6 +52,26 @@ const marketPosition = await getMarketPosition(program, marketPK, purchaserPk)
 
 Returns **MarketPosition** market position account info
 
+## createMarketPosition
+
+Create a market position account for the provided market and purchaser wallet.
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
+*   `purchaserPk` **PublicKey** {PublicKey} publicKey of the purchasing wallet
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const purchaserPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
+const marketPositionPk = await createMarketPosition(program, marketPK, purchaserPk)
+```
+
+Returns **PublicKey** market position publicKey
+
 [1]: #findmarketpositionpda
 
 [2]: #parameters
@@ -60,3 +83,9 @@ Returns **MarketPosition** market position account info
 [5]: #parameters-1
 
 [6]: #examples-1
+
+[7]: #createmarketposition
+
+[8]: #parameters-2
+
+[9]: #examples-2

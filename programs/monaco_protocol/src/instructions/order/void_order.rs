@@ -164,6 +164,7 @@ mod tests {
             title: "".to_string(),
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         }
     }

@@ -45,6 +45,7 @@ import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
   findCommissionPaymentsQueuePda,
+  findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
@@ -157,6 +158,9 @@ export async function createMarket(
 
   const escrowPda = (await findEscrowPda(protocolProgram as Program, marketPda))
     .data.pda;
+  const fundingPda = (
+    await findMarketFundingPda(protocolProgram as Program, marketPda)
+  ).data.pda;
 
   await protocolProgram.methods
     .createMarket(
@@ -178,6 +182,7 @@ export async function createMarket(
       marketType: marketTypePk,
       systemProgram: SystemProgram.programId,
       escrow: escrowPda,
+      funding: fundingPda,
       mint: mintPk,
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: anchor.web3.SYSVAR_RENT_PUBKEY,

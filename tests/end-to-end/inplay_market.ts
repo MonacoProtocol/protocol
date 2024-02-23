@@ -312,6 +312,7 @@ describe("End to end test of", () => {
         market: market.pk,
         authority: monaco.operatorPk,
         marketEscrow: market.escrowPk,
+        marketFunding: market.fundingPk,
       })
       .rpc()
       .catch((e) => {

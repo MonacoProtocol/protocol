@@ -11,7 +11,7 @@ import {
   setMarketReadyToClose,
   voidMarket,
   openMarket,
-  transferMarketEscrowSurplus,
+  transferMarketTokenSurplus,
   updateMarketEventStartTime,
   setMarketEventStartToNow,
 } from "../../npm-admin-client/src";
@@ -267,7 +267,7 @@ describe("Transfer market escrow surplus", () => {
     const response = await setMarketReadyToClose(protocolProgram, market.pk);
     assert(!response.success);
 
-    const transferResponse = await transferMarketEscrowSurplus(
+    const transferResponse = await transferMarketTokenSurplus(
       protocolProgram,
       market.pk,
       market.mintPk,
@@ -295,7 +295,7 @@ describe("Transfer market escrow surplus", () => {
     await market.forOrder(0, 1, 1.001, purchaser);
     await market.settle(0);
 
-    const transferResponse = await transferMarketEscrowSurplus(
+    const transferResponse = await transferMarketTokenSurplus(
       protocolProgram,
       market.pk,
       market.mintPk,

@@ -141,8 +141,13 @@ mod test {
         let mut order = mock_order(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -226,8 +231,13 @@ mod test {
         let mut order = mock_order(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -315,8 +325,13 @@ mod test {
         let mut order = mock_order(market_pk, order_request, payer_pk);
 
         let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 14, 0), market_position.unmatched_exposures);
 
@@ -410,6 +425,7 @@ mod test {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 100,
         }
     }

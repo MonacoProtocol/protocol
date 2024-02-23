@@ -38,6 +38,7 @@ import {
   findMarketMatchingQueuePda,
   findPriceLadderPda,
   MarketAccount,
+  findMarketFundingPda,
 } from "../../npm-admin-client";
 import console from "console";
 import { MarketMatchingPoolAccount } from "../../npm-client/types";
@@ -412,6 +413,10 @@ export class Monaco {
       this.program as Program,
       marketPk,
     );
+    const fundingPk = await findMarketFundingPda(
+      this.program as Program,
+      marketPk,
+    );
 
     // invoke core program to call operations required for creating an order
     await this.program.methods
@@ -433,6 +438,7 @@ export class Monaco {
         market: marketPk,
         marketType: marketTypePk,
         escrow: marketEscrowPk.data.pda,
+        funding: fundingPk.data.pda,
         mint: mintPk,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authorisedOperators: authorisedOperatorsPk,
@@ -554,6 +560,7 @@ export class Monaco {
       externalPrograms,
       marketPk,
       marketEscrowPk.data.pda,
+      fundingPk.data.pda,
       liquiditiesPk.data.pda,
       matchingQueuePk.data.pda,
       commissionQueuePk.data.pda,
@@ -617,6 +624,7 @@ export class MonacoMarket {
   private externalPrograms: ExternalPrograms;
   readonly pk: PublicKey;
   readonly escrowPk: PublicKey;
+  readonly fundingPk: PublicKey;
   readonly liquiditiesPk: PublicKey;
   readonly matchingQueuePk: PublicKey;
   readonly paymentsQueuePk: PublicKey;
@@ -644,6 +652,7 @@ export class MonacoMarket {
     externalPrograms: ExternalPrograms,
     pk: PublicKey,
     escrowPk: PublicKey,
+    fundingPk: PublicKey,
     liquiditiesPk: PublicKey,
     matchingQueuePk: PublicKey,
     paymentsQueuePk: PublicKey,
@@ -663,6 +672,7 @@ export class MonacoMarket {
     this.externalPrograms = externalPrograms;
     this.pk = pk;
     this.escrowPk = escrowPk;
+    this.fundingPk = fundingPk;
     this.liquiditiesPk = liquiditiesPk;
     this.matchingQueuePk = matchingQueuePk;
     this.paymentsQueuePk = paymentsQueuePk;
@@ -927,6 +937,7 @@ export class MonacoMarket {
         orderRequestQueue: this.orderRequestQueuePk,
         marketPosition: await this.cacheMarketPositionPk(purchaser.publicKey),
         purchaser: purchaser.publicKey,
+        payer: purchaser.publicKey,
         purchaserToken: overrides.purchaserToken
           ? overrides.purchaserToken
           : await this.cachePurchaserTokenPk(purchaser.publicKey),
@@ -1508,6 +1519,7 @@ export class MonacoMarket {
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
+        marketFunding: this.fundingPk,
         marketOperator: this.marketAuthority
           ? this.marketAuthority.publicKey
           : this.monaco.operatorPk,

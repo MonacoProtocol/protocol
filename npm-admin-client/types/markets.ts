@@ -108,6 +108,7 @@ export type MarketAccount = {
   authority: BN;
   decimalLimit: number;
   escrowAccountBump: number;
+  fundingAccountBump: number;
   eventAccount: PublicKey;
   eventStartTimestamp: BN;
   marketLockTimestamp: BN;
