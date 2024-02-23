@@ -2,8 +2,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "~0.29.0",
     "@solana/spl-token": "^0.3.8",
-    "@solana/web3.js": "1.75.0",
-    "axios": "^0.27.2"
+    "@solana/web3.js": "1.75.0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
@@ -61,8 +60,6 @@
     "authoriseAdminOperator": "ts-node admin/client.ts authoriseAdminOperator",
     "printAuthorisedOperatorAccounts": "ts-node admin/client.ts printAuthorisedOperatorAccounts",
     "addPricesToLadder": "ts-node admin/client.ts addPricesToLadder",
-    "getTokenLeaderboard": "ts-node admin/client.ts getTokenLeaderboard",
-    "getMarketLeaderboards": "ts-node admin/client.ts getMarketLeaderboards",
     "createProduct": "ts-node admin/client.ts createProduct"
   },
   "lint-staged": {

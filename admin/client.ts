@@ -24,8 +24,6 @@ import {
   printAuthorisedOperatorAccounts,
 } from "./market_operator";
 import { addPricesToLadder } from "./add_prices_to_ladder";
-import { getTokenLeaderboard } from "./leaderboard/token_leaderboard";
-import { getLeaderboardPerMarket } from "./leaderboard/market_leaderboard";
 import { create_product } from "./product";
 import {
   createMarketType,
@@ -116,12 +114,6 @@ switch (script) {
     break;
   case "addPricesToLadder":
     addPricesToLadder();
-    break;
-  case "getTokenLeaderboard":
-    getTokenLeaderboard();
-    break;
-  case "getMarketLeaderboards":
-    getLeaderboardPerMarket();
     break;
   case "authoriseAdminOperator":
     authoriseAdminOperator();
