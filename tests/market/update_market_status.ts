@@ -139,10 +139,11 @@ describe("Market: update status", () => {
     );
 
     await monaco.program.methods
-      .transferMarketEscrowSurplus()
+      .transferMarketTokenSurplus()
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketFunding: market.fundingPk,
         marketAuthorityToken: (
           await getOrCreateAssociatedTokenAccount(
             monaco.provider.connection,
@@ -223,6 +224,7 @@ describe("Market: update status", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketFunding: market.fundingPk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })
@@ -278,6 +280,7 @@ describe("Market: update status", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
+        marketFunding: market.fundingPk,
         authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
         marketOperator: monaco.operatorPk,
       })

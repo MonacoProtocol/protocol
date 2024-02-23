@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::context::*;
 use crate::error::CoreError;
 use crate::instructions::market::verify_market_authority;
+use crate::instructions::market_position;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
@@ -42,6 +43,7 @@ pub mod monaco_protocol {
         let payment = instructions::order_request::create_order_request(
             ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            &ctx.accounts.payer,
             &ctx.accounts.purchaser,
             &ctx.accounts.product,
             &mut ctx.accounts.market_position,
@@ -51,17 +53,60 @@ pub mod monaco_protocol {
             data,
         )?;
 
-        transfer::order_creation_payment(
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.purchaser,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            payment,
-        )?;
+        // if PDA owner then do PDA transfer else do regular token account transfer
+        if ctx.accounts.purchaser_token.owner == ctx.accounts.purchaser_token.key() {
+            // Verify PDA is the correct account
+            let market = ctx.accounts.market.key();
+            Pubkey::create_program_address(
+                &[
+                    b"funding",
+                    market.key().as_ref(),
+                    &[ctx.accounts.market.funding_account_bump],
+                ],
+                &monaco_protocol::ID,
+            )
+            .map_or_else(
+                |_| Err(CoreError::OrderRequestCreationInvalidPayerTokenAccount.into()),
+                |pk| {
+                    require!(
+                        pk == ctx.accounts.purchaser_token.key(),
+                        CoreError::OrderRequestCreationInvalidPayerTokenAccount
+                    );
+                    Ok(())
+                },
+            )?;
 
+            transfer::funding_account_order_creation_payment(
+                &ctx.accounts.market_escrow,
+                &ctx.accounts.purchaser_token,
+                &ctx.accounts.token_program,
+                &ctx.accounts.market.key(),
+                ctx.accounts.market.funding_account_bump,
+                payment,
+            )?;
+        } else {
+            transfer::order_creation_payment(
+                &ctx.accounts.market_escrow,
+                &ctx.accounts.purchaser,
+                &ctx.accounts.purchaser_token,
+                &ctx.accounts.token_program,
+                payment,
+            )?;
+        }
         ctx.accounts
             .reserved_order
-            .close(ctx.accounts.purchaser.to_account_info())
+            .close(ctx.accounts.payer.to_account_info())
+    }
+
+    pub fn create_market_position(ctx: Context<CreateMarketPosition>) -> Result<()> {
+        market_position::create_market_position(
+            &ctx.accounts.purchaser.key(),
+            &ctx.accounts.payer.key(),
+            ctx.accounts.market.key(),
+            &ctx.accounts.market,
+            &mut ctx.accounts.market_position,
+        )?;
+        ctx.accounts.market.increment_account_counts()
     }
 
     pub fn process_order_request(ctx: Context<ProcessOrderRequest>) -> Result<()> {
@@ -682,10 +727,14 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::ready_to_close(&mut ctx.accounts.market, &ctx.accounts.market_escrow)
+        instructions::market::ready_to_close(
+            &mut ctx.accounts.market,
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.market_funding,
+        )
     }
 
-    pub fn transfer_market_escrow_surplus(ctx: Context<TransferMarketEscrowSurplus>) -> Result<()> {
+    pub fn transfer_market_token_surplus(ctx: Context<TransferMarketTokenSurplus>) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -695,9 +744,10 @@ pub mod monaco_protocol {
             &ctx.accounts.market.authority,
         )?;
 
-        instructions::market::transfer_market_escrow_surplus(
+        instructions::market::transfer_market_token_surplus(
             &ctx.accounts.market,
             &ctx.accounts.market_escrow,
+            &ctx.accounts.market_funding,
             &ctx.accounts.market_authority_token,
             &ctx.accounts.token_program,
         )
@@ -757,6 +807,7 @@ pub mod monaco_protocol {
             ctx.accounts.market.unclosed_accounts_count,
         )?;
 
-        instructions::market::close_escrow_token_account(&ctx)
+        instructions::market::close_escrow_token_account(&ctx)?;
+        instructions::market::close_funding_token_account(&ctx)
     }
 }

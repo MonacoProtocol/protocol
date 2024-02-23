@@ -15,6 +15,7 @@ use crate::state::price_ladder::{PriceLadder, DEFAULT_PRICES};
 pub fn create_order_request(
     market_pk: Pubkey,
     market: &mut Market,
+    payer: &Signer,
     purchaser: &Signer,
     product: &Option<Account<Product>>,
     market_position: &mut MarketPosition,
@@ -27,13 +28,19 @@ pub fn create_order_request(
     validate_order_request(market, market_outcome, price_ladder, &data, now)?;
 
     // initialize market position if needed
-    if market_position.purchaser == Pubkey::default() {
-        market_position::create_market_position(purchaser, market_pk, market, market_position)?;
+    if market_position.payer == Pubkey::default() {
+        market_position::create_market_position(
+            purchaser.key,
+            payer.key,
+            market_pk,
+            market,
+            market_position,
+        )?;
         market.increment_account_counts()?;
     }
 
     // initialize and enqueue order request on to order_request_queue
-    let order_request = initialize_order_request(market, purchaser, product, data, now)?;
+    let order_request = initialize_order_request(market, purchaser.key, product, data, now)?;
     require!(
         !order_request_queue.order_requests.contains(&order_request),
         CoreError::OrderRequestCreationDuplicateRequest
@@ -44,12 +51,18 @@ pub fn create_order_request(
         .enqueue(order_request)
         .ok_or(CoreError::OrderRequestCreationQueueFull)?;
 
-    market_position::update_on_order_request_creation(market_position, &order_request)
+    market_position::update_on_order_request_creation(
+        market_position,
+        order_request.market_outcome_index,
+        order_request.for_outcome,
+        order_request.stake,
+        order_request.expected_price,
+    )
 }
 
 fn initialize_order_request(
     market: &Market,
-    purchaser: &Signer,
+    purchaser: &Pubkey,
     product: &Option<Account<Product>>,
     data: OrderRequestData,
     now: UnixTimestamp,
@@ -58,7 +71,7 @@ fn initialize_order_request(
 
     order_request.market_outcome_index = data.market_outcome_index;
     order_request.for_outcome = data.for_outcome;
-    order_request.purchaser = purchaser.key();
+    order_request.purchaser = *purchaser;
     order_request.stake = data.stake;
     order_request.expected_price = data.price;
     order_request.delay_expiration_timestamp = match market.is_inplay() {
@@ -263,6 +276,7 @@ mod tests {
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
             unsettled_accounts_count: 0,
+            funding_account_bump: 0,
         }
     }
 }

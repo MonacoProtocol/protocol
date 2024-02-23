@@ -205,7 +205,11 @@ pub fn unsuspend(ctx: Context<UpdateMarket>) -> Result<()> {
     Ok(())
 }
 
-pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Result<()> {
+pub fn ready_to_close(
+    market: &mut Market,
+    market_escrow: &TokenAccount,
+    market_funding: &TokenAccount,
+) -> Result<()> {
     require!(
         Settled.eq(&market.market_status) || Voided.eq(&market.market_status),
         CoreError::MarketNotSettledOrVoided
@@ -214,6 +218,10 @@ pub fn ready_to_close(market: &mut Market, market_escrow: &TokenAccount) -> Resu
     require!(
         market_escrow.amount == 0_u64,
         CoreError::SettlementMarketEscrowNonZero
+    );
+    require!(
+        market_funding.amount == 0_u64,
+        CoreError::SettlementMarketFundingNonZero
     );
 
     market.market_status = ReadyToClose;
@@ -455,6 +463,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -529,6 +538,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -587,6 +597,7 @@ mod open_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
             inplay_enabled: false,
             inplay: false,
@@ -659,6 +670,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -704,6 +716,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
 
@@ -743,6 +756,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -789,6 +803,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -836,6 +851,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -886,6 +902,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = &mut mock_market_matching_queue(market_pk);
@@ -936,6 +953,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let market_matching_queue = mock_market_matching_queue(market_pk);
@@ -982,6 +1000,7 @@ mod void_market_tests {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         };
         let order_request_queue = mock_order_request_queue(market_pk);

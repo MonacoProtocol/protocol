@@ -41,6 +41,8 @@ pub enum CoreError {
     OrderRequestCreationQueueFull,
     #[msg("Order Request Creation: duplicate request already queued")]
     OrderRequestCreationDuplicateRequest,
+    #[msg("Order Request Creation: invalid payer token account")]
+    OrderRequestCreationInvalidPayerTokenAccount,
     #[msg("Order Request Processing: request queue is empty")]
     OrderRequestQueueIsEmpty,
     #[msg("Order Request Processing: request queue is not empty")]
@@ -95,6 +97,8 @@ pub enum CoreError {
     SettlementMarketNotReadyForSettlement,
     #[msg("Core Settlement: market escrow is non zero")]
     SettlementMarketEscrowNonZero,
+    #[msg("Core Settlement: market funding is non zero")]
+    SettlementMarketFundingNonZero,
     #[msg("Core Settlement: market matching queue not empty")]
     SettlementMarketMatchingQueueNotEmpty,
     #[msg("Core Settlement: market payment queue not empty")]

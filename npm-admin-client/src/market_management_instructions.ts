@@ -12,6 +12,7 @@ import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
   findCommissionPaymentsQueuePda,
   findEscrowPda,
+  findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
   findOrderRequestQueuePda,
@@ -194,11 +195,17 @@ export async function buildMarketManagementInstruction(
         response.addErrors(marketEscrow.errors);
         return response.body;
       }
+      const marketFunding = await findMarketFundingPda(program, marketPk);
+      if (!marketFunding.success) {
+        response.addErrors(marketFunding.errors);
+        return response.body;
+      }
       const instruction = await program.methods
         .setMarketReadyToClose()
         .accounts({
           market: new PublicKey(marketPk),
           marketEscrow: marketEscrow.data.pda,
+          marketFunding: marketFunding.data.pda,
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
         })

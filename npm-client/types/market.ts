@@ -23,6 +23,7 @@ export type MarketAccount = {
   authority: PublicKey;
   decimalLimit: number;
   escrowAccountBump: number;
+  fundingAccountBump: number;
   eventAccount: PublicKey;
   marketLockTimestamp: BN;
   marketOutcomesCount: number;

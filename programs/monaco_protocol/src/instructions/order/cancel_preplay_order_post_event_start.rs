@@ -139,8 +139,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -210,8 +215,14 @@ mod test {
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
-        market_position::update_on_order_request_creation(&mut market_position, &order_request)
-            .unwrap();
+        market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        )
+        .unwrap();
         market_position::update_on_order_match(
             &mut market_position,
             &order,
@@ -303,8 +314,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -372,8 +388,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -452,8 +473,13 @@ mod test {
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_request_creation(&mut market_position, &order_request);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
@@ -505,6 +531,7 @@ mod test {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 100,
         }
     }
