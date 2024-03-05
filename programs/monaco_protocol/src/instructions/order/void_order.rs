@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn test_void_open_order() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         let mut market = mock_market();
 
         let result = void_order(&mut order, &mut market);
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_void_matched_order() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         order.order_status = OrderStatus::Matched;
         order.stake_unmatched = 5;
         let mut market = mock_market();
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_void_cancelled_order() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         order.order_status = OrderStatus::Cancelled;
         order.voided_stake = order.stake;
         order.stake_unmatched = 0;
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_void_voided_order() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         order.order_status = OrderStatus::Voided;
         order.voided_stake = order.stake;
         let mut market = mock_market();
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_void_market_already_voided() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         order.order_status = OrderStatus::Voided;
         let mut market = mock_market();
         market.market_status = MarketStatus::Voided;
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn test_void_market_already_settled() {
-        let mut order = mock_order();
+        let mut order = mock_order_default();
         order.order_status = OrderStatus::SettledWin;
         let mut market = mock_market();
         market.market_status = MarketStatus::Settled;
@@ -118,25 +118,6 @@ mod tests {
         );
     }
 
-    fn mock_order() -> Order {
-        Order {
-            order_status: OrderStatus::Open,
-            stake: 10,
-            stake_unmatched: 10,
-            voided_stake: 0,
-
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            product: None,
-            payout: 0,
-            payer: Default::default(),
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            product_commission_rate: 0.0,
-        }
-    }
     fn mock_market() -> Market {
         Market {
             unsettled_accounts_count: 1,

@@ -84,7 +84,7 @@ mod tests {
     use crate::state::market_account::MarketStatus::Open;
     use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_queue_account::OrderMatch;
-    use crate::state::order_account::OrderStatus;
+    use crate::state::order_account::{mock_order_default, OrderStatus};
     use crate::state::payments_queue::PaymentInfo;
 
     // generic close account validation
@@ -229,7 +229,7 @@ mod tests {
         market.market_status = ReadyToClose;
         market.unclosed_accounts_count = 1;
 
-        let order = &mut test_order();
+        let order = &mut mock_order_default();
         order.order_status = OrderStatus::SettledWin;
 
         assert!(close_order(market, order).is_ok());
@@ -242,7 +242,7 @@ mod tests {
         market.market_status = ReadyToClose;
         market.unclosed_accounts_count = 1;
 
-        let order = &mut test_order();
+        let order = &mut mock_order_default();
         order.order_status = OrderStatus::Open;
 
         let result = close_order(market, order);
@@ -335,25 +335,6 @@ mod tests {
             escrow_account_bump: 0,
             funding_account_bump: 0,
             event_start_timestamp: 0,
-        }
-    }
-
-    fn test_order() -> Order {
-        Order {
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            product: None,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-            product_commission_rate: 0.0,
         }
     }
 

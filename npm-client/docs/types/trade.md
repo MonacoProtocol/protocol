@@ -46,12 +46,12 @@ Type: {tradePk: PublicKey, tnxID: ([string][12] | void)}
 
 ## TradePdaResponse
 
-Type: {tradePk: PublicKey, distinctSeed: [string][12]}
+Type: {tradePk: PublicKey, distinctSeed: [Uint8Array][13]}
 
 ### Properties
 
 *   `tradePk` **PublicKey**&#x20;
-*   `distinctSeed` **[string][12]**&#x20;
+*   `distinctSeed` **[Uint8Array][13]**&#x20;
 
 [1]: #trade
 
@@ -76,3 +76,5 @@ Type: {tradePk: PublicKey, distinctSeed: [string][12]}
 [11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
 [12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
