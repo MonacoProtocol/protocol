@@ -65,16 +65,17 @@ describe("Matching Crank", () => {
       ],
     );
 
-    const [makerOrderTradePk, takerOrderTradePk] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), makerOrderPk, 1),
-        findTradePda(monaco.getRawProgram(), takerOrderPk, 0),
-      ])
-    ).map((result) => result.data.tradePk);
+    const [makerOrderTradePk, takerOrderTradePk] = await Promise.all([
+      findTradePda(monaco.getRawProgram(), makerOrderPk),
+      findTradePda(monaco.getRawProgram(), takerOrderPk),
+    ]);
 
     // THEN
     await monaco.program.methods
-      .processOrderMatch(1, 0)
+      .processOrderMatch(
+        Array.from(makerOrderTradePk.data.distinctSeed),
+        Array.from(takerOrderTradePk.data.distinctSeed),
+      )
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
@@ -87,8 +88,8 @@ describe("Matching Crank", () => {
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: makerOrderTradePk,
-        takerOrderTrade: takerOrderTradePk,
+        makerOrderTrade: makerOrderTradePk.data.tradePk,
+        takerOrderTrade: takerOrderTradePk.data.tradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,

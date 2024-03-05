@@ -497,8 +497,8 @@ fn taker_order_pk(market_matching_queue: &Account<MarketMatchingQueue>) -> Resul
 
 #[derive(Accounts)]
 #[instruction(
-    maker_order_trade_seed: u16,
-    taker_order_trade_seed: u16,
+    maker_order_trade_seed: [u8; 16],
+    taker_order_trade_seed: [u8; 16],
 )]
 pub struct ProcessOrderMatch<'info> {
     #[account(mut)]
@@ -546,7 +546,7 @@ pub struct ProcessOrderMatch<'info> {
         init,
         seeds = [
             maker_order.key().as_ref(),
-            maker_order_trade_seed.to_string().as_ref(),
+            &maker_order_trade_seed,
         ],
         bump,
         payer = crank_operator,
@@ -557,7 +557,7 @@ pub struct ProcessOrderMatch<'info> {
         init_if_needed,
         seeds = [
             taker_order_pk(&market_matching_queue)?.as_ref(),
-            taker_order_trade_seed.to_string().as_ref(),
+            &taker_order_trade_seed,
         ],
         bump,
         payer = crank_operator,
@@ -576,8 +576,8 @@ pub struct ProcessOrderMatch<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    trade_for_seed: u16,
-    trade_against_seed: u16,
+    trade_for_seed: [u8; 16],
+    trade_against_seed: [u8; 16],
 )]
 pub struct MatchOrders<'info> {
     #[account(
@@ -591,7 +591,7 @@ pub struct MatchOrders<'info> {
         init,
         seeds = [
             order_against.key().as_ref(),
-            trade_against_seed.to_string().as_ref(),
+            &trade_against_seed,
         ],
         bump,
         payer = crank_operator,
@@ -630,7 +630,7 @@ pub struct MatchOrders<'info> {
         init,
         seeds = [
             order_for.key().as_ref(),
-            trade_for_seed.to_string().as_ref(),
+            &trade_for_seed,
         ],
         bump,
         payer = crank_operator,

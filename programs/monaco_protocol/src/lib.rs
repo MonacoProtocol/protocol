@@ -293,8 +293,8 @@ pub mod monaco_protocol {
     #[allow(unused_variables)]
     pub fn process_order_match(
         ctx: Context<ProcessOrderMatch>,
-        maker_order_trade_seed: u16,
-        taker_order_trade_seed: u16,
+        maker_order_trade_seed: [u8; 16],
+        taker_order_trade_seed: [u8; 16],
     ) -> Result<()> {
         let stake_unmatched = ctx.accounts.maker_order.stake_unmatched;
 
@@ -337,8 +337,8 @@ pub mod monaco_protocol {
     #[allow(unused_variables)]
     pub fn match_orders(
         mut ctx: Context<MatchOrders>,
-        trade_for_seed: u16,
-        trade_against_seed: u16,
+        trade_for_seed: [u8; 16],
+        trade_against_seed: [u8; 16],
     ) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.crank_operator.key,

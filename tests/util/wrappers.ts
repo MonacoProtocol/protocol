@@ -686,10 +686,6 @@ export class MonacoMarket {
     this.marketAuthority = marketAuthority;
   }
 
-  randomNumber() {
-    return Math.floor(Math.random() * 65535);
-  }
-
   async getAccount() {
     return this.monaco.fetchMarket(this.pk);
   }
@@ -1181,25 +1177,16 @@ export class MonacoMarket {
       makerOrder.purchaser,
     );
 
-    const makerOrderTradeSeed = this.randomNumber();
-    const takerOrderTradeSeed = this.randomNumber();
-    const [makerOrderTradePk, takerOrderTradePk] = (
-      await Promise.all([
-        findTradePda(
-          this.monaco.getRawProgram(),
-          makerOrderPk,
-          makerOrderTradeSeed,
-        ),
-        findTradePda(
-          this.monaco.getRawProgram(),
-          takerOrder.pk,
-          takerOrderTradeSeed,
-        ),
-      ])
-    ).map((result) => result.data.tradePk);
+    const [makerOrderTradePk, takerOrderTradePk] = await Promise.all([
+      findTradePda(this.monaco.getRawProgram(), makerOrderPk),
+      findTradePda(this.monaco.getRawProgram(), takerOrder.pk),
+    ]);
 
     const ix = await this.monaco.program.methods
-      .processOrderMatch(makerOrderTradeSeed, takerOrderTradeSeed)
+      .processOrderMatch(
+        Array.from(makerOrderTradePk.data.distinctSeed),
+        Array.from(takerOrderTradePk.data.distinctSeed),
+      )
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
@@ -1208,8 +1195,8 @@ export class MonacoMarket {
         makerOrder: makerOrderPk,
         marketPosition: await this.cacheMarketPositionPk(makerOrder.purchaser),
         purchaserToken: makerPurchaserTokenPk,
-        makerOrderTrade: makerOrderTradePk,
-        takerOrderTrade: takerOrderTradePk,
+        makerOrderTrade: makerOrderTradePk.data.tradePk,
+        takerOrderTrade: takerOrderTradePk.data.tradePk,
         crankOperator:
           crankOperatorKeypair instanceof Keypair
             ? crankOperatorKeypair.publicKey
@@ -1238,8 +1225,8 @@ export class MonacoMarket {
       remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
-      makerOrderTrade: makerOrderTradePk,
-      takerOrderTrade: takerOrderTradePk,
+      makerOrderTrade: makerOrderTradePk.data.tradePk,
+      takerOrderTrade: takerOrderTradePk.data.tradePk,
     };
   }
 

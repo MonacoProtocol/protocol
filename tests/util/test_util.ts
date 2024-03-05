@@ -739,6 +739,7 @@ export async function assertTransactionThrowsErrorCode(
       assert.fail("This test should have thrown an error");
     },
     function (err) {
+      console.error(err);
       assert.ok(err.logs.toString().includes(errorCode));
     },
   );

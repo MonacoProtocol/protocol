@@ -11,20 +11,27 @@
 
 ## findTradePda
 
-For a given order PublicKey and trade index return a Program Derived Address (PDA) and the seed used. This PDA is used for trade creation.
+For the provided order PublicKey return a Program Derived Address (PDA) and the seed used.
+If a seed override is provided, it will be used instead of generating new one.
+This PDA can be used for trade creation.
 
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `orderPk` **PublicKey** {PublicKey} publicKey of the order
-*   `orderTradeIndex` **[number][7]** {number} index representing a trade count
+*   `existingTradeSeed` **[Uint8Array][7]?** {Uint8Array} (optional) distinctSeed of an existing trade
 
 ### Examples
 
 ```javascript
 const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const orderTradeIndex = 0;
-const tradePda = await findTradePda(program, orderPk, orderTradeIndex)
+const tradePda = await findTradePda(program, orderPk)
+```
+
+```javascript
+const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const existingTradeSeed = Buffer.from("seed")
+const tradePda = await findTradePda(program, orderPk, existingTradeSeed)
 ```
 
 Returns **TradePdaResponse** publicKey (PDA) and the seed used to generate it
@@ -59,4 +66,4 @@ Returns **Trade** trade account details
 
 [6]: #examples-1
 
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array

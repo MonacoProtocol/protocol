@@ -28,11 +28,7 @@ describe("Close trade accounts", () => {
       crankOperator.publicKey,
     );
 
-    const tradeResponse = await findTradePda(
-      monaco.getRawProgram(),
-      forOrder,
-      0,
-    );
+    const tradeResponse = await findTradePda(monaco.getRawProgram(), forOrder);
     const tradePk = tradeResponse.data.tradePk;
     const tradeAccountRent = await monaco.provider.connection.getBalance(
       tradePk,
