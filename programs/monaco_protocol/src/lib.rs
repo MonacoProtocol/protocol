@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -314,6 +315,26 @@ pub mod monaco_protocol {
             event_start_order_behaviour,
             market_lock_order_behaviour,
         )
+    }
+
+    pub fn initialize_market_queues(ctx: Context<InitializeMarketQueues>) -> Result<()> {
+        msg!("Initializing market queues");
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let matching_queue = &mut ctx.accounts.matching_queue;
+
+        matching_queue.market = ctx.accounts.market.key();
+        matching_queue.matches = MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
+
+        msg!("Initialized market queues");
+        Ok(())
     }
 
     pub fn initialize_market_outcome(

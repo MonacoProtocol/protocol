@@ -689,6 +689,28 @@ pub struct InitializeMarketOutcome<'info> {
 }
 
 #[derive(Accounts)]
+pub struct InitializeMarketQueues<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        init,
+        seeds = [b"matching".as_ref(), market.key().as_ref()],
+        bump,
+        payer = market_operator,
+        space = MarketMatchingQueue::SIZE
+    )]
+    pub matching_queue: Box<Account<'info, MarketMatchingQueue>>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(_outcome_index: u16)]
 pub struct UpdateMarketOutcome<'info> {
     #[account(address = system_program::ID)]
