@@ -689,28 +689,6 @@ pub struct InitializeMarketOutcome<'info> {
 }
 
 #[derive(Accounts)]
-pub struct InitializeMarketQueues<'info> {
-    #[account(mut)]
-    pub market: Account<'info, Market>,
-    #[account(
-        init,
-        seeds = [b"matching".as_ref(), market.key().as_ref()],
-        bump,
-        payer = market_operator,
-        space = MarketMatchingQueue::SIZE
-    )]
-    pub matching_queue: Box<Account<'info, MarketMatchingQueue>>,
-
-    #[account(mut)]
-    pub market_operator: Signer<'info>,
-    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
-    pub authorised_operators: Account<'info, AuthorisedOperators>,
-
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
 #[instruction(_outcome_index: u16)]
 pub struct UpdateMarketOutcome<'info> {
     #[account(address = system_program::ID)]
@@ -945,6 +923,37 @@ pub struct CloseMarket<'info> {
         close = authority,
     )]
     pub matching_queue: Account<'info, MarketMatchingQueue>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::CloseAccountMarketMismatch,
+        seeds = [b"commission_payments".as_ref(), market.key().as_ref()],
+        bump,
+        close = authority,
+    )]
+    pub commission_payment_queue: Account<'info, MarketPaymentsQueue>,
+
+    #[account(mut)]
+    pub authority: SystemAccount<'info>,
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct CloseMarketWithoutMatchingQueue<'info> {
+    #[account(
+        mut,
+        has_one = authority @ CoreError::CloseAccountPurchaserMismatch,
+        close = authority,
+    )]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
     #[account(
         mut,
         has_one = market @ CoreError::CloseAccountMarketMismatch,
