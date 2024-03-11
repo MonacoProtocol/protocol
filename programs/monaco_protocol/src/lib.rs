@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -316,6 +317,26 @@ pub mod monaco_protocol {
         )
     }
 
+    pub fn initialize_market_queues(ctx: Context<InitializeMarketQueues>) -> Result<()> {
+        msg!("Initializing market queues");
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let matching_queue = &mut ctx.accounts.matching_queue;
+
+        matching_queue.market = ctx.accounts.market.key();
+        matching_queue.matches = MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
+
+        msg!("Initialized market queues");
+        Ok(())
+    }
+
     pub fn initialize_market_outcome(
         ctx: Context<InitializeMarketOutcome>,
         title: String,
@@ -593,17 +614,5 @@ pub mod monaco_protocol {
         )?;
 
         instructions::market::close_escrow_token_account(&ctx)
-    }
-
-    pub fn close_market_without_matching_queue(
-        ctx: Context<CloseMarketWithoutMatchingQueue>,
-    ) -> Result<()> {
-        instructions::close::close_market(
-            &ctx.accounts.market.market_status,
-            ctx.accounts.commission_payment_queue.payment_queue.len(),
-            ctx.accounts.market.unclosed_accounts_count,
-        )?;
-
-        instructions::market::close_escrow_token_account_2(&ctx)
     }
 }
