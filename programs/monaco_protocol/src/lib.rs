@@ -29,6 +29,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_account::MarketStatus;
     use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 
     pub const PRICE_SCALE: u8 = 3_u8;
@@ -327,6 +328,10 @@ pub mod monaco_protocol {
             ctx.accounts.market_operator.key,
             &ctx.accounts.market.authority,
         )?;
+        require!(
+            MarketStatus::ReadyToClose.eq(&ctx.accounts.market.market_status),
+            CoreError::MarketInvalidStatus
+        );
 
         let matching_queue = &mut ctx.accounts.matching_queue;
 
