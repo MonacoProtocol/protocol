@@ -592,12 +592,7 @@ pub mod monaco_protocol {
             ctx.accounts.market.unclosed_accounts_count,
         )?;
 
-        instructions::market::close_escrow_token_account(
-            &ctx.accounts.market,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.authority,
-            &ctx.accounts.token_program,
-        )
+        instructions::market::close_escrow_token_account(&ctx)
     }
 
     pub fn close_market_without_matching_queue(
@@ -609,11 +604,6 @@ pub mod monaco_protocol {
             ctx.accounts.market.unclosed_accounts_count,
         )?;
 
-        instructions::market::close_escrow_token_account(
-            &ctx.accounts.market,
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.authority,
-            &ctx.accounts.token_program,
-        )
+        instructions::market::close_escrow_token_account_2(&ctx)
     }
 }
