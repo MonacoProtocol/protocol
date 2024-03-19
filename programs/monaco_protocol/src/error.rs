@@ -265,6 +265,8 @@ pub enum CoreError {
      */
     #[msg(format!("Market: title is too long, max length: {}", Market::TITLE_MAX_LENGTH))]
     MarketTitleTooLong,
+    #[msg(format!("Market Outcome: title is too long, max length: {}", MarketOutcome::TITLE_MAX_LENGTH))]
+    MarketOutcomeTitleTooLong,
     #[msg("Market: type is invalid")]
     MarketTypeInvalid,
     #[msg("Market: lock time must be in the future")]
