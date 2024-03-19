@@ -169,6 +169,8 @@ pub enum CoreError {
     MatchingOrdersForAndAgainstAreIdentical,
     #[msg("Core Matching: market price mismatch")]
     MatchingMarketPriceMismatch,
+    #[msg("Core Matching: market outcome index mismatch")]
+    MatchingMarketOutcomeIndexMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
@@ -186,8 +188,6 @@ pub enum CoreError {
     MatchingQueueIsEmpty,
     #[msg("Matching queue is not empty.")]
     MatchingQueueIsNotEmpty,
-    #[msg("There was an attempt to dequeue an item from a matching pool queue, but the item at the front of the queue was incorrect.")]
-    IncorrectOrderDequeueAttempt,
     #[msg("The order to be matched is not at the front of the matching pool queue")]
     OrderNotAtFrontOfQueue,
     #[msg("Failed to update market: invalid arguments provided.")]
@@ -217,16 +217,13 @@ pub enum CoreError {
     MatchingMarketNotYetInplay,
     #[msg("Matching: invalid market status for operation")]
     MatchingMarketInvalidStatus,
-    // matching queue related errors
     #[msg("Matching: matched stake calculated incorrectly")]
     MatchingMatchedStakeCalculationError,
-    #[msg("Matching: matching queue empty")]
-    MatchingMatchingQueueEmpty,
-    #[msg("Matching: matching queue head mismatch")]
-    MatchingMatchingQueueHeadMismatch,
-    // -------------------
-    #[msg("matching: unknown")]
-    Unknown,
+    // matching pool related errors
+    #[msg("Matching: matching pool empty")]
+    MatchingPoolIsEmpty,
+    #[msg("Matching: matching pool head mismatch")]
+    MatchingPoolHeadMismatch,
 
     /*
     Inplay

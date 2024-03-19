@@ -487,6 +487,14 @@ pub struct AuthoriseOperator<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn outcome_index(market_matching_queue: &Account<MarketMatchingQueue>) -> Result<u16> {
+    Ok(market_matching_queue
+        .matches
+        .peek()
+        .ok_or(CoreError::MatchingQueueIsEmpty)?
+        .outcome_index)
+}
+
 fn order_against_pk(
     order: &Account<Order>,
     market_matching_queue: &Account<MarketMatchingQueue>,
@@ -536,6 +544,9 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
+        constraint =
+            market_matching_pool.market_outcome_index == outcome_index(&market_matching_queue)?
+            @ CoreError::MatchingMarketOutcomeIndexMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
     #[account(
@@ -548,7 +559,8 @@ pub struct ProcessOrderMatch<'info> {
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = *market_matching_pool.orders.peek(0)
-            .ok_or(CoreError::MatchingQueueIsEmpty)? == maker_order.key() @ CoreError::MatchingPurchaserMismatch,
+            .ok_or(CoreError::MatchingPoolIsEmpty)? == maker_order.key()
+            @ CoreError::MatchingPoolHeadMismatch,
     )]
     pub maker_order: Account<'info, Order>,
     #[account(
