@@ -152,6 +152,10 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
         ctx.accounts.market.market_status == MarketStatus::Initializing,
         CoreError::MarketOutcomeMarketInvalidStatus
     );
+    require!(
+        title.len() <= MarketOutcome::TITLE_MAX_LENGTH,
+        CoreError::MarketOutcomeTitleTooLong
+    );
 
     ctx.accounts.outcome.market = ctx.accounts.market.key();
     ctx.accounts.outcome.index = ctx.accounts.market.market_outcomes_count;
