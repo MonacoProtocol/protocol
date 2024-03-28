@@ -364,7 +364,7 @@ mod tests {
             product_commission_rate: 0.0,
             creation_timestamp: 0,
         };
-        assert!(request_1.eq(&request_2));
+        assert_eq!(request_1, request_2);
 
         let request_3 = OrderRequest {
             purchaser,
@@ -380,6 +380,6 @@ mod tests {
             product_commission_rate: 0.0,
             creation_timestamp: 0,
         };
-        assert!(!request_1.eq(&request_3));
+        assert_ne!(request_1, request_3);
     }
 }
