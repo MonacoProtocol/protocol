@@ -7,7 +7,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { findMarketPdas, findUserPdas } from "../util/pdas";
 import { findOrderRequestQueuePda } from "../../npm-admin-client";
-import { OrderRequestQueueAccount } from "../../npm-client";
+import { findOrderPda, OrderRequestQueueAccount } from "../../npm-client";
 
 describe("Order Request Creation", () => {
   const provider = anchor.AnchorProvider.local();
@@ -117,13 +117,7 @@ describe("Order Request Creation", () => {
     ]);
     const marketPk = market.pk;
     await market.airdrop(purchaser, 1000.0);
-
-    const orderPk = await market.forOrderRequest(
-      outcomeIndex,
-      stake,
-      price,
-      purchaser,
-    );
+    await market.forOrderRequest(outcomeIndex, stake, price, purchaser);
 
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
@@ -149,16 +143,24 @@ describe("Order Request Creation", () => {
         monaco.program,
       );
 
+      const order2Pk = await findOrderPda(
+        monaco.program,
+        marketPk,
+        purchaser.publicKey,
+        Uint8Array.from(duplicateDistinctSeed),
+      );
+
+      // attempt to create order using same purchaser & distinct seeds as an existing item on the queue
       await monaco.program.methods
         .createOrderRequest({
           marketOutcomeIndex: outcomeIndex,
-          forOutcome: forOutcome,
+          forOutcome: !forOutcome,
           stake: new BN(uiAmountToAmount(stake)),
           price: price,
           distinctSeed: duplicateDistinctSeed,
         })
         .accounts({
-          reservedOrder: orderPk.data.orderPk,
+          reservedOrder: order2Pk.data.orderPk,
           orderRequestQueue: (
             await findOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
