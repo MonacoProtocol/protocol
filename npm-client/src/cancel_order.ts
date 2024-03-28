@@ -11,6 +11,7 @@ import {
   buildCancelOrderInstruction,
   buildCancelOrdersForMarketInstructions,
 } from "./cancel_order_instruction";
+import { MarketPosition, Order } from "../types";
 
 /**
  * For the provided order publicKey, cancel the order if the program provider owns the order.Orders can be cancelled if they:
@@ -114,4 +115,65 @@ export async function cancelOrdersForMarket(
     tnxIDs,
   });
   return response.body;
+}
+
+/**
+ * For the provided order and market position calculate amount that will be refunded if order gets canceled.
+ *
+ * @param order {Order} order to be canceled
+ * @param marketPosition {MarketPosition} market position of the order's owner
+ * @returns the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
+ *
+ * @example
+ *
+ * const orderPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+ * const order = await getOrder(program, orderPk);
+ * const marketPositionPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D');
+ * const marketPosition = await getMarketPosition(program, marketPositionPk);
+ * const refundAmount = await calculateOrderCancellationRefund(order, marketPosition);
+ */
+export function calculateOrderCancellationRefund(
+  order: Order,
+  marketPosition: MarketPosition,
+): number {
+  const unmatchedExposures = marketPosition.unmatchedExposures.map((value) =>
+    value.toNumber(),
+  );
+  const matchedExposures = marketPosition.marketOutcomeSums.map(
+    (value) => -Math.min(value.toNumber(), 0),
+  );
+
+  const totalExposureBefore = totalExposure(
+    unmatchedExposures,
+    matchedExposures,
+  );
+
+  if (order.forOutcome) {
+    for (let i = 0; i < unmatchedExposures.length; i++) {
+      if (i == order.marketOutcomeIndex) {
+        continue;
+      }
+      unmatchedExposures[i] -= order.stakeUnmatched;
+    }
+  } else {
+    const orderExposure =
+      order.stakeUnmatched * order.expectedPrice - order.stakeUnmatched;
+    unmatchedExposures[order.marketOutcomeIndex] -= orderExposure;
+  }
+
+  return (
+    totalExposureBefore - totalExposure(unmatchedExposures, matchedExposures)
+  );
+}
+
+function totalExposure(
+  unmatchedExposures: number[],
+  matchedExposures: number[],
+): number {
+  const totalExposures = Array.from(
+    new Array(unmatchedExposures.length),
+    (_, index) => matchedExposures[index] + unmatchedExposures[index],
+  );
+
+  return Math.max(...totalExposures);
 }

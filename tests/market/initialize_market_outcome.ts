@@ -1,6 +1,9 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import assert from "assert";
 import { monaco } from "../util/wrappers";
+import { findMarketOutcomePda } from "../../npm-client";
+import { AnchorError } from "@coral-xyz/anchor";
+import console from "console";
 
 describe("Market: market outcome initialization", () => {
   it("Success with price ladder account", async () => {
@@ -134,6 +137,67 @@ describe("Market: market outcome initialization", () => {
         "Account does not exist or has no data " + marketOutcomePk,
       );
     }
+  });
+
+  it("Failure: title too long", async () => {
+    // create a new market
+    const market = await monaco.createMarket([], [1.001, 1.01, 1.1]);
+    assert.deepEqual(
+      (await monaco.fetchMarket(market.pk)).marketOutcomesCount,
+      0,
+    );
+
+    const marketOutcomeTitle = "0123456789".repeat(10); // 100 characters long
+
+    const marketOutcome0Pk = (
+      await findMarketOutcomePda(monaco.program, market.pk, 0)
+    ).data.pda;
+    await monaco.program.methods
+      .initializeMarketOutcome(marketOutcomeTitle)
+      .accounts({
+        market: market.pk,
+        outcome: marketOutcome0Pk,
+        priceLadder: null,
+        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        assert.fail("This test should have NOT thrown an error");
+      });
+    assert.deepEqual(
+      (await monaco.fetchMarket(market.pk)).marketOutcomesCount,
+      1,
+    );
+
+    const marketOutcome1Pk = (
+      await findMarketOutcomePda(monaco.program, market.pk, 1)
+    ).data.pda;
+    await monaco.program.methods
+      .initializeMarketOutcome(marketOutcomeTitle + "1") // 101 characters long
+      .accounts({
+        market: market.pk,
+        outcome: marketOutcome1Pk,
+        priceLadder: null,
+        authorisedOperators: await monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: monaco.operatorPk,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
+      .then(
+        function (_) {
+          assert.fail("This test should have thrown an error");
+        },
+        function (e: AnchorError) {
+          assert.equal(e.error.errorCode.code, "MarketOutcomeTitleTooLong");
+        },
+      );
+    assert.deepEqual(
+      (await monaco.fetchMarket(market.pk)).marketOutcomesCount,
+      1,
+    );
   });
 
   it("PDA seed: market-pk incorrect", async () => {

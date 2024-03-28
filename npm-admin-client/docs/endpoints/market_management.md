@@ -29,18 +29,21 @@
 *   [updateMarketLocktime][25]
     *   [Parameters][26]
     *   [Examples][27]
-*   [openMarket][28]
+*   [updateMarketLocktimeToNow][28]
     *   [Parameters][29]
     *   [Examples][30]
-*   [setMarketReadyToClose][31]
+*   [openMarket][31]
     *   [Parameters][32]
     *   [Examples][33]
-*   [voidMarket][34]
+*   [setMarketReadyToClose][34]
     *   [Parameters][35]
     *   [Examples][36]
-*   [transferMarketEscrowSurplus][37]
+*   [voidMarket][37]
     *   [Parameters][38]
     *   [Examples][39]
+*   [transferMarketTokenSurplus][40]
+    *   [Parameters][41]
+    *   [Examples][42]
 
 ## settleMarket
 
@@ -50,7 +53,11 @@ Settle a market by setting the winningOutcomeIndex
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to settle
-*   `winningOutcomeIndex` **[number][40]** {number} index representing the winning outcome of the event associated with the market
+*   `winningOutcomeIndex` **[number][43]** {number} index representing the winning outcome of the event associated with the market
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -70,6 +77,10 @@ Set the published flag on a market to `true`
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -88,6 +99,10 @@ Set the published flag on a market to `false`
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -106,6 +121,10 @@ Set the suspended flag on a market to `true` - no orders can be placed against a
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -124,6 +143,10 @@ Set the suspended flag on a market to `false` - allowing for orders to be placed
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -142,7 +165,11 @@ For the given market, update the title
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
-*   `title` **[string][41]** {string} new title to apply to the provided market
+*   `title` **[string][44]** {string} new title to apply to the provided market
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -163,6 +190,10 @@ For the given market, update the event start time
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
 *   `eventStartTimeTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing the new time when the market event will start (moving in-play markets to in-play)
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -182,6 +213,10 @@ For the given market, update the event start time to now
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -201,6 +236,10 @@ For the given market, update the lock time
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing the new time when the market can no longer accept orders
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -208,6 +247,28 @@ For the given market, update the lock time
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const marketLock = 1633042800
 const update = await updateMarketLocktime(program, marketPk, marketLock)
+```
+
+Returns **TransactionResponse** transaction ID of the request
+
+## updateMarketLocktimeToNow
+
+For the given market, update the lock time to now
+
+### Parameters
+
+*   `program` **Program** {program} anchor program initialized by the consuming client
+*   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:<ul>
+      <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+      <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+    </ul>
+
+### Examples
+
+```javascript
+const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+const update = await updateMarketLocktimeToNow(program, marketPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -222,6 +283,10 @@ Once Open, outcomes can no longer be added to a market.
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to open
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -240,6 +305,10 @@ Set a Settled market to the Ready to Close status
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -258,6 +327,10 @@ Set an Open or Intializing market to the Ready to Void status
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to update
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
@@ -268,7 +341,7 @@ const voidMarket = await voidMarket(program, marketPk)
 
 Returns **TransactionResponse** transaction ID of the request
 
-## transferMarketEscrowSurplus
+## transferMarketTokenSurplus
 
 Attempts to transfer any surplus token balance in a market's escrow account into an associated token account belonging to the calling client.
 
@@ -281,13 +354,17 @@ The token balance will only be transferred into an ATA belonging to the market a
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market with a surplus escrow balance
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+*   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
+        <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+        <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+      </ul>
 
 ### Examples
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
 const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
-const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+const transferTxn = await transferMarketTokenSurplus(program, marketPk, mintPk)
 ```
 
 Returns **TransactionResponse** transaction ID of the request
@@ -346,30 +423,36 @@ Returns **TransactionResponse** transaction ID of the request
 
 [27]: #examples-8
 
-[28]: #openmarket
+[28]: #updatemarketlocktimetonow
 
 [29]: #parameters-9
 
 [30]: #examples-9
 
-[31]: #setmarketreadytoclose
+[31]: #openmarket
 
 [32]: #parameters-10
 
 [33]: #examples-10
 
-[34]: #voidmarket
+[34]: #setmarketreadytoclose
 
 [35]: #parameters-11
 
 [36]: #examples-11
 
-[37]: #transfermarketescrowsurplus
+[37]: #voidmarket
 
 [38]: #parameters-12
 
 [39]: #examples-12
 
-[40]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[40]: #transfermarkettokensurplus
 
-[41]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[41]: #parameters-13
+
+[42]: #examples-13
+
+[43]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

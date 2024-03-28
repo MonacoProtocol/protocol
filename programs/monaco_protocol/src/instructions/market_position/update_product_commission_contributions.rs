@@ -63,7 +63,6 @@ mod tests {
         let order = Order {
             product,
             product_commission_rate: product_commission_rate,
-
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_index: 0,
@@ -73,7 +72,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),
@@ -113,7 +111,6 @@ mod tests {
         let order = Order {
             product,
             product_commission_rate,
-
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_index: 0,
@@ -123,7 +120,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),
@@ -293,7 +289,6 @@ mod tests {
         let order = Order {
             product,
             product_commission_rate: new_product_commission_rate,
-
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_index: 0,
@@ -303,7 +298,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),
@@ -366,7 +360,6 @@ mod tests {
         let order = Order {
             product,
             product_commission_rate: product_commission_rate_2,
-
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_index: 0,
@@ -376,7 +369,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),
@@ -437,7 +429,6 @@ mod tests {
         let order = Order {
             product: product_2,
             product_commission_rate: product_commission_rate_2,
-
             purchaser: Default::default(),
             market: Default::default(),
             market_outcome_index: 0,
@@ -447,7 +438,6 @@ mod tests {
             voided_stake: 0,
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 0,
             payout: 0,
             payer: Default::default(),
@@ -455,7 +445,6 @@ mod tests {
 
         let mut market_position = MarketPosition {
             matched_risk_per_product: product_stake_rates,
-
             purchaser: Default::default(),
             market: Default::default(),
             paid: false,

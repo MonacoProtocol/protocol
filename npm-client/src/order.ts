@@ -17,6 +17,7 @@ import { v4 as uuid } from "uuid";
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
  * @param purchaserPk {PublicKey} publicKey of the purchasing wallet
+ * @param existingOrderSeed {Uint8Array} Optional: distinctSeed of an existing order
  * @returns {orderPdaResponse} publicKey (PDA) and the seed used to generate it
  *
  * @example
@@ -29,13 +30,17 @@ export async function findOrderPda(
   program: Program,
   marketPk: PublicKey,
   purchaserPk: PublicKey,
+  existingOrderSeed?: Uint8Array,
 ): Promise<ClientResponse<orderPdaResponse>> {
   const response = new ResponseFactory({} as orderPdaResponse);
 
-  const distinctSeed = uuid().toString().substring(0, 13);
+  const distinctSeed = existingOrderSeed
+    ? existingOrderSeed
+    : newUuidAsByteArray();
+
   try {
-    const [orderPk, _] = await PublicKey.findProgramAddress(
-      [marketPk.toBuffer(), purchaserPk.toBuffer(), Buffer.from(distinctSeed)],
+    const [orderPk, _] = PublicKey.findProgramAddressSync(
+      [marketPk.toBuffer(), purchaserPk.toBuffer(), distinctSeed],
       program.programId,
     );
 
@@ -48,6 +53,17 @@ export async function findOrderPda(
   }
 
   return response.body;
+}
+
+/**
+ * Return a new UUID as Uint8Array to be used as a unique seed for an order PDA
+ *
+ * @returns {Uint8Array}
+ */
+function newUuidAsByteArray(): Uint8Array {
+  const buffer = new Uint8Array(16);
+  uuid(null, buffer, 0);
+  return buffer;
 }
 
 /**

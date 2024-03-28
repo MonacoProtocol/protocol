@@ -35,7 +35,7 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
         return ctx
             .accounts
             .order
-            .close(ctx.accounts.purchaser.to_account_info());
+            .close(ctx.accounts.payer.to_account_info());
     }
 
     if ctx.accounts.order.stake_unmatched > 0_u64 {
@@ -80,12 +80,10 @@ mod tests {
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Matched,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
@@ -118,6 +116,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -133,12 +132,10 @@ mod tests {
             for_outcome: true,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Matched,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
@@ -171,6 +168,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -186,12 +184,10 @@ mod tests {
             for_outcome: false,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Matched,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
@@ -224,6 +220,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then
@@ -239,12 +236,10 @@ mod tests {
             for_outcome: false,
             purchaser: Pubkey::new_unique(),
             payer: Pubkey::new_unique(),
-
             stake: 100000000,
             expected_price: 2.10,
             order_status: OrderStatus::Matched,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             stake_unmatched: 100000000,
             payout: 210000000,
             voided_stake: 0,
@@ -277,6 +272,7 @@ mod tests {
             event_start_order_behaviour: MarketOrderBehaviour::None,
             market_lock_order_behaviour: MarketOrderBehaviour::None,
             unclosed_accounts_count: 0,
+            funding_account_bump: 0,
         };
 
         // then

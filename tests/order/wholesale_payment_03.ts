@@ -68,8 +68,8 @@ describe("Order Wholesale Payment 03", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 5, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
-        { matched: [0, 0, 0], unmatched: [10, 0, 10] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         40,
         80,
         90,
@@ -79,7 +79,8 @@ describe("Order Wholesale Payment 03", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.match(purchaserCFor1Pk, purchaserAAgainst2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -92,11 +93,11 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
-        40,
-        80,
+        30,
+        90,
         90,
         90,
       ],
@@ -126,12 +127,12 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         0,
-        109,
-        100,
+        90,
+        118,
         90,
       ],
     );
@@ -199,8 +200,8 @@ describe("Order Wholesale Payment 03", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 5, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
-        { matched: [0, 0, 0], unmatched: [10, 0, 10] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         40,
         80,
         90,
@@ -210,7 +211,8 @@ describe("Order Wholesale Payment 03", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.match(purchaserCFor1Pk, purchaserAAgainst2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -223,11 +225,11 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
-        40,
-        80,
+        30,
+        90,
         90,
         90,
       ],
@@ -258,12 +260,12 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         0,
-        95,
-        100,
+        104.5,
+        90,
         104.5,
       ],
     );
@@ -331,8 +333,8 @@ describe("Order Wholesale Payment 03", () => {
       ]),
       [
         { matched: [0, 0, 0], unmatched: [20, 5, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
-        { matched: [0, 0, 0], unmatched: [10, 0, 10] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
+        { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         40,
         80,
         90,
@@ -342,7 +344,8 @@ describe("Order Wholesale Payment 03", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.match(purchaserCFor1Pk, purchaserAAgainst2Pk);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -355,11 +358,11 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
-        40,
-        80,
+        30,
+        90,
         90,
         90,
       ],
@@ -389,12 +392,12 @@ describe("Order Wholesale Payment 03", () => {
         market.getTokenBalance(purchaserC),
       ]),
       [
-        { matched: [10, -5, 10], unmatched: [20, 0, 6.8] },
-        { matched: [0, 0, 0], unmatched: [0, 10, 10] },
+        { matched: [-10, 5, 20], unmatched: [0, 0, 6.8] },
+        { matched: [20, -10, -10], unmatched: [0, 0, 0] },
         { matched: [-10, 5, -10], unmatched: [0, 0, 0] },
         0,
-        109,
-        100,
+        118,
+        90,
         90,
       ],
     );

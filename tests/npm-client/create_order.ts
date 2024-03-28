@@ -12,7 +12,7 @@ describe("NPM client - create order", () => {
     await market.airdropProvider(10000);
     const productPk = await externalPrograms.createProduct("SOME_EXCHANGE", 99);
 
-    const orderPk = await createOrderUiStake(
+    const orderRequestTx = await createOrderUiStake(
       monaco.getRawProgram(),
       market.pk,
       0,
@@ -23,11 +23,13 @@ describe("NPM client - create order", () => {
       productPk,
     );
 
-    await confirmTransaction(monaco.getRawProgram(), orderPk.data.tnxID);
+    await confirmTransaction(monaco.getRawProgram(), orderRequestTx.data.tnxID);
+
+    const orderPk = await market.processNextOrderRequest();
 
     // check that product is set to our custom product
     const orderAccount = (await monaco.program.account.order.fetch(
-      orderPk.data.orderPk,
+      orderPk,
     )) as Order;
     assert.equal(orderAccount.product.toBase58(), productPk.toBase58());
   });
@@ -36,7 +38,7 @@ describe("NPM client - create order", () => {
     const market = await monaco.create3WayMarket([2.0]);
     await market.airdropProvider(10000);
 
-    const orderPk = await createOrderUiStake(
+    const orderRequestTx = await createOrderUiStake(
       monaco.getRawProgram(),
       market.pk,
       0,
@@ -44,12 +46,13 @@ describe("NPM client - create order", () => {
       2.0,
       10,
     );
+    await confirmTransaction(monaco.getRawProgram(), orderRequestTx.data.tnxID);
 
-    await confirmTransaction(monaco.getRawProgram(), orderPk.data.tnxID);
+    const orderPk = await market.processNextOrderRequest();
 
     // check that product is set to null (how rust Option<Pubkey> of None is represented)
     const orderAccount = (await monaco.program.account.order.fetch(
-      orderPk.data.orderPk,
+      orderPk,
     )) as Order;
     assert.equal(orderAccount.product, null);
   });
@@ -58,7 +61,7 @@ describe("NPM client - create order", () => {
     const market = await monaco.create3WayMarket([2.0]);
     await market.airdropProvider(10000);
 
-    const orderPk = await createOrderUiStake(
+    const orderRequestTx = await createOrderUiStake(
       monaco.getRawProgram(),
       market.pk,
       0,
@@ -69,11 +72,12 @@ describe("NPM client - create order", () => {
       null,
       6,
     );
+    await confirmTransaction(monaco.getRawProgram(), orderRequestTx.data.tnxID);
 
-    await confirmTransaction(monaco.getRawProgram(), orderPk.data.tnxID);
+    const orderPk = await market.processNextOrderRequest();
 
     const orderAccount = (await monaco.program.account.order.fetch(
-      orderPk.data.orderPk,
+      orderPk,
     )) as Order;
     assert.equal(orderAccount.stake.toNumber(), 10000000);
   });

@@ -59,6 +59,10 @@ impl PaymentQueue {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn size(&self) -> u32 {
         self.items.len() as u32
     }
@@ -91,6 +95,14 @@ impl PaymentQueue {
             let item: PaymentInfo = *self.items.get(old_front as usize).unwrap();
             Some(item)
         }
+    }
+}
+
+#[cfg(test)]
+pub fn mock_market_payments_queue(market_pk: Pubkey) -> MarketPaymentsQueue {
+    MarketPaymentsQueue {
+        market: market_pk,
+        payment_queue: PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH),
     }
 }
 

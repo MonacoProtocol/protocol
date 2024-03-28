@@ -32,7 +32,7 @@ describe("Order Wholesale Payment 02", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,
@@ -118,7 +118,7 @@ describe("Order Wholesale Payment 02", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,
@@ -204,7 +204,7 @@ describe("Order Wholesale Payment 02", () => {
     );
     const b1ForPk = await market.forOrder(outcomeA, 10, price, purchaserB);
 
-    await market.match(b1ForPk, a1AgainstPk);
+    await market.processMatchingQueue();
 
     const a2AgainstPk = await market.againstOrder(
       outcomeB,

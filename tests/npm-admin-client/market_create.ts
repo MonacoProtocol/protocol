@@ -1,6 +1,5 @@
 import {
   BN,
-  Program,
   AnchorProvider,
   setProvider,
   workspace,
@@ -27,7 +26,7 @@ describe("Admin Client Create Market", () => {
   const marketTypeValue = null;
 
   it("Creates a market", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const nodeWallet = provider.wallet as NodeWallet;
     const event = web3.Keypair.generate();
     const newMintPk = await createNewMint(
@@ -72,7 +71,7 @@ describe("Admin Client Create Full Market", () => {
   const marketTypeValue = null;
 
   it("Creates a market with outcomes and ladder", async () => {
-    const protocolProgram = workspace.MonacoProtocol as Program;
+    const protocolProgram = workspace.MonacoProtocol;
     const nodeWallet = provider.wallet as NodeWallet;
     const event = web3.Keypair.generate();
     const newMintPk = await createNewMint(

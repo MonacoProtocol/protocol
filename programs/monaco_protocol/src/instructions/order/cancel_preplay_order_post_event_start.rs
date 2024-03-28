@@ -1,18 +1,25 @@
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
+use crate::instructions::market::move_market_to_inplay;
 use crate::instructions::market_position;
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
+use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
+use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::order_account::OrderStatus;
 
 pub fn cancel_preplay_order_post_event_start(
     market: &mut Market,
+    market_liquidities: &mut MarketLiquidities,
     market_matching_pool: &mut MarketMatchingPool,
     order: &mut Order,
     market_position: &mut MarketPosition,
+    matching_queue: &MarketMatchingQueue,
+    order_request_queue: &MarketOrderRequestQueue,
 ) -> Result<u64> {
     // market is open + in inplay mode + and cancellation is the intended behaviour
     require!(
@@ -39,7 +46,24 @@ pub fn cancel_preplay_order_post_event_start(
         CoreError::CancelationOrderCreatedAfterMarketEventStarted
     );
 
+    if let Some(order_request) = order_request_queue.order_requests.peek_front() {
+        require!(
+            market.event_start_timestamp <= order_request.creation_timestamp,
+            CoreError::CancelationPreplayOrderRequestsExist
+        );
+    }
+
+    // if market is inplay, but the inplay flag hasn't been flipped yet, do it now
+    // and zero liquidities before cancelling the order if that's what the market is
+    // configured for
+    if market.is_inplay() && !market.inplay {
+        move_market_to_inplay(market, market_liquidities)?;
+    }
     if !market_matching_pool.inplay {
+        require!(
+            matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
@@ -58,7 +82,10 @@ pub fn cancel_preplay_order_post_event_start(
 #[cfg(test)]
 mod test {
     use crate::state::market_account::MarketStatus;
+    use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_pool_account::Cirque;
+    use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
+    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -71,6 +98,21 @@ mod test {
 
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
+
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: 0,
+        };
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -86,27 +128,36 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
-
-        let mut market_position = MarketPosition::default();
-        market_position.market_outcome_sums.resize(3, 0_i128);
-        market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_creation(&mut market_position, &order);
-        assert!(update_on_order_creation.is_ok());
-        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
+        let matching_queue = &mock_market_matching_queue(market_pk);
+        let order_request_queue = &mock_order_request_queue(market_pk);
 
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
+        let mut market_position = MarketPosition::default();
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
+        assert!(update_on_order_creation.is_ok());
+        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
+
         // when
         let result = cancel_preplay_order_post_event_start(
             &mut market,
+            &mut market_liquidities,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
+            &matching_queue,
+            &order_request_queue,
         );
 
         // then
@@ -125,6 +176,119 @@ mod test {
 
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+        let mut market_position = mock_market_position(3);
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: 0,
+        };
+
+        let mut order = Order {
+            purchaser: Pubkey::new_unique(),
+            market: market_pk,
+            market_outcome_index,
+            for_outcome: false,
+            order_status: OrderStatus::Matched,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            stake_unmatched: 10_u64,
+            voided_stake: 0_u64,
+            payout: 216_u64,
+            creation_timestamp: 0,
+            payer: payer_pk,
+        };
+
+        let matching_queue = &mock_market_matching_queue(market_pk);
+        let order_request_queue = &mock_order_request_queue(market_pk);
+
+        let mut market_matching_pool =
+            mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
+
+        market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        )
+        .unwrap();
+        market_position::update_on_order_match(
+            &mut market_position,
+            &order,
+            order.stake - order.stake_unmatched,
+            order.expected_price,
+        )
+        .unwrap();
+        assert_eq!(vec!(0, 14, 0), market_position.unmatched_exposures);
+
+        // when 1
+        let result1 = cancel_preplay_order_post_event_start(
+            &mut market,
+            &mut market_liquidities,
+            &mut market_matching_pool,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &order_request_queue,
+        );
+
+        // then 1
+        assert!(result1.is_ok());
+        assert_eq!(14, result1.unwrap());
+        assert_eq!(10, order.voided_stake);
+
+        // when 2
+        let result2 = cancel_preplay_order_post_event_start(
+            &mut market,
+            &mut market_liquidities,
+            &mut market_matching_pool,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &order_request_queue,
+        );
+
+        // then 2
+        assert!(result2.is_err());
+        assert_eq!(
+            result2.unwrap_err(),
+            error!(CoreError::CancelOrderNotCancellable)
+        );
+    }
+
+    #[test]
+    fn ok_inplay_order_requests_exist() {
+        let market_outcome_index = 1;
+        let matched_price = 2.2_f64;
+        let payer_pk = Pubkey::new_unique();
+
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market();
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: market.event_start_timestamp + 1,
+        };
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -140,47 +304,204 @@ mod test {
             voided_stake: 0_u64,
             payout: 0_u64,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             payer: payer_pk,
         };
+
+        let matching_queue = &mock_market_matching_queue(market_pk);
+        let order_request_queue = &mut mock_order_request_queue(market_pk);
+        order_request_queue.order_requests.enqueue(order_request);
 
         let mut market_position = MarketPosition::default();
         market_position.market_outcome_sums.resize(3, 0_i128);
         market_position.unmatched_exposures.resize(3, 0_u64);
-        let update_on_order_creation =
-            market_position::update_on_order_creation(&mut market_position, &order);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
         assert!(update_on_order_creation.is_ok());
         assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
 
         let mut market_matching_pool =
             mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
 
-        // when 1
-        let result1 = cancel_preplay_order_post_event_start(
+        let result = cancel_preplay_order_post_event_start(
             &mut market,
+            &mut market_liquidities,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
+            &matching_queue,
+            &order_request_queue,
         );
 
-        // then 1
-        assert!(result1.is_ok());
-        assert_eq!(14, result1.unwrap());
+        assert!(result.is_ok());
+        assert_eq!(14, result.unwrap());
         assert_eq!(10, order.voided_stake);
+    }
 
-        // when 2
-        let result2 = cancel_preplay_order_post_event_start(
+    #[test]
+    fn error_unprocessed_preplay_order_requests() {
+        let market_outcome_index = 1;
+        let matched_price = 2.2_f64;
+        let payer_pk = Pubkey::new_unique();
+
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market();
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: 99,
+        };
+
+        let mut order = Order {
+            purchaser: Pubkey::new_unique(),
+            market: market_pk,
+            market_outcome_index,
+            for_outcome: false,
+            order_status: OrderStatus::Matched,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            stake_unmatched: 10_u64,
+            voided_stake: 0_u64,
+            payout: 0_u64,
+            creation_timestamp: 0,
+            payer: payer_pk,
+        };
+        let matching_queue = &mock_market_matching_queue(market_pk);
+        let order_request_queue = &mut mock_order_request_queue(market_pk);
+        order_request_queue.order_requests.enqueue(order_request);
+
+        let mut market_position = MarketPosition::default();
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
+        assert!(update_on_order_creation.is_ok());
+        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
+
+        let mut market_matching_pool =
+            mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
+
+        // when
+        let result = cancel_preplay_order_post_event_start(
             &mut market,
+            &mut market_liquidities,
             &mut market_matching_pool,
             &mut order,
             &mut market_position,
+            &matching_queue,
+            &order_request_queue,
         );
 
-        // then 2
-        assert!(result2.is_err());
+        // then
+        assert!(result.is_err());
         assert_eq!(
-            result2.unwrap_err(),
-            error!(CoreError::CancelOrderNotCancellable)
+            result.unwrap_err(),
+            error!(CoreError::CancelationPreplayOrderRequestsExist)
+        );
+    }
+
+    #[test]
+    fn error_matching_queue_not_empty() {
+        let market_outcome_index = 1;
+        let matched_price = 2.2_f64;
+        let payer_pk = Pubkey::new_unique();
+
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market();
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+
+        let order_request = OrderRequest {
+            purchaser: Pubkey::new_unique(),
+            market_outcome_index,
+            for_outcome: false,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            delay_expiration_timestamp: 0,
+            distinct_seed: [0; 16],
+            creation_timestamp: 99,
+        };
+
+        let mut order = Order {
+            purchaser: Pubkey::new_unique(),
+            market: market_pk,
+            market_outcome_index,
+            for_outcome: false,
+            order_status: OrderStatus::Matched,
+            product: None,
+            product_commission_rate: 0.0,
+            expected_price: 2.4_f64,
+            stake: 100_u64,
+            stake_unmatched: 10_u64,
+            voided_stake: 0_u64,
+            payout: 0_u64,
+            creation_timestamp: 0,
+            payer: payer_pk,
+        };
+        let matching_queue = &mut mock_market_matching_queue(market_pk);
+        matching_queue.matches.enqueue(OrderMatch {
+            pk: Default::default(),
+            purchaser: Default::default(),
+            for_outcome: false,
+            outcome_index: 0,
+            price: 0.0,
+            stake: 0,
+        });
+        let order_request_queue = &mock_order_request_queue(market_pk);
+
+        let mut market_position = MarketPosition::default();
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        let update_on_order_creation = market_position::update_on_order_request_creation(
+            &mut market_position,
+            order_request.market_outcome_index,
+            order_request.for_outcome,
+            order_request.stake,
+            order_request.expected_price,
+        );
+        assert!(update_on_order_creation.is_ok());
+        assert_eq!(vec!(0, 140, 0), market_position.unmatched_exposures);
+
+        let mut market_matching_pool =
+            mock_market_matching_pool(market_pk, market_outcome_index, matched_price);
+
+        // when
+        let result = cancel_preplay_order_post_event_start(
+            &mut market,
+            &mut market_liquidities,
+            &mut market_matching_pool,
+            &mut order,
+            &mut market_position,
+            &matching_queue,
+            &order_request_queue,
+        );
+
+        // then
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty)
         );
     }
 
@@ -210,8 +531,16 @@ mod test {
             unsettled_accounts_count: 0,
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 100,
         }
+    }
+
+    fn mock_market_position(outcomes: usize) -> MarketPosition {
+        let mut market_position = MarketPosition::default();
+        market_position.market_outcome_sums.resize(outcomes, 0_i128);
+        market_position.unmatched_exposures.resize(outcomes, 0_u64);
+        return market_position;
     }
 
     fn mock_market_matching_pool(

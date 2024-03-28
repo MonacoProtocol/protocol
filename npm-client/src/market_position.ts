@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { Program, BN } from "@coral-xyz/anchor";
 import { MarketPosition } from "../types";
 import { ClientResponse, ResponseFactory, FindPdaResponse } from "../types";
@@ -101,6 +101,59 @@ export async function getMarketPosition(
   );
 
   response.addResponseData(marketPosition);
+
+  return response.body;
+}
+
+/**
+ * Create a market position account for the provided market and purchaser wallet.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of a market
+ * @param purchaserPk {PublicKey} publicKey of the purchasing wallet
+ * @returns {PublicKey} market position publicKey
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const purchaserPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk')
+ * const marketPositionPk = await createMarketPosition(program, marketPK, purchaserPk)
+ */
+export async function createMarketPosition(
+  program: Program,
+  marketPk: PublicKey,
+  purchaserPk: PublicKey,
+): Promise<ClientResponse<PublicKey>> {
+  const response = new ResponseFactory({} as MarketPosition);
+
+  try {
+    const marketPositionPk = await findMarketPositionPda(
+      program,
+      marketPk,
+      purchaserPk,
+    );
+
+    if (!marketPositionPk.success) {
+      response.addErrors(marketPositionPk.errors);
+      return response.body;
+    }
+
+    await program.methods
+      .createMarketPosition()
+      .accounts({
+        marketPosition: marketPositionPk.data.pda,
+        market: marketPk,
+        purchaser: purchaserPk,
+        payer: program.provider.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    response.addResponseData(marketPositionPk);
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
 
   return response.body;
 }

@@ -61,6 +61,40 @@ export async function findMarketMatchingPoolPda(
 }
 
 /**
+ * For the provided market matching pool publicKey, return the market matching pool account details.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketMatchingPoolPk {PublicKey} publicKey of the market matching pool
+ * @returns {GetAccount<MarketMatchingPoolAccount>} market matching pool account details
+ *
+ * @example
+ *
+ * const marketMatchingPoolPk = new PublicKey('DdBdS1EgatrdJXbqxVbZCzsErTXApyVyrJdaDGTiY56R')
+ * const marketMatchingPool = await getMarketMatchingPool(program, marketMatchingPoolPk)
+ */
+export async function getMarketMatchingPool(
+  program: Program,
+  marketMatchingPoolPk: PublicKey,
+): Promise<ClientResponse<GetAccount<MarketMatchingPoolAccount>>> {
+  const response = new ResponseFactory(
+    {} as GetAccount<MarketMatchingPoolAccount>,
+  );
+  try {
+    const marketMatchingPool = (await program.account.marketMatchingPool.fetch(
+      marketMatchingPoolPk,
+    )) as MarketMatchingPoolAccount;
+
+    response.addResponseData({
+      publicKey: marketMatchingPoolPk,
+      account: marketMatchingPool,
+    });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+/**
  * For the provided marketMatchingPool PDAs, return the market matching pool accounts for those PDAs.
  *
  * @param program {program} anchor program initialized by the consuming client

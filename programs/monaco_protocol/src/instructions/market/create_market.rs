@@ -7,10 +7,8 @@ use crate::instructions::current_timestamp;
 use crate::monaco_protocol::{PRICE_SCALE, SEED_SEPARATOR_CHAR};
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
-use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::order_account::Order;
-use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 use crate::CoreError;
 
 const STATUSES_THAT_SUPPORT_MARKET_RECREATION: [MarketStatus; 2] =
@@ -127,6 +125,7 @@ pub fn create(
     ctx.accounts.market.mint_account = ctx.accounts.mint.key();
     ctx.accounts.market.decimal_limit = decimal_limit;
     ctx.accounts.market.escrow_account_bump = ctx.bumps.escrow;
+    ctx.accounts.market.funding_account_bump = ctx.bumps.funding;
     ctx.accounts.market.market_status = MarketStatus::Initializing;
     ctx.accounts.market.published = false;
     ctx.accounts.market.suspended = false;
@@ -145,13 +144,6 @@ pub fn create(
         false
     };
 
-    intialize_matching_queue(&mut ctx.accounts.matching_queue, &ctx.accounts.market.key())?;
-
-    intialize_commission_payments_queue(
-        &mut ctx.accounts.commission_payment_queue,
-        &ctx.accounts.market.key(),
-    )?;
-
     Ok(())
 }
 
@@ -159,6 +151,10 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
     require!(
         ctx.accounts.market.market_status == MarketStatus::Initializing,
         CoreError::MarketOutcomeMarketInvalidStatus
+    );
+    require!(
+        title.len() <= MarketOutcome::TITLE_MAX_LENGTH,
+        CoreError::MarketOutcomeTitleTooLong
     );
 
     ctx.accounts.outcome.market = ctx.accounts.market.key();
@@ -240,30 +236,12 @@ pub fn add_prices_to_market_outcome(
     Ok(())
 }
 
-fn intialize_matching_queue(
-    matching_queue: &mut MarketMatchingQueue,
-    market: &Pubkey,
-) -> Result<()> {
-    matching_queue.market = *market;
-    matching_queue.matches = MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
-    Ok(())
-}
-
-fn intialize_commission_payments_queue(
-    payments_queue: &mut MarketPaymentsQueue,
-    market: &Pubkey,
-) -> Result<()> {
-    payments_queue.market = *market;
-    payments_queue.payment_queue = PaymentQueue::new(MarketPaymentsQueue::QUEUE_LENGTH);
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{
-        instructions::market::create_market::{add_prices_to_market_outcome, validate_prices},
-        state::market_outcome_account::MarketOutcome,
+    use crate::instructions::market::create_market::{
+        add_prices_to_market_outcome, validate_prices,
     };
+    use crate::state::market_outcome_account::MarketOutcome;
 
     #[test]
     fn test_add_prices_to_market_outcome() {

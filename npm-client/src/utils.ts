@@ -6,7 +6,7 @@ import {
 import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
 import { Big } from "big.js";
-import { getMarket } from "./markets";
+import { findOrderRequestQueuePda, getMarket } from "./markets";
 import { findMarketPositionPda } from "./market_position";
 import { findMarketMatchingPoolPda } from "./market_matching_pools";
 import { findMarketOutcomePda } from "./market_outcomes";
@@ -55,22 +55,29 @@ export async function getMarketAccounts(
 
   const provider = program.provider as AnchorProvider;
 
-  const [marketOutcomePda, marketOutcomePoolPda, marketPositionPda, escrowPda] =
-    await Promise.all([
-      findMarketOutcomePda(program, marketPk, marketOutcomeIndex),
-      findMarketMatchingPoolPda(
-        program,
-        marketPk,
-        marketOutcomeIndex,
-        price,
-        forOutcome,
-      ),
-      findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
-      findEscrowPda(program, marketPk),
-    ]);
+  const [
+    marketOutcomePda,
+    marketOutcomePoolPda,
+    marketPositionPda,
+    escrowPda,
+    marketOrderRequestQueuePda,
+  ] = await Promise.all([
+    findMarketOutcomePda(program, marketPk, marketOutcomeIndex),
+    findMarketMatchingPoolPda(
+      program,
+      marketPk,
+      marketOutcomeIndex,
+      price,
+      forOutcome,
+    ),
+    findMarketPositionPda(program, marketPk, provider.wallet.publicKey),
+    findEscrowPda(program, marketPk),
+    findOrderRequestQueuePda(program, marketPk),
+  ]);
 
   const responseData = {
     escrowPda: escrowPda.data.pda,
+    marketOrderRequestQueuePda: marketOrderRequestQueuePda.data.pda,
     marketOutcomePda: marketOutcomePda.data.pda,
     marketOutcomePoolPda: marketOutcomePoolPda.data.pda,
     marketPositionPda: marketPositionPda.data.pda,
@@ -88,7 +95,7 @@ export async function getMarketAccounts(
  * @param program {program} anchor program initialized by the consuming client
  * @param stake {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
  * @param marketPk {PublicKey} publicKey of a market
- * @param mintDecimal {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
+ * @param mintDecimals {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
  * @returns {BN} ui stake adjusted for the market token decimal places
  *
  * @example
@@ -149,7 +156,7 @@ export async function findEscrowPda(
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
   try {
-    const [pda, _] = await PublicKey.findProgramAddress(
+    const [pda, _] = PublicKey.findProgramAddressSync(
       [Buffer.from("escrow"), marketPk.toBuffer()],
       program.programId,
     );
@@ -167,7 +174,7 @@ export async function findEscrowPda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param mintPK {PublicKey} publicKey of an spl-token
- * @returns {MintInfo} mint information including mint authority and decimals
+ * @returns {Mint} mint information including mint authority and decimals
  *
  * @example
  *

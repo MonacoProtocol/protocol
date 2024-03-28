@@ -60,15 +60,16 @@ describe("Order Settlement Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
+        { matched: [5, -15, 5], unmatched: [10, 0, 10] },
         { len: 1, liquidity: 10, matched: 0 },
-        { len: 1, liquidity: 5, matched: 0 },
+        { len: 0, liquidity: 0, matched: 5 },
         15,
         85,
       ],
     );
 
     // Settlement
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     await market.settleOrder(againstOrderPk);
@@ -80,7 +81,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [10, 15, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [5, 0, 5] }, 0, 100],
     );
   });
 
@@ -115,15 +116,16 @@ describe("Order Settlement Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
+        { matched: [5, -15, 5], unmatched: [10, 0, 10] },
         { len: 1, liquidity: 10, matched: 0 },
-        { len: 1, liquidity: 5, matched: 0 },
+        { len: 0, liquidity: 0, matched: 5 },
         15,
         85,
       ],
     );
 
     // Settlement
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     await market.settleOrder(forOrderPk);
@@ -135,7 +137,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [10, 15, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [5, 0, 5] }, 0, 100],
     );
   });
 
@@ -170,8 +172,8 @@ describe("Order Settlement Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [-5, 15, -5], unmatched: [5, 15, 5] },
+        { len: 1, liquidity: 5, matched: 5 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
         85,
@@ -179,6 +181,7 @@ describe("Order Settlement Payment 10", () => {
     );
 
     // Settlement
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     await market.settleOrder(againstOrderPk);
@@ -190,7 +193,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [10, 15, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [5, 0, 5] }, 0, 100],
     );
   });
 
@@ -225,8 +228,8 @@ describe("Order Settlement Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [10, 15, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [-5, 15, -5], unmatched: [5, 15, 5] },
+        { len: 1, liquidity: 5, matched: 5 },
         { len: 1, liquidity: 5, matched: 0 },
         15,
         85,
@@ -234,6 +237,7 @@ describe("Order Settlement Payment 10", () => {
     );
 
     // Settlement
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleMarketPositionForPurchaser(purchaser.publicKey);
     await market.settleOrder(forOrderPk);
@@ -245,7 +249,7 @@ describe("Order Settlement Payment 10", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [10, 15, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [5, 0, 5] }, 0, 100],
     );
   });
 });

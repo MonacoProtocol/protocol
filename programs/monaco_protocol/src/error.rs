@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
+    #[msg("MarketOutcome: update failed")]
+    MarketOutcomeUpdateError,
 
     /*
     Order Creation
@@ -27,9 +29,24 @@ pub enum CoreError {
     #[msg("Order Creation: Failed to create Order, selected price is invalid for outcome")]
     CreationInvalidPrice,
     #[msg("Order Creation: calculating payment/refund amount error")]
-    CreationPaymentAmountError,
+    CreationTransferAmountError,
     #[msg("Order Creation: market is already inplay")]
     CreationMarketAlreadyInplay,
+    #[msg("Order Creation: market mismatch")]
+    CreationMarketMismatch,
+    #[msg("Order Creation: purchaser mismatch")]
+    CreationPurchaserMismatch,
+
+    #[msg("Order Request Creation: request queue is full")]
+    OrderRequestCreationQueueFull,
+    #[msg("Order Request Creation: duplicate request already queued")]
+    OrderRequestCreationDuplicateRequest,
+    #[msg("Order Request Creation: invalid payer token account")]
+    OrderRequestCreationInvalidPayerTokenAccount,
+    #[msg("Order Request Processing: request queue is empty")]
+    OrderRequestQueueIsEmpty,
+    #[msg("Order Request Processing: request queue is not empty")]
+    OrderRequestQueueIsNotEmpty,
 
     /*
     Cancelation
@@ -38,26 +55,38 @@ pub enum CoreError {
     CancelOrderNotCancellable,
     #[msg("Core Cancelation: purchaser mismatch")]
     CancelationPurchaserMismatch,
+    #[msg("Core Cancelation: payer mismatch")]
+    CancelationPayerMismatch,
     #[msg("Core Cancelation: market mismatch")]
     CancelationMarketMismatch,
+    #[msg("Core Cancelation: market liquidities mismatch")]
+    CancelationMarketLiquiditiesMismatch,
+    #[msg("Core Cancelation: market outcome mismatch")]
+    CancelationMarketOutcomeMismatch,
     #[msg("Order Cancelation: market status invalid")]
     CancelationMarketStatusInvalid,
     #[msg("Order Cancelation: market not inplay")]
     CancelationMarketNotInplay,
+    #[msg("Order Cancelation: market not locked")]
+    CancelationMarketNotLocked,
     #[msg("Order Cancelation: market behaviour not valid for cancellation")]
     CancelationMarketOrderBehaviourInvalid,
     #[msg("Order Cancelation: order status invalid")]
     CancelationOrderStatusInvalid,
     #[msg("Order Cancelation: order created after market event started")]
     CancelationOrderCreatedAfterMarketEventStarted,
+    #[msg("Order Cancelation: liquidity too low")]
+    CancelationLowLiquidity,
+    #[msg("Order Cancelation: cannot cancel preplay orders until all preplay order requests are processed")]
+    CancelationPreplayOrderRequestsExist,
 
     /*
     Settlement
      */
     #[msg("Core Settlement: market outcome index is not valid for market")]
     SettlementInvalidMarketOutcomeIndex,
-    #[msg("Core Settlement: purchaser mismatch")]
-    SettlementPurchaserMismatch,
+    #[msg("Core Settlement: payer mismatch")]
+    SettlementPayerMismatch,
     #[msg("Core Settlement: market mismatch")]
     SettlementMarketMismatch,
     #[msg("Core Settlement: market not open")]
@@ -68,6 +97,12 @@ pub enum CoreError {
     SettlementMarketNotReadyForSettlement,
     #[msg("Core Settlement: market escrow is non zero")]
     SettlementMarketEscrowNonZero,
+    #[msg("Core Settlement: market funding is non zero")]
+    SettlementMarketFundingNonZero,
+    #[msg("Core Settlement: market matching queue not empty")]
+    SettlementMarketMatchingQueueNotEmpty,
+    #[msg("Core Settlement: market payment queue not empty")]
+    SettlementMarketPaymentsQueueNotEmpty,
     #[msg("Core Settlement: error calculating settlement payment.")]
     SettlementPaymentCalculation,
     #[msg("Core Settlement: failed to enqueue payment - queue full.")]
@@ -92,6 +127,10 @@ pub enum CoreError {
     VoidPaymentCalculation,
     #[msg("Void: order is already voided.")]
     VoidOrderIsVoided,
+    #[msg("Void: matching queue must be provided for non Initializing markets")]
+    VoidMarketMatchingQueueNotProvided,
+    #[msg("Void: request queue must be provided for non Initializing markets")]
+    VoidMarketRequestQueueNotProvided,
 
     /*
     Account counts
@@ -130,11 +169,15 @@ pub enum CoreError {
     MatchingOrdersForAndAgainstAreIdentical,
     #[msg("Core Matching: market price mismatch")]
     MatchingMarketPriceMismatch,
+    #[msg("Core Matching: market outcome index mismatch")]
+    MatchingMarketOutcomeIndexMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
     #[msg("Order Matching: remaining stake too small")]
     MatchingRemainingStakeTooSmall,
+    #[msg("Order Matching: remaining liquidity too small")]
+    MatchingRemainingLiquidityTooSmall,
     #[msg("Failed to update market: invalid arguments provided.")]
     MarketDoesNotMatch,
     #[msg(
@@ -143,8 +186,8 @@ pub enum CoreError {
     MatchingQueueIsFull,
     #[msg("There was an attempt to dequeue an item from a matching pool queue, but the queue was empty.")]
     MatchingQueueIsEmpty,
-    #[msg("There was an attempt to dequeue an item from a matching pool queue, but the item at the front of the queue was incorrect.")]
-    IncorrectOrderDequeueAttempt,
+    #[msg("Matching queue is not empty.")]
+    MatchingQueueIsNotEmpty,
     #[msg("The order to be matched is not at the front of the matching pool queue")]
     OrderNotAtFrontOfQueue,
     #[msg("Failed to update market: invalid arguments provided.")]
@@ -174,14 +217,21 @@ pub enum CoreError {
     MatchingMarketNotYetInplay,
     #[msg("Matching: invalid market status for operation")]
     MatchingMarketInvalidStatus,
-    #[msg("matching: unknown")]
-    Unknown,
+    #[msg("Matching: matched stake calculated incorrectly")]
+    MatchingMatchedStakeCalculationError,
+    // matching pool related errors
+    #[msg("Matching: matching pool empty")]
+    MatchingPoolIsEmpty,
+    #[msg("Matching: matching pool head mismatch")]
+    MatchingPoolHeadMismatch,
 
     /*
     Inplay
      */
     #[msg("The order is currently within the inplay delay period and the operation cannot be completed")]
     InplayDelay,
+    #[msg("Operation cannot currently be completed - market matching queue is not yet empty for inplay transition")]
+    InplayTransitionMarketMatchingQueueIsNotEmpty,
 
     /*
     Market Type
@@ -212,6 +262,8 @@ pub enum CoreError {
      */
     #[msg(format!("Market: title is too long, max length: {}", Market::TITLE_MAX_LENGTH))]
     MarketTitleTooLong,
+    #[msg(format!("Market Outcome: title is too long, max length: {}", MarketOutcome::TITLE_MAX_LENGTH))]
+    MarketOutcomeTitleTooLong,
     #[msg("Market: type is invalid")]
     MarketTypeInvalid,
     #[msg("Market: lock time must be in the future")]
@@ -279,12 +331,16 @@ pub enum CoreError {
     CloseAccountOrderNotComplete,
     #[msg("CloseAccount: MarketPosition not paid")]
     CloseAccountMarketPositionNotPaid,
-    #[msg("CloseAccount: Purchaser does not match")]
-    CloseAccountPurchaserMismatch,
+    #[msg("CloseAccount: Market authority does not match")]
+    CloseAccountMarketAuthorityMismatch,
     #[msg("CloseAccount: Payer does not match")]
     CloseAccountPayerMismatch,
     #[msg("CloseAccount: Market does not match")]
     CloseAccountMarketMismatch,
-    #[msg("CloseAccount: Market payment queue is not empty.")]
+    #[msg("CloseAccount: Market payment queue is not empty")]
     CloseAccountMarketPaymentQueueNotEmpty,
+    #[msg("CloseAccount: Market matching queue is not empty")]
+    CloseAccountMarketMatchingQueueNotEmpty,
+    #[msg("CloseAccount: Market order request queue is not empty")]
+    CloseAccountOrderRequestQueueNotEmpty,
 }

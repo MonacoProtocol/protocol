@@ -13,14 +13,13 @@
 
 ## Trade
 
-Type: {purchaser: PublicKey, market: PublicKey, order: PublicKey, oppositeTrade: PublicKey, marketOutcomeIndex: [number][9], forOutcome: [boolean][10], stake: BN, price: [number][9], creationTimestamp: BN, payer: PublicKey}
+Type: {purchaser: PublicKey, market: PublicKey, order: PublicKey, marketOutcomeIndex: [number][9], forOutcome: [boolean][10], stake: BN, price: [number][9], creationTimestamp: BN, payer: PublicKey}
 
 ### Properties
 
 *   `purchaser` **PublicKey**&#x20;
 *   `market` **PublicKey**&#x20;
 *   `order` **PublicKey**&#x20;
-*   `oppositeTrade` **PublicKey**&#x20;
 *   `marketOutcomeIndex` **[number][9]**&#x20;
 *   `forOutcome` **[boolean][10]**&#x20;
 *   `stake` **BN**&#x20;

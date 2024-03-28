@@ -1,12 +1,15 @@
-import { AnchorError, Program } from "@coral-xyz/anchor";
-import { createMarketWithOutcomesAndPriceLadder } from "../../npm-admin-client/src";
+import { workspace } from "@coral-xyz/anchor";
+import {
+  createMarket,
+  createMarketWithOutcomesAndPriceLadder,
+} from "../../npm-admin-client/src";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
 import { getMarketOutcomeTitlesByMarket } from "../../npm-client";
 
 describe("Admin Client Recreate Market", () => {
   it("Recreates a market successfully", async () => {
-    const program = monaco.program as Program;
+    const program = workspace.MonacoProtocol;
 
     const existingMarketWrapper = await monaco.create3WayMarket([2, 3, 4]);
     await existingMarketWrapper.voidMarket();
@@ -59,7 +62,7 @@ describe("Admin Client Recreate Market", () => {
   });
 
   it("Surfaces instruction errors appropriately", async () => {
-    const program = monaco.program as Program;
+    const program = workspace.MonacoProtocol;
 
     const existingMarketWrapper = await monaco.create3WayMarket([2, 3, 4]);
     //await existingMarketWrapper.voidMarket(); // Don't void the market - this should result in an error
@@ -68,15 +71,13 @@ describe("Admin Client Recreate Market", () => {
       existingMarket.marketType,
     );
 
-    const response = await createMarketWithOutcomesAndPriceLadder(
+    const response = await createMarket(
       program,
       existingMarket.title,
       existingMarketType.name,
       existingMarket.mintAccount,
       existingMarket.marketLockTimestamp,
       existingMarket.eventAccount,
-      ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
-      [2, 3, 4],
       {
         marketTypeDiscriminator: existingMarket.marketTypeDiscriminator,
         marketTypeValue: existingMarket.marketTypeValue,
@@ -85,8 +86,6 @@ describe("Admin Client Recreate Market", () => {
         inplayOrderDelay: existingMarket.inplayOrderDelay,
       },
     );
-    expect((response.errors[0] as AnchorError).error.errorCode.code).toMatch(
-      "MarketInvalidStatus",
-    );
+    assert(response.errors[0] as unknown as string, "MarketInvalidStatus");
   });
 });

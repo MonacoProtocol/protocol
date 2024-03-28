@@ -134,7 +134,6 @@ mod tests {
             payer: Default::default(),
             expected_price: 0.0,
             creation_timestamp: 0,
-            delay_expiration_timestamp: 0,
             product_commission_rate: 0.0,
         }
     }
@@ -165,6 +164,7 @@ mod tests {
             title: "".to_string(),
             unclosed_accounts_count: 0,
             escrow_account_bump: 0,
+            funding_account_bump: 0,
             event_start_timestamp: 0,
         }
     }

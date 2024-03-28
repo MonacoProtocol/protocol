@@ -24,17 +24,18 @@ describe("Order Settlement Payment 2", () => {
     orderPks.push(await market.againstOrder(outcome, 11, 2.01, purchaser));
     orderPks.push(await market.forOrder(outcome, 10, 1.96, purchaser));
 
-    await market.match(orderPks[1], orderPks[0]);
+    await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 10, 2.2, purchaser));
     orderPks.push(await market.forOrder(outcome, 11, 2.01, purchaser));
 
-    await market.match(orderPks[3], orderPks[2]);
+    await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 11, 2.2, purchaser));
     orderPks.push(await market.forOrder(outcome, 10, 2.01, purchaser));
 
-    await market.match(orderPks[3], orderPks[4]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // All orders are created
     assert.deepEqual(
@@ -56,13 +57,13 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [13.01, 10, 10] },
+        { matched: [0, 0, 0], unmatched: [1.2, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 10, matched: 11 },
-        { len: 1, liquidity: 1, matched: 10 },
-        { len: 1, liquidity: 10, matched: 11 },
-        13.01,
-        86.99,
+        { len: 0, liquidity: 0, matched: 21 },
+        { len: 0, liquidity: 0, matched: 11 },
+        { len: 1, liquidity: 1, matched: 20 },
+        1.2,
+        98.8,
       ],
     );
 
@@ -80,7 +81,7 @@ describe("Order Settlement Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [13.01, 10, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [1.2, 0, 0] }, 0, 100],
     );
   });
 
@@ -126,9 +127,9 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [36.31, 31, 31] },
-        { len: 1, liquidity: 10, matched: 0 },
-        { len: 2, liquidity: 21, matched: 0 },
+        { matched: [35.11, -31, -31], unmatched: [36.31, 0, 0] },
+        { len: 0, liquidity: 0, matched: 10 },
+        { len: 0, liquidity: 0, matched: 21 },
         { len: 1, liquidity: 11, matched: 0 },
         { len: 2, liquidity: 21, matched: 0 },
         36.31,
@@ -136,9 +137,10 @@ describe("Order Settlement Payment 2", () => {
       ],
     );
 
-    await market.match(orderPks[1], orderPks[0]);
-    await market.match(orderPks[3], orderPks[2]);
-    await market.match(orderPks[3], orderPks[4]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // All orders are matched
     assert.deepEqual(
@@ -160,13 +162,13 @@ describe("Order Settlement Payment 2", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [0, 0, 0], unmatched: [13.01, 10, 10] },
+        { matched: [0, 0, 0], unmatched: [1.2, 0, 0] },
         { len: 0, liquidity: 0, matched: 10 },
-        { len: 1, liquidity: 10, matched: 11 },
-        { len: 1, liquidity: 1, matched: 10 },
-        { len: 1, liquidity: 10, matched: 11 },
-        13.01,
-        86.99,
+        { len: 0, liquidity: 0, matched: 21 },
+        { len: 0, liquidity: 0, matched: 11 },
+        { len: 1, liquidity: 1, matched: 20 },
+        1.2,
+        98.8,
       ],
     );
 
@@ -184,7 +186,7 @@ describe("Order Settlement Payment 2", () => {
         market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
       ]),
-      [{ matched: [0, 0, 0], unmatched: [13.01, 10, 10] }, 0, 100],
+      [{ matched: [0, 0, 0], unmatched: [1.2, 0, 0] }, 0, 100],
     );
   });
 });

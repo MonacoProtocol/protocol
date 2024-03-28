@@ -27,8 +27,8 @@ describe("Order Settlement Payment 4", () => {
     orderPks.push(await market.forOrder(0, 10, 3.0, purchaserB)); // 2
     orderPks.push(await market.forOrder(1, 10, 3.0, purchaserB)); // 3
 
-    await market.match(orderPks[2], orderPks[0]);
-    await market.match(orderPks[3], orderPks[1]);
+    await market.processMatchingQueue();
+    await market.processMatchingQueue();
 
     // All orders are created
     assert.deepEqual(
@@ -95,7 +95,7 @@ describe("Order Settlement Payment 4", () => {
     orderPks.push(await market.againstOrder(1, 10, 3.0, purchaserA)); // 1
     orderPks.push(await market.forOrder(0, 10, 3.0, purchaserB)); // 2
 
-    await market.match(orderPks[2], orderPks[0]);
+    await market.processMatchingQueue();
 
     // All orders are created
     assert.deepEqual(

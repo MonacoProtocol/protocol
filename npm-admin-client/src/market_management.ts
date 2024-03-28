@@ -1,19 +1,61 @@
-import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import {
-  Operator,
   TransactionResponse,
   ClientResponse,
-  ResponseFactory,
   EpochTimeStamp,
+  ResponseFactory,
+  TransactionOptions,
 } from "../types";
-import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { findEscrowPda } from "./market_helpers";
+import { findEscrowPda, findMarketFundingPda } from "./market_helpers";
+import {
+  MarketManagementInstructionType,
+  buildMarketManagementInstruction,
+  setupManagementRequest,
+} from "./market_management_instructions";
+import { confirmTransaction, signAndSendInstructions } from "./utils";
+
+async function sendManagementTransaction(
+  program: Program,
+  instructions: TransactionInstruction[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  errors: object[],
+  options?: TransactionOptions,
+): Promise<ClientResponse<TransactionResponse>> {
+  const response = new ResponseFactory({} as TransactionResponse);
+  if (errors.length > 0) {
+    response.addErrors(errors);
+    return response.body;
+  }
+  try {
+    const tnxId = await signAndSendInstructions(program, instructions, options);
+
+    if (!tnxId.success) {
+      response.addErrors(tnxId.errors);
+      return response.body;
+    }
+
+    const confirmation = await confirmTransaction(
+      program,
+      tnxId.data.signature,
+    );
+    if (!confirmation.success) {
+      response.addErrors(confirmation.errors);
+    }
+    response.addResponseData({
+      tnxId: tnxId.data.signature,
+    });
+  } catch (e) {
+    response.addError(e);
+    return response.body;
+  }
+  return response;
+}
 
 /**
  * Settle a market by setting the winningOutcomeIndex
@@ -21,6 +63,11 @@ import { findEscrowPda } from "./market_helpers";
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to settle
  * @param winningOutcomeIndex {number} index representing the winning outcome of the event associated with the market
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -33,32 +80,20 @@ export async function settleMarket(
   program: Program,
   marketPk: PublicKey,
   winningOutcomeIndex: number,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .settleMarket(winningOutcomeIndex)
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.SETTLE,
+    { winningOutcomeIndex },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -66,6 +101,11 @@ export async function settleMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -76,32 +116,19 @@ export async function settleMarket(
 export async function publishMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .publishMarket()
-      .accounts({
-        market: new PublicKey(marketPk),
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.PUBLISH,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -109,6 +136,11 @@ export async function publishMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -119,28 +151,19 @@ export async function publishMarket(
 export async function unpublishMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  try {
-    const tnxId = await program.methods
-      .unpublishMarket()
-      .accounts({
-        market: new PublicKey(marketPk),
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UNPUBLISH,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -148,6 +171,11 @@ export async function unpublishMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -158,33 +186,19 @@ export async function unpublishMarket(
 export async function suspendMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .suspendMarket()
-      .accounts({
-        market: new PublicKey(marketPk),
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.SUSPEND,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -192,6 +206,11 @@ export async function suspendMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -202,33 +221,19 @@ export async function suspendMarket(
 export async function unsuspendMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .unsuspendMarket()
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UNSUSPEND,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -237,6 +242,11 @@ export async function unsuspendMarket(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param title {string} new title to apply to the provided market
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -249,34 +259,20 @@ export async function updateMarketTitle(
   program: Program,
   marketPk: PublicKey,
   title: string,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketTitle(title)
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_TITLE,
+    { title },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -285,6 +281,11 @@ export async function updateMarketTitle(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param eventStartTimeTimestamp {EpochTimeStamp} timestamp in seconds representing the new time when the market event will start (moving in-play markets to in-play)
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -296,34 +297,20 @@ export async function updateMarketEventStartTime(
   program: Program,
   marketPk: PublicKey,
   eventStartTimeTimestamp: EpochTimeStamp,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketEventStartTime(new BN(eventStartTimeTimestamp))
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME,
+    { eventStartTimeTimestamp },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -331,6 +318,11 @@ export async function updateMarketEventStartTime(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -340,34 +332,19 @@ export async function updateMarketEventStartTime(
 export async function setMarketEventStartToNow(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketEventStartTimeToNow()
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_MARKET_EVENT_START_TIME_TO_NOW,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -376,6 +353,11 @@ export async function setMarketEventStartToNow(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
  * @param marketLockTimestamp {EpochTimeStamp} timestamp in seconds representing the new time when the market can no longer accept orders
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -388,34 +370,55 @@ export async function updateMarketLocktime(
   program: Program,
   marketPk: PublicKey,
   marketLockTimestamp: EpochTimeStamp,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_LOCK_TIME,
+    { marketLockTimestamp },
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
+}
 
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .updateMarketLocktime(new BN(marketLockTimestamp))
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
+/**
+ * For the given market, update the lock time to now
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ * <ul>
+ *   <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *   <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ * </ul>
+ * @returns {TransactionResponse} transaction ID of the request
+ *
+ * @example
+ *
+ * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const update = await updateMarketLocktimeToNow(program, marketPk)
+ */
+export async function updateMarketLocktimeToNow(
+  program: Program,
+  marketPk: PublicKey,
+  options?: TransactionOptions,
+): Promise<ClientResponse<TransactionResponse>> {
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.UPDATE_MARKET_LOCK_TIME_TO_NOW,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -425,6 +428,11 @@ export async function updateMarketLocktime(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to open
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -435,32 +443,19 @@ export async function updateMarketLocktime(
 export async function openMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .openMarket()
-      .accounts({
-        market: marketPk,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.OPEN,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -468,6 +463,11 @@ export async function openMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -478,39 +478,19 @@ export async function openMarket(
 export async function setMarketReadyToClose(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  const marketEscrow = await findEscrowPda(program, marketPk);
-  if (!marketEscrow.success) {
-    response.addErrors(marketEscrow.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .setMarketReadyToClose()
-      .accounts({
-        market: marketPk,
-        marketEscrow: marketEscrow.data.pda,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.SET_READY_TO_CLOSE,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -518,6 +498,11 @@ export async function setMarketReadyToClose(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to update
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
@@ -528,39 +513,19 @@ export async function setMarketReadyToClose(
 export async function voidMarket(
   program: Program,
   marketPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
-  const { response, provider, authorisedOperators } =
-    await setupManagementRequest(program);
-
-  if (!authorisedOperators.success) {
-    response.addErrors(authorisedOperators.errors);
-    return response.body;
-  }
-
-  const marketEscrow = await findEscrowPda(program, marketPk);
-  if (!marketEscrow.success) {
-    response.addErrors(marketEscrow.errors);
-    return response.body;
-  }
-
-  try {
-    const tnxId = await program.methods
-      .voidMarket()
-      .accounts({
-        market: marketPk,
-        marketEscrow: marketEscrow.data.pda,
-        authorisedOperators: authorisedOperators.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-    response.addResponseData({
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-  return response.body;
+  const instruction = await buildMarketManagementInstruction(
+    program,
+    marketPk,
+    MarketManagementInstructionType.VOID,
+  );
+  return await sendManagementTransaction(
+    program,
+    [instruction.data.instruction],
+    instruction.errors,
+    options,
+  );
 }
 
 /**
@@ -573,18 +538,24 @@ export async function voidMarket(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market with a surplus escrow balance
  * @param mintPk {PublicKey} publicKey of the mint/token used for the market, required to getOrCreate the ATA
+ * @param options {TransactionOptions} optional parameters:
+ *   <ul>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
  * @returns {TransactionResponse} transaction ID of the request
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
  * const mintPk = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
- * const transferTxn = await transferMarketEscrowSurplus(program, marketPk, mintPk)
+ * const transferTxn = await transferMarketTokenSurplus(program, marketPk, mintPk)
  */
-export async function transferMarketEscrowSurplus(
+export async function transferMarketTokenSurplus(
   program: Program,
   marketPk: PublicKey,
   mintPk: PublicKey,
+  options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const { response, provider, authorisedOperators } =
     await setupManagementRequest(program);
@@ -600,6 +571,12 @@ export async function transferMarketEscrowSurplus(
     return response.body;
   }
 
+  const marketFunding = await findMarketFundingPda(program, marketPk);
+  if (!marketFunding.success) {
+    response.addErrors(marketEscrow.errors);
+    return response.body;
+  }
+
   const tokenAccount = await getOrCreateAssociatedTokenAccount(
     provider.connection,
     (provider.wallet as NodeWallet).payer,
@@ -608,31 +585,41 @@ export async function transferMarketEscrowSurplus(
   );
 
   try {
-    const tnxId = await program.methods
-      .transferMarketEscrowSurplus()
+    const instruction = await program.methods
+      .transferMarketTokenSurplus()
       .accounts({
         market: marketPk,
         marketEscrow: marketEscrow.data.pda,
+        marketFunding: marketFunding.data.pda,
         marketAuthorityToken: tokenAccount.address,
         marketOperator: provider.wallet.publicKey,
         authorisedOperators: authorisedOperators.data.pda,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc();
-    response.addResponseData({ tnxId });
+      .instruction();
+    const tnxId = await signAndSendInstructions(
+      program,
+      [instruction],
+      options,
+    );
+
+    if (!tnxId.success) {
+      response.addErrors(tnxId.errors);
+      return response.body;
+    }
+
+    const confirmation = await confirmTransaction(
+      program,
+      tnxId.data.signature,
+    );
+
+    if (!confirmation.success) {
+      response.addErrors(confirmation.errors);
+    }
+    response.addResponseData({ tnxId: tnxId.data.signature });
   } catch (e) {
     response.addError(e);
     return response.body;
   }
   return response.body;
-}
-
-async function setupManagementRequest(program: Program) {
-  const response = new ResponseFactory({} as TransactionResponse);
-  const provider = program.provider as AnchorProvider;
-  const authorisedOperators = await findAuthorisedOperatorsAccountPda(
-    program,
-    Operator.MARKET,
-  );
-  return { response, provider, authorisedOperators };
 }

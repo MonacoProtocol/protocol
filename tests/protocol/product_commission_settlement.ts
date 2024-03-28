@@ -23,21 +23,9 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    const forPk = await market.forOrder(
-      0,
-      stake,
-      price,
-      forPurchaser,
-      productPk,
-    );
-    const againstPk = await market.againstOrder(
-      0,
-      stake,
-      price,
-      againstPurchaser,
-      productPk,
-    );
-    await market.match(forPk, againstPk);
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);
@@ -137,10 +125,9 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);
@@ -216,17 +203,15 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     await externalPrograms.updateProductCommission(productTitle, 20);
 
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);
@@ -303,20 +288,18 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const productCommission2 = 10;
     const productPk2 = await externalPrograms.createProduct(
       "SECOND_PRODUCT",
       productCommission2,
     );
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk2),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk2),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk2);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk2);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);
@@ -417,10 +400,9 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);
@@ -497,10 +479,9 @@ describe("Product commission - settlement", () => {
     );
 
     const stake = 10;
-    await market.match(
-      await market.forOrder(0, stake, price, forPurchaser, productPk),
-      await market.againstOrder(0, stake, price, againstPurchaser, productPk),
-    );
+    await market.forOrder(0, stake, price, forPurchaser, productPk);
+    await market.againstOrder(0, stake, price, againstPurchaser, productPk);
+    await market.processMatchingQueue();
 
     const product =
       await externalPrograms.protocolProduct.account.product.fetch(productPk);

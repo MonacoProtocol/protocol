@@ -1,8 +1,7 @@
+import { ProductMatchedRiskAndRate, MarketPositions } from "../../npm-client";
 import { externalPrograms, monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
-import { MarketPositions } from "../../npm-client/src/market_position_query";
 import * as assert from "assert";
-import { ProductMatchedRiskAndRate } from "../../npm-client";
 
 describe("Market Position", () => {
   it("fetch market positions from chain", async () => {
@@ -17,10 +16,10 @@ describe("Market Position", () => {
     await market.airdrop(purchaserFor, 100.0);
     await market.airdrop(purchaserAgainst, 100.0);
 
-    const forOrder = await market.forOrder(0, 10, 2, purchaserFor, productPk);
-    const againstOrder = await market.againstOrder(0, 10, 2, purchaserAgainst);
+    await market.forOrder(0, 10, 2, purchaserFor, productPk);
+    await market.againstOrder(0, 10, 2, purchaserAgainst);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
 
     const marketPositionQuery = await MarketPositions.marketPositionQuery(
       monaco.getRawProgram(),
@@ -44,6 +43,10 @@ describe("Market Position", () => {
       forPosition.marketOutcomeSums.map((sum) => sum.toNumber()),
       [10000000, -10000000, -10000000],
     );
+    assert.deepEqual(
+      forPosition.unmatchedExposures.map((sum) => sum.toNumber()),
+      [0, 0, 0],
+    );
     assert.equal(forPosition.matchedRisk.toNumber(), 10000000);
     assert.equal(forPosition.matchedRiskPerProduct.length, 1);
     assert.deepEqual(forPosition.matchedRiskPerProduct[0], {
@@ -64,6 +67,10 @@ describe("Market Position", () => {
       againstPosition.marketOutcomeSums.map((sum) => sum.toNumber()),
       [-10000000, 10000000, 10000000],
     );
+    assert.deepEqual(
+      againstPosition.unmatchedExposures.map((sum) => sum.toNumber()),
+      [0, 0, 0],
+    );
   });
 
   it("fetch market positions by purchaser from chain", async () => {
@@ -74,10 +81,10 @@ describe("Market Position", () => {
     await market.airdrop(purchaserFor, 100.0);
     await market.airdrop(purchaserAgainst, 100.0);
 
-    const forOrder = await market.forOrder(0, 10, 2, purchaserFor);
-    const againstOrder = await market.againstOrder(0, 10, 2, purchaserAgainst);
+    await market.forOrder(0, 10, 2, purchaserFor);
+    await market.againstOrder(0, 10, 2, purchaserAgainst);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
 
     const marketPositionQuery = await MarketPositions.marketPositionQuery(
       monaco.getRawProgram(),
@@ -109,10 +116,10 @@ describe("Market Position", () => {
     await market.airdrop(purchaserFor, 100.0);
     await market.airdrop(purchaserAgainst, 100.0);
 
-    const forOrder = await market.forOrder(0, 10, 2, purchaserFor);
-    const againstOrder = await market.againstOrder(0, 10, 2, purchaserAgainst);
+    await market.forOrder(0, 10, 2, purchaserFor);
+    await market.againstOrder(0, 10, 2, purchaserAgainst);
 
-    await market.match(forOrder, againstOrder);
+    await market.processMatchingQueue();
     await market.settle(0);
     await market.settleMarketPositionForPurchaser(purchaserFor.publicKey);
 

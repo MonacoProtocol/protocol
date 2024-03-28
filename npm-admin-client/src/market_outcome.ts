@@ -1,87 +1,14 @@
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 import {
-  OutcomeInitialisationsResponse,
-  OutcomeInitialisationResponse,
-  Operator,
   ClientResponse,
   ResponseFactory,
-  FindPdaResponse,
-  MarketAccount,
+  SignAndSendInstructionsBatchResponse,
+  SignAndSendInstructionsResponse,
+  TransactionOptionsBatch,
 } from "../types";
-import { confirmTransaction } from "./utils";
-import { findAuthorisedOperatorsAccountPda } from "./operators";
-
-/**
- * For the given market account, initialise an outcome account for the provided outcome.
- *
- * **Note** To add prices to an outcome use `batchAddPricesToOutcomePool` (deprecated).
- *
- * @param program {program} anchor program initialized by the consuming client
- * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
- * @param outcome {string} string representation of the outcome
- * @param priceLadderPk {PublicKey | null} publicKey of the reusable price ladder to associate with the outcome - if null, the protocol's default price ladder will be used. Price ladders can be shared by multiple outcomes
- * @returns {OutcomeInitialisationResponse} the outcome provided, the pda for the outcome account and the transaction ID of the request
- *
- * @example
- *
- * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const outcome = "Draw"
- * const priceLadderPk = new PublicKey('5cL9zVtKrugMx6J6vT5LP4hdxq5TSGzrcc5GMj3YSwGk');
- * const initialiseOutcomeRequest = await initialiseOutcome(program, marketPk, outcome, priceLadderPk)
- */
-export async function initialiseOutcome(
-  program: Program,
-  marketPk: PublicKey,
-  outcome: string,
-  priceLadderPk?: PublicKey,
-): Promise<ClientResponse<OutcomeInitialisationResponse>> {
-  const response = new ResponseFactory({} as OutcomeInitialisationResponse);
-  const provider = program.provider as AnchorProvider;
-
-  const [authorisedOperatorsPda, nextOutcomePda] = await Promise.all([
-    findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
-    findNextOutcomePda(program, marketPk),
-  ]);
-
-  if (!authorisedOperatorsPda.success) {
-    response.addErrors(authorisedOperatorsPda.errors);
-    return response.body;
-  }
-
-  if (!nextOutcomePda.success) {
-    response.addErrors(nextOutcomePda.errors);
-    return response.body;
-  }
-  try {
-    const tnxId = await program.methods
-      .initializeMarketOutcome(outcome)
-      .accounts({
-        systemProgram: SystemProgram.programId,
-        outcome: nextOutcomePda.data.pda,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
-        market: marketPk,
-        authorisedOperators: authorisedOperatorsPda.data.pda,
-        marketOperator: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    await confirmTransaction(program, tnxId);
-
-    response.addResponseData({
-      outcome: outcome,
-      outcomePda: nextOutcomePda.data.pda,
-      tnxId: tnxId,
-    });
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
-
-  return response.body;
-}
+import { signAndSendInstructionsBatch } from "./utils";
+import { buildInitialiseOutcomesInstructions } from "./market_outcome_instruction";
 
 /**
  * For the given market account, initialise outcome accounts for the provided outcomes
@@ -90,6 +17,14 @@ export async function initialiseOutcome(
  * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
  * @param outcomes {string[]} list of strings representing the market outcomes
  * @param priceLadderPk {PublicKey | null} publicKey of the price ladder to associate with the outcomes - if null, the protocol's default price ladder will be used
+ * @param options {TransactionOptionsBatch} optional parameters:
+ *   <ul>
+ *     <li> batchSize - number of outcomes to create in single transaction (defaults to 2)</li>
+ *     <li> confirmBatchSuccess - whether to confirm each batch transaction, if true and the current batch fails, the remaining batches will not be sent - this is overridden to always be true for initialising outcomes as they always need to be added sequentially and have their seeds validated/li>
+ *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
+ *     <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
+ *   </ul>
+ *
  * @returns {OutcomeInitialisationsResponse} list of the outcomes provided, their pdas and the transaction IDs performed in the request
  *
  * @example
@@ -104,130 +39,42 @@ export async function initialiseOutcomes(
   marketPk: PublicKey,
   outcomes: string[],
   priceLadderPk?: PublicKey,
-): Promise<ClientResponse<OutcomeInitialisationsResponse>> {
-  const response = new ResponseFactory({} as OutcomeInitialisationsResponse);
-  const provider = program.provider as AnchorProvider;
-  const [authorisedOperatorsPda, marketAccount] = await Promise.all([
-    findAuthorisedOperatorsAccountPda(program, Operator.MARKET),
-    program.account.market.fetch(marketPk),
-  ]);
-  const market = marketAccount as MarketAccount;
+  options?: TransactionOptionsBatch,
+): Promise<ClientResponse<SignAndSendInstructionsBatchResponse>> {
+  const response = new ResponseFactory({} as SignAndSendInstructionsResponse);
+  const DEFAULT_BATCH_SIZE = 2;
 
-  if (!authorisedOperatorsPda.success) {
-    response.addErrors(authorisedOperatorsPda.errors);
+  const instructions = await buildInitialiseOutcomesInstructions(
+    program,
+    marketPk,
+    outcomes,
+    priceLadderPk,
+  );
+
+  if (!instructions.success) {
+    response.addErrors(instructions.errors);
     return response.body;
   }
 
-  const transactions = [] as OutcomeInitialisationResponse[];
-  for (const i in outcomes) {
-    try {
-      const outcomeIndex = market.marketOutcomesCount + parseInt(i);
-      const nextOutcomePda = await findMarketOutcomePda(
-        program,
-        marketPk,
-        outcomeIndex,
-      );
-      const tnxId = await program.methods
-        .initializeMarketOutcome(outcomes[i])
-        .accounts({
-          systemProgram: SystemProgram.programId,
-          outcome: nextOutcomePda.data.pda,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
-          market: marketPk,
-          authorisedOperators: authorisedOperatorsPda.data.pda,
-          marketOperator: provider.wallet.publicKey,
-        })
-        .rpc();
+  const transaction = await signAndSendInstructionsBatch(
+    program,
+    instructions.data.instructions.map((i) => i.instruction),
+    {
+      batchSize: options?.batchSize ? options.batchSize : DEFAULT_BATCH_SIZE,
+      confirmBatchSuccess: true,
+      computeUnitLimit: options?.computeUnitLimit,
+      computeUnitPrice: options?.computeUnitPrice,
+    },
+  );
 
-      await confirmTransaction(program, tnxId);
-      transactions.push({
-        outcomeIndex: outcomeIndex,
-        outcomePda: nextOutcomePda.data.pda,
-        tnxId: tnxId,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-  }
-  return response.body;
-}
-
-/**
- * For the given market and outcome index, returns the pda for that outcome account
- *
- * @param program {program} anchor program initialized by the consuming client
- * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
- * @param marketOutcomeIndex {number} number representing the index of the outcome
- * @returns {FindPdaResponse} pda of the market outcome account
- *
- * @example
- *
- * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const outcomeIndex = 2
- * const outcomePda = await findMarketOutcomePda(program, marketPk, outcomeIndex)
- */
-export async function findMarketOutcomePda(
-  program: Program,
-  marketPk: PublicKey,
-  marketOutcomeIndex: number,
-): Promise<ClientResponse<FindPdaResponse>> {
-  const response = new ResponseFactory({} as FindPdaResponse);
-
-  try {
-    const [pda, _] = await PublicKey.findProgramAddress(
-      [marketPk.toBuffer(), Buffer.from(marketOutcomeIndex.toString())],
-      program.programId,
-    );
-
+  if (transaction.success) {
     response.addResponseData({
-      pda: pda,
+      signatures: transaction.data.signatures,
+      failedInstructions: transaction.data.failedInstructions,
     });
-  } catch (e) {
-    response.addError(e);
+  } else {
+    response.addErrors(transaction.errors);
   }
-  return response.body;
-}
 
-/**
- * For the given market, return the pda for the next possible outcome account based off how many outcomes already exist on that market account
- *
- * @param program {program} anchor program initialized by the consuming client
- * @param marketPk {PublicKey} publicKey of the market to initialise the outcome for
- * @returns {FindPdaResponse} pda of the next possible market outcome account
- *
- * @example
- *
- * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const outcomeIndex = 2
- * const outcomePda = await findNextOutcomePda(program, marketPk)
- */
-export async function findNextOutcomePda(
-  program: Program,
-  marketPk: PublicKey,
-): Promise<ClientResponse<FindPdaResponse>> {
-  const response = new ResponseFactory({} as FindPdaResponse);
-  try {
-    const market = (await program.account.market.fetch(
-      marketPk,
-    )) as MarketAccount;
-    try {
-      const nextOutcomePda = await findMarketOutcomePda(
-        program,
-        marketPk,
-        market.marketOutcomesCount,
-      );
-      response.addResponseData({
-        pda: nextOutcomePda.data.pda,
-      });
-    } catch (e) {
-      response.addError(e);
-      return response.body;
-    }
-  } catch (e) {
-    response.addError(e);
-    return response.body;
-  }
   return response.body;
 }

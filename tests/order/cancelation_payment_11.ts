@@ -1,5 +1,5 @@
 import assert from "assert";
-import { cancelOrderSmart, createWalletWithBalance } from "../util/test_util";
+import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 
 /*
@@ -63,17 +63,17 @@ describe("Order Cancelation Payment 11", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
+        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
+        { matched: [10, -22, 10], unmatched: [10, 4.4, 10] },
         { len: 1, liquidity: 10, matched: 0 },
-        { len: 1, liquidity: 12, matched: 0 },
+        { len: 1, liquidity: 2, matched: 10 },
         26.4,
         173.6,
       ],
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -97,7 +97,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched against order
-    await cancelOrderSmart(againstOrderPk, purchaser);
+    await market.cancel(againstOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -154,10 +154,10 @@ describe("Order Cancelation Payment 11", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [10, 26.4, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [-10, 22, -10], unmatched: [0, 26.4, 0] },
+        { len: 0, liquidity: 0, matched: 10 },
         { len: 1, liquidity: 12, matched: 0 },
         26.4,
         173.6,
@@ -165,7 +165,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -189,7 +189,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched against order
-    await cancelOrderSmart(againstOrderPk, purchaser);
+    await market.cancel(againstOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -247,17 +247,17 @@ describe("Order Cancelation Payment 11", () => {
       ]),
       [
         { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [12, 22, 12] },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { matched: [10, -22, 10], unmatched: [12, 0, 12] },
         { len: 1, liquidity: 12, matched: 0 },
-        { len: 1, liquidity: 10, matched: 0 },
+        { len: 0, liquidity: 0, matched: 10 },
         22,
         178,
       ],
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -281,7 +281,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched for order
-    await cancelOrderSmart(forOrderPk, purchaser);
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -338,10 +338,10 @@ describe("Order Cancelation Payment 11", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { stakeUnmatched: 12, stakeVoided: 0, status: { open: {} } },
+        { stakeUnmatched: 2, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { matched: [0, 0, 0], unmatched: [12, 22, 12] },
-        { len: 1, liquidity: 12, matched: 0 },
+        { matched: [-10, 22, -10], unmatched: [2, 22, 2] },
+        { len: 1, liquidity: 2, matched: 10 },
         { len: 1, liquidity: 10, matched: 0 },
         22,
         178,
@@ -349,7 +349,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Match orders
-    await market.match(forOrderPk, againstOrderPk);
+    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -373,7 +373,7 @@ describe("Order Cancelation Payment 11", () => {
     );
 
     // Cancel partially matched for order
-    await cancelOrderSmart(forOrderPk, purchaser);
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([

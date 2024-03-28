@@ -6,6 +6,7 @@ import {
 } from "./create_market";
 import { create_order } from "./create_order";
 import {
+  lockMarket,
   openMarket,
   publish_market,
   setMarketReadyToClose,
@@ -23,8 +24,6 @@ import {
   printAuthorisedOperatorAccounts,
 } from "./market_operator";
 import { addPricesToLadder } from "./add_prices_to_ladder";
-import { getTokenLeaderboard } from "./leaderboard/token_leaderboard";
-import { getLeaderboardPerMarket } from "./leaderboard/market_leaderboard";
 import { create_product } from "./product";
 import {
   createMarketType,
@@ -98,6 +97,9 @@ switch (script) {
   case "unsuspend_market":
     unsuspend_market();
     break;
+  case "lockMarket":
+    lockMarket();
+    break;
   case "getAllOrders":
     getAllOrders();
     break;
@@ -112,12 +114,6 @@ switch (script) {
     break;
   case "addPricesToLadder":
     addPricesToLadder();
-    break;
-  case "getTokenLeaderboard":
-    getTokenLeaderboard();
-    break;
-  case "getMarketLeaderboards":
-    getLeaderboardPerMarket();
     break;
   case "authoriseAdminOperator":
     authoriseAdminOperator();
