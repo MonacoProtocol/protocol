@@ -113,7 +113,7 @@ describe("Order Request Creation", () => {
 
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([price]),
+      monaco.create3WayMarket([price, price + 1]),
     ]);
     const marketPk = market.pk;
     await market.airdrop(purchaser, 1000.0);
@@ -149,12 +149,13 @@ describe("Order Request Creation", () => {
         monaco.program,
       );
 
+      // attempt to create order using same purchaser & distinct seeds as an existing item on the queue
       await monaco.program.methods
         .createOrderRequest({
           marketOutcomeIndex: outcomeIndex,
           forOutcome: forOutcome,
-          stake: new BN(uiAmountToAmount(stake)),
-          price: price,
+          stake: new BN(uiAmountToAmount(stake + 1)),
+          price: price + 1,
           distinctSeed: duplicateDistinctSeed,
         })
         .accounts({

@@ -170,12 +170,7 @@ impl OrderRequestQueue {
 
 impl PartialEq for OrderRequest {
     fn eq(&self, other: &Self) -> bool {
-        self.market_outcome_index == other.market_outcome_index
-            && self.for_outcome == other.for_outcome
-            && self.stake == other.stake
-            && self.expected_price == other.expected_price
-            && self.distinct_seed == other.distinct_seed
-            && self.purchaser == other.purchaser
+        self.distinct_seed == other.distinct_seed && self.purchaser == other.purchaser
     }
 }
 
@@ -192,6 +187,7 @@ pub fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
 #[cfg(test)]
 mod tests {
     use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
+    use solana_program::pubkey::Pubkey;
 
     //
     // Cirque tests
@@ -332,5 +328,58 @@ mod tests {
         assert!(queue.contains(&item2));
         assert!(queue.contains(&item3));
         assert!(queue.contains(&item4));
+    }
+
+    #[test]
+    fn test_order_request_eq() {
+        // order requests should be considered equal if purchaser and distinct_seed are equal
+        let purchaser = Pubkey::new_unique();
+
+        let request_1 = OrderRequest {
+            purchaser,
+            distinct_seed: [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0],
+
+            market_outcome_index: 0,
+            for_outcome: false,
+
+            delay_expiration_timestamp: 0,
+            stake: 0,
+            product: None,
+            expected_price: 0.0,
+            product_commission_rate: 0.0,
+            creation_timestamp: 0,
+        };
+
+        let request_2 = OrderRequest {
+            purchaser,
+            distinct_seed: [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0],
+
+            market_outcome_index: 1,
+            for_outcome: true,
+
+            delay_expiration_timestamp: 0,
+            stake: 0,
+            product: None,
+            expected_price: 0.0,
+            product_commission_rate: 0.0,
+            creation_timestamp: 0,
+        };
+        assert_eq!(request_1, request_2);
+
+        let request_3 = OrderRequest {
+            purchaser,
+            distinct_seed: [0, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0],
+
+            market_outcome_index: 0,
+            for_outcome: false,
+
+            delay_expiration_timestamp: 0,
+            stake: 0,
+            product: None,
+            expected_price: 0.0,
+            product_commission_rate: 0.0,
+            creation_timestamp: 0,
+        };
+        assert_ne!(request_1, request_3);
     }
 }
