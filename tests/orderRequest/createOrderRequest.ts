@@ -7,7 +7,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { findMarketPdas, findUserPdas } from "../util/pdas";
 import { findOrderRequestQueuePda } from "../../npm-admin-client";
-import { findOrderPda, OrderRequestQueueAccount } from "../../npm-client";
+import { OrderRequestQueueAccount } from "../../npm-client";
 
 describe("Order Request Creation", () => {
   const provider = anchor.AnchorProvider.local();
@@ -113,11 +113,17 @@ describe("Order Request Creation", () => {
 
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([price]),
+      monaco.create3WayMarket([price, price + 1]),
     ]);
     const marketPk = market.pk;
     await market.airdrop(purchaser, 1000.0);
-    await market.forOrderRequest(outcomeIndex, stake, price, purchaser);
+
+    const orderPk = await market.forOrderRequest(
+      outcomeIndex,
+      stake,
+      price,
+      purchaser,
+    );
 
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
@@ -143,24 +149,17 @@ describe("Order Request Creation", () => {
         monaco.program,
       );
 
-      const order2Pk = await findOrderPda(
-        monaco.program,
-        marketPk,
-        purchaser.publicKey,
-        Uint8Array.from(duplicateDistinctSeed),
-      );
-
       // attempt to create order using same purchaser & distinct seeds as an existing item on the queue
       await monaco.program.methods
         .createOrderRequest({
           marketOutcomeIndex: outcomeIndex,
-          forOutcome: !forOutcome,
-          stake: new BN(uiAmountToAmount(stake)),
-          price: price,
+          forOutcome: forOutcome,
+          stake: new BN(uiAmountToAmount(stake + 1)),
+          price: price + 1,
           distinctSeed: duplicateDistinctSeed,
         })
         .accounts({
-          reservedOrder: order2Pk.data.orderPk,
+          reservedOrder: orderPk.data.orderPk,
           orderRequestQueue: (
             await findOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
