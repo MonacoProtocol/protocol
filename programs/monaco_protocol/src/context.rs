@@ -348,20 +348,6 @@ pub struct CancelOrderPostMarketLock<'info> {
 
     #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
-
-    #[account(
-        mut,
-        seeds = [
-            market.key().as_ref(),
-            order.market_outcome_index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{:.3}", order.expected_price).as_ref(),
-            order.for_outcome.to_string().as_ref(),
-        ],
-        bump,
-    )]
-    pub market_matching_pool: Account<'info, MarketMatchingPool>,
-
     #[account(
         mut,
         token::mint = market.mint_account,
@@ -370,7 +356,6 @@ pub struct CancelOrderPostMarketLock<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
-
     #[account(
         seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
