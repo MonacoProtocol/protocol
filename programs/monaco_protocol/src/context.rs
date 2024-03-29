@@ -485,6 +485,16 @@ fn market_matching_pool_constraint(
     }
 }
 
+fn maker_order_constraint(
+    market_matching_pool: &Account<MarketMatchingPool>,
+    maker_order: &Account<Order>,
+) -> bool {
+    match market_matching_pool.orders.peek(0) {
+        Some(head) => maker_order.key().eq(head),
+        None => false,
+    }
+}
+
 fn order_against_pk(
     order: &Account<Order>,
     market_matching_queue: &Account<MarketMatchingQueue>,
@@ -547,8 +557,7 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
-        constraint = *market_matching_pool.orders.peek(0)
-            .ok_or(CoreError::MatchingPoolIsEmpty)? == maker_order.key()
+        constraint = maker_order_constraint(&market_matching_pool, &maker_order)
             @ CoreError::MatchingPoolHeadMismatch,
     )]
     pub maker_order: Account<'info, Order>,
