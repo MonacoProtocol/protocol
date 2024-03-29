@@ -472,12 +472,28 @@ pub struct AuthoriseOperator<'info> {
     pub system_program: Program<'info, System>,
 }
 
-fn outcome_index(market_matching_queue: &Account<MarketMatchingQueue>) -> Result<u16> {
-    Ok(market_matching_queue
-        .matches
-        .peek()
-        .ok_or(CoreError::MatchingQueueIsEmpty)?
-        .outcome_index)
+fn market_matching_pool_constraint(
+    market_matching_queue: &Account<MarketMatchingQueue>,
+    market_matching_pool: &Account<MarketMatchingPool>,
+) -> bool {
+    match market_matching_queue.matches.peek() {
+        Some(order_match) => {
+            market_matching_pool.for_outcome != order_match.for_outcome
+                && market_matching_pool.market_outcome_index == order_match.outcome_index
+                && market_matching_pool.price == order_match.price
+        }
+        None => false,
+    }
+}
+
+fn maker_order_constraint(
+    market_matching_pool: &Account<MarketMatchingPool>,
+    maker_order: &Account<Order>,
+) -> bool {
+    match market_matching_pool.orders.peek(0) {
+        Some(head) => maker_order.key().eq(head),
+        None => false,
+    }
 }
 
 fn order_against_pk(
@@ -529,9 +545,8 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
-        constraint =
-            market_matching_pool.market_outcome_index == outcome_index(&market_matching_queue)?
-            @ CoreError::MatchingMarketOutcomeIndexMismatch,
+        constraint = market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
+            @ CoreError::MatchingMarketMarketMatchingPoolMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
     #[account(
@@ -543,8 +558,7 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
-        constraint = *market_matching_pool.orders.peek(0)
-            .ok_or(CoreError::MatchingPoolIsEmpty)? == maker_order.key()
+        constraint = maker_order_constraint(&market_matching_pool, &maker_order)
             @ CoreError::MatchingPoolHeadMismatch,
     )]
     pub maker_order: Account<'info, Order>,
