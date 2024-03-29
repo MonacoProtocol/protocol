@@ -224,6 +224,8 @@ pub enum CoreError {
     MatchingPoolIsEmpty,
     #[msg("Matching: matching pool head mismatch")]
     MatchingPoolHeadMismatch,
+    #[msg("Market Liquidities: is full")]
+    MarketLiquiditiesIsFull,
 
     /*
     Inplay
