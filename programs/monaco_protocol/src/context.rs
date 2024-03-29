@@ -478,8 +478,9 @@ fn market_matching_pool_constraint(
 ) -> bool {
     match market_matching_queue.matches.peek() {
         Some(order_match) => {
-            market_matching_pool.market_outcome_index == order_match.outcome_index
-                && market_matching_pool.for_outcome != order_match.for_outcome
+            market_matching_pool.for_outcome != order_match.for_outcome
+                && market_matching_pool.market_outcome_index == order_match.outcome_index
+                && market_matching_pool.price == order_match.price
         }
         None => false,
     }
