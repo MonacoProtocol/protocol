@@ -319,6 +319,21 @@ mod total_exposure_tests {
     }
 
     #[test]
+    fn test_add_liquidity_when_full() {
+        let mut market_liquidities = mock_market_liquidities(Pubkey::default());
+
+        let mut price = 2.01;
+        for _ in 0..60 {
+            market_liquidities.add_liquidity_for(0, price, 1).unwrap();
+            price += 0.01;
+        }
+
+        let result = market_liquidities.add_liquidity_for(0, price, 1);
+        assert!(result.is_err());
+        assert_eq!(Err(error!(CoreError::MarketLiquiditiesIsFull)), result);
+    }
+
+    #[test]
     fn test_remove_liquidity() {
         let mut market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
