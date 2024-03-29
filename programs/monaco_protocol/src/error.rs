@@ -169,8 +169,8 @@ pub enum CoreError {
     MatchingOrdersForAndAgainstAreIdentical,
     #[msg("Core Matching: market price mismatch")]
     MatchingMarketPriceMismatch,
-    #[msg("Core Matching: market outcome index mismatch")]
-    MatchingMarketOutcomeIndexMismatch,
+    #[msg("Core Matching: market matching pool mismatch")]
+    MatchingMarketMarketMatchingPoolMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
