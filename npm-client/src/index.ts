@@ -9,6 +9,7 @@ export * from "./cancel_order";
 export * from "./markets";
 export * from "./market_matching_pools";
 export * from "./market_matching_pool_query";
+export * from "./market_matching_queues";
 export * from "./market_outcomes";
 export * from "./market_outcome_query";
 export * from "./market_position";

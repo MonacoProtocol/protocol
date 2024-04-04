@@ -102,7 +102,7 @@ export const MarketOrderBehaviourValue = {
 };
 
 export type MarketAccount = {
-  authority: BN;
+  authority: PublicKey;
   decimalLimit: number;
   escrowAccountBump: number;
   eventAccount: PublicKey;

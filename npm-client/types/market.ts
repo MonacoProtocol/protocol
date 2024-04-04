@@ -101,6 +101,25 @@ export type MarketMatchingPoolSeeds = {
   forOutcome: string;
 };
 
+export type MarketMatchingQueueAccount = {
+  market: PublicKey;
+  matches: {
+    front: number;
+    len: number;
+    items: MarketMatchingQueueOrderMatch[];
+  };
+};
+
+export type MarketMatchingQueueOrderMatch = {
+  pk: PublicKey;
+  purchaser: PublicKey;
+
+  forOutcome: boolean;
+  outcomeIndex: number;
+  price: number;
+  stake: BN;
+};
+
 export type MarketOutcomeAccount = {
   index: number;
   title: string;
