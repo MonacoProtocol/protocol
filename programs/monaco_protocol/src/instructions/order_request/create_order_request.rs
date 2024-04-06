@@ -30,7 +30,6 @@ pub fn create_order_request(
     let now: UnixTimestamp = current_timestamp();
     // unpack account optionals (works only for non-mut)
     let price_ladder_account = price_ladder.as_ref().map(|v| v.clone().into_inner());
-
     validate_order_request(market, market_outcome, &price_ladder_account, &data, now)?;
 
     // initialize market position if needed
