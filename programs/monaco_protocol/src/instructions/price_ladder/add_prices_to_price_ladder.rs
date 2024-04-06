@@ -1,8 +1,7 @@
+use crate::instructions::price_precision_is_within_range;
 use crate::state::price_ladder::PriceLadder;
 use crate::CoreError;
 use anchor_lang::{require, Result};
-use rust_decimal::prelude::FromPrimitive;
-use rust_decimal::Decimal;
 
 pub fn add_prices_to_price_ladder(
     price_ladder: &mut PriceLadder,
@@ -40,13 +39,7 @@ pub fn remove_prices_from_price_ladder(
 fn validate_prices(prices: &[f64]) -> Result<()> {
     let prices_iter = prices.iter();
     for price in prices_iter {
-        let decimal = Decimal::from_f64(*price).unwrap();
-        let decimal_with_scale = decimal.trunc_with_scale(3);
-
-        require!(
-            decimal.eq(&decimal_with_scale),
-            CoreError::PricePrecisionTooLarge
-        );
+        price_precision_is_within_range(*price)?;
         require!(*price > 1_f64, CoreError::PriceOneOrLess);
     }
     Ok(())
