@@ -8,8 +8,6 @@
 *   [createMarket][4]
     *   [Parameters][5]
     *   [Examples][6]
-*   [initializeMarketQueues][7]
-    *   [Parameters][8]
 
 ## createMarketWithOutcomesAndPriceLadder
 
@@ -22,14 +20,14 @@ For the given parameters:
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketName` **[string][9]** {string} title of the market being created
-*   `marketType` **[string][9]** {string} type of the market being created
+*   `marketName` **[string][7]** {string} title of the market being created
+*   `marketType` **[string][7]** {string} type of the market being created
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
-*   `outcomes` **[Array][10]<[string][9]>** {string\[]} list of possible outcomes for the market
-*   `priceLadder` **([Array][10]<[number][11]> | PublicKey)?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
-*   `options` **{marketTypeDiscriminator: [string][9]?, marketTypeValue: [string][9]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][12]?, inplayOrderDelay: [number][11]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][11]?}?** {object} optional parameters:  <ul>
+*   `outcomes` **[Array][8]<[string][7]>** {string\[]} list of possible outcomes for the market
+*   `priceLadder` **([Array][8]<[number][9]> | PublicKey)?** {number\[]} array of price points to add to the outcome, or the public key of a price ladder account (Optional - no price ladder will result in the protocol default being used for the market)
+*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?, batchSize: [number][9]?}?** {object} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type (defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -67,12 +65,12 @@ For the given parameters, create a wagering market that accepts orders in the pr
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketName` **[string][9]** {string} title of the market being created
-*   `marketType` **[string][9]** {string} type of the market being created
+*   `marketName` **[string][7]** {string} title of the market being created
+*   `marketType` **[string][7]** {string} type of the market being created
 *   `marketTokenPk` **PublicKey** {PublicKey} publicKey of the mint token being used to place an order on a market
 *   `marketLockTimestamp` **EpochTimeStamp** {EpochTimeStamp} timestamp in seconds representing when the market can no longer accept orders
 *   `eventAccountPk` **PublicKey** {PublicKey} publicKey of the event the market is associated with
-*   `options` **{marketTypeDiscriminator: [string][9]?, marketTypeValue: [string][9]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][12]?, inplayOrderDelay: [number][11]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?}?** {object} optional parameters:  <ul>
+*   `options` **{marketTypeDiscriminator: [string][7]?, marketTypeValue: [string][7]?, existingMarketPk: PublicKey?, existingMarket: MarketAccount?, eventStartTimestamp: EpochTimeStamp?, inplayEnabled: [boolean][10]?, inplayOrderDelay: [number][9]?, eventStartOrderBehaviour: MarketOrderBehaviour?, marketLockOrderBehaviour: MarketOrderBehaviour?}?** {object} optional parameters:  <ul>
         <li> marketTypeDiscriminator - string discriminator for the type of the market being created, e.g., relevant event period (defaults to null)</li>
         <li> marketTypeValue - string value for the type of the market being created, e.g., 100.5 for an over/under market type(defaults to null)</li>
         <li> existingMarketPk - publicKey of the market to recreate, if any (defaults to null)</li>
@@ -99,15 +97,6 @@ const newMarket = await createMarket(program, name, marketType, marketTypeDiscri
 
 Returns **CreateMarketResponse** containing the newly-created market account publicKey, creation transaction ID and the market account
 
-## initializeMarketQueues
-
-### Parameters
-
-*   `program` **Program**&#x20;
-*   `marketPk` **PublicKey**&#x20;
-
-Returns **[Promise][13]\<ClientResponse<{marketMatchingQueue: PublicKey, tnxId: [string][9]}>>**&#x20;
-
 [1]: #createmarketwithoutcomesandpriceladder
 
 [2]: #parameters
@@ -120,16 +109,10 @@ Returns **[Promise][13]\<ClientResponse<{marketMatchingQueue: PublicKey, tnxId: 
 
 [6]: #examples-1
 
-[7]: #initializemarketqueues
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[8]: #parameters-2
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
-
-[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
-
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
