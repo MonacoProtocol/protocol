@@ -282,8 +282,6 @@ pub enum CoreError {
     MarketPriceListIsFull,
     #[msg("Market: price cannot be 1.0 or less")]
     MarketPriceOneOrLess,
-    #[msg("Market: price support up to 3 decimal places only")]
-    MarketPricePrecisionTooLarge,
     #[msg("mint.decimals must be >= PRICE_SCALE (3)")]
     MintDecimalsUnsupported,
     #[msg("max_decimals is too large, must be <= mint.decimals-PRICE_SCALE (3)")]
