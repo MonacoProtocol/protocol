@@ -14,6 +14,7 @@ use crate::state::market_order_request_queue::{
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::price_ladder::{PriceLadder, DEFAULT_PRICES};
+use std::ops::Deref;
 
 pub fn create_order_request(
     market_pk: Pubkey,
@@ -29,7 +30,7 @@ pub fn create_order_request(
 ) -> Result<u64> {
     let now: UnixTimestamp = current_timestamp();
     // unpack account optionals (works only for non-mut)
-    let price_ladder_account = price_ladder.as_ref().map(|v| v.clone().into_inner());
+    let price_ladder_account = price_ladder.as_ref().map(|v| v.deref());
     validate_order_request(market, market_outcome, &price_ladder_account, &data, now)?;
 
     // initialize market position if needed
@@ -105,7 +106,7 @@ fn initialize_order_request(
 fn validate_order_request(
     market: &Market,
     market_outcome: &MarketOutcome,
-    price_ladder: &Option<PriceLadder>,
+    price_ladder: &Option<&PriceLadder>,
     data: &OrderRequestData,
     now: UnixTimestamp,
 ) -> Result<()> {
@@ -195,11 +196,11 @@ mod tests {
             price_ladder: vec![],
         };
 
-        let price_ladder = Some(PriceLadder {
+        let price_ladder = PriceLadder {
             authority: Pubkey::new_unique(),
             max_number_of_prices: 0,
             prices: vec![],
-        });
+        };
 
         let data = OrderRequestData {
             market_outcome_index: 0,
@@ -209,7 +210,8 @@ mod tests {
             distinct_seed: [0_u8; 16],
         };
 
-        let result = validate_order_request(&market, &market_outcome, &price_ladder, &data, now);
+        let result =
+            validate_order_request(&market, &market_outcome, &Some(&price_ladder), &data, now);
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
