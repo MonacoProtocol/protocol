@@ -348,20 +348,6 @@ pub struct CancelOrderPostMarketLock<'info> {
 
     #[account(mut, address = order.market @ CoreError::CancelationMarketMismatch)]
     pub market: Box<Account<'info, Market>>,
-
-    #[account(
-        mut,
-        seeds = [
-            market.key().as_ref(),
-            order.market_outcome_index.to_string().as_ref(),
-            b"-".as_ref(),
-            format!("{:.3}", order.expected_price).as_ref(),
-            order.for_outcome.to_string().as_ref(),
-        ],
-        bump,
-    )]
-    pub market_matching_pool: Account<'info, MarketMatchingPool>,
-
     #[account(
         mut,
         token::mint = market.mint_account,
@@ -370,7 +356,6 @@ pub struct CancelOrderPostMarketLock<'info> {
         bump,
     )]
     pub market_escrow: Box<Account<'info, TokenAccount>>,
-
     #[account(
         seeds = [b"order_request".as_ref(), market.key().as_ref()],
         bump,
@@ -487,6 +472,30 @@ pub struct AuthoriseOperator<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn market_matching_pool_constraint(
+    market_matching_queue: &Account<MarketMatchingQueue>,
+    market_matching_pool: &Account<MarketMatchingPool>,
+) -> bool {
+    match market_matching_queue.matches.peek() {
+        Some(order_match) => {
+            market_matching_pool.for_outcome != order_match.for_outcome
+                && market_matching_pool.market_outcome_index == order_match.outcome_index
+                && market_matching_pool.price == order_match.price
+        }
+        None => false,
+    }
+}
+
+fn maker_order_constraint(
+    market_matching_pool: &Account<MarketMatchingPool>,
+    maker_order: &Account<Order>,
+) -> bool {
+    match market_matching_pool.orders.peek(0) {
+        Some(head) => maker_order.key().eq(head),
+        None => false,
+    }
+}
+
 fn order_against_pk(
     order: &Account<Order>,
     market_matching_queue: &Account<MarketMatchingQueue>,
@@ -536,6 +545,8 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
+        constraint = market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
+            @ CoreError::MatchingMarketMarketMatchingPoolMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
     #[account(
@@ -547,8 +558,8 @@ pub struct ProcessOrderMatch<'info> {
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
-        constraint = *market_matching_pool.orders.peek(0)
-            .ok_or(CoreError::MatchingQueueIsEmpty)? == maker_order.key() @ CoreError::MatchingPurchaserMismatch,
+        constraint = maker_order_constraint(&market_matching_pool, &maker_order)
+            @ CoreError::MatchingPoolHeadMismatch,
     )]
     pub maker_order: Account<'info, Order>,
     #[account(

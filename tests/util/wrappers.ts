@@ -1130,11 +1130,6 @@ export class MonacoMarket {
   async cancelOrderPostMarketLock(orderPk: PublicKey) {
     const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
-    const matchingPoolPk = order.forOutcome
-      ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
-          .forOutcome
-      : this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
-          .against;
     await this.monaco.program.methods
       .cancelOrderPostMarketLock()
       .accounts({
@@ -1144,7 +1139,6 @@ export class MonacoMarket {
         purchaserToken: purchaserTokenPk,
         market: this.pk,
         marketEscrow: this.escrowPk,
-        marketMatchingPool: matchingPoolPk,
         orderRequestQueue: this.orderRequestQueuePk,
         matchingQueue: this.matchingQueuePk,
         tokenProgram: TOKEN_PROGRAM_ID,

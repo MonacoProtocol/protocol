@@ -27,6 +27,16 @@ pub fn calculate_for_payout(stake: u64, price: f64) -> u64 {
     Decimal::from(stake).mul(price_decimal).to_u64().unwrap()
 }
 
+pub fn price_precision_is_within_range(price: f64) -> Result<()> {
+    let decimal = Decimal::from_f64(price).ok_or(CoreError::ArithmeticError)?;
+    let decimal_with_scale = decimal.trunc_with_scale(3);
+    require!(
+        decimal.eq(&decimal_with_scale),
+        CoreError::PricePrecisionTooLarge
+    );
+    Ok(())
+}
+
 pub fn stake_precision_is_within_range(stake: u64, decimal_limit: u8) -> Result<bool> {
     let mut stake_decimal = Decimal::from_u64(stake).unwrap();
     require!(
@@ -115,6 +125,15 @@ mod tests {
 
         let test_case = (u64::MAX / 1000) * 1000;
         assert!(stake_precision_is_within_range(test_case, 3).unwrap());
+    }
+
+    #[test]
+    fn test_price_precision_is_within_range() {
+        assert!(price_precision_is_within_range(1_f64).is_ok());
+        assert!(price_precision_is_within_range(1.1_f64).is_ok());
+        assert!(price_precision_is_within_range(1.11_f64).is_ok());
+        assert!(price_precision_is_within_range(1.111_f64).is_ok());
+        assert!(price_precision_is_within_range(1.1111_f64).is_err());
     }
 
     #[test]
