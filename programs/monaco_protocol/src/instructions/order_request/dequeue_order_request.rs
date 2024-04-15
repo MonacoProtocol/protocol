@@ -25,23 +25,12 @@ pub fn dequeue_order_request(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::market_order_request_queue::{OrderRequest, OrderRequestQueue};
+    use crate::state::market_order_request_queue::{mock_order_request, OrderRequestQueue};
 
     #[test]
     fn dequeue_order_request_ok() {
         let purchaser = Pubkey::new_unique();
-        let order_request = OrderRequest {
-            purchaser,
-            market_outcome_index: 0,
-            for_outcome: true,
-            product: None,
-            stake: 10,
-            expected_price: 3.0,
-            delay_expiration_timestamp: 0,
-            product_commission_rate: 0.0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(purchaser, true, 0, 10_u64, 3.0_f64);
         let expected_refund = order_request.stake;
 
         let order_request_queue = &mut MarketOrderRequestQueue {
@@ -68,18 +57,7 @@ mod tests {
 
     #[test]
     fn dequeue_order_request_purchaser_mismatch() {
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 0,
-            for_outcome: true,
-            product: None,
-            stake: 10,
-            expected_price: 3.0,
-            delay_expiration_timestamp: 0,
-            product_commission_rate: 0.0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), true, 0, 10_u64, 3.0_f64);
 
         let order_request_queue = &mut MarketOrderRequestQueue {
             market: Pubkey::new_unique(),
