@@ -113,6 +113,9 @@ fn validate_order_request(
 ) -> Result<()> {
     validate_market_for_order_request(market, now)?;
 
+    if let Some(expires_on) = data.expires_on {
+        require!(expires_on > now, CoreError::CreationExpired);
+    }
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
     let stake_precision_check_result =

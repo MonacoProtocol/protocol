@@ -36,6 +36,8 @@ pub enum CoreError {
     CreationMarketMismatch,
     #[msg("Order Creation: purchaser mismatch")]
     CreationPurchaserMismatch,
+    #[msg("Order Creation: expired")]
+    CreationExpired,
 
     #[msg("Order Request Creation: request queue is full")]
     OrderRequestCreationQueueFull,

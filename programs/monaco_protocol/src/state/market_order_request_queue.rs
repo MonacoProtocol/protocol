@@ -28,7 +28,7 @@ pub struct OrderRequest {
     pub product_commission_rate: f64, // product commission rate at time of order creation
     pub distinct_seed: [u8; 16],      // used as a seed for generating a unique order pda
     pub creation_timestamp: i64,      // timestamp when request was created
-    pub expires_on: Option<i64>,      // timestamp when request was created
+    pub expires_on: Option<i64>,      // timestamp when request is supposed to expire if set
 }
 
 impl OrderRequest {
