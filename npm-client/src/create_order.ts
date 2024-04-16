@@ -125,7 +125,6 @@ export async function createOrder(
     {
       priceLadderPk,
       productPk,
-      expiresOn: undefined,
     },
   );
 
