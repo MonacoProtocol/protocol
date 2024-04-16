@@ -54,7 +54,7 @@ but the orderPk returned by this function will match the PDA of the order accoun
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
-*   `options` **{priceLadderPk: PublicKey?, productPk: PublicKey?, expiresOn: BN?}** {} set of options
+*   `options` **{priceLadderPk: PublicKey?, productPk: PublicKey?, expiresOn: BN?}**&#x20;
 
     *   `options.priceLadderPk`  {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
     *   `options.productPk`  {PublicKey} Optional: publicKey of product account this order was created on

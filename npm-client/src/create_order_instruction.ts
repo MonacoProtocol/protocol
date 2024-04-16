@@ -71,7 +71,7 @@ export async function buildOrderInstructionUIStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
- * @param options {} set of options
+ * @param options
  * @param options.priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
  * @param options.productPk {PublicKey} Optional: publicKey of product account this order was created on
  * @param options.expiresOn {BN} Optional: unix timestamp (seconds) defining expiration of request; if omitted or null or undefined order request will never expire
