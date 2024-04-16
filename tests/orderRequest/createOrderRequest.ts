@@ -157,6 +157,7 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake + 1)),
           price: price + 1,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,
@@ -242,6 +243,7 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake)),
           price: price,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,

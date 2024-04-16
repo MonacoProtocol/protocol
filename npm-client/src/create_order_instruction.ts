@@ -52,8 +52,11 @@ export async function buildOrderInstructionUIStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
-    priceLadderPk,
-    productPk,
+    {
+      priceLadderPk,
+      productPk,
+      expiresOn: undefined,
+    },
   );
 }
 
@@ -69,8 +72,10 @@ export async function buildOrderInstructionUIStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
- * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
- * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
+ * @param options {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
+ * @param options.priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
+ * @param options.productPk {PublicKey} Optional: publicKey of product account this order was created on
+ * @param options.expiresOn {PublicKey} Optional: date
  * @returns {OrderInstructionResponse}  derived order publicKey and the instruction to perform a create order transaction
  *
  * @example
@@ -91,8 +96,11 @@ export async function buildOrderInstruction(
   forOutcome: boolean,
   price: number,
   stake: BN,
-  priceLadderPk?: PublicKey,
-  productPk?: PublicKey,
+  options: {
+    priceLadderPk?: PublicKey;
+    productPk?: PublicKey;
+    expiresOn?: number;
+  },
 ): Promise<ClientResponse<OrderInstructionResponse>> {
   const response = new ResponseFactory({} as OrderInstructionResponse);
   const provider = program.provider as AnchorProvider;
@@ -135,6 +143,8 @@ export async function buildOrderInstruction(
       stake: stake,
       price: price,
       distinctSeed: distinctSeed,
+      expiresOn:
+        options.expiresOn == undefined ? null : new BN(options.expiresOn),
     })
     .accounts({
       reservedOrder: orderPk,
@@ -147,12 +157,13 @@ export async function buildOrderInstruction(
       marketOutcome: marketAccounts.data.marketOutcomePda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
+      priceLadder:
+        options.priceLadderPk == undefined ? null : options.priceLadderPk,
       purchaserToken: purchaserTokenAccount.data.associatedTokenAccount,
       marketEscrow: marketAccounts.data.escrowPda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      product: productPk == undefined ? null : productPk,
+      product: options.productPk == undefined ? null : options.productPk,
       orderRequestQueue: marketAccounts.data.marketOrderRequestQueuePda,
     })
     .instruction();
