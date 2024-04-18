@@ -122,8 +122,10 @@ export async function createOrder(
     forOutcome,
     price,
     stake,
-    priceLadderPk,
-    productPk,
+    {
+      priceLadderPk,
+      productPk,
+    },
   );
 
   response.addResponseData({

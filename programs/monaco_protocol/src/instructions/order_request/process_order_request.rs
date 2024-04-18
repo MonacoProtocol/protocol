@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
 use crate::instructions::market::move_market_to_inplay;
@@ -16,20 +15,33 @@ use crate::state::market_order_request_queue::MarketOrderRequestQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::*;
 
-pub fn process_order_request(
-    order: &mut Account<Order>,
+pub fn process_order_request<'info>(
+    order: &mut Account<'info, Order>,
     market_position: &mut MarketPosition,
     market: &mut Account<Market>,
     market_liquidities: &mut MarketLiquidities,
     market_matching_queue: &mut MarketMatchingQueue,
-    fee_payer: Pubkey,
+    fee_payer: &Signer<'info>,
     matching_pool: &mut Account<MarketMatchingPool>,
     order_request_queue: &mut Account<MarketOrderRequestQueue>,
 ) -> Result<u64> {
+    let now = current_timestamp();
     let order_request = order_request_queue
         .order_requests
         .dequeue()
         .ok_or(CoreError::OrderRequestQueueIsEmpty)?;
+
+    if let Some(expires_on) = order_request.expires_on {
+        if expires_on <= now {
+            let refund = market_position::update_on_order_request_cancellation(
+                market_position,
+                order_request,
+            )?;
+            order.close(fee_payer.to_account_info())?;
+
+            return Ok(refund);
+        }
+    }
 
     if market.is_inplay() {
         // if market is inplay, but the inplay flag hasn't been flipped yet, do it now
@@ -41,7 +53,6 @@ pub fn process_order_request(
 
         // if market is inplay, and order is delayed, processing requires that the delay has expired
         if order_request.delay_expiration_timestamp > 0 {
-            let now: UnixTimestamp = current_timestamp();
             require!(
                 order_request.delay_expiration_timestamp <= now,
                 CoreError::InplayDelay
@@ -49,7 +60,7 @@ pub fn process_order_request(
         }
     }
 
-    initialize_order(order, market, fee_payer, *order_request)?;
+    initialize_order(order, market, fee_payer.key(), *order_request)?;
     market.increment_account_counts()?;
 
     // if this pool is new, initialize it

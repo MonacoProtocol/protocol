@@ -85,7 +85,7 @@ mod test {
     use crate::state::market_liquidities::mock_market_liquidities;
     use crate::state::market_matching_pool_account::Cirque;
     use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
-    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
+    use crate::state::market_order_request_queue::{mock_order_request, mock_order_request_queue};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -101,18 +101,13 @@ mod test {
 
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
+        let order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
             market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+            100_u64,
+            2.4_f64,
+        );
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -179,18 +174,13 @@ mod test {
         let mut market_liquidities = mock_market_liquidities(market_pk);
         let mut market_position = mock_market_position(3);
 
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
+        let order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
             market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+            100_u64,
+            2.4_f64,
+        );
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -277,18 +267,14 @@ mod test {
         let mut market = mock_market();
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
+        let mut order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
             market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: market.event_start_timestamp + 1,
-        };
+            100_u64,
+            2.4_f64,
+        );
+        order_request.creation_timestamp = market.event_start_timestamp + 1;
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -352,18 +338,13 @@ mod test {
         let mut market = mock_market();
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
+        let order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
             market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 99,
-        };
+            100_u64,
+            2.4_f64,
+        );
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
@@ -430,18 +411,13 @@ mod test {
         let mut market = mock_market();
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
+        let order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
             market_outcome_index,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 99,
-        };
+            100_u64,
+            2.4_f64,
+        );
 
         let mut order = Order {
             purchaser: Pubkey::new_unique(),

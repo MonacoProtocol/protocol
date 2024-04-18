@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
-import { BN } from "@coral-xyz/anchor";
+import { AnchorError, BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { findMarketPdas, findUserPdas } from "../util/pdas";
@@ -105,6 +105,32 @@ describe("Order Request Creation", () => {
     );
   });
 
+  it("failure - enqueue expired order request", async function () {
+    const price = 3.0;
+    const outcomeIndex = 0;
+    const forOutcome = true;
+    const stake = 10.0;
+
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price, price + 1]),
+    ]);
+    await market.airdrop(purchaser, 1000.0);
+
+    await market
+      ._createOrderRequest(outcomeIndex, forOutcome, stake, price, purchaser, {
+        expiresOn: 1,
+      })
+      .then(
+        function (_) {
+          assert.fail("expected CreationExpired");
+        },
+        function (ae: AnchorError) {
+          assert.equal(ae.error.errorCode.code, "CreationExpired");
+        },
+      );
+  });
+
   it("failure - enqueue duplicate order request", async function () {
     const price = 3.0;
     const outcomeIndex = 0;
@@ -157,6 +183,7 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake + 1)),
           price: price + 1,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,
@@ -242,6 +269,7 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake)),
           price: price,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,

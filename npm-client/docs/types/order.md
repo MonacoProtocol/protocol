@@ -62,7 +62,7 @@ Type: {purchaser: PublicKey, market: PublicKey, marketOutcomeIndex: [number][26]
 
 ## OrderRequest
 
-Type: {purchaser: PublicKey, marketOutcomeIndex: [number][26], forOutcome: [boolean][27], product: (PublicKey | null), stake: BN, expectedPrice: [number][26], delayExpirationTimestamp: BN, productCommissionRate: [number][26], distinctSeed: [Array][28]<[number][26]>, creationTimestamp: BN}
+Type: {purchaser: PublicKey, marketOutcomeIndex: [number][26], forOutcome: [boolean][27], product: (PublicKey | null), stake: BN, expectedPrice: [number][26], delayExpirationTimestamp: BN, productCommissionRate: [number][26], distinctSeed: [Array][28]<[number][26]>, creationTimestamp: BN, expiresOn: BN}
 
 ### Properties
 
@@ -76,6 +76,7 @@ Type: {purchaser: PublicKey, marketOutcomeIndex: [number][26], forOutcome: [bool
 *   `productCommissionRate` **[number][26]**&#x20;
 *   `distinctSeed` **[Array][28]<[number][26]>**&#x20;
 *   `creationTimestamp` **BN**&#x20;
+*   `expiresOn` **BN**&#x20;
 
 ## OrderInstructionResponse
 

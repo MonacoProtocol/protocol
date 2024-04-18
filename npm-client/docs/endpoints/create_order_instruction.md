@@ -54,8 +54,11 @@ but the orderPk returned by this function will match the PDA of the order accoun
 *   `forOutcome` **[boolean][8]** {boolean} whether the order is for or against the outcome
 *   `price` **[number][7]** {number} price at which the order should be created, the price should be present on the outcome pool for the market
 *   `stake` **BN** {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
-*   `priceLadderPk` **PublicKey?** {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
-*   `productPk` **PublicKey?** {PublicKey} Optional: publicKey of product account this order was created on
+*   `options` **{priceLadderPk: PublicKey?, productPk: PublicKey?, expiresOn: BN?}**&#x20;
+
+    *   `options.priceLadderPk`  {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
+    *   `options.productPk`  {PublicKey} Optional: publicKey of product account this order was created on
+    *   `options.expiresOn`  {BN} Optional: unix timestamp (seconds) defining expiration of request; if omitted or null or undefined order request will never expire
 
 ### Examples
 
@@ -67,7 +70,8 @@ const price = 1.5
 const stake = 20,000,000,000
 const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
 const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, , productPk)
+const expiresOn = new BN(1010101010101)
+const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, {priceLadderPk, productPk, expiresOn} )
 ```
 
 Returns **OrderInstructionResponse** derived order publicKey and the instruction to perform a create order transaction
