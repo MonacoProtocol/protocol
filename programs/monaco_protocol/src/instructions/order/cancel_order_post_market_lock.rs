@@ -63,7 +63,7 @@ pub fn cancel_order_post_market_lock(
 mod test {
     use crate::state::market_account::MarketStatus;
     use crate::state::market_matching_queue_account::{mock_market_matching_queue, OrderMatch};
-    use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
+    use crate::state::market_order_request_queue::{mock_order_request, mock_order_request_queue};
     use crate::state::order_account::OrderStatus;
 
     use super::*;
@@ -71,18 +71,7 @@ mod test {
     #[test]
     fn error_market_queues_not_empty() {
         let mut market = mock_market();
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -166,18 +155,7 @@ mod test {
     #[test]
     fn error_market_status_invalid() {
         let mut market = mock_market();
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -229,18 +207,7 @@ mod test {
     #[test]
     fn error_market_not_locked() {
         let mut market = mock_market();
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -292,18 +259,7 @@ mod test {
     #[test]
     fn error_market_not_configured_to_cancel() {
         let mut market = mock_market();
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -355,18 +311,7 @@ mod test {
     #[test]
     fn error_order_status_invalid() {
         let mut market = mock_market();
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -420,18 +365,7 @@ mod test {
     fn ok_cancel_remaining_unmatched_stake() {
         let mut market = mock_market();
         market.unsettled_accounts_count = 1;
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),
@@ -501,18 +435,7 @@ mod test {
     fn ok_cancel_all_stake() {
         let mut market = mock_market();
         market.unsettled_accounts_count = 1;
-        let order_request = OrderRequest {
-            purchaser: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price: 2.4_f64,
-            stake: 100_u64,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        };
+        let order_request = mock_order_request(Pubkey::new_unique(), false, 1, 100_u64, 2.4_f64);
         let mut order = Order {
             purchaser: Pubkey::new_unique(),
             market: Pubkey::new_unique(),

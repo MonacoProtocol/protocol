@@ -28,6 +28,7 @@ pub struct OrderRequest {
     pub product_commission_rate: f64, // product commission rate at time of order creation
     pub distinct_seed: [u8; 16],      // used as a seed for generating a unique order pda
     pub creation_timestamp: i64,      // timestamp when request was created
+    pub expires_on: Option<i64>,      // timestamp when request is supposed to expire if set
 }
 
 impl OrderRequest {
@@ -39,7 +40,8 @@ impl OrderRequest {
     + (F64_SIZE * 2) // expected_price & product_commission_rate
     + I64_SIZE // delay_expiration_timestamp
     + U128_SIZE // distinct_seed
-    + I64_SIZE; // creation_timestamp
+    + I64_SIZE // creation_timestamp
+    + option_size(I64_SIZE); // expire_on
 
     pub fn new_unique() -> Self {
         OrderRequest {
@@ -53,6 +55,7 @@ impl OrderRequest {
             product_commission_rate: 0.0,
             distinct_seed: [0; 16],
             creation_timestamp: 0,
+            expires_on: None,
         }
     }
 }
@@ -64,6 +67,7 @@ pub struct OrderRequestData {
     pub stake: u64,
     pub price: f64,
     pub distinct_seed: [u8; 16],
+    pub expires_on: Option<i64>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -181,6 +185,29 @@ pub fn mock_order_request_queue(market_pk: Pubkey) -> MarketOrderRequestQueue {
     MarketOrderRequestQueue {
         market: market_pk,
         order_requests: OrderRequestQueue::new(1),
+    }
+}
+
+#[cfg(test)]
+pub fn mock_order_request(
+    purchaser: Pubkey,
+    for_outcome: bool,
+    outcome: u16,
+    stake: u64,
+    price: f64,
+) -> OrderRequest {
+    OrderRequest {
+        purchaser,
+        market_outcome_index: outcome,
+        for_outcome,
+        stake,
+        expected_price: price,
+        product: None,
+        product_commission_rate: 0.0,
+        delay_expiration_timestamp: 0,
+        distinct_seed: [0; 16],
+        creation_timestamp: 0,
+        expires_on: None,
     }
 }
 
@@ -348,6 +375,7 @@ mod tests {
             expected_price: 0.0,
             product_commission_rate: 0.0,
             creation_timestamp: 0,
+            expires_on: None,
         };
 
         let request_2 = OrderRequest {
@@ -363,6 +391,7 @@ mod tests {
             expected_price: 0.0,
             product_commission_rate: 0.0,
             creation_timestamp: 0,
+            expires_on: None,
         };
         assert_eq!(request_1, request_2);
 
@@ -379,6 +408,7 @@ mod tests {
             expected_price: 0.0,
             product_commission_rate: 0.0,
             creation_timestamp: 0,
+            expires_on: None,
         };
         assert_ne!(request_1, request_3);
     }

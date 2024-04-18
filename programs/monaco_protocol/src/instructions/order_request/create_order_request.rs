@@ -88,6 +88,7 @@ fn initialize_order_request(
     }?;
     order_request.distinct_seed = data.distinct_seed;
     order_request.creation_timestamp = now;
+    order_request.expires_on = data.expires_on;
 
     match product {
         Some(product_account) => {
@@ -112,6 +113,9 @@ fn validate_order_request(
 ) -> Result<()> {
     validate_market_for_order_request(market, now)?;
 
+    if let Some(expires_on) = data.expires_on {
+        require!(expires_on > now, CoreError::CreationExpired);
+    }
     require!(data.stake > 0_u64, CoreError::CreationStakeZeroOrLess);
     require!(data.price > 1_f64, CoreError::CreationPriceOneOrLess);
     let stake_precision_check_result =
@@ -208,6 +212,7 @@ mod tests {
             stake: 100000_u64,
             price: 2.1111_f64,
             distinct_seed: [0_u8; 16],
+            expires_on: None,
         };
 
         let result =
