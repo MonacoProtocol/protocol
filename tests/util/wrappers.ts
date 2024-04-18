@@ -917,6 +917,7 @@ export class MonacoMarket {
       marketOutcome?: PublicKey;
       productPk?: PublicKey;
       purchaserToken?: PublicKey;
+      expiresOn?: number;
     },
   ) {
     const orderPk = await findOrderPda(
@@ -931,6 +932,7 @@ export class MonacoMarket {
         stake: new BN(this.toAmountInteger(stake)),
         price: price,
         distinctSeed: Array.from(orderPk.data.distinctSeed),
+        expiresOn: overrides.expiresOn ? new BN(overrides.expiresOn) : null,
       })
       .accounts({
         reservedOrder: orderPk.data.orderPk,

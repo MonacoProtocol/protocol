@@ -44,6 +44,7 @@ export type OrderRequest = {
   productCommissionRate: number;
   distinctSeed: number[];
   creationTimestamp: BN;
+  expiresOn: BN;
 };
 
 export type OrderInstructionResponse = {
