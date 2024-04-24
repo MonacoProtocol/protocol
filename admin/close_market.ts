@@ -31,7 +31,9 @@ export async function closeMarket() {
 
   // check market's status
   const marketStatus = market.data.account.marketStatus;
-  console.log(`Closing market ${marketPk} actual status ${marketStatus}`);
+  console.log(
+    `Closing market ${marketPk} actual status ${JSON.stringify(marketStatus)}`,
+  );
   if (!marketStatus.readyToClose) {
     console.error(`Closing market ${marketPk} incorrect status`);
     return;
