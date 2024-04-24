@@ -33,6 +33,7 @@ import {
   printMarketTypeByName,
 } from "./market_types";
 import { createPriceLadder } from "./price_ladders";
+import { closeMarket } from "./close_market";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -85,6 +86,9 @@ switch (script) {
     break;
   case "void_market":
     voidMarket();
+    break;
+  case "close_market":
+    closeMarket();
     break;
   case "publish_market":
     publish_market();

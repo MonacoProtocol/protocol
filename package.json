@@ -53,6 +53,7 @@
     "suspendMarket": "ts-node admin/client.ts suspend_market",
     "unsuspendMarket": "ts-node admin/client.ts unsuspend_market",
     "voidMarket": "ts-node admin/client.ts void_market",
+    "closeMarket": "ts-node admin/client.ts close_market",
     "getAllOrders": "ts-node admin/client.ts getAllOrders",
     "printOrder": "ts-node admin/client.ts print_order",
     "createOrder": "ts-node admin/client.ts create_order",

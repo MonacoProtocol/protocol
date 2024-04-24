@@ -9,6 +9,7 @@ import { Buffer } from "buffer";
 import process from "process";
 
 const PROGRAM_TYPE = {
+  dev_release: new PublicKey("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih"),
   stable: new PublicKey("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr"),
   dev: new PublicKey("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9"),
 };
