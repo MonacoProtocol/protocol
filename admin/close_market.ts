@@ -29,22 +29,23 @@ export async function closeMarket() {
     return;
   }
 
-  // check markets authority
+  // check market's authority
   const marketAuthorityPk = market.data.account.authority;
   console.log(
     `Closing market ${marketPk} expected authority ${marketAuthorityPk}`,
   );
-  if (marketAuthorityPk != authorityPk) {
+  if (!marketAuthorityPk.equals(authorityPk)) {
     console.error(`Closing market ${marketPk} wrong authority`);
     return;
   }
 
+  // check market's matching queue
   const marketMatchingQueuePk = await findMarketMatchingQueuePda(
     protocolProgram,
     marketPk,
   );
   console.log(
-    `Closing market ${marketPk} expected matching queue ${marketMatchingQueuePk}`,
+    `Closing market ${marketPk} expected matching queue ${marketMatchingQueuePk.data.pda}`,
   );
 
   const marketMatchingQueue = await getMarketMatchingQueue(
@@ -69,17 +70,19 @@ export async function closeMarket() {
       .rpc()
       .catch((e) => {
         console.error(e);
+        throw e;
       });
     console.log(`Closing market ${marketPk} initialize market queues`);
   }
 
+  // close
   const marketEscrowPk = await findEscrowPda(protocolProgram, marketPk);
   const marketCommissionPaymentsQueuePk = await findCommissionPaymentsQueuePda(
     protocolProgram,
     marketPk,
   );
 
-  console.log(`Closing market ${marketPk} now`);
+  console.log(`Closing market ${marketPk} executing`);
   await protocolProgram.methods
     .closeMarket()
     .accounts({
@@ -93,4 +96,5 @@ export async function closeMarket() {
     .catch((e) => {
       console.error(e);
     });
+  console.log(`Closing market ${marketPk} done`);
 }
