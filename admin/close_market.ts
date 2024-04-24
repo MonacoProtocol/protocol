@@ -29,13 +29,21 @@ export async function closeMarket() {
     return;
   }
 
+  // check market's status
+  const marketStatus = market.data.account.marketStatus;
+  console.log(`Closing market ${marketPk} actual status ${marketStatus}`);
+  if (!marketStatus.readyToClose) {
+    console.error(`Closing market ${marketPk} incorrect status`);
+    return;
+  }
+
   // check market's authority
   const marketAuthorityPk = market.data.account.authority;
   console.log(
-    `Closing market ${marketPk} expected authority ${marketAuthorityPk}`,
+    `Closing market ${marketPk} actual authority ${marketAuthorityPk}`,
   );
   if (!marketAuthorityPk.equals(authorityPk)) {
-    console.error(`Closing market ${marketPk} wrong authority`);
+    console.error(`Closing market ${marketPk} incorrect authority`);
     return;
   }
 
