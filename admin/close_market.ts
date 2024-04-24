@@ -5,7 +5,6 @@ import {
   findCommissionPaymentsQueuePda,
 } from "../npm-admin-client";
 import { getProtocolProgram } from "./util";
-import { monaco } from "../tests/util/wrappers";
 
 export async function closeMarket() {
   const protocolProgram = await getProtocolProgram();
@@ -16,13 +15,16 @@ export async function closeMarket() {
   }
 
   const marketPk = new PublicKey(process.argv[3]);
+  const authorityPk = new PublicKey(
+    "J2LqciLvyxVHMjMcda73459zWfFxw7rveDb5YAhSdGTe",
+  );
   console.log(`Closing ${marketPk}`);
 
   await protocolProgram.methods
     .closeMarket()
     .accounts({
       market: marketPk,
-      authority: monaco.operatorPk,
+      authority: authorityPk,
       marketEscrow: (await findEscrowPda(protocolProgram, marketPk)).data.pda,
       matchingQueue: (
         await findMarketMatchingQueuePda(protocolProgram, marketPk)
