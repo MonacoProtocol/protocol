@@ -25,7 +25,6 @@ Current version of the protocol on mainnet-beta: [0.14.1](https://github.com/Mon
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
 | 2024-04-29 | [0.14.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| SKIPPED    | [0.14.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.0) | |
 | 2024-01-24 | [0.13.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.13.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-12-06 | [0.12.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2023-11-30 | [0.12.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.12.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
