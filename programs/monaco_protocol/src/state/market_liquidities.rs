@@ -52,6 +52,7 @@ impl MarketLiquidities {
     }
 
     pub fn add_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
+        let is_full = self.is_full();
         let liquidities = &mut self.liquidities_for;
         Self::add_liquidity(
             liquidities,
@@ -59,6 +60,7 @@ impl MarketLiquidities {
             outcome,
             price,
             liquidity,
+            is_full,
         )
     }
 
@@ -68,6 +70,7 @@ impl MarketLiquidities {
         price: f64,
         liquidity: u64,
     ) -> Result<()> {
+        let is_full = self.is_full();
         let liquidities = &mut self.liquidities_against;
         Self::add_liquidity(
             liquidities,
@@ -75,7 +78,13 @@ impl MarketLiquidities {
             outcome,
             price,
             liquidity,
+            is_full,
         )
+    }
+
+    fn is_full(&self) -> bool {
+        Self::LIQUIDITIES_VEC_LENGTH + Self::LIQUIDITIES_VEC_LENGTH
+            <= self.liquidities_for.len() + self.liquidities_against.len()
     }
 
     fn add_liquidity(
@@ -84,6 +93,7 @@ impl MarketLiquidities {
         outcome: u16,
         price: f64,
         liquidity: u64,
+        is_full: bool,
     ) -> Result<()> {
         match liquidities.binary_search_by(search_function) {
             Ok(index) => {
@@ -93,15 +103,21 @@ impl MarketLiquidities {
                     .checked_add(liquidity)
                     .ok_or(CoreError::MarketOutcomeUpdateError)?
             }
-            Err(index) => liquidities.insert(
-                index,
-                MarketOutcomePriceLiquidity {
-                    outcome,
-                    price,
-                    liquidity,
-                    cross: false,
-                },
-            ),
+            Err(index) => {
+                if is_full {
+                    return Err(error!(CoreError::MarketLiquiditiesIsFull));
+                } else {
+                    liquidities.insert(
+                        index,
+                        MarketOutcomePriceLiquidity {
+                            outcome,
+                            price,
+                            liquidity,
+                            cross: false,
+                        },
+                    )
+                }
+            }
         }
 
         Ok(())
@@ -312,6 +328,21 @@ mod total_exposure_tests {
             },
         ];
         assert_eq!(expected_against, market_liquidities.liquidities_against);
+    }
+
+    #[test]
+    fn test_add_liquidity_when_full() {
+        let mut market_liquidities = mock_market_liquidities(Pubkey::default());
+
+        let mut price = 2.01;
+        for _ in 0..60 {
+            market_liquidities.add_liquidity_for(0, price, 1).unwrap();
+            price += 0.01;
+        }
+
+        let result = market_liquidities.add_liquidity_for(0, price, 1);
+        assert!(result.is_err());
+        assert_eq!(Err(error!(CoreError::MarketLiquiditiesIsFull)), result);
     }
 
     #[test]

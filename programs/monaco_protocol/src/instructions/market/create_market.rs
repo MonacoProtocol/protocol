@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
-use rust_decimal::prelude::FromPrimitive;
-use rust_decimal::Decimal;
 
 use crate::context::{CreateMarket, InitializeMarketOutcome};
-use crate::instructions::current_timestamp;
+use crate::instructions::{current_timestamp, price_precision_is_within_range};
 use crate::monaco_protocol::{PRICE_SCALE, SEED_SEPARATOR_CHAR};
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_matching_pool_account::{Cirque, MarketMatchingPool};
@@ -152,6 +150,10 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
         ctx.accounts.market.market_status == MarketStatus::Initializing,
         CoreError::MarketOutcomeMarketInvalidStatus
     );
+    require!(
+        title.len() <= MarketOutcome::TITLE_MAX_LENGTH,
+        CoreError::MarketOutcomeTitleTooLong
+    );
 
     ctx.accounts.outcome.market = ctx.accounts.market.key();
     ctx.accounts.outcome.index = ctx.accounts.market.market_outcomes_count;
@@ -181,13 +183,7 @@ pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) 
 fn validate_prices(prices: &[f64]) -> Result<()> {
     let prices_iter = prices.iter();
     for price in prices_iter {
-        let decimal = Decimal::from_f64(*price).unwrap();
-        let decimal_with_scale = decimal.trunc_with_scale(3);
-
-        require!(
-            decimal.eq(&decimal_with_scale),
-            CoreError::MarketPricePrecisionTooLarge
-        );
+        price_precision_is_within_range(*price)?;
         require!(*price > 1_f64, CoreError::MarketPriceOneOrLess);
     }
     Ok(())

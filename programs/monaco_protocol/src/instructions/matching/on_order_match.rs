@@ -30,7 +30,7 @@ pub fn on_order_match(
     let now = current_timestamp();
 
     match market_matching_queue.matches.peek_mut() {
-        None => Err(error!(CoreError::MatchingMatchingQueueEmpty)),
+        None => Err(error!(CoreError::MatchingQueueIsEmpty)),
         Some(taker_order) => {
             // determine matched stake
             let stake = maker_order.stake_unmatched.min(taker_order.stake);
@@ -191,7 +191,7 @@ mod test {
         );
         assert!(on_order_match_testable_result.is_err());
         assert_eq!(
-            error!(CoreError::MatchingMatchingQueueEmpty),
+            error!(CoreError::MatchingQueueIsEmpty),
             on_order_match_testable_result.unwrap_err()
         );
 

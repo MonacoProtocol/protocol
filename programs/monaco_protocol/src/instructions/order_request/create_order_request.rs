@@ -3,7 +3,10 @@ use protocol_product::state::product::Product;
 use solana_program::clock::UnixTimestamp;
 
 use crate::error::CoreError;
-use crate::instructions::{current_timestamp, market_position, stake_precision_is_within_range};
+use crate::instructions::{
+    current_timestamp, market_position, price_precision_is_within_range,
+    stake_precision_is_within_range,
+};
 use crate::state::market_account::{Market, MarketStatus};
 use crate::state::market_order_request_queue::{
     MarketOrderRequestQueue, OrderRequest, OrderRequestData,
@@ -11,6 +14,7 @@ use crate::state::market_order_request_queue::{
 use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::price_ladder::{PriceLadder, DEFAULT_PRICES};
+use std::ops::Deref;
 
 pub fn create_order_request(
     market_pk: Pubkey,
@@ -25,7 +29,9 @@ pub fn create_order_request(
     data: OrderRequestData,
 ) -> Result<u64> {
     let now: UnixTimestamp = current_timestamp();
-    validate_order_request(market, market_outcome, price_ladder, &data, now)?;
+    // unpack account optionals (works only for non-mut)
+    let price_ladder_account = price_ladder.as_ref().map(|v| v.deref());
+    validate_order_request(market, market_outcome, &price_ladder_account, &data, now)?;
 
     // initialize market position if needed
     if market_position.payer == Pubkey::default() {
@@ -100,7 +106,7 @@ fn initialize_order_request(
 fn validate_order_request(
     market: &Market,
     market_outcome: &MarketOutcome,
-    price_ladder: &Option<Account<PriceLadder>>,
+    price_ladder: &Option<&PriceLadder>,
     data: &OrderRequestData,
     now: UnixTimestamp,
 ) -> Result<()> {
@@ -119,11 +125,16 @@ fn validate_order_request(
     if market_outcome.price_ladder.is_empty() {
         // No prices included on the outcome, use a PriceLadder or default prices
         match price_ladder {
-            Some(price_ladder_account) => require!(
-                price_ladder_account.prices.is_empty()
-                    || price_ladder_account.prices.contains(&data.price),
-                CoreError::CreationInvalidPrice
-            ),
+            Some(price_ladder_account) => {
+                if price_ladder_account.prices.is_empty() {
+                    price_precision_is_within_range(data.price)?
+                } else {
+                    require!(
+                        price_ladder_account.prices.contains(&data.price),
+                        CoreError::CreationInvalidPrice
+                    )
+                }
+            }
             None => require!(
                 DEFAULT_PRICES.contains(&data.price),
                 CoreError::CreationInvalidPrice
@@ -168,6 +179,45 @@ pub fn validate_market_for_order_request(market: &Market, now: UnixTimestamp) ->
 mod tests {
     use super::*;
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
+
+    #[test]
+    fn test_market_valid_() {
+        let now: i64 = 1575975177;
+        let time_in_future: i64 = 43041841910;
+
+        let market = create_test_market(time_in_future, false, MarketStatus::Open, None);
+        let market_outcome = MarketOutcome {
+            market: Pubkey::new_unique(),
+            index: 0,
+            title: "title".to_string(),
+            latest_matched_price: 2.1_f64,
+            matched_total: 0_u64,
+            prices: Some(Pubkey::new_unique()),
+            price_ladder: vec![],
+        };
+
+        let price_ladder = PriceLadder {
+            authority: Pubkey::new_unique(),
+            max_number_of_prices: 0,
+            prices: vec![],
+        };
+
+        let data = OrderRequestData {
+            market_outcome_index: 0,
+            for_outcome: true,
+            stake: 100000_u64,
+            price: 2.1111_f64,
+            distinct_seed: [0_u8; 16],
+        };
+
+        let result =
+            validate_order_request(&market, &market_outcome, &Some(&price_ladder), &data, now);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::PricePrecisionTooLarge)
+        );
+    }
 
     #[test]
     fn test_market_valid() {
