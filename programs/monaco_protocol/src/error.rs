@@ -155,8 +155,6 @@ pub enum CoreError {
     /*
     Matching
      */
-    #[msg("Core Matching: maker order mismatch")]
-    MatchingMakerOrderMismatch,
     #[msg("Core Matching: purchaser mismatch")]
     MatchingPurchaserMismatch,
     #[msg("Core Matching: market mismatch")]

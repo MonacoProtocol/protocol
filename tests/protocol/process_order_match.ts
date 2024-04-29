@@ -37,7 +37,7 @@ describe("Matching Crank", () => {
    * Trying to test passing a maker order that has no more unmatched stake.
    * However, such situation would mean order would be off the matching queue.
    */
-  it("Fail: maker order processed twice", async () => {
+  it("Failure: maker order processed twice", async () => {
     // GIVEN
 
     // Create market, purchaser

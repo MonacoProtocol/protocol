@@ -14,6 +14,7 @@ pub fn on_order_creation(
     order_pk: &Pubkey,
     order: &mut Order,
 ) -> Result<Vec<(u64, f64)>> {
+    let liquidity_cross = false; // TODO temp
     let mut order_matches = Vec::with_capacity(MATCH_CAPACITY);
     let order_outcome = order.market_outcome_index;
 
@@ -36,7 +37,7 @@ pub fn on_order_creation(
             }
 
             let stake_matched;
-            if liquidity.cross {
+            if liquidity_cross {
                 stake_matched = 0; // TODO
             } else {
                 stake_matched = liquidity.liquidity.min(order.stake_unmatched);
@@ -96,7 +97,7 @@ pub fn on_order_creation(
             }
 
             let stake_matched;
-            if liquidity.cross {
+            if liquidity_cross {
                 stake_matched = 0; // TODO
             } else {
                 stake_matched = liquidity.liquidity.min(order.stake_unmatched);

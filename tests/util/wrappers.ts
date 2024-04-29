@@ -1219,7 +1219,9 @@ export class MonacoMarket {
       remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
+      makerOrderTradeDistinctSeed: makerOrderTradePk.data.distinctSeed,
       makerOrderTrade: makerOrderTradePk.data.tradePk,
+      takerOrderTradeDistinctSeed: takerOrderTradePk.data.distinctSeed,
       takerOrderTrade: takerOrderTradePk.data.tradePk,
     };
   }
