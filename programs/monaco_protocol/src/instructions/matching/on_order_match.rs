@@ -9,6 +9,7 @@ use crate::events::trade::TradeEvent;
 use crate::state::market_account::Market;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
+use crate::state::market_outcome_account::MarketOutcome;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::trade_account::Trade;
@@ -18,6 +19,7 @@ use super::update_matching_pool_with_matched_order;
 pub fn on_order_match(
     market_pk: &Pubkey,
     market: &mut Market,
+    market_outcome: &mut MarketOutcome,
     market_matching_queue: &mut MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
     maker_order_pk: &Pubkey,
@@ -65,6 +67,9 @@ pub fn on_order_match(
                     false => calculate_risk_from_stake(stake, taker_order.price),
                 },
             )?;
+
+            // update market outcome
+            market_outcome.on_match(stake, taker_order.price)?;
 
             // store trades
             create_trade(
@@ -114,6 +119,7 @@ pub fn on_order_match(
 #[cfg(test)]
 mod test {
     use crate::state::market_order_request_queue::{mock_order_request, OrderRequest};
+    use crate::state::market_outcome_account::mock_market_outcome;
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
         market_matching_pool_account::Cirque,
@@ -127,6 +133,7 @@ mod test {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
         let market_outcome_index = 1;
+        let mut market_outcome = mock_market_outcome(market_pk, market_outcome_index);
         let matched_price = 2.2_f64;
         let payer_pk = Pubkey::new_unique();
 
@@ -176,6 +183,7 @@ mod test {
         let on_order_match_testable_result = on_order_match(
             &market_pk,
             &mut market,
+            &mut market_outcome,
             &mut market_matching_queue,
             &mut market_matching_pool,
             &order_pk,
@@ -216,6 +224,7 @@ mod test {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
         let market_outcome_index = 1;
+        let mut market_outcome = mock_market_outcome(market_pk, market_outcome_index);
         let matched_price = 2.2_f64;
         let matched_stake = 10_u64;
         let payer_pk = Pubkey::new_unique();
@@ -274,6 +283,7 @@ mod test {
         let on_order_match_testable_result = on_order_match(
             &market_pk,
             &mut market,
+            &mut market_outcome,
             &mut market_matching_queue,
             &mut market_matching_pool,
             &order_pk,
@@ -310,6 +320,7 @@ mod test {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market();
         let market_outcome_index = 1;
+        let mut market_outcome = mock_market_outcome(market_pk, market_outcome_index);
         let matched_price = 2.2_f64;
         let matched_stake = 100_u64;
         let payer_pk = Pubkey::new_unique();
@@ -368,6 +379,7 @@ mod test {
         let on_order_match_testable_result = on_order_match(
             &market_pk,
             &mut market,
+            &mut market_outcome,
             &mut market_matching_queue,
             &mut market_matching_pool,
             &order_pk,

@@ -172,7 +172,7 @@ pub enum CoreError {
     #[msg("Core Matching: market price mismatch")]
     MatchingMarketPriceMismatch,
     #[msg("Core Matching: market matching pool mismatch")]
-    MatchingMarketMarketMatchingPoolMismatch,
+    MatchingMarketMatchingPoolMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,

@@ -1195,6 +1195,7 @@ export class MonacoMarket {
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
+        marketOutcome: this.outcomePks[takerOrder.outcomeIndex],
         marketMatchingPool: matchingPoolPk,
         marketMatchingQueue: this.matchingQueuePk,
         makerOrder: makerOrderPk,

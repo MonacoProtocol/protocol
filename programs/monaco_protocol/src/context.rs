@@ -486,6 +486,16 @@ fn market_matching_pool_constraint(
     }
 }
 
+fn market_outcome_constraint(
+    market_matching_queue: &Account<MarketMatchingQueue>,
+    market_outcome: &Account<MarketOutcome>,
+) -> bool {
+    match market_matching_queue.matches.peek() {
+        Some(order_match) => market_outcome.index == order_match.outcome_index,
+        None => false,
+    }
+}
+
 fn maker_order_constraint(
     market_matching_pool: &Account<MarketMatchingPool>,
     maker_order: &Account<Order>,
@@ -544,9 +554,16 @@ pub struct ProcessOrderMatch<'info> {
     pub market_escrow: Account<'info, TokenAccount>,
     #[account(
         mut,
+        has_one = market @ CoreError::MatchingMarketOutcomeMismatch,
+        constraint = market_outcome_constraint(&market_matching_queue, &market_outcome)
+            @ CoreError::MatchingMarketOutcomeMismatch,
+    )]
+    pub market_outcome: Box<Account<'info, MarketOutcome>>,
+    #[account(
+        mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
-            @ CoreError::MatchingMarketMarketMatchingPoolMismatch,
+            @ CoreError::MatchingMarketMatchingPoolMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
     #[account(

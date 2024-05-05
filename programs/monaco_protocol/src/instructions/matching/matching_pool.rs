@@ -24,19 +24,14 @@ pub fn update_on_match(
 
     // market-outcome stats
     msg!("market: calculating market-outcome stats");
-    if stake_matched > 0_u64 {
-        market_outcome.latest_matched_price =
-            if for_order.creation_timestamp < against_order.creation_timestamp {
-                for_order.expected_price
-            } else {
-                against_order.expected_price
-            };
-
-        market_outcome.matched_total = market_outcome
-            .matched_total
-            .checked_add(stake_matched)
-            .ok_or(CoreError::MatchingMatchedAmountUpdateError)?;
-    }
+    market_outcome.on_match(
+        stake_matched,
+        if for_order.creation_timestamp < against_order.creation_timestamp {
+            for_order.expected_price
+        } else {
+            against_order.expected_price
+        },
+    )?;
 
     // Update the pools
     update_matching_pool_with_matched_order(
