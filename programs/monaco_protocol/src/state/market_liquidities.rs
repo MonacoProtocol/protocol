@@ -531,7 +531,7 @@ mod total_exposure_tests {
 }
 
 #[cfg(test)]
-mod test_update_stake_matched_total {
+mod update_stake_matched_total_tests {
     use super::*;
 
     #[test]
