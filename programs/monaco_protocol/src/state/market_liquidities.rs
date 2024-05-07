@@ -99,7 +99,7 @@ impl MarketLiquidities {
                 liquidities_for_value.liquidity = liquidities_for_value
                     .liquidity
                     .checked_add(liquidity)
-                    .ok_or(CoreError::MarketOutcomeUpdateError)?
+                    .ok_or(CoreError::MarketLiquiditiesUpdateError)?
             }
             Err(index) => {
                 if is_full {
@@ -146,14 +146,14 @@ impl MarketLiquidities {
                 liquidities_for_value.liquidity = liquidities_for_value
                     .liquidity
                     .checked_sub(liquidity)
-                    .ok_or(CoreError::MarketOutcomeUpdateError)?;
+                    .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
 
                 if liquidities_for_value.liquidity == 0 {
                     liquidities.remove(index);
                 }
                 Ok(())
             }
-            Err(_) => Err(error!(CoreError::MarketOutcomeUpdateError)),
+            Err(_) => Err(error!(CoreError::MarketLiquiditiesUpdateError)),
         }
     }
 
