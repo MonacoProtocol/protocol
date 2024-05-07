@@ -12,6 +12,7 @@ pub struct MarketLiquidities {
     pub market: Pubkey,
     pub liquidities_for: Vec<MarketOutcomePriceLiquidity>,
     pub liquidities_against: Vec<MarketOutcomePriceLiquidity>,
+    pub stake_matched_total: u64,
 }
 
 impl MarketLiquidities {
@@ -201,6 +202,16 @@ impl MarketLiquidities {
         }
     }
 
+    pub fn update_stake_matched_total(&mut self, stake_matched: u64) -> Result<()> {
+        if stake_matched > 0_u64 {
+            self.stake_matched_total = self
+                .stake_matched_total
+                .checked_add(stake_matched)
+                .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
+        }
+        Ok(())
+    }
+
     pub fn move_to_inplay(&mut self, market_event_start_order_behaviour: &MarketOrderBehaviour) {
         // Reset liquidities when market moves to inplay if that's the desired behaviour
         if market_event_start_order_behaviour.eq(&MarketOrderBehaviour::CancelUnmatched) {
@@ -227,6 +238,7 @@ pub fn mock_market_liquidities(market_pk: Pubkey) -> MarketLiquidities {
         market: market_pk,
         liquidities_for: Vec::new(),
         liquidities_against: Vec::new(),
+        stake_matched_total: 0_u64,
     }
 }
 
@@ -371,6 +383,7 @@ mod total_exposure_tests {
                     liquidity: 1001,
                 },
             ],
+            stake_matched_total: 0_u64,
         };
 
         market_liquidities
@@ -458,6 +471,7 @@ mod total_exposure_tests {
                 },
             ],
             liquidities_against: vec![],
+            stake_matched_total: 0_u64,
         };
 
         assert_eq!(
@@ -498,6 +512,7 @@ mod total_exposure_tests {
                     liquidity: 1001,
                 },
             ],
+            stake_matched_total: 0_u64,
         };
 
         assert_eq!(

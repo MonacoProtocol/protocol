@@ -122,6 +122,7 @@ pub fn on_order_creation(
                     order_match.stake,
                 )
                 .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
+            market_liquidities.update_stake_matched_total(order_match.stake)?;
         }
 
         // remainder is added to liquidities
@@ -139,7 +140,7 @@ pub fn on_order_creation(
 
 #[cfg(test)]
 mod test {
-    use crate::state::market_liquidities::MarketOutcomePriceLiquidity;
+    use crate::state::market_liquidities::{mock_market_liquidities, MarketOutcomePriceLiquidity};
     use crate::state::market_matching_queue_account::MatchingQueue;
 
     use super::*;
@@ -847,14 +848,6 @@ mod test {
             payout: 0_u64,
             creation_timestamp: 0,
             payer,
-        }
-    }
-
-    fn mock_market_liquidities(market: Pubkey) -> MarketLiquidities {
-        MarketLiquidities {
-            market,
-            liquidities_for: vec![],
-            liquidities_against: vec![],
         }
     }
 
