@@ -529,3 +529,29 @@ mod total_exposure_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod test_update_stake_matched_total {
+    use super::*;
+
+    #[test]
+    fn test_on_match() {
+        let market_pk = Pubkey::new_unique();
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+
+        let result_1 = market_liquidities.update_stake_matched_total(0);
+
+        assert!(result_1.is_ok());
+        assert_eq!(market_liquidities.stake_matched_total, 0);
+
+        let result_2 = market_liquidities.update_stake_matched_total(1);
+
+        assert!(result_2.is_ok());
+        assert_eq!(market_liquidities.stake_matched_total, 1);
+
+        let result_3 = market_liquidities.update_stake_matched_total(u64::MAX);
+
+        assert!(result_3.is_err());
+        assert_eq!(market_liquidities.stake_matched_total, 1);
+    }
+}
