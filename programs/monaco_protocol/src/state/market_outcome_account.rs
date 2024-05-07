@@ -7,7 +7,12 @@ pub struct MarketOutcome {
     pub market: Pubkey,
     pub index: u16,
     pub title: String,
+    #[deprecated(since = "0.14.2", note = "discontinued")]
     pub latest_matched_price: f64,
+    #[deprecated(
+        since = "0.14.2",
+        note = "replaced by MarketLiquidities::stake_matched_total which is a sum over all outcomes"
+    )]
     pub matched_total: u64,
     pub prices: Option<Pubkey>,
     pub price_ladder: Vec<f64>,
@@ -33,7 +38,9 @@ pub fn mock_market_outcome(market_pk: Pubkey, outcome: u16) -> MarketOutcome {
         market: market_pk,
         index: outcome,
         title: market_pk.to_string(),
+        #[allow(deprecated)]
         latest_matched_price: 0_f64,
+        #[allow(deprecated)]
         matched_total: 0_u64,
         prices: None,
         price_ladder: vec![],
