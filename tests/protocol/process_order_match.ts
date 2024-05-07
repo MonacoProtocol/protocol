@@ -72,7 +72,6 @@ describe("Matching Crank", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[1],
         marketMatchingPool: result.matchingPool,
         marketMatchingQueue: market.matchingQueuePk,
         makerOrder: makerOrderPk,
@@ -132,7 +131,6 @@ describe("Matching Crank", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[1],
         marketMatchingPool: marketMatchingPoolPk,
         marketMatchingQueue: market.matchingQueuePk,
         makerOrder: makerOrderPk, // incorrect
@@ -189,7 +187,6 @@ describe("Matching Crank", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[1],
         marketMatchingPool: marketMatchingPoolPk,
         marketMatchingQueue: market.matchingQueuePk,
         makerOrder: makerOrderPk, // incorrect
@@ -243,7 +240,6 @@ describe("Matching Crank", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[1],
         marketMatchingPool: fakeMakerMatchingPool1Pk, // fake 1
         marketMatchingQueue: market.matchingQueuePk,
         makerOrder: fakeMakerOrder1Pk, // fake 1
@@ -292,7 +288,6 @@ describe("Matching Crank", () => {
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
-        marketOutcome: market.outcomePks[1],
         marketMatchingPool: fakeMakerMatchingPool2Pk, // fake 2
         marketMatchingQueue: market.matchingQueuePk,
         makerOrder: fakeMakerOrder2Pk, // fake 1
