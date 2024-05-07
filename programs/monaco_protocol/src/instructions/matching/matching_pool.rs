@@ -3,35 +3,17 @@ use anchor_lang::prelude::*;
 use crate::state::market_account::{Market, MarketStatus};
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
-use crate::state::market_outcome_account::MarketOutcome;
 use crate::{CoreError, Order};
 
 pub fn update_on_match(
-    market_outcome: &mut Account<MarketOutcome>,
     market_matching_pool_against: &mut Account<MarketMatchingPool>,
     market_matching_pool_for: &mut Account<MarketMatchingPool>,
-    market_account: &Pubkey,
     stake_matched: u64,
     for_order: &Account<Order>,
     against_order: &Account<Order>,
 ) -> Result<()> {
     let for_fully_matched = for_order.stake_unmatched == 0_u64;
     let against_fully_matched = against_order.stake_unmatched == 0_u64;
-    require!(
-        market_outcome.market.eq(market_account),
-        CoreError::MarketDoesNotMatch
-    );
-
-    // market-outcome stats
-    msg!("market: calculating market-outcome stats");
-    market_outcome.on_match(
-        stake_matched,
-        if for_order.creation_timestamp < against_order.creation_timestamp {
-            for_order.expected_price
-        } else {
-            against_order.expected_price
-        },
-    )?;
 
     // Update the pools
     update_matching_pool_with_matched_order(

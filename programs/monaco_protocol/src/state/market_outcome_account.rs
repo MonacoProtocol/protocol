@@ -27,7 +27,7 @@ impl MarketOutcome {
         + option_size(PUB_KEY_SIZE) // price ladder account
         + vec_size(F64_SIZE, MarketOutcome::PRICE_LADDER_LENGTH); // price_ladder
 
-    pub fn on_match(&mut self, stake_matched: u64, price_matched: f64) -> Result<()> {
+    pub fn update_on_match(&mut self, stake_matched: u64, price_matched: f64) -> Result<()> {
         if stake_matched > 0_u64 {
             self.matched_total = self
                 .matched_total
@@ -63,19 +63,19 @@ mod test {
         let market_pk = Pubkey::new_unique();
         let mut market_outcome = mock_market_outcome(market_pk, 0);
 
-        let result_1 = market_outcome.on_match(0, 1.5);
+        let result_1 = market_outcome.update_on_match(0, 1.5);
 
         assert!(result_1.is_ok());
         assert_eq!(market_outcome.latest_matched_price, 0_f64);
         assert_eq!(market_outcome.matched_total, 0);
 
-        let result_2 = market_outcome.on_match(1, 1.5);
+        let result_2 = market_outcome.update_on_match(1, 1.5);
 
         assert!(result_2.is_ok());
         assert_eq!(market_outcome.latest_matched_price, 1.5_f64);
         assert_eq!(market_outcome.matched_total, 1);
 
-        let result_3 = market_outcome.on_match(u64::MAX, 1.5);
+        let result_3 = market_outcome.update_on_match(u64::MAX, 1.5);
 
         assert!(result_3.is_err());
         assert_eq!(market_outcome.latest_matched_price, 1.5_f64);

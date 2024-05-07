@@ -69,7 +69,7 @@ pub fn on_order_match(
             )?;
 
             // update market outcome
-            market_outcome.on_match(stake, taker_order.price)?;
+            market_outcome.update_on_match(stake, taker_order.price)?;
 
             // store trades
             create_trade(
