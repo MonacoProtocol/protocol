@@ -145,7 +145,6 @@ pub fn create(
     Ok(())
 }
 
-#[allow(deprecated)]
 pub fn initialize_outcome(ctx: Context<InitializeMarketOutcome>, title: String) -> Result<()> {
     require!(
         ctx.accounts.market.market_status == MarketStatus::Initializing,
