@@ -10,15 +10,16 @@ use crate::state::type_size::*;
 #[account]
 pub struct MarketLiquidities {
     pub market: Pubkey,
+    pub stake_matched_total: u64,
     pub liquidities_for: Vec<MarketOutcomePriceLiquidity>,
     pub liquidities_against: Vec<MarketOutcomePriceLiquidity>,
-    pub stake_matched_total: u64,
 }
 
 impl MarketLiquidities {
     const LIQUIDITIES_VEC_LENGTH: usize = 30_usize;
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + PUB_KEY_SIZE // market
+        + U64_SIZE // stake_matched_total
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
 
