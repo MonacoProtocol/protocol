@@ -72,6 +72,7 @@ pub struct OrderRequestData {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct OrderRequestQueue {
+    empty: bool,
     front: u32,
     len: u32,
     capacity: u32,
@@ -80,12 +81,14 @@ pub struct OrderRequestQueue {
 
 impl OrderRequestQueue {
     pub const fn size_for(length: u32) -> usize {
+        BOOL_SIZE + // empty
         (U32_SIZE  * 3) + // front, len & capacity
         vec_size(OrderRequest::SIZE, length as usize) // items
     }
 
     pub fn new(capacity: u32) -> OrderRequestQueue {
         OrderRequestQueue {
+            empty: true,
             front: 0,
             len: 0,
             capacity,
@@ -145,6 +148,7 @@ impl OrderRequestQueue {
             } else {
                 self.items[old_back as usize] = item;
             }
+            self.empty = self.is_empty();
             Some(old_back)
         }
     }
@@ -157,6 +161,7 @@ impl OrderRequestQueue {
             self.front = (old_front + 1) % self.capacity();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
+            self.empty = self.is_empty();
             Some(&mut self.items[old_front as usize])
         }
     }
