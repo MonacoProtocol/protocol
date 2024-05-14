@@ -1,5 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
+import { GetAccount } from "./get_account";
+
+export type MarketPaymentsQueueAccounts = {
+  marketPaymentsQueues: GetAccount<MarketPaymentsQueueAccount>[];
+};
 
 export type MarketPaymentsQueueAccount = {
   market: PublicKey;

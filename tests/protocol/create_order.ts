@@ -14,11 +14,11 @@ import { SendTransactionError } from "@solana/web3.js";
 import { createOrder as createOrderNpm } from "../../npm-client/src/create_order";
 import {
   findMarketMatchingPoolPda,
+  findMarketOrderRequestQueuePda,
   confirmTransaction,
-} from "../../npm-client/src";
+} from "../../npm-client/";
 import { getMint } from "@solana/spl-token";
 import { monaco } from "../util/wrappers";
-import { findOrderRequestQueuePda } from "../../npm-admin-client";
 
 describe("Protocol - Create Order", () => {
   const provider = anchor.AnchorProvider.local();
@@ -278,7 +278,7 @@ describe("Protocol - Create Order", () => {
         authorisedOperators: authorisedMarketOperators,
         marketOperator: marketOperator.publicKey,
         orderRequestQueue: (
-          await findOrderRequestQueuePda(protocolProgram, marketPda)
+          await findMarketOrderRequestQueuePda(protocolProgram, marketPda)
         ).data.pda,
       })
       .signers([marketOperator])

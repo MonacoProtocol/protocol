@@ -26,7 +26,7 @@
 *   [findCommissionPaymentsQueuePda][22]
     *   [Parameters][23]
     *   [Examples][24]
-*   [findOrderRequestQueuePda][25]
+*   [findMarketOrderRequestQueuePda][25]
     *   [Parameters][26]
     *   [Examples][27]
 *   [MarketOutcomes][28]
@@ -192,7 +192,7 @@ const commissionPaymentsQueuePda = await findCommissionPaymentsQueuePda(program,
 
 Returns **FindPdaResponse** PDA of the payment queue
 
-## findOrderRequestQueuePda
+## findMarketOrderRequestQueuePda
 
 For the provided market publicKey, return the order request queue account PDA (publicKey) for that market.
 
@@ -205,7 +205,7 @@ For the provided market publicKey, return the order request queue account PDA (p
 
 ```javascript
 const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const orderRequestQueuePda = await findOrderRequestQueuePda(program, marketPK)
+const orderRequestQueuePda = await findMarketOrderRequestQueuePda(program, marketPK)
 ```
 
 Returns **FindPdaResponse** PDA of the payment queue
@@ -318,7 +318,7 @@ Returns **MarketOutcomeTitlesResponse** fetched market outcome titles - ordered 
 
 [24]: #examples-7
 
-[25]: #findorderrequestqueuepda
+[25]: #findmarketorderrequestqueuepda
 
 [26]: #parameters-8
 

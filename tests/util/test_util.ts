@@ -29,6 +29,7 @@ import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
   findMarketMatchingPoolPda,
+  findMarketOrderRequestQueuePda,
   findMarketOutcomePda,
   findMarketPda,
   findMarketPositionPda,
@@ -48,9 +49,8 @@ import {
   findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
-  findOrderRequestQueuePda,
+  getOrCreateMarketType as getOrCreateMarketTypeClient,
 } from "../../npm-admin-client";
-import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
 
 const { SystemProgram } = anchor.web3;
 
@@ -281,7 +281,7 @@ export async function createMarket(
     findMarketLiquiditiesPda(protocolProgram, marketPda),
     findMarketMatchingQueuePda(protocolProgram, marketPda),
     findCommissionPaymentsQueuePda(protocolProgram, marketPda),
-    findOrderRequestQueuePda(protocolProgram as Program, marketPda),
+    findMarketOrderRequestQueuePda(protocolProgram as Program, marketPda),
   ]);
 
   await protocolProgram.methods
@@ -459,7 +459,7 @@ export async function processNextOrderRequest(
     .MonacoProtocol as Program<MonacoProtocol>;
 
   const orderRequestQueuePk = (
-    await findOrderRequestQueuePda(protocolProgram, marketPk)
+    await findMarketOrderRequestQueuePda(protocolProgram, marketPk)
   ).data.pda;
   const orderRequestQueue =
     await protocolProgram.account.marketOrderRequestQueue.fetch(
@@ -540,7 +540,7 @@ export async function processOrderRequests(
     .MonacoProtocol as Program<MonacoProtocol>;
 
   const orderRequestQueuePk = (
-    await findOrderRequestQueuePda(protocolProgram, marketPk)
+    await findMarketOrderRequestQueuePda(protocolProgram, marketPk)
   ).data.pda;
   const orderRequestQueue =
     await protocolProgram.account.marketOrderRequestQueue.fetch(

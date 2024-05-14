@@ -306,9 +306,9 @@ export async function findCommissionPaymentsQueuePda(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const orderRequestQueuePda = await findOrderRequestQueuePda(program, marketPK)
+ * const orderRequestQueuePda = await findMarketOrderRequestQueuePda(program, marketPK)
  */
-export async function findOrderRequestQueuePda(
+export async function findMarketOrderRequestQueuePda(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<FindPdaResponse>> {

@@ -34,7 +34,7 @@ import {
   createPriceLadderWithPrices,
   findMarketLiquiditiesPda,
   findCommissionPaymentsQueuePda,
-  findOrderRequestQueuePda,
+  findMarketOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
   MarketAccount,
@@ -552,7 +552,10 @@ export class Monaco {
       findMarketLiquiditiesPda(this.program as Program, marketPk),
       findMarketMatchingQueuePda(this.program as Program, marketPk),
       findCommissionPaymentsQueuePda(this.program as Program, marketPk),
-      findOrderRequestQueuePda(this.program as Program as Program, marketPk),
+      findMarketOrderRequestQueuePda(
+        this.program as Program as Program,
+        marketPk,
+      ),
     ]);
 
     return new MonacoMarket(
@@ -1240,7 +1243,7 @@ export class MonacoMarket {
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+      await findMarketOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
     ).data.pda;
 
     await this.monaco.program.methods
@@ -1276,8 +1279,12 @@ export class MonacoMarket {
           .data.pda;
     const orderRequestQueuePk = market.marketStatus.initializing
       ? null
-      : (await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk))
-          .data.pda;
+      : (
+          await findMarketOrderRequestQueuePda(
+            this.monaco.getRawProgram(),
+            this.pk,
+          )
+        ).data.pda;
 
     await this.monaco.program.methods
       .voidMarket()
