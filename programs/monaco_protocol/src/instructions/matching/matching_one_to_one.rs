@@ -125,14 +125,15 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     // 3. market update
     // -----------------------------
     matching::update_on_match(
-        &mut ctx.accounts.market_outcome,
         &mut ctx.accounts.market_matching_pool_against,
         &mut ctx.accounts.market_matching_pool_for,
-        &ctx.accounts.market.key(),
         stake_matched,
         order_for,
         order_against,
     )?;
+    ctx.accounts
+        .market_liquidities
+        .update_stake_matched_total(stake_matched)?;
 
     // 4. if any refunds are due to change in exposure, transfer them
     if change_in_exposure_refund_against > 0_u64 {

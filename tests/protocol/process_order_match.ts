@@ -277,7 +277,7 @@ describe("Matching Crank", () => {
         function (e: AnchorError) {
           assert.equal(
             e.error.errorCode.code,
-            "MatchingMarketMarketMatchingPoolMismatch",
+            "MatchingMarketMatchingPoolMismatch",
           );
         },
       );
@@ -325,7 +325,7 @@ describe("Matching Crank", () => {
         function (e: AnchorError) {
           assert.equal(
             e.error.errorCode.code,
-            "MatchingMarketMarketMatchingPoolMismatch",
+            "MatchingMarketMatchingPoolMismatch",
           );
         },
       );
