@@ -6,7 +6,9 @@ import {
   FindPdaResponse,
   GetAccount,
   MarketMatchingQueueAccount,
+  MarketMatchingQueueAccounts,
 } from "../types";
+import { BooleanCriterion, toFilters } from "./queries";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market matching-queue account.
@@ -70,6 +72,40 @@ export async function getMarketMatchingQueue(
       publicKey: marketMatchingQueuePk,
       account: marketMatchingQueue,
     });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+export async function getNonEmptyMarketMatchingQueues(
+  program: Program,
+): Promise<ClientResponse<MarketMatchingQueueAccounts>> {
+  const response = new ResponseFactory({} as MarketMatchingQueueAccounts);
+  const connection = program.provider.connection;
+
+  try {
+    const emptyFilter = new BooleanCriterion(8 + 32);
+    emptyFilter.setValue(false);
+
+    const accounts = await connection.getProgramAccounts(program.programId, {
+      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
+      filters: toFilters("market_matching_queue", emptyFilter),
+    });
+    const accountKeys = accounts.map((account) => account.pubkey);
+
+    const accountsWithData =
+      (await program.account.marketMatchingQueue.fetchMultiple(
+        accountKeys,
+      )) as MarketMatchingQueueAccount[];
+
+    const result = accountKeys
+      .map((accountKey, i) => {
+        return { publicKey: accountKey, account: accountsWithData[i] };
+      })
+      .filter((o) => o.account);
+
+    response.addResponseData({ marketMatchingQueues: result });
   } catch (e) {
     response.addError(e);
   }
