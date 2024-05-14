@@ -35,7 +35,7 @@ import {
   findOrderPda,
   MarketAccount,
   MarketPaymentsQueueAccount,
-  PaymentInfo,
+  toPaymentInfos,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
@@ -648,7 +648,7 @@ export async function processCommissionPayments(
   }
 
   const market = (await monaco.account.market.fetch(marketPk)) as MarketAccount;
-  const queuedItems = getPaymentInfoQueueItems(queue);
+  const queuedItems = toPaymentInfos(queue);
 
   const tx = new Transaction();
   for (const item of queuedItems) {
@@ -686,26 +686,6 @@ export async function processCommissionPayments(
   } catch (e) {
     console.log(e);
   }
-}
-
-export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
-  const frontIndex = queue.front;
-  const allItems = queue.items;
-  const backIndex = frontIndex + (queue.len % queue.items.length);
-
-  let queuedItems: PaymentInfo[] = [];
-  if (queue.len > 0) {
-    if (backIndex <= frontIndex) {
-      // queue bridges array
-      queuedItems = allItems
-        .slice(frontIndex)
-        .concat(allItems.slice(0, backIndex));
-    } else {
-      // queue can be treated as normal array
-      queuedItems = allItems.slice(frontIndex, backIndex);
-    }
-  }
-  return queuedItems;
 }
 
 export async function executeTransactionMaxCompute(
