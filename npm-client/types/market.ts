@@ -100,7 +100,9 @@ export type MarketOutcomeAccount = {
   index: number;
   title: string;
   market: PublicKey;
+  /** @deprecated discontinued */
   latestMatchedPrice: number;
+  /** @deprecated discontinued */
   matchedTotal: BN;
   prices: PublicKey | null;
   priceLadder: number[];

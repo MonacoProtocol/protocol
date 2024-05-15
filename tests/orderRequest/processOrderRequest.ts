@@ -63,7 +63,6 @@ describe("Order Request Processing", () => {
   });
 
   it("process expired order request", async function () {
-    const nowUnixTimestamp: number = Math.floor(new Date().getTime() / 1000);
     const prices = [3.0, 4.9];
 
     const orderRequestOutcomeIndex = 0;
@@ -77,6 +76,7 @@ describe("Order Request Processing", () => {
     ]);
     await market.airdrop(purchaser, 1000.0);
 
+    const nowUnixTimestamp: number = Math.floor(new Date().getTime() / 1000);
     await market._createOrderRequest(
       orderRequestOutcomeIndex,
       orderRequestForOutcome,
@@ -84,7 +84,7 @@ describe("Order Request Processing", () => {
       orderRequestPrice,
       purchaser,
       {
-        expiresOn: nowUnixTimestamp - 1,
+        expiresOn: nowUnixTimestamp + 1,
       },
     );
 
