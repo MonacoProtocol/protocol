@@ -17,7 +17,7 @@ describe("Market Commission Payment Queue", () => {
         createWalletWithBalance(monaco.provider),
         createWalletWithBalance(monaco.provider),
         monaco.create3WayMarket([3.0]),
-        externalPrograms.createProduct("ONE_PRODUCT_20_RATE", 20),
+        externalPrograms.createProduct("RATE_10_V1", 10),
       ]);
     await market.airdrop(forPurchaser, 10_000.0);
     await market.airdrop(againstPurchaser, 10_000.0);
@@ -72,7 +72,7 @@ describe("Market Commission Payment Queue", () => {
         createWalletWithBalance(monaco.provider),
         monaco.create3WayMarket([3.0]),
         monaco.create3WayMarket([3.0]),
-        externalPrograms.createProduct("ONE_PRODUCT_20_RATE", 20),
+        externalPrograms.createProduct("RATE_10_V2", 10),
       ]);
     await market1.airdrop(forPurchaser, 10_000.0);
     await market1.airdrop(againstPurchaser, 10_000.0);
