@@ -2,23 +2,23 @@ import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
 
-export type MarketMatchingQueueAccounts = {
-  marketMatchingQueues: GetAccount<MarketMatchingQueueAccount>[];
-};
-
-export type MarketMatchingQueueAccount = {
-  market: PublicKey;
-  matches: MarketMatchingQueue;
+export type MarketMatchingQueues = {
+  marketMatchingQueues: GetAccount<MarketMatchingQueue>[];
 };
 
 export type MarketMatchingQueue = {
+  market: PublicKey;
+  matches: MatchingQueue;
+};
+
+export type MatchingQueue = {
   empty: boolean;
   front: number;
   len: number;
-  items: MarketMatchingQueueOrderMatch[];
+  items: OrderMatch[];
 };
 
-export type MarketMatchingQueueOrderMatch = {
+export type OrderMatch = {
   pk: PublicKey;
   purchaser: PublicKey;
 

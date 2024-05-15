@@ -4,7 +4,7 @@ import {
   GetAccount,
   getMarketMatchingQueue,
   getNonEmptyMarketMatchingQueues,
-  MarketMatchingQueueAccount,
+  MarketMatchingQueue,
 } from "../../npm-client";
 import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
@@ -72,7 +72,7 @@ describe("Market Matching Queue", () => {
 
     // need to filter markets as markets from other parallel tests are reported too
     const marketPkStrings = [market1.pk.toBase58(), market2.pk.toBase58()];
-    const marketPkStringsCheck = (a: GetAccount<MarketMatchingQueueAccount>) =>
+    const marketPkStringsCheck = (a: GetAccount<MarketMatchingQueue>) =>
       marketPkStrings.includes(a.account.market.toBase58());
 
     const queues1 = await getNonEmptyMarketMatchingQueues(monaco.program);

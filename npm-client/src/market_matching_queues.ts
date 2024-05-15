@@ -5,8 +5,9 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
-  MarketMatchingQueueAccount,
-  MarketMatchingQueueAccounts,
+  MarketMatchingQueues,
+  MarketMatchingQueue,
+  OrderMatch,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
 
@@ -46,7 +47,7 @@ export async function findMarketMatchingQueuePda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketMatchingQueuePk {PublicKey} publicKey of the market matching queue
- * @returns {GetAccount<MarketMatchingQueueAccount>} market matching queue account details
+ * @returns {GetAccount<MarketMatchingQueue>} market matching queue account details
  *
  * @example
  *
@@ -56,15 +57,13 @@ export async function findMarketMatchingQueuePda(
 export async function getMarketMatchingQueue(
   program: Program,
   marketMatchingQueuePk: PublicKey,
-): Promise<ClientResponse<GetAccount<MarketMatchingQueueAccount>>> {
-  const response = new ResponseFactory(
-    {} as GetAccount<MarketMatchingQueueAccount>,
-  );
+): Promise<ClientResponse<GetAccount<MarketMatchingQueue>>> {
+  const response = new ResponseFactory({} as GetAccount<MarketMatchingQueue>);
   try {
     const marketMatchingQueue =
       (await program.account.marketMatchingQueue.fetch(
         marketMatchingQueuePk,
-      )) as MarketMatchingQueueAccount;
+      )) as MarketMatchingQueue;
 
     response.addResponseData({
       publicKey: marketMatchingQueuePk,
@@ -78,8 +77,8 @@ export async function getMarketMatchingQueue(
 
 export async function getNonEmptyMarketMatchingQueues(
   program: Program,
-): Promise<ClientResponse<MarketMatchingQueueAccounts>> {
-  const response = new ResponseFactory({} as MarketMatchingQueueAccounts);
+): Promise<ClientResponse<MarketMatchingQueues>> {
+  const response = new ResponseFactory({} as MarketMatchingQueues);
   const connection = program.provider.connection;
 
   try {
@@ -95,7 +94,7 @@ export async function getNonEmptyMarketMatchingQueues(
     const accountsWithData =
       (await program.account.marketMatchingQueue.fetchMultiple(
         accountKeys,
-      )) as MarketMatchingQueueAccount[];
+      )) as MarketMatchingQueue[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -108,4 +107,27 @@ export async function getNonEmptyMarketMatchingQueues(
     response.addError(e);
   }
   return response.body;
+}
+
+export function toOrderMatches(
+  marketMatchingQueue: MarketMatchingQueue,
+): OrderMatch[] {
+  const matches = marketMatchingQueue.matches;
+  const frontIndex = matches.front;
+  const allItems = matches.items;
+  const backIndex = frontIndex + (matches.len % matches.items.length);
+
+  let queuedItems: OrderMatch[] = [];
+  if (matches.len > 0) {
+    if (backIndex <= frontIndex) {
+      // queue bridges array
+      queuedItems = allItems
+        .slice(frontIndex)
+        .concat(allItems.slice(0, backIndex));
+    } else {
+      // queue can be treated as normal array
+      queuedItems = allItems.slice(frontIndex, backIndex);
+    }
+  }
+  return queuedItems;
 }

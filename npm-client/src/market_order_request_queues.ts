@@ -7,6 +7,7 @@ import {
   GetAccount,
   MarketOrderRequestQueues,
   MarketOrderRequestQueue,
+  OrderRequest,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
 
@@ -108,4 +109,28 @@ export async function getNonEmptyMarketOrderRequestQueues(
     response.addError(e);
   }
   return response.body;
+}
+
+export function toOrderRequests(
+  marketOrderRequestQueue: MarketOrderRequestQueue,
+): OrderRequest[] {
+  const orderRequests = marketOrderRequestQueue.orderRequests;
+  const frontIndex = orderRequests.front;
+  const allItems = orderRequests.items;
+  const backIndex =
+    frontIndex + (orderRequests.len % orderRequests.items.length);
+
+  let queuedItems: OrderRequest[] = [];
+  if (orderRequests.len > 0) {
+    if (backIndex <= frontIndex) {
+      // queue bridges array
+      queuedItems = allItems
+        .slice(frontIndex)
+        .concat(allItems.slice(0, backIndex));
+    } else {
+      // queue can be treated as normal array
+      queuedItems = allItems.slice(frontIndex, backIndex);
+    }
+  }
+  return queuedItems;
 }
