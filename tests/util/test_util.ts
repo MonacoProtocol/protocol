@@ -34,9 +34,9 @@ import {
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
+  getMarketCommissionPaymentQueue,
   MarketAccount,
-  MarketPaymentsQueueAccount,
-  toPaymentInfos,
+  toCommissionPayments,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
@@ -45,7 +45,7 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
-  findCommissionPaymentsQueuePda,
+  findMarketCommissionPaymentQueuePda,
   findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
@@ -280,7 +280,7 @@ export async function createMarket(
   ] = await Promise.all([
     findMarketLiquiditiesPda(protocolProgram, marketPda),
     findMarketMatchingQueuePda(protocolProgram, marketPda),
-    findCommissionPaymentsQueuePda(protocolProgram, marketPda),
+    findMarketCommissionPaymentQueuePda(protocolProgram, marketPda),
     findMarketOrderRequestQueuePda(protocolProgram as Program, marketPda),
   ]);
 
@@ -633,22 +633,24 @@ export async function processCommissionPayments(
   productProgram: Program,
   marketPk: PublicKey,
 ) {
-  const commissionQueuePk = (
-    await findCommissionPaymentsQueuePda(monaco, marketPk)
+  const marketCommissionPaymentQueuePk = (
+    await findMarketCommissionPaymentQueuePda(monaco, marketPk)
   ).data.pda;
   const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
 
-  const queue = (
-    (await monaco.account.marketPaymentsQueue.fetch(
-      commissionQueuePk,
-    )) as MarketPaymentsQueueAccount
-  ).paymentQueue;
-  if (queue.len == 0) {
+  const marketCommissionPaymentQueue = (
+    await getMarketCommissionPaymentQueue(
+      monaco,
+      marketCommissionPaymentQueuePk,
+    )
+  ).data.account;
+
+  if (marketCommissionPaymentQueue.commissionPayments.empty) {
     return;
   }
 
   const market = (await monaco.account.market.fetch(marketPk)) as MarketAccount;
-  const queuedItems = toPaymentInfos(queue);
+  const queuedItems = toCommissionPayments(marketCommissionPaymentQueue);
 
   const tx = new Transaction();
   for (const item of queuedItems) {
@@ -672,7 +674,7 @@ export async function processCommissionPayments(
           commissionEscrow: productEscrowPk,
           product: productPk,
 
-          commissionPaymentsQueue: commissionQueuePk,
+          commissionPaymentsQueue: marketCommissionPaymentQueuePk,
           market: marketPk,
           marketEscrow: marketEscrowPk,
         })

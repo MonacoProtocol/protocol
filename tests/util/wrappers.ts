@@ -33,7 +33,7 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
   findMarketLiquiditiesPda,
-  findCommissionPaymentsQueuePda,
+  findMarketCommissionPaymentQueuePda,
   findMarketOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
@@ -551,7 +551,7 @@ export class Monaco {
     ] = await Promise.all([
       findMarketLiquiditiesPda(this.program as Program, marketPk),
       findMarketMatchingQueuePda(this.program as Program, marketPk),
-      findCommissionPaymentsQueuePda(this.program as Program, marketPk),
+      findMarketCommissionPaymentQueuePda(this.program as Program, marketPk),
       findMarketOrderRequestQueuePda(
         this.program as Program as Program,
         marketPk,
@@ -1570,7 +1570,10 @@ export class MonacoMarket {
       .catch((e) => console.log(e));
   }
 
-  async settleMarketPositionForPurchaser(purchaser: PublicKey) {
+  async settleMarketPositionForPurchaser(
+    purchaser: PublicKey,
+    processCommissionPayments = true,
+  ) {
     const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
     const protocolCommissionPks = await this.cacheProtocolCommissionPks();
@@ -1592,7 +1595,9 @@ export class MonacoMarket {
         throw e;
       });
 
-    await this.processCommissionPayments();
+    if (processCommissionPayments) {
+      await this.processCommissionPayments();
+    }
   }
 
   async processCommissionPayments() {

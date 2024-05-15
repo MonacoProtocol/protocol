@@ -61,10 +61,18 @@ export async function getMarketCommissionPaymentQueue(
     {} as GetAccount<MarketCommissionPaymentQueue>,
   );
   try {
-    const marketCommissionPaymentQueue =
-      (await program.account.marketPaymentsQueue.fetch(
+    const marketCommissionPaymentQueueRaw =
+      await program.account.marketPaymentsQueue.fetch(
         marketCommissionPaymentQueuePk,
-      )) as MarketCommissionPaymentQueue;
+      );
+
+    // renaming paymentQueue -> payments
+    const { paymentQueue, ...otherProperties } =
+      marketCommissionPaymentQueueRaw;
+    const marketCommissionPaymentQueue = {
+      ...otherProperties,
+      commissionPayments: paymentQueue,
+    } as MarketCommissionPaymentQueue;
 
     response.addResponseData({
       publicKey: marketCommissionPaymentQueuePk,

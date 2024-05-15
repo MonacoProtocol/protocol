@@ -27,13 +27,11 @@ export async function findMarketMatchingQueuePda(
   marketPk: PublicKey,
 ): Promise<ClientResponse<FindPdaResponse>> {
   const response = new ResponseFactory({} as FindPdaResponse);
-
   try {
     const [pda, _] = PublicKey.findProgramAddressSync(
       [Buffer.from("matching"), marketPk.toBuffer()],
       program.programId,
     );
-
     response.addResponseData({
       pda: pda,
     });

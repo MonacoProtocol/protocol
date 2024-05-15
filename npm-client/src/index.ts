@@ -7,6 +7,7 @@ export * from "./create_order";
 export * from "./cancel_order_instruction";
 export * from "./cancel_order";
 export * from "./markets";
+export * from "./market_commission_payment_queues";
 export * from "./market_liquidities";
 export * from "./market_matching_pools";
 export * from "./market_matching_queues";

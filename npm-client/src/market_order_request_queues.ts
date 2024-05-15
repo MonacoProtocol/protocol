@@ -6,9 +6,9 @@ import {
   FindPdaResponse,
   GetAccount,
   MarketOrderRequestQueues,
+  MarketOrderRequestQueue,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
-import { MarketOrderRequestQueue } from "../types/market_order_request_queue";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market order-request-queue account.

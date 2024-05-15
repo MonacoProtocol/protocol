@@ -3,12 +3,12 @@ import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
 
 export type MarketCommissionPaymentQueues = {
-  marketPaymentQueues: GetAccount<MarketCommissionPaymentQueue>[];
+  marketCommissionPaymentQueues: GetAccount<MarketCommissionPaymentQueue>[];
 };
 
 export type MarketCommissionPaymentQueue = {
   market: PublicKey;
-  payments: CommissionPaymentQueue;
+  commissionPayments: CommissionPaymentQueue;
 };
 
 export type CommissionPaymentQueue = {
@@ -24,16 +24,17 @@ export type CommissionPayment = {
   amount: BN;
 };
 
-export function toPayments(
+export function toCommissionPayments(
   marketCommissionPaymentQueue: MarketCommissionPaymentQueue,
 ): CommissionPayment[] {
-  const payments = marketCommissionPaymentQueue.payments;
-  const frontIndex = payments.front;
-  const allItems = payments.items;
-  const backIndex = frontIndex + (payments.len % payments.items.length);
+  const commissionPayments = marketCommissionPaymentQueue.commissionPayments;
+  const frontIndex = commissionPayments.front;
+  const allItems = commissionPayments.items;
+  const backIndex =
+    frontIndex + (commissionPayments.len % commissionPayments.items.length);
 
   let queuedItems: CommissionPayment[] = [];
-  if (payments.len > 0) {
+  if (commissionPayments.len > 0) {
     if (backIndex <= frontIndex) {
       // queue bridges array
       queuedItems = allItems

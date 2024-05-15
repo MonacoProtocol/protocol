@@ -10,7 +10,7 @@ import {
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
-  findCommissionPaymentsQueuePda,
+  findMarketCommissionPaymentQueuePda,
   findEscrowPda,
   findMarketFundingPda,
   findMarketLiquiditiesPda,
@@ -153,7 +153,7 @@ export async function buildMarketManagementInstruction(
       ] = await Promise.all([
         findMarketLiquiditiesPda(program, marketPk),
         findMarketMatchingQueuePda(program, marketPk),
-        findCommissionPaymentsQueuePda(program, marketPk),
+        findMarketCommissionPaymentQueuePda(program, marketPk),
         findMarketOrderRequestQueuePda(program, marketPk),
       ]);
       if (

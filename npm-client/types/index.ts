@@ -6,7 +6,7 @@ export * from "./market";
 export * from "./get_account";
 export * from "./market_matching_queue";
 export * from "./market_order_request_queue";
-export * from "./market_payments_queue";
+export * from "./market_commission_payment_queue";
 export * from "./market_position";
 export * from "./wallet_tokens";
 export * from "./protocol";
