@@ -19,6 +19,7 @@ impl MarketMatchingQueue {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct MatchingQueue {
+    empty: bool,
     front: u32,
     len: u32,
     items: Vec<OrderMatch>,
@@ -26,12 +27,14 @@ pub struct MatchingQueue {
 
 impl MatchingQueue {
     pub const fn size_for(length: usize) -> usize {
+        BOOL_SIZE + // empty
         (U32_SIZE  * 2) + // front and len
         vec_size(OrderMatch::SIZE, length) // items
     }
 
     pub fn new(size: usize) -> MatchingQueue {
         MatchingQueue {
+            empty: true,
             front: 0,
             len: 0,
             items: vec![OrderMatch::default(); size],
@@ -79,6 +82,7 @@ impl MatchingQueue {
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
             self.items[old_back as usize] = item;
+            self.empty = self.is_empty();
             Some(old_back)
         }
     }
@@ -91,6 +95,7 @@ impl MatchingQueue {
             self.front = (old_front + 1) % self.size();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
+            self.empty = self.is_empty();
             Some(&mut self.items[old_front as usize])
         }
     }

@@ -29,13 +29,14 @@ import { MonacoProtocol } from "../../target/types/monaco_protocol";
 import {
   findEscrowPda,
   findMarketMatchingPoolPda,
+  findMarketOrderRequestQueuePda,
   findMarketOutcomePda,
   findMarketPda,
   findMarketPositionPda,
   findOrderPda,
+  getMarketCommissionPaymentQueue,
   MarketAccount,
-  MarketPaymentsQueueAccount,
-  PaymentInfo,
+  toCommissionPayments,
 } from "../../npm-client";
 import { findMarketPdas, findProductPda } from "./pdas";
 import * as assert from "assert";
@@ -44,13 +45,12 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import console from "console";
 import * as idl from "../anchor/protocol_product/protocol_product.json";
 import {
-  findCommissionPaymentsQueuePda,
+  findMarketCommissionPaymentQueuePda,
   findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
-  findOrderRequestQueuePda,
+  getOrCreateMarketType as getOrCreateMarketTypeClient,
 } from "../../npm-admin-client";
-import { getOrCreateMarketType as getOrCreateMarketTypeClient } from "../../npm-admin-client/src/market_type_create";
 
 const { SystemProgram } = anchor.web3;
 
@@ -280,8 +280,8 @@ export async function createMarket(
   ] = await Promise.all([
     findMarketLiquiditiesPda(protocolProgram, marketPda),
     findMarketMatchingQueuePda(protocolProgram, marketPda),
-    findCommissionPaymentsQueuePda(protocolProgram, marketPda),
-    findOrderRequestQueuePda(protocolProgram as Program, marketPda),
+    findMarketCommissionPaymentQueuePda(protocolProgram, marketPda),
+    findMarketOrderRequestQueuePda(protocolProgram as Program, marketPda),
   ]);
 
   await protocolProgram.methods
@@ -459,7 +459,7 @@ export async function processNextOrderRequest(
     .MonacoProtocol as Program<MonacoProtocol>;
 
   const orderRequestQueuePk = (
-    await findOrderRequestQueuePda(protocolProgram, marketPk)
+    await findMarketOrderRequestQueuePda(protocolProgram, marketPk)
   ).data.pda;
   const orderRequestQueue =
     await protocolProgram.account.marketOrderRequestQueue.fetch(
@@ -540,7 +540,7 @@ export async function processOrderRequests(
     .MonacoProtocol as Program<MonacoProtocol>;
 
   const orderRequestQueuePk = (
-    await findOrderRequestQueuePda(protocolProgram, marketPk)
+    await findMarketOrderRequestQueuePda(protocolProgram, marketPk)
   ).data.pda;
   const orderRequestQueue =
     await protocolProgram.account.marketOrderRequestQueue.fetch(
@@ -633,22 +633,24 @@ export async function processCommissionPayments(
   productProgram: Program,
   marketPk: PublicKey,
 ) {
-  const commissionQueuePk = (
-    await findCommissionPaymentsQueuePda(monaco, marketPk)
+  const marketCommissionPaymentQueuePk = (
+    await findMarketCommissionPaymentQueuePda(monaco, marketPk)
   ).data.pda;
   const marketEscrowPk = (await findEscrowPda(monaco, marketPk)).data.pda;
 
-  const queue = (
-    (await monaco.account.marketPaymentsQueue.fetch(
-      commissionQueuePk,
-    )) as MarketPaymentsQueueAccount
-  ).paymentQueue;
-  if (queue.len == 0) {
+  const marketCommissionPaymentQueue = (
+    await getMarketCommissionPaymentQueue(
+      monaco,
+      marketCommissionPaymentQueuePk,
+    )
+  ).data.account;
+
+  if (marketCommissionPaymentQueue.commissionPayments.empty) {
     return;
   }
 
   const market = (await monaco.account.market.fetch(marketPk)) as MarketAccount;
-  const queuedItems = getPaymentInfoQueueItems(queue);
+  const queuedItems = toCommissionPayments(marketCommissionPaymentQueue);
 
   const tx = new Transaction();
   for (const item of queuedItems) {
@@ -672,7 +674,7 @@ export async function processCommissionPayments(
           commissionEscrow: productEscrowPk,
           product: productPk,
 
-          commissionPaymentsQueue: commissionQueuePk,
+          commissionPaymentsQueue: marketCommissionPaymentQueuePk,
           market: marketPk,
           marketEscrow: marketEscrowPk,
         })
@@ -686,26 +688,6 @@ export async function processCommissionPayments(
   } catch (e) {
     console.log(e);
   }
-}
-
-export function getPaymentInfoQueueItems(queue): PaymentInfo[] {
-  const frontIndex = queue.front;
-  const allItems = queue.items;
-  const backIndex = frontIndex + (queue.len % queue.items.length);
-
-  let queuedItems: PaymentInfo[] = [];
-  if (queue.len > 0) {
-    if (backIndex <= frontIndex) {
-      // queue bridges array
-      queuedItems = allItems
-        .slice(frontIndex)
-        .concat(allItems.slice(0, backIndex));
-    } else {
-      // queue can be treated as normal array
-      queuedItems = allItems.slice(frontIndex, backIndex);
-    }
-  }
-  return queuedItems;
 }
 
 export async function executeTransactionMaxCompute(

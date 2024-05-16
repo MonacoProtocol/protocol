@@ -36,6 +36,7 @@ impl PaymentInfo {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct PaymentQueue {
+    empty: bool,
     front: u32,
     len: u32,
     items: Vec<PaymentInfo>,
@@ -43,12 +44,14 @@ pub struct PaymentQueue {
 
 impl PaymentQueue {
     pub const fn size_for(length: u32) -> usize {
+        BOOL_SIZE + // empty
         (U32_SIZE * 2) + // front and len
             vec_size(PaymentInfo::SIZE, length as usize) // items
     }
 
     pub fn new(size: u32) -> PaymentQueue {
         PaymentQueue {
+            empty: true,
             front: 0,
             len: 0,
             items: vec![PaymentInfo::default(); size as usize],
@@ -80,6 +83,7 @@ impl PaymentQueue {
             // #[soteria(ignore)] no overflows due to "if" check
             self.len += 1;
             self.items[old_back as usize] = item;
+            self.empty = self.is_empty();
             Some(old_back)
         }
     }
@@ -92,6 +96,7 @@ impl PaymentQueue {
             self.front = (old_front + 1) % self.size();
             // #[soteria(ignore)] no underflows due to "if" check
             self.len -= 1;
+            self.empty = self.is_empty();
             let item: PaymentInfo = *self.items.get(old_front as usize).unwrap();
             Some(item)
         }
