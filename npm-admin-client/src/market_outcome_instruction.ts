@@ -102,6 +102,35 @@ export async function buildInitialiseOutcomesInstructions(
   return response.body;
 }
 
+export async function buildInitialiseOutcomesInstructionsExplicit(
+  program: Program,
+  marketPk: PublicKey,
+  outcomes: { name: string; index: number }[],
+  priceLadderPk?: PublicKey,
+): Promise<ClientResponse<MarketOutcomesInstructionsResponse>> {
+  const response = new ResponseFactory(
+    {} as MarketOutcomesInstructionsResponse,
+  );
+
+  const instructions = await Promise.all(
+    outcomes.map((outcome) =>
+      buildInitialiseOutcomeInstruction(
+        program,
+        marketPk,
+        outcome.name,
+        outcome.index,
+        priceLadderPk,
+      ),
+    ),
+  );
+
+  response.addResponseData({
+    instructions: instructions.map((i) => i.data),
+  });
+
+  return response.body;
+}
+
 export function findMarketOutcomePda(
   program: Program,
   marketPk: PublicKey,
