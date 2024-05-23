@@ -1,6 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { ClientResponse, ResponseFactory, FindPdaResponse } from "../types";
+import {
+  ClientResponse,
+  ResponseFactory,
+  FindPdaResponse,
+  GetAccount,
+  MarketLiquidities,
+} from "../types";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market liquidities account.
@@ -28,6 +34,38 @@ export async function findMarketLiquiditiesPda(
 
     response.addResponseData({
       pda: pda,
+    });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+/**
+ * For the provided market-liquidities publicKey, return the market-liquidities account.
+ *
+ * @param program {program} anchor program initialized by the consuming client
+ * @param marketLiquiditiesPk {PublicKey} publicKey of the market-liquidities
+ * @returns {MarketLiquidities} market-liquidities account info
+ *
+ * @example
+ *
+ * const marketLiquiditiesPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
+ * const marketLiquidities = await getMarketLiquidities(program, marketLiquiditiesPk)
+ */
+export async function getMarketLiquidities(
+  program: Program,
+  marketLiquiditiesPk: PublicKey,
+): Promise<ClientResponse<GetAccount<MarketLiquidities>>> {
+  const response = new ResponseFactory({} as GetAccount<MarketLiquidities>);
+  try {
+    const marketLiquidities = (await program.account.marketLiquidities.fetch(
+      marketLiquiditiesPk,
+    )) as MarketLiquidities;
+
+    response.addResponseData({
+      publicKey: marketLiquiditiesPk,
+      account: marketLiquidities,
     });
   } catch (e) {
     response.addError(e);

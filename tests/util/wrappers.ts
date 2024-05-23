@@ -33,8 +33,8 @@ import { ProtocolProduct } from "../anchor/protocol_product/protocol_product";
 import {
   createPriceLadderWithPrices,
   findMarketLiquiditiesPda,
-  findCommissionPaymentsQueuePda,
-  findOrderRequestQueuePda,
+  findMarketCommissionPaymentQueuePda,
+  findMarketOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   findPriceLadderPda,
   MarketAccount,
@@ -551,8 +551,11 @@ export class Monaco {
     ] = await Promise.all([
       findMarketLiquiditiesPda(this.program as Program, marketPk),
       findMarketMatchingQueuePda(this.program as Program, marketPk),
-      findCommissionPaymentsQueuePda(this.program as Program, marketPk),
-      findOrderRequestQueuePda(this.program as Program as Program, marketPk),
+      findMarketCommissionPaymentQueuePda(this.program as Program, marketPk),
+      findMarketOrderRequestQueuePda(
+        this.program as Program as Program,
+        marketPk,
+      ),
     ]);
 
     return new MonacoMarket(
@@ -917,6 +920,7 @@ export class MonacoMarket {
       marketOutcome?: PublicKey;
       productPk?: PublicKey;
       purchaserToken?: PublicKey;
+      expiresOn?: number;
     },
   ) {
     const orderPk = await findOrderPda(
@@ -931,6 +935,7 @@ export class MonacoMarket {
         stake: new BN(this.toAmountInteger(stake)),
         price: price,
         distinctSeed: Array.from(orderPk.data.distinctSeed),
+        expiresOn: overrides.expiresOn ? new BN(overrides.expiresOn) : null,
       })
       .accounts({
         reservedOrder: orderPk.data.orderPk,
@@ -1238,7 +1243,7 @@ export class MonacoMarket {
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
+      await findMarketOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk)
     ).data.pda;
 
     await this.monaco.program.methods
@@ -1274,8 +1279,12 @@ export class MonacoMarket {
           .data.pda;
     const orderRequestQueuePk = market.marketStatus.initializing
       ? null
-      : (await findOrderRequestQueuePda(this.monaco.getRawProgram(), this.pk))
-          .data.pda;
+      : (
+          await findMarketOrderRequestQueuePda(
+            this.monaco.getRawProgram(),
+            this.pk,
+          )
+        ).data.pda;
 
     await this.monaco.program.methods
       .voidMarket()
@@ -1561,7 +1570,10 @@ export class MonacoMarket {
       .catch((e) => console.log(e));
   }
 
-  async settleMarketPositionForPurchaser(purchaser: PublicKey) {
+  async settleMarketPositionForPurchaser(
+    purchaser: PublicKey,
+    processCommissionPayments = true,
+  ) {
     const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(purchaser);
     const protocolCommissionPks = await this.cacheProtocolCommissionPks();
@@ -1583,7 +1595,9 @@ export class MonacoMarket {
         throw e;
       });
 
-    await this.processCommissionPayments();
+    if (processCommissionPayments) {
+      await this.processCommissionPayments();
+    }
   }
 
   async processCommissionPayments() {

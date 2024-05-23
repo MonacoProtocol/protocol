@@ -26,3 +26,16 @@ impl MarketOutcome {
         + option_size(PUB_KEY_SIZE) // price ladder account
         + vec_size(F64_SIZE, MarketOutcome::PRICE_LADDER_LENGTH); // price_ladder
 }
+
+#[cfg(test)]
+pub fn mock_market_outcome(market_pk: Pubkey, outcome: u16) -> MarketOutcome {
+    MarketOutcome {
+        market: market_pk,
+        index: outcome,
+        title: market_pk.to_string(),
+        latest_matched_price: 0_f64,
+        matched_total: 0_u64,
+        prices: None,
+        price_ladder: vec![],
+    }
+}

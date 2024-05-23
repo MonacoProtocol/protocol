@@ -52,8 +52,10 @@ export async function buildOrderInstructionUIStake(
     forOutcome,
     price,
     stakeInteger.data.stakeInteger,
-    priceLadderPk,
-    productPk,
+    {
+      priceLadderPk,
+      productPk,
+    },
   );
 }
 
@@ -69,8 +71,10 @@ export async function buildOrderInstructionUIStake(
  * @param forOutcome  {boolean} whether the order is for or against the outcome
  * @param price  {number} price at which the order should be created, the price should be present on the outcome pool for the market
  * @param stake  {BN} raw token value of the order taking into account the decimal amount of the token associated with the market
- * @param priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
- * @param productPk {PublicKey} Optional: publicKey of product account this order was created on
+ * @param options
+ * @param options.priceLadderPk {PublicKey} Optional: publicKey of the price ladder associated with the market outcome - if there is one
+ * @param options.productPk {PublicKey} Optional: publicKey of product account this order was created on
+ * @param options.expiresOn {BN} Optional: unix timestamp (seconds) defining expiration of request; if omitted or null or undefined order request will never expire
  * @returns {OrderInstructionResponse}  derived order publicKey and the instruction to perform a create order transaction
  *
  * @example
@@ -82,7 +86,8 @@ export async function buildOrderInstructionUIStake(
  * const stake = 20,000,000,000
  * const priceLadderPk = new PublicKey('Dopn2C9R4G6GaPwFAxaNWM33D7o1PXyYZtBBDFZf9cEhH')
  * const productPk = new PublicKey('yourNewExcHangeZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, , productPk)
+ * const expiresOn = new BN(1010101010101)
+ * const instruction = await buildOrderInstruction(program, marketPk, marketOutcomeIndex, forOutcome, price, stake, {priceLadderPk, productPk, expiresOn} )
  */
 export async function buildOrderInstruction(
   program: Program,
@@ -91,8 +96,11 @@ export async function buildOrderInstruction(
   forOutcome: boolean,
   price: number,
   stake: BN,
-  priceLadderPk?: PublicKey,
-  productPk?: PublicKey,
+  options: {
+    priceLadderPk?: PublicKey;
+    productPk?: PublicKey;
+    expiresOn?: BN;
+  },
 ): Promise<ClientResponse<OrderInstructionResponse>> {
   const response = new ResponseFactory({} as OrderInstructionResponse);
   const provider = program.provider as AnchorProvider;
@@ -135,6 +143,7 @@ export async function buildOrderInstruction(
       stake: stake,
       price: price,
       distinctSeed: distinctSeed,
+      expiresOn: options.expiresOn ?? null,
     })
     .accounts({
       reservedOrder: orderPk,
@@ -147,12 +156,12 @@ export async function buildOrderInstruction(
       marketOutcome: marketAccounts.data.marketOutcomePda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      priceLadder: priceLadderPk == undefined ? null : priceLadderPk,
+      priceLadder: options.priceLadderPk ?? null,
       purchaserToken: purchaserTokenAccount.data.associatedTokenAccount,
       marketEscrow: marketAccounts.data.escrowPda,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      product: productPk == undefined ? null : productPk,
+      product: options.productPk ?? null,
       orderRequestQueue: marketAccounts.data.marketOrderRequestQueuePda,
     })
     .instruction();

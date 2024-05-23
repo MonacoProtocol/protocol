@@ -10,12 +10,12 @@ import {
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
-  findCommissionPaymentsQueuePda,
+  findMarketCommissionPaymentQueuePda,
   findEscrowPda,
   findMarketFundingPda,
   findMarketLiquiditiesPda,
   findMarketMatchingQueuePda,
-  findOrderRequestQueuePda,
+  findMarketOrderRequestQueuePda,
 } from "./market_helpers";
 
 export enum MarketManagementInstructionType {
@@ -153,8 +153,8 @@ export async function buildMarketManagementInstruction(
       ] = await Promise.all([
         findMarketLiquiditiesPda(program, marketPk),
         findMarketMatchingQueuePda(program, marketPk),
-        findCommissionPaymentsQueuePda(program, marketPk),
-        findOrderRequestQueuePda(program, marketPk),
+        findMarketCommissionPaymentQueuePda(program, marketPk),
+        findMarketOrderRequestQueuePda(program, marketPk),
       ]);
       if (
         !liquiditiesPk.success ||
@@ -227,7 +227,7 @@ export async function buildMarketManagementInstruction(
         : (await findMarketMatchingQueuePda(program, marketPk)).data.pda;
       const orderRequestQueuePk = market.marketStatus.initializing
         ? null
-        : (await findOrderRequestQueuePda(program, marketPk)).data.pda;
+        : (await findMarketOrderRequestQueuePda(program, marketPk)).data.pda;
       const instruction = await program.methods
         .voidMarket()
         .accounts({
@@ -259,7 +259,7 @@ export async function buildMarketManagementInstruction(
           authorisedOperators: authorisedOperators.data.pda,
           marketOperator: provider.wallet.publicKey,
           orderRequestQueue: (
-            await findOrderRequestQueuePda(program, marketPk)
+            await findMarketOrderRequestQueuePda(program, marketPk)
           ).data.pda,
         })
         .instruction();
