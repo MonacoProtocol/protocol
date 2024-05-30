@@ -11,9 +11,6 @@
 *   [getMarkets][7]
     *   [Parameters][8]
     *   [Examples][9]
-*   [findOrderRequestQueuePda][10]
-    *   [Parameters][11]
-    *   [Examples][12]
 
 ## findMarketPda
 
@@ -24,10 +21,10 @@ For the provided event publicKey, market type and mint publicKey return a Progra
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `eventPk` **PublicKey** {PublicKey} publicKey of an event
 *   `marketTypePk` **PublicKey** {PublicKey} publicKey of the market type
-*   `marketTypeDiscriminator` **([string][13] | null)** {string} discriminator of the market type
-*   `marketTypeValue` **([string][13] | null)** {string} value of the market type
+*   `marketTypeDiscriminator` **([string][10] | null)** {string} discriminator of the market type
+*   `marketTypeValue` **([string][10] | null)** {string} value of the market type
 *   `mintPk` **PublicKey** {PublicKey} publicKey of the currency token
-*   `version` **[number][14]?** {number} (Optional) version of the market, defaults to 0
+*   `version` **[number][11]?** {number} (Optional) version of the market, defaults to 0
 
 ### Examples
 
@@ -67,7 +64,7 @@ For the provided list of market publicKeys, get the market account details for e
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPks` **[Array][15]\<PublicKey>** {PublicKey} publicKey of a market
+*   `marketPks` **[Array][12]\<PublicKey>** {PublicKey} publicKey of a market
 
 ### Examples
 
@@ -79,24 +76,6 @@ const markets = await getMarkets(program, marketPks)
 ```
 
 Returns **MarketAccounts** list of market account details
-
-## findOrderRequestQueuePda
-
-For the provided market publicKey, return the order request queue account PDA (publicKey) for that market.
-
-### Parameters
-
-*   `program` **Program** {program} anchor program initialized by the consuming client
-*   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-
-### Examples
-
-```javascript
-const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
-const orderRequestQueuePda = await findOrderRequestQueuePda(program, marketPK)
-```
-
-Returns **FindPdaResponse** PDA of the payment queue
 
 [1]: #findmarketpda
 
@@ -116,14 +95,8 @@ Returns **FindPdaResponse** PDA of the payment queue
 
 [9]: #examples-2
 
-[10]: #findorderrequestqueuepda
+[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[11]: #parameters-3
+[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[12]: #examples-3
-
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

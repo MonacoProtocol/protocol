@@ -2,12 +2,14 @@ import * as anchor from "@coral-xyz/anchor";
 import { createWalletWithBalance } from "../util/test_util";
 import { monaco } from "../util/wrappers";
 import assert from "assert";
-import { BN } from "@coral-xyz/anchor";
+import { AnchorError, BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { findMarketPdas, findUserPdas } from "../util/pdas";
-import { findOrderRequestQueuePda } from "../../npm-admin-client";
-import { OrderRequestQueueAccount } from "../../npm-client";
+import {
+  findMarketOrderRequestQueuePda,
+  MarketOrderRequestQueue,
+} from "../../npm-client";
 
 describe("Order Request Creation", () => {
   const provider = anchor.AnchorProvider.local();
@@ -28,7 +30,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueueAccount;
+      )) as MarketOrderRequestQueue;
 
     assert.equal(orderRequestQueue.market.toBase58(), market.pk.toBase58());
     assert.equal(orderRequestQueue.orderRequests.len, 2);
@@ -86,7 +88,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueueAccount;
+      )) as MarketOrderRequestQueue;
     assert.equal(orderRequestQueue.orderRequests.len, 2);
 
     // check that inplay de
@@ -103,6 +105,32 @@ describe("Order Request Creation", () => {
       againstOrderRequest.delayExpirationTimestamp.toNumber() >
         Math.floor(new Date().getTime() / 1000),
     );
+  });
+
+  it("failure - enqueue expired order request", async function () {
+    const price = 3.0;
+    const outcomeIndex = 0;
+    const forOutcome = true;
+    const stake = 10.0;
+
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price, price + 1]),
+    ]);
+    await market.airdrop(purchaser, 1000.0);
+
+    await market
+      ._createOrderRequest(outcomeIndex, forOutcome, stake, price, purchaser, {
+        expiresOn: 1,
+      })
+      .then(
+        function (_) {
+          assert.fail("expected CreationExpired");
+        },
+        function (ae: AnchorError) {
+          assert.equal(ae.error.errorCode.code, "CreationExpired");
+        },
+      );
   });
 
   it("failure - enqueue duplicate order request", async function () {
@@ -128,7 +156,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueueAccount;
+      )) as MarketOrderRequestQueue;
 
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
@@ -157,11 +185,12 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake + 1)),
           price: price + 1,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,
           orderRequestQueue: (
-            await findOrderRequestQueuePda(monaco.program, marketPk)
+            await findMarketOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
           marketPosition: marketPositionPk.data.pda,
           purchaser: purchaser.publicKey,
@@ -212,7 +241,7 @@ describe("Order Request Creation", () => {
     const orderRequestQueue =
       (await monaco.program.account.marketOrderRequestQueue.fetch(
         market.orderRequestQueuePk,
-      )) as OrderRequestQueueAccount;
+      )) as MarketOrderRequestQueue;
 
     assert.equal(orderRequestQueue.orderRequests.len, 1);
 
@@ -242,11 +271,12 @@ describe("Order Request Creation", () => {
           stake: new BN(uiAmountToAmount(stake)),
           price: price,
           distinctSeed: duplicateDistinctSeed,
+          expiresOn: null,
         })
         .accounts({
           reservedOrder: orderPk.data.orderPk,
           orderRequestQueue: (
-            await findOrderRequestQueuePda(monaco.program, marketPk)
+            await findMarketOrderRequestQueuePda(monaco.program, marketPk)
           ).data.pda,
           marketPosition: marketPositionPk.data.pda,
           purchaser: purchaser.publicKey,

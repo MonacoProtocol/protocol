@@ -1,9 +1,9 @@
 import { Program } from "@coral-xyz/anchor";
-import { findEscrowPda, findMarketPda } from "../../npm-client/src/";
+import { findEscrowPda, findMarketPda } from "../../npm-client";
 import { monaco } from "../util/wrappers";
 import {
-  findCommissionPaymentsQueuePda,
-  findOrderRequestQueuePda,
+  findMarketCommissionPaymentQueuePda,
+  findMarketOrderRequestQueuePda,
   findMarketMatchingQueuePda,
   getOrCreateMarketType,
   findMarketFundingPda,
@@ -36,10 +36,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const fundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -100,10 +100,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -171,10 +171,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -251,10 +251,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -332,10 +332,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -405,10 +405,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const marketFundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)
@@ -475,10 +475,10 @@ describe("Recreate markets", () => {
       await findMarketMatchingQueuePda(program, marketPk)
     ).data.pda;
     const paymentsQueuePk = (
-      await findCommissionPaymentsQueuePda(program, marketPk)
+      await findMarketCommissionPaymentQueuePda(program, marketPk)
     ).data.pda;
     const orderRequestQueuePk = (
-      await findOrderRequestQueuePda(monaco.program as Program, marketPk)
+      await findMarketOrderRequestQueuePda(monaco.program as Program, marketPk)
     ).data.pda;
     const fundingPk = (
       await findMarketFundingPda(monaco.program as Program, marketPk)

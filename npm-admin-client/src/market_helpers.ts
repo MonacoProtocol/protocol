@@ -266,18 +266,18 @@ export async function findMarketMatchingQueuePda(
 }
 
 /**
- * For the provided market publicKey, return the commission payments queue account PDA (publicKey) for that market.
+ * For the provided market publicKey, return the commission-payment queue account PDA (publicKey) for that market.
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
- * @returns {FindPdaResponse} PDA of the payment queue
+ * @returns {FindPdaResponse} PDA of the commission-payment queue
  *
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const commissionPaymentsQueuePda = await findCommissionPaymentsQueuePda(program, marketPK)
+ * const marketCommissionPaymentQueuePda = await findMarketCommissionPaymentQueuePda(program, marketPK)
  */
-export async function findCommissionPaymentsQueuePda(
+export async function findMarketCommissionPaymentQueuePda(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<FindPdaResponse>> {
@@ -306,9 +306,9 @@ export async function findCommissionPaymentsQueuePda(
  * @example
  *
  * const marketPk = new PublicKey('7o1PXyYZtBBDFZf9cEhHopn2C9R4G6GaPwFAxaNWM33D')
- * const orderRequestQueuePda = await findOrderRequestQueuePda(program, marketPK)
+ * const orderRequestQueuePda = await findMarketOrderRequestQueuePda(program, marketPK)
  */
-export async function findOrderRequestQueuePda(
+export async function findMarketOrderRequestQueuePda(
   program: Program,
   marketPk: PublicKey,
 ): Promise<ClientResponse<FindPdaResponse>> {

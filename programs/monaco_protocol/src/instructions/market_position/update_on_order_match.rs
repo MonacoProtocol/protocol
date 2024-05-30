@@ -92,7 +92,7 @@ pub fn update_on_order_match(
 mod tests {
     use super::*;
     use crate::instructions::market_position;
-    use crate::state::market_order_request_queue::OrderRequest;
+    use crate::state::market_order_request_queue::mock_order_request;
     use test_case::test_case;
 
     struct OrderData {
@@ -228,9 +228,10 @@ mod tests {
         let mut market_position = market_position(vec![0_i128; 3], vec![0_u64; 3]);
 
         for order_data in orders.into_vec() {
-            let order_request = order_request(
-                order_data.outcome_index as u16,
+            let order_request = mock_order_request(
+                Pubkey::new_unique(),
                 order_data.for_outcome,
+                order_data.outcome_index as u16,
                 order_data.stake,
                 order_data.price,
             );
@@ -261,26 +262,6 @@ mod tests {
 
         // Check market position
         assert_eq!(market_position.market_outcome_sums, expected_position);
-    }
-
-    fn order_request(
-        market_outcome_index: u16,
-        for_outcome: bool,
-        stake: u64,
-        expected_price: f64,
-    ) -> OrderRequest {
-        OrderRequest {
-            purchaser: Default::default(),
-            market_outcome_index,
-            for_outcome,
-            product: None,
-            stake,
-            expected_price,
-            delay_expiration_timestamp: 0,
-            product_commission_rate: 0f64,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
-        }
     }
 
     fn market_position(

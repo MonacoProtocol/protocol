@@ -116,7 +116,7 @@ pub mod monaco_protocol {
             &mut ctx.accounts.market,
             &mut ctx.accounts.market_liquidities,
             &mut ctx.accounts.market_matching_queue,
-            ctx.accounts.crank_operator.key(),
+            &ctx.accounts.crank_operator,
             &mut ctx.accounts.market_matching_pool,
             &mut ctx.accounts.order_request_queue,
         )?;

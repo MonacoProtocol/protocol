@@ -116,7 +116,7 @@ pub fn on_order_match(
 
 #[cfg(test)]
 mod test {
-    use crate::state::market_order_request_queue::OrderRequest;
+    use crate::state::market_order_request_queue::mock_order_request;
     use crate::state::order_account::mock_order_from_order_request;
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
@@ -431,27 +431,6 @@ mod test {
             escrow_account_bump: 0,
             funding_account_bump: 0,
             event_start_timestamp: 100,
-        }
-    }
-
-    fn mock_order_request(
-        purchaser: Pubkey,
-        for_outcome: bool,
-        outcome: u16,
-        stake: u64,
-        price: f64,
-    ) -> OrderRequest {
-        OrderRequest {
-            purchaser,
-            market_outcome_index: outcome,
-            for_outcome,
-            stake,
-            expected_price: price,
-            product: None,
-            product_commission_rate: 0.0,
-            delay_expiration_timestamp: 0,
-            distinct_seed: [0; 16],
-            creation_timestamp: 0,
         }
     }
 

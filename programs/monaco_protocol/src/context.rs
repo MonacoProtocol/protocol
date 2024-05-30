@@ -524,7 +524,7 @@ pub struct ProcessOrderMatch<'info> {
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
-            @ CoreError::MatchingMarketMarketMatchingPoolMismatch,
+            @ CoreError::MatchingMarketMatchingPoolMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
     #[account(
@@ -672,12 +672,11 @@ pub struct MatchOrders<'info> {
     pub market: Box<Account<'info, Market>>,
     #[account(
         mut,
-        seeds = [
-            market.key().as_ref(),
-            order_for.market_outcome_index.to_string().as_ref(),
-        ],
-        bump,
-        constraint = order_against.market_outcome_index == order_for.market_outcome_index @ CoreError::MatchingMarketOutcomeMismatch,
+        has_one = market @ CoreError::MatchingMarketOutcomeMismatch,
+        constraint = market_outcome.index == order_for.market_outcome_index
+            @ CoreError::MatchingMarketOutcomeMismatch,
+        constraint = market_outcome.index == order_against.market_outcome_index
+            @ CoreError::MatchingMarketOutcomeMismatch,
     )]
     pub market_outcome: Box<Account<'info, MarketOutcome>>,
 

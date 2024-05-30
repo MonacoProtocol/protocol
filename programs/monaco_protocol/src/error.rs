@@ -4,8 +4,10 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
-    #[msg("MarketOutcome: update failed")]
-    MarketOutcomeUpdateError,
+    #[msg("MarketLiquidities: is full")]
+    MarketLiquiditiesIsFull,
+    #[msg("MarketLiquidities: update error")]
+    MarketLiquiditiesUpdateError,
 
     /*
     Order Creation
@@ -36,6 +38,8 @@ pub enum CoreError {
     CreationMarketMismatch,
     #[msg("Order Creation: purchaser mismatch")]
     CreationPurchaserMismatch,
+    #[msg("Order Creation: expired")]
+    CreationExpired,
 
     #[msg("Order Request Creation: request queue is full")]
     OrderRequestCreationQueueFull,
@@ -170,7 +174,7 @@ pub enum CoreError {
     #[msg("Core Matching: market price mismatch")]
     MatchingMarketPriceMismatch,
     #[msg("Core Matching: market matching pool mismatch")]
-    MatchingMarketMarketMatchingPoolMismatch,
+    MatchingMarketMatchingPoolMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
@@ -178,8 +182,6 @@ pub enum CoreError {
     MatchingRemainingStakeTooSmall,
     #[msg("Order Matching: remaining liquidity too small")]
     MatchingRemainingLiquidityTooSmall,
-    #[msg("Failed to update market: invalid arguments provided.")]
-    MarketDoesNotMatch,
     #[msg(
         "There was an attempt to add an item from a matching pool queue, but the queue was full."
     )]
@@ -224,8 +226,6 @@ pub enum CoreError {
     MatchingPoolIsEmpty,
     #[msg("Matching: matching pool head mismatch")]
     MatchingPoolHeadMismatch,
-    #[msg("Market Liquidities: is full")]
-    MarketLiquiditiesIsFull,
 
     /*
     Inplay

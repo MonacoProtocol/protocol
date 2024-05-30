@@ -956,7 +956,7 @@ describe("Matching Crank", () => {
       })
       .instruction();
 
-    await assertTransactionThrowsErrorCode(ix, "ConstraintSeeds");
+    await assertTransactionThrowsErrorCode(ix, "MatchingMarketOutcomeMismatch");
 
     // Check that the orders have not been matched.
     assert.deepEqual(
