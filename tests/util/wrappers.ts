@@ -1176,25 +1176,16 @@ export class MonacoMarket {
       makerOrder.purchaser,
     );
 
-    const [orderTradePk, orderOppositeTradePk] = (
-      await Promise.all([
-        findTradePda(
-          this.monaco.getRawProgram(),
-          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
-          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
-          makerOrder.forOutcome,
-        ),
-        findTradePda(
-          this.monaco.getRawProgram(),
-          makerOrder.forOutcome ? takerOrder.pk : makerOrderPk, // against
-          makerOrder.forOutcome ? makerOrderPk : takerOrder.pk, // for
-          !makerOrder.forOutcome,
-        ),
-      ])
-    ).map((result) => result.data.tradePk);
+    const [makerOrderTradePk, takerOrderTradePk] = await Promise.all([
+      findTradePda(this.monaco.getRawProgram(), makerOrderPk),
+      findTradePda(this.monaco.getRawProgram(), takerOrder.pk),
+    ]);
 
     const ix = await this.monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatch(
+        Array.from(makerOrderTradePk.data.distinctSeed),
+        Array.from(takerOrderTradePk.data.distinctSeed),
+      )
       .accounts({
         market: this.pk,
         marketEscrow: this.escrowPk,
@@ -1203,8 +1194,8 @@ export class MonacoMarket {
         makerOrder: makerOrderPk,
         marketPosition: await this.cacheMarketPositionPk(makerOrder.purchaser),
         purchaserToken: makerPurchaserTokenPk,
-        makerOrderTrade: orderTradePk,
-        takerOrderTrade: orderOppositeTradePk,
+        makerOrderTrade: makerOrderTradePk.data.tradePk,
+        takerOrderTrade: takerOrderTradePk.data.tradePk,
         crankOperator:
           crankOperatorKeypair instanceof Keypair
             ? crankOperatorKeypair.publicKey
@@ -1233,8 +1224,10 @@ export class MonacoMarket {
       remainingMatches,
       matchingPool: matchingPoolPk,
       makerOrder: makerOrderPk,
-      makerOrderTrade: orderTradePk,
-      takerOrderTrade: orderOppositeTradePk,
+      makerOrderTradeDistinctSeed: makerOrderTradePk.data.distinctSeed,
+      makerOrderTrade: makerOrderTradePk.data.tradePk,
+      takerOrderTradeDistinctSeed: takerOrderTradePk.data.distinctSeed,
+      takerOrderTrade: takerOrderTradePk.data.tradePk,
     };
   }
 

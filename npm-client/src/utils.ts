@@ -20,6 +20,7 @@ import {
   SignAndSendInstructionsBatchResponse,
   MarketAccountsForCreateOrder,
 } from "../types";
+import { v4 as uuid } from "uuid";
 
 /**
  * For the provided market, outcome, price and forOutcome condition - return all the necessary PDAs and account information required for order creation.
@@ -345,4 +346,15 @@ export async function confirmTransaction(
     response.addError(e);
   }
   return response.body;
+}
+
+/**
+ * Return a new seed 16 bytes long as Uint8Array
+ *
+ * @returns {Uint8Array}
+ */
+export function randomSeed16(): Uint8Array {
+  const buffer = new Uint8Array(16);
+  uuid(null, buffer, 0);
+  return buffer;
 }

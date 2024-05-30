@@ -123,11 +123,11 @@ pub struct OrderMatch {
 
 impl OrderMatch {
     pub const SIZE: usize = PUB_KEY_SIZE +  // pk
-    PUB_KEY_SIZE + // purchaser
+        PUB_KEY_SIZE + // purchaser
         BOOL_SIZE + //for_outcome
-         U16_SIZE + // outcome_index
-         F64_SIZE + // price
-         U64_SIZE; // stake
+        U16_SIZE + // outcome_index
+        F64_SIZE + // price
+        U64_SIZE; // stake
 
     pub fn new_unique() -> Self {
         OrderMatch {

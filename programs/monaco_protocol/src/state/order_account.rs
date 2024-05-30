@@ -64,3 +64,62 @@ pub enum OrderStatus {
     Cancelled,   // order cancelled
     Voided,      // order voided
 }
+
+#[cfg(test)]
+use crate::state::market_order_request_queue::OrderRequest;
+
+#[cfg(test)]
+pub fn mock_order_default() -> Order {
+    mock_order(Pubkey::new_unique(), 0, true, 0.0, 0, Pubkey::new_unique())
+}
+
+#[cfg(test)]
+pub fn mock_order_from_order_request(
+    market: Pubkey,
+    order_request: OrderRequest,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        market,
+        purchaser: order_request.purchaser,
+        market_outcome_index: order_request.market_outcome_index,
+        for_outcome: order_request.for_outcome,
+        stake: order_request.stake,
+        expected_price: order_request.expected_price,
+        stake_unmatched: order_request.stake,
+        voided_stake: 0_u64,
+        payout: 0_u64,
+        order_status: OrderStatus::Open,
+        product: order_request.product,
+        product_commission_rate: order_request.product_commission_rate,
+        creation_timestamp: 0,
+        payer,
+    }
+}
+
+#[cfg(test)]
+pub fn mock_order(
+    market: Pubkey,
+    market_outcome_index: u16,
+    for_outcome: bool,
+    expected_price: f64,
+    stake: u64,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        purchaser: Pubkey::new_unique(),
+        market,
+        market_outcome_index,
+        for_outcome,
+        order_status: OrderStatus::Open,
+        product: None,
+        product_commission_rate: 0.0,
+        stake,
+        voided_stake: 0,
+        expected_price,
+        creation_timestamp: 0,
+        stake_unmatched: stake,
+        payout: 0,
+        payer,
+    }
+}

@@ -62,8 +62,9 @@ fn is_winning_order(order: &Order, market: &Market) -> bool {
 mod tests {
     use super::*;
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
-    use crate::state::order_account::OrderStatus;
+    use crate::state::order_account::mock_order;
 
+    use crate::instructions::order::match_order_internal;
     use anchor_lang::prelude::Pubkey;
     use solana_program::clock::UnixTimestamp;
 
@@ -74,22 +75,15 @@ mod tests {
     #[test]
     fn test_settle_order_win_for_order() {
         // when
-        let mut order = Order {
-            market: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: true,
-            purchaser: Pubkey::new_unique(),
-            payer: Pubkey::new_unique(),
-            stake: 100000000,
-            expected_price: 2.10,
-            order_status: OrderStatus::Matched,
-            creation_timestamp: 0,
-            stake_unmatched: 100000000,
-            payout: 210000000,
-            voided_stake: 0,
-            product: None,
-            product_commission_rate: 0.0,
-        };
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            100_000_000,
+            Pubkey::new_unique(),
+        );
+        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -126,22 +120,15 @@ mod tests {
     #[test]
     fn test_settle_order_lose_for_order() {
         // when
-        let mut order = Order {
-            market: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: true,
-            purchaser: Pubkey::new_unique(),
-            payer: Pubkey::new_unique(),
-            stake: 100000000,
-            expected_price: 2.10,
-            order_status: OrderStatus::Matched,
-            creation_timestamp: 0,
-            stake_unmatched: 100000000,
-            payout: 210000000,
-            voided_stake: 0,
-            product: None,
-            product_commission_rate: 0.0,
-        };
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            100_000_000,
+            Pubkey::new_unique(),
+        );
+        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -178,22 +165,15 @@ mod tests {
     #[test]
     fn test_settle_order_win_against_order() {
         // when
-        let mut order = Order {
-            market: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            purchaser: Pubkey::new_unique(),
-            payer: Pubkey::new_unique(),
-            stake: 100000000,
-            expected_price: 2.10,
-            order_status: OrderStatus::Matched,
-            creation_timestamp: 0,
-            stake_unmatched: 100000000,
-            payout: 210000000,
-            voided_stake: 0,
-            product: None,
-            product_commission_rate: 0.0,
-        };
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            false,
+            2.10,
+            100000000,
+            Pubkey::new_unique(),
+        );
+        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -230,22 +210,15 @@ mod tests {
     #[test]
     fn test_settle_order_lose_against_order() {
         // when
-        let mut order = Order {
-            market: Pubkey::new_unique(),
-            market_outcome_index: 1,
-            for_outcome: false,
-            purchaser: Pubkey::new_unique(),
-            payer: Pubkey::new_unique(),
-            stake: 100000000,
-            expected_price: 2.10,
-            order_status: OrderStatus::Matched,
-            creation_timestamp: 0,
-            stake_unmatched: 100000000,
-            payout: 210000000,
-            voided_stake: 0,
-            product: None,
-            product_commission_rate: 0.0,
-        };
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            false,
+            2.10,
+            100000000,
+            Pubkey::new_unique(),
+        );
+        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),

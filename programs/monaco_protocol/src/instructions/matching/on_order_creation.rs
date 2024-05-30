@@ -13,7 +13,8 @@ pub fn on_order_creation(
     market_matching_queue: &mut MarketMatchingQueue,
     order_pk: &Pubkey,
     order: &mut Order,
-) -> Result<Vec<OrderMatch>> {
+) -> Result<Vec<(u64, f64)>> {
+    let liquidity_cross = false; // TODO temp
     let mut order_matches = Vec::with_capacity(MATCH_CAPACITY);
     let order_outcome = order.market_outcome_index;
 
@@ -35,36 +36,38 @@ pub fn on_order_creation(
                 break; // liquidity.price >= expected_price must be true
             }
 
-            let stake_matched = liquidity.liquidity.min(order.stake_unmatched);
+            let stake_matched;
+            if liquidity_cross {
+                stake_matched = 0; // TODO
+            } else {
+                stake_matched = liquidity.liquidity.min(order.stake_unmatched);
 
-            // record the match
-            let order_match = OrderMatch {
-                pk: *order_pk,
-                purchaser: order.purchaser.key(),
-                for_outcome: order.for_outcome,
-                outcome_index: order.market_outcome_index,
-                price: liquidity.price,
-                stake: stake_matched,
-            };
-            order_matches.push(order_match);
-            market_matching_queue
-                .matches
-                .enqueue(order_match)
-                .ok_or(MatchingQueueIsFull)?;
+                order_matches.push((stake_matched, liquidity.price));
 
-            order::match_order_internal(order, order_match.stake, order_match.price)?;
+                // record the match
+                let order_match = OrderMatch {
+                    pk: *order_pk,
+                    purchaser: order.purchaser.key(),
+                    for_outcome: order.for_outcome,
+                    outcome_index: order.market_outcome_index,
+                    price: liquidity.price,
+                    stake: stake_matched,
+                };
+                market_matching_queue
+                    .matches
+                    .enqueue(order_match)
+                    .ok_or(MatchingQueueIsFull)?;
+            }
+
+            order::match_order_internal(order, stake_matched, liquidity.price)?;
         }
 
         // remove matched liquidity
-        for order_match in &order_matches {
+        for (stake, price) in &order_matches {
             market_liquidities
-                .remove_liquidity_against(
-                    order_match.outcome_index,
-                    order_match.price,
-                    order_match.stake,
-                )
+                .remove_liquidity_against(order.market_outcome_index, *price, *stake)
                 .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
-            market_liquidities.update_stake_matched_total(order_match.stake)?;
+            market_liquidities.update_stake_matched_total(*stake)?;
         }
 
         // remainder is added to liquidities
@@ -94,36 +97,38 @@ pub fn on_order_creation(
                 break; // liquidity.price <= expected_price must be true
             }
 
-            let stake_matched = liquidity.liquidity.min(order.stake_unmatched);
+            let stake_matched;
+            if liquidity_cross {
+                stake_matched = 0; // TODO
+            } else {
+                stake_matched = liquidity.liquidity.min(order.stake_unmatched);
 
-            // record the match
-            let order_match = OrderMatch {
-                pk: *order_pk,
-                purchaser: order.purchaser.key(),
-                for_outcome: order.for_outcome,
-                outcome_index: order.market_outcome_index,
-                price: liquidity.price,
-                stake: stake_matched,
-            };
-            order_matches.push(order_match);
-            market_matching_queue
-                .matches
-                .enqueue(order_match)
-                .ok_or(MatchingQueueIsFull)?;
+                order_matches.push((stake_matched, liquidity.price));
 
-            order::match_order_internal(order, order_match.stake, order_match.price)?;
+                // record the match
+                let order_match = OrderMatch {
+                    pk: *order_pk,
+                    purchaser: order.purchaser.key(),
+                    for_outcome: order.for_outcome,
+                    outcome_index: order.market_outcome_index,
+                    price: liquidity.price,
+                    stake: stake_matched,
+                };
+                market_matching_queue
+                    .matches
+                    .enqueue(order_match)
+                    .ok_or(MatchingQueueIsFull)?;
+            }
+
+            order::match_order_internal(order, stake_matched, liquidity.price)?;
         }
 
         // remove matched liquidity
-        for order_match in &order_matches {
+        for (stake, price) in &order_matches {
             market_liquidities
-                .remove_liquidity_for(
-                    order_match.outcome_index,
-                    order_match.price,
-                    order_match.stake,
-                )
+                .remove_liquidity_for(order.market_outcome_index, *price, *stake)
                 .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
-            market_liquidities.update_stake_matched_total(order_match.stake)?;
+            market_liquidities.update_stake_matched_total(*stake)?;
         }
 
         // remainder is added to liquidities
@@ -838,32 +843,6 @@ mod test {
 
         assert_eq!(100_u64, order.stake_unmatched);
         assert_eq!(0_u64, order.payout);
-    }
-
-    fn mock_order(
-        market: Pubkey,
-        market_outcome_index: u16,
-        for_outcome: bool,
-        expected_price: f64,
-        stake: u64,
-        payer: Pubkey,
-    ) -> Order {
-        Order {
-            purchaser: Pubkey::new_unique(),
-            market,
-            market_outcome_index,
-            for_outcome,
-            order_status: OrderStatus::Open,
-            product: None,
-            product_commission_rate: 0.0,
-            expected_price,
-            stake,
-            stake_unmatched: stake,
-            voided_stake: 0_u64,
-            payout: 0_u64,
-            creation_timestamp: 0,
-            payer,
-        }
     }
 
     fn liquidities(liquidities: &Vec<MarketOutcomePriceLiquidity>) -> Vec<(f64, u64)> {
