@@ -117,6 +117,44 @@ impl MarketLiquidities {
         Ok(())
     }
 
+    pub fn set_liquidity_for_sources(
+        &mut self,
+        outcome: u16,
+        price: f64,
+        sources: Vec<LiquidityKey>,
+    ) -> Result<()> {
+        let liquidities = &mut self.liquidities_for;
+        let search_function = Self::sorter_for(outcome, price);
+
+        match liquidities.binary_search_by(search_function) {
+            Ok(index) => {
+                let liquidities_for_value = &mut liquidities[index];
+                liquidities_for_value.sources = sources;
+                Ok(())
+            }
+            Err(_) => Err(error!(CoreError::MarketLiquiditiesUpdateError)),
+        }
+    }
+
+    pub fn set_liquidity_against_sources(
+        &mut self,
+        outcome: u16,
+        price: f64,
+        sources: Vec<LiquidityKey>,
+    ) -> Result<()> {
+        let liquidities = &mut self.liquidities_against;
+        let search_function = Self::sorter_against(outcome, price);
+
+        match liquidities.binary_search_by(search_function) {
+            Ok(index) => {
+                let liquidities_for_value = &mut liquidities[index];
+                liquidities_for_value.sources = sources;
+                Ok(())
+            }
+            Err(_) => Err(error!(CoreError::MarketLiquiditiesUpdateError)),
+        }
+    }
+
     pub fn remove_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
         let liquidities = &mut self.liquidities_for;
         Self::remove_liquidity(liquidities, Self::sorter_for(outcome, price), liquidity)

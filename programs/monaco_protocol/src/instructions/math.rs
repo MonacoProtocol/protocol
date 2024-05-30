@@ -27,6 +27,20 @@ pub fn calculate_for_payout(stake: u64, price: f64) -> u64 {
     Decimal::from(stake).mul(price_decimal).to_u64().unwrap()
 }
 
+/// stake_cross = stake * price / price_cross
+pub fn calculate_stake_cross(stake: u64, price: f64, price_cross: f64) -> u64 {
+    let stake_matched_decimal = Decimal::from_u64(stake).unwrap();
+    let price_matched_decimal = price_to_decimal(price);
+    let price_cross_decimal = price_to_decimal(price_cross);
+
+    let stake_cross_decimal = stake_matched_decimal
+        .mul(price_matched_decimal)
+        .checked_div(price_cross_decimal)
+        .unwrap();
+
+    stake_cross_decimal.to_u64().unwrap()
+}
+
 pub fn price_precision_is_within_range(price: f64) -> Result<()> {
     let decimal = Decimal::from_f64(price).ok_or(CoreError::ArithmeticError)?;
     let decimal_with_scale = decimal.trunc_with_scale(3);
