@@ -122,7 +122,6 @@ describe("Order Matching Refunds 1", () => {
     );
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

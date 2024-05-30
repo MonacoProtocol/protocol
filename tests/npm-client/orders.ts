@@ -158,10 +158,8 @@ describe("Pending Orders by index and for order", () => {
     assert.deepEqual(preMatchResponseAgainst.data.pendingOrders.length, 1);
 
     // match orders and place an additional order
-    await Promise.all([
-      market.processMatchingQueue(),
-      market.forOrder(0, stakeSimple, prices[1], purchaser),
-    ]);
+    await market.processMatchingQueue();
+    await market.forOrder(0, stakeSimple, prices[1], purchaser);
     await new Promise((e) => setTimeout(e, 1000));
 
     const [postMatchResponseFor, postMatchResponseAgainst] = await Promise.all([

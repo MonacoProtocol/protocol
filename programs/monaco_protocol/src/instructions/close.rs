@@ -170,14 +170,7 @@ mod tests {
         });
 
         let matching_queue = &mut MatchingQueue::new(1);
-        matching_queue.enqueue(OrderMatch {
-            pk: Pubkey::new_unique(),
-            purchaser: Pubkey::new_unique(),
-            for_outcome: false,
-            outcome_index: 0,
-            price: 0.0,
-            stake: 0,
-        });
+        matching_queue.enqueue(OrderMatch::maker(false, 0, 0.0, 0));
         let request_queue = OrderRequestQueue::new(1);
 
         let result = close_market_queues(

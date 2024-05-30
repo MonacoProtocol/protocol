@@ -63,8 +63,6 @@ mod tests {
     use super::*;
     use crate::state::market_account::{MarketOrderBehaviour, MarketStatus};
     use crate::state::order_account::mock_order;
-
-    use crate::instructions::order::match_order_internal;
     use anchor_lang::prelude::Pubkey;
     use solana_program::clock::UnixTimestamp;
 
@@ -83,7 +81,9 @@ mod tests {
             100_000_000,
             Pubkey::new_unique(),
         );
-        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
+        order
+            .match_stake_unmatched(100_000_000, 2.10)
+            .expect("test setup");
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -128,7 +128,9 @@ mod tests {
             100_000_000,
             Pubkey::new_unique(),
         );
-        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
+        order
+            .match_stake_unmatched(100_000_000, 2.10)
+            .expect("test setup");
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -173,7 +175,9 @@ mod tests {
             100000000,
             Pubkey::new_unique(),
         );
-        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
+        order
+            .match_stake_unmatched(100_000_000, 2.10)
+            .expect("test setup");
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),
@@ -218,7 +222,9 @@ mod tests {
             100000000,
             Pubkey::new_unique(),
         );
-        match_order_internal(&mut order, 100_000_000, 2.10).unwrap();
+        order
+            .match_stake_unmatched(100_000_000, 2.10)
+            .expect("test setup");
         let market = Market {
             authority: Pubkey::new_unique(),
             event_account: Pubkey::new_unique(),

@@ -23,32 +23,26 @@ impl MarketLiquidities {
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
 
-    pub fn get_liquidity_for(&self, outcome: u16, price: f64) -> MarketOutcomePriceLiquidity {
-        match self
-            .liquidities_for
+    pub fn get_liquidity_for(
+        &self,
+        outcome: u16,
+        price: f64,
+    ) -> Option<&MarketOutcomePriceLiquidity> {
+        self.liquidities_for
             .binary_search_by(Self::sorter_for(outcome, price))
-        {
-            Ok(index) => self.liquidities_for[index],
-            Err(_) => MarketOutcomePriceLiquidity {
-                outcome,
-                price,
-                liquidity: 0,
-            },
-        }
+            .ok()
+            .map(|index| &self.liquidities_for[index])
     }
 
-    pub fn get_liquidity_against(&self, outcome: u16, price: f64) -> MarketOutcomePriceLiquidity {
-        match self
-            .liquidities_against
+    pub fn get_liquidity_against(
+        &self,
+        outcome: u16,
+        price: f64,
+    ) -> Option<&MarketOutcomePriceLiquidity> {
+        self.liquidities_against
             .binary_search_by(Self::sorter_against(outcome, price))
-        {
-            Ok(index) => self.liquidities_against[index],
-            Err(_) => MarketOutcomePriceLiquidity {
-                outcome,
-                price,
-                liquidity: 0,
-            },
-        }
+            .ok()
+            .map(|index| &self.liquidities_against[index])
     }
 
     pub fn add_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
@@ -113,6 +107,7 @@ impl MarketLiquidities {
                             outcome,
                             price,
                             liquidity,
+                            sources: vec![],
                         },
                     )
                 }
@@ -222,15 +217,25 @@ impl MarketLiquidities {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
+pub struct LiquidityKey {
+    pub outcome: u16,
+    pub price: f64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
 pub struct MarketOutcomePriceLiquidity {
     pub outcome: u16,
     pub price: f64,
     pub liquidity: u64,
+    pub sources: Vec<LiquidityKey>,
 }
 
 impl MarketOutcomePriceLiquidity {
-    pub const SIZE: usize = U16_SIZE + F64_SIZE + U64_SIZE;
+    pub const SIZE: usize = U16_SIZE // outcome
+        + F64_SIZE // price
+        + U64_SIZE // liquidity
+        + vec_size(U16_SIZE + F64_SIZE, 3); // sources: sized to work for 3 and 4 way markets
 }
 
 #[cfg(test)]
@@ -240,6 +245,16 @@ pub fn mock_market_liquidities(market_pk: Pubkey) -> MarketLiquidities {
         liquidities_for: Vec::new(),
         liquidities_against: Vec::new(),
         stake_matched_total: 0_u64,
+    }
+}
+
+#[cfg(test)]
+pub fn mock_liquidity(outcome: u16, price: f64, liquidity: u64) -> MarketOutcomePriceLiquidity {
+    MarketOutcomePriceLiquidity {
+        outcome,
+        price,
+        liquidity,
+        sources: Vec::new(),
     }
 }
 
@@ -283,52 +298,24 @@ mod total_exposure_tests {
             .add_liquidity_against(2, 2.111, 1501)
             .unwrap();
 
-        let expected_for: Vec<MarketOutcomePriceLiquidity> = vec![
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.111,
-                liquidity: 1001,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.112,
-                liquidity: 499,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 1,
-                price: 2.111,
-                liquidity: 2001,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 2,
-                price: 2.111,
-                liquidity: 3001,
-            },
-        ];
-        assert_eq!(expected_for, market_liquidities.liquidities_for);
-        let expected_against: Vec<MarketOutcomePriceLiquidity> = vec![
-            MarketOutcomePriceLiquidity {
-                outcome: 2,
-                price: 2.111,
-                liquidity: 3001,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 1,
-                price: 2.111,
-                liquidity: 2001,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.112,
-                liquidity: 499,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.111,
-                liquidity: 1001,
-            },
-        ];
-        assert_eq!(expected_against, market_liquidities.liquidities_against);
+        assert_eq!(
+            vec![
+                mock_liquidity(0, 2.111, 1001),
+                mock_liquidity(0, 2.112, 499),
+                mock_liquidity(1, 2.111, 2001),
+                mock_liquidity(2, 2.111, 3001),
+            ],
+            market_liquidities.liquidities_for
+        );
+        assert_eq!(
+            vec![
+                mock_liquidity(2, 2.111, 3001),
+                mock_liquidity(1, 2.111, 2001),
+                mock_liquidity(0, 2.112, 499),
+                mock_liquidity(0, 2.111, 1001),
+            ],
+            market_liquidities.liquidities_against
+        );
     }
 
     #[test]
@@ -351,38 +338,14 @@ mod total_exposure_tests {
         let mut market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
             liquidities_for: vec![
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.111,
-                    liquidity: 1001,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 1,
-                    price: 2.111,
-                    liquidity: 2001,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 2,
-                    price: 2.111,
-                    liquidity: 3001,
-                },
+                mock_liquidity(0, 2.111, 1001),
+                mock_liquidity(1, 2.111, 2001),
+                mock_liquidity(2, 2.111, 3001),
             ],
             liquidities_against: vec![
-                MarketOutcomePriceLiquidity {
-                    outcome: 2,
-                    price: 2.111,
-                    liquidity: 3001,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 1,
-                    price: 2.111,
-                    liquidity: 2001,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.111,
-                    liquidity: 1001,
-                },
+                mock_liquidity(2, 2.111, 3001),
+                mock_liquidity(1, 2.111, 2001),
+                mock_liquidity(0, 2.111, 1001),
             ],
             stake_matched_total: 0_u64,
         };
@@ -407,42 +370,22 @@ mod total_exposure_tests {
             .remove_liquidity_against(2, 2.111, 200)
             .unwrap();
 
-        let expected_for: Vec<MarketOutcomePriceLiquidity> = vec![
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.111,
-                liquidity: 801,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 1,
-                price: 2.111,
-                liquidity: 1801,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 2,
-                price: 2.111,
-                liquidity: 2801,
-            },
-        ];
-        assert_eq!(expected_for, market_liquidities.liquidities_for);
-        let expected_against: Vec<MarketOutcomePriceLiquidity> = vec![
-            MarketOutcomePriceLiquidity {
-                outcome: 2,
-                price: 2.111,
-                liquidity: 2801,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 1,
-                price: 2.111,
-                liquidity: 1801,
-            },
-            MarketOutcomePriceLiquidity {
-                outcome: 0,
-                price: 2.111,
-                liquidity: 801,
-            },
-        ];
-        assert_eq!(expected_against, market_liquidities.liquidities_against);
+        assert_eq!(
+            vec![
+                mock_liquidity(0, 2.111, 801),
+                mock_liquidity(1, 2.111, 1801),
+                mock_liquidity(2, 2.111, 2801),
+            ],
+            market_liquidities.liquidities_for
+        );
+        assert_eq!(
+            vec![
+                mock_liquidity(2, 2.111, 2801),
+                mock_liquidity(1, 2.111, 1801),
+                mock_liquidity(0, 2.111, 801),
+            ],
+            market_liquidities.liquidities_against
+        );
     }
 
     #[test]
@@ -450,26 +393,10 @@ mod total_exposure_tests {
         let market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
             liquidities_for: vec![
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.30,
-                    liquidity: 1001,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.31,
-                    liquidity: 1002,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.32,
-                    liquidity: 1003,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.33,
-                    liquidity: 1004,
-                },
+                mock_liquidity(0, 2.30, 1001),
+                mock_liquidity(0, 2.31, 1002),
+                mock_liquidity(0, 2.32, 1003),
+                mock_liquidity(0, 2.33, 1004),
             ],
             liquidities_against: vec![],
             stake_matched_total: 0_u64,
@@ -477,12 +404,18 @@ mod total_exposure_tests {
 
         assert_eq!(
             1002,
-            market_liquidities.get_liquidity_for(0, 2.31).liquidity
+            market_liquidities
+                .get_liquidity_for(0, 2.31)
+                .unwrap()
+                .liquidity
         );
-        assert_eq!(0, market_liquidities.get_liquidity_for(0, 2.315).liquidity);
+        assert_eq!(None, market_liquidities.get_liquidity_for(0, 2.315));
         assert_eq!(
             1003,
-            market_liquidities.get_liquidity_for(0, 2.32).liquidity
+            market_liquidities
+                .get_liquidity_for(0, 2.32)
+                .unwrap()
+                .liquidity
         );
     }
 
@@ -492,41 +425,28 @@ mod total_exposure_tests {
             market: Pubkey::default(),
             liquidities_for: vec![],
             liquidities_against: vec![
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.33,
-                    liquidity: 1004,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.32,
-                    liquidity: 1003,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.31,
-                    liquidity: 1002,
-                },
-                MarketOutcomePriceLiquidity {
-                    outcome: 0,
-                    price: 2.30,
-                    liquidity: 1001,
-                },
+                mock_liquidity(0, 2.33, 1004),
+                mock_liquidity(0, 2.32, 1003),
+                mock_liquidity(0, 2.31, 1002),
+                mock_liquidity(0, 2.30, 1001),
             ],
             stake_matched_total: 0_u64,
         };
 
         assert_eq!(
             1002,
-            market_liquidities.get_liquidity_against(0, 2.31).liquidity
+            market_liquidities
+                .get_liquidity_against(0, 2.31)
+                .unwrap()
+                .liquidity
         );
-        assert_eq!(
-            0,
-            market_liquidities.get_liquidity_against(0, 2.315).liquidity
-        );
+        assert_eq!(None, market_liquidities.get_liquidity_against(0, 2.315));
         assert_eq!(
             1003,
-            market_liquidities.get_liquidity_against(0, 2.32).liquidity
+            market_liquidities
+                .get_liquidity_against(0, 2.32)
+                .unwrap()
+                .liquidity
         );
     }
 }

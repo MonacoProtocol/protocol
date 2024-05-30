@@ -291,45 +291,47 @@ pub mod monaco_protocol {
     }
 
     #[allow(unused_variables)]
-    pub fn process_order_match(
-        ctx: Context<ProcessOrderMatch>,
-        maker_order_trade_seed: [u8; 16],
-        taker_order_trade_seed: [u8; 16],
+    pub fn process_order_match_taker(
+        ctx: Context<ProcessOrderMatchTaker>,
+        order_trade_seed: [u8; 16],
     ) -> Result<()> {
-        let stake_unmatched = ctx.accounts.maker_order.stake_unmatched;
+        instructions::matching::on_order_match_taker(
+            &ctx.accounts.market.key(),
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.market_matching_queue,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.order_trade,
+            &ctx.accounts.crank_operator.key(),
+        )?;
 
-        // if there's nothing to match close the trades
-        if stake_unmatched == 0 {
-            ctx.accounts
-                .taker_order_trade
-                .close(ctx.accounts.crank_operator.to_account_info())?;
-            ctx.accounts
-                .maker_order_trade
-                .close(ctx.accounts.crank_operator.to_account_info())?;
+        Ok(())
+    }
 
-        // otherwise just do the matching
-        } else {
-            let refund_amount = instructions::matching::on_order_match(
-                &ctx.accounts.market.key(),
-                &mut ctx.accounts.market,
-                &mut ctx.accounts.market_matching_queue,
-                &mut ctx.accounts.market_matching_pool,
-                &ctx.accounts.maker_order.key(),
-                &mut ctx.accounts.maker_order,
-                &mut ctx.accounts.market_position,
-                &mut ctx.accounts.maker_order_trade,
-                &mut ctx.accounts.taker_order_trade,
-                &ctx.accounts.crank_operator.key(),
-            )?;
+    #[allow(unused_variables)]
+    pub fn process_order_match_maker(
+        ctx: Context<ProcessOrderMatchMaker>,
+        order_trade_seed: [u8; 16],
+    ) -> Result<()> {
+        let refund_amount = instructions::matching::on_order_match_maker(
+            &ctx.accounts.market.key(),
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.market_matching_queue,
+            &mut ctx.accounts.market_matching_pool,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+            &mut ctx.accounts.order_trade,
+            &ctx.accounts.crank_operator.key(),
+        )?;
 
-            transfer::transfer_from_market_escrow(
-                &ctx.accounts.market_escrow,
-                &ctx.accounts.purchaser_token,
-                &ctx.accounts.token_program,
-                &ctx.accounts.market,
-                refund_amount,
-            )?;
-        }
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
 
         Ok(())
     }
@@ -359,8 +361,8 @@ pub mod monaco_protocol {
 
         if for_stake_unmatched == 0
             || against_stake_unmatched == 0
-            || liquidity_for.liquidity < against_stake_unmatched
-            || liquidity_against.liquidity < for_stake_unmatched
+            || liquidity_for.map_or(0_u64, |x| x.liquidity) < against_stake_unmatched
+            || liquidity_against.map_or(0_u64, |x| x.liquidity) < for_stake_unmatched
         {
             ctx.accounts
                 .trade_for

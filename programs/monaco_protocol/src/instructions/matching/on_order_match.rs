@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::instructions::market_position::update_product_commission_contributions;
 use crate::instructions::matching::create_trade::create_trade;
-use crate::instructions::{calculate_risk_from_stake, current_timestamp, market_position, order};
+use crate::instructions::{calculate_risk_from_stake, current_timestamp, market_position};
 
 use crate::error::CoreError;
 use crate::events::trade::TradeEvent;
@@ -15,97 +15,124 @@ use crate::state::trade_account::Trade;
 
 use super::update_matching_pool_with_matched_order;
 
-pub fn on_order_match(
+pub fn on_order_match_taker(
+    market_pk: &Pubkey,
+    market: &mut Market,
+    market_matching_queue: &mut MarketMatchingQueue,
+    order_pk: &Pubkey,
+    order: &mut Order,
+    order_trade: &mut Trade,
+    payer: &Pubkey,
+) -> Result<()> {
+    let now = current_timestamp();
+
+    match market_matching_queue.matches.peek_mut() {
+        None => Err(error!(CoreError::MatchingQueueIsEmpty)),
+        Some(order_match) => {
+            let matched_stake = order_match.stake;
+            let matched_price = order_match.price;
+
+            create_trade(
+                order_trade,
+                &order.purchaser,
+                &order.market,
+                order_pk,
+                order.market_outcome_index,
+                order.for_outcome,
+                matched_stake,
+                matched_price,
+                now,
+                *payer,
+            );
+            market.increment_unclosed_accounts_count()?;
+
+            emit!(TradeEvent {
+                amount: matched_stake,
+                price: matched_price,
+                market: *market_pk,
+            });
+
+            // dequeue empty matches (needs to be last due to borrowing)
+            market_matching_queue.matches.dequeue();
+
+            Ok(())
+        }
+    }
+}
+
+pub fn on_order_match_maker(
     market_pk: &Pubkey,
     market: &mut Market,
     market_matching_queue: &mut MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
-    maker_order_pk: &Pubkey,
-    maker_order: &mut Order,
+    order_pk: &Pubkey,
+    order: &mut Order,
     market_position: &mut MarketPosition,
-    maker_order_trade: &mut Trade,
-    taker_order_trade: &mut Trade,
+    order_trade: &mut Trade,
     payer: &Pubkey,
 ) -> Result<u64> {
     let now = current_timestamp();
 
     match market_matching_queue.matches.peek_mut() {
         None => Err(error!(CoreError::MatchingQueueIsEmpty)),
-        Some(taker_order) => {
-            // determine matched stake
-            let stake = maker_order.stake_unmatched.min(taker_order.stake);
+        Some(order_match) => {
+            let matched_stake = order.stake_unmatched.min(order_match.stake);
+            let matched_price = order_match.price;
 
             // update order
-            order::match_order_internal(maker_order, stake, taker_order.price)?;
+            order.match_stake_unmatched(matched_stake, matched_price)?;
             let refund = market_position::update_on_order_match(
                 market_position,
-                maker_order,
-                stake,
-                taker_order.price,
+                order,
+                matched_stake,
+                matched_price,
             )?;
             update_matching_pool_with_matched_order(
                 market_matching_pool,
-                stake,
-                *maker_order_pk,
-                maker_order.stake_unmatched == 0_u64,
+                matched_stake,
+                *order_pk,
+                order.stake_unmatched == 0_u64,
             )?;
 
-            // update match
-            taker_order.stake = taker_order
+            // update order match
+            order_match.stake = order_match
                 .stake
-                .checked_sub(stake)
+                .checked_sub(matched_stake)
                 .ok_or(CoreError::MatchingMatchedStakeCalculationError)?;
 
             // update product commission tracking for matched risk
             update_product_commission_contributions(
                 market_position,
-                maker_order,
-                match maker_order.for_outcome {
-                    true => stake,
-                    false => calculate_risk_from_stake(stake, taker_order.price),
+                order,
+                match order.for_outcome {
+                    true => matched_stake,
+                    false => calculate_risk_from_stake(matched_stake, matched_price),
                 },
             )?;
 
-            // store trades
+            // store maker trade
             create_trade(
-                maker_order_trade,
-                &maker_order.purchaser,
-                &maker_order.market,
-                maker_order_pk,
-                maker_order.market_outcome_index,
-                maker_order.for_outcome,
-                stake,
-                taker_order.price,
+                order_trade,
+                &order.purchaser,
+                &order.market,
+                order_pk,
+                order.market_outcome_index,
+                order.for_outcome,
+                matched_stake,
+                matched_price,
                 now,
                 *payer,
             );
             market.increment_unclosed_accounts_count()?;
 
-            if taker_order_trade.stake == 0 {
-                // prevent duplicates
-                create_trade(
-                    taker_order_trade,
-                    &taker_order.purchaser,
-                    &maker_order.market,
-                    &taker_order.pk,
-                    taker_order.outcome_index,
-                    taker_order.for_outcome,
-                    stake,
-                    taker_order.price,
-                    now,
-                    *payer,
-                );
-                market.increment_unclosed_accounts_count()?;
-
-                emit!(TradeEvent {
-                    amount: stake,
-                    price: taker_order.price,
-                    market: *market_pk,
-                });
-            }
+            emit!(TradeEvent {
+                amount: matched_stake,
+                price: matched_price,
+                market: *market_pk,
+            });
 
             // dequeue empty matches (needs to be last due to borrowing)
-            if taker_order.stake == 0_u64 {
+            if order_match.stake == 0_u64 {
                 market_matching_queue.matches.dequeue();
             }
 
@@ -175,9 +202,8 @@ mod test {
         };
 
         let mut maker_order_trade = Trade::default();
-        let mut taker_order_trade = Trade::default();
 
-        let on_order_match_testable_result = on_order_match(
+        let on_order_match_testable_result = on_order_match_maker(
             &market_pk,
             &mut market,
             &mut market_matching_queue,
@@ -186,7 +212,6 @@ mod test {
             &mut order,
             &mut market_position,
             &mut maker_order_trade,
-            &mut taker_order_trade,
             &payer_pk,
         );
         assert!(on_order_match_testable_result.is_err());
@@ -209,10 +234,6 @@ mod test {
         assert_eq!(false, maker_order_trade.for_outcome); // default value
         assert_eq!(0_u64, maker_order_trade.stake); // default value
         assert_eq!(0.0_f64, maker_order_trade.price); // default value
-
-        assert_eq!(false, taker_order_trade.for_outcome); // default value
-        assert_eq!(0_u64, taker_order_trade.stake); // default value
-        assert_eq!(0.0_f64, taker_order_trade.price); // default value
     }
 
     #[test]
@@ -263,19 +284,16 @@ mod test {
             market: market_pk,
             matches: MatchingQueue::new(10),
         };
-        market_matching_queue.matches.enqueue(OrderMatch {
-            for_outcome: true,
-            outcome_index: market_outcome_index,
-            price: matched_price,
-            stake: matched_stake,
-            pk: Pubkey::new_unique(),
-            purchaser: Pubkey::new_unique(),
-        });
+        market_matching_queue.matches.enqueue(OrderMatch::maker(
+            true,
+            market_outcome_index,
+            matched_price,
+            matched_stake,
+        ));
 
         let mut maker_order_trade = Trade::default();
-        let mut taker_order_trade = Trade::default();
 
-        let on_order_match_testable_result = on_order_match(
+        let on_order_match_testable_result = on_order_match_maker(
             &market_pk,
             &mut market,
             &mut market_matching_queue,
@@ -284,7 +302,6 @@ mod test {
             &mut order,
             &mut market_position,
             &mut maker_order_trade,
-            &mut taker_order_trade,
             &payer_pk,
         );
         assert!(on_order_match_testable_result.is_ok());
@@ -303,10 +320,6 @@ mod test {
         assert_eq!(false, maker_order_trade.for_outcome);
         assert_eq!(10_u64, maker_order_trade.stake);
         assert_eq!(2.2_f64, maker_order_trade.price);
-
-        assert_eq!(true, taker_order_trade.for_outcome);
-        assert_eq!(10_u64, taker_order_trade.stake);
-        assert_eq!(2.2_f64, taker_order_trade.price);
     }
 
     #[test]
@@ -357,19 +370,16 @@ mod test {
             market: market_pk,
             matches: MatchingQueue::new(10),
         };
-        market_matching_queue.matches.enqueue(OrderMatch {
-            for_outcome: true,
-            outcome_index: market_outcome_index,
-            price: matched_price,
-            stake: matched_stake,
-            pk: Pubkey::new_unique(),
-            purchaser: Pubkey::new_unique(),
-        });
+        market_matching_queue.matches.enqueue(OrderMatch::maker(
+            true,
+            market_outcome_index,
+            matched_price,
+            matched_stake,
+        ));
 
         let mut maker_order_trade = Trade::default();
-        let mut taker_order_trade = Trade::default();
 
-        let on_order_match_testable_result = on_order_match(
+        let on_order_match_testable_result = on_order_match_maker(
             &market_pk,
             &mut market,
             &mut market_matching_queue,
@@ -378,7 +388,6 @@ mod test {
             &mut order,
             &mut market_position,
             &mut maker_order_trade,
-            &mut taker_order_trade,
             &payer_pk,
         );
         assert!(on_order_match_testable_result.is_ok());
@@ -397,10 +406,6 @@ mod test {
         assert_eq!(false, maker_order_trade.for_outcome);
         assert_eq!(10_u64, maker_order_trade.stake);
         assert_eq!(2.2_f64, maker_order_trade.price);
-
-        assert_eq!(true, taker_order_trade.for_outcome);
-        assert_eq!(10_u64, taker_order_trade.stake);
-        assert_eq!(2.2_f64, taker_order_trade.price);
     }
 
     fn mock_market() -> Market {

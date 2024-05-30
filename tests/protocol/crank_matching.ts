@@ -99,7 +99,10 @@ describe("Matching Crank", () => {
     const { market, purchaser, forOrderPk, againstOrderPk } =
       await setupMatchedOrders(monaco, outcome, price, stake);
 
-    const processMatchingQueueResponse = await market.processMatchingQueue();
+    const processMatchingQueue1Response =
+      await market.processMatchingQueueOnce();
+    const processMatchingQueue2Response =
+      await market.processMatchingQueueOnce();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -127,10 +130,10 @@ describe("Matching Crank", () => {
     ).data.stakeInteger.toNumber();
 
     const againstTrade = await monaco.fetchTrade(
-      processMatchingQueueResponse.takerOrderTrade,
+      processMatchingQueue2Response.orderTrade,
     );
     const forTrade = await monaco.fetchTrade(
-      processMatchingQueueResponse.makerOrderTrade,
+      processMatchingQueue1Response.orderTrade,
     );
 
     assert.deepEqual(
@@ -222,7 +225,10 @@ describe("Matching Crank", () => {
       ],
     );
 
-    const processMatchingQueueResponse = await market.processMatchingQueue();
+    const processMatchingQueue1Response =
+      await market.processMatchingQueueOnce();
+    const processMatchingQueue2Response =
+      await market.processMatchingQueueOnce();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -252,10 +258,10 @@ describe("Matching Crank", () => {
     ).data.stakeInteger.toNumber();
 
     const againstTrade = await monaco.fetchTrade(
-      processMatchingQueueResponse.takerOrderTrade,
+      processMatchingQueue2Response.orderTrade,
     );
     const forTrade = await monaco.fetchTrade(
-      processMatchingQueueResponse.makerOrderTrade,
+      processMatchingQueue1Response.orderTrade,
     );
 
     assert.deepEqual(
@@ -1134,7 +1140,8 @@ describe("Matching Crank", () => {
     );
 
     // CRANK 1
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     assert.deepEqual(
       await Promise.all([
@@ -1164,7 +1171,8 @@ describe("Matching Crank", () => {
     );
 
     // CRANK 2
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     assert.deepEqual(
       await Promise.all([
@@ -1194,7 +1202,8 @@ describe("Matching Crank", () => {
     );
 
     // CRANK 3
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     assert.deepEqual(
       await Promise.all([
@@ -1224,7 +1233,8 @@ describe("Matching Crank", () => {
     );
 
     // CRANK 4
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     assert.deepEqual(
       await Promise.all([
@@ -1388,7 +1398,6 @@ describe("Matching Crank", () => {
     );
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1473,7 +1482,6 @@ describe("Matching Crank", () => {
     );
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     // Check that the orders have been matched.
     assert.deepEqual(
@@ -1554,7 +1562,6 @@ describe("Matching Crank", () => {
       ],
     );
 
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     // Check that the orders have been matched.

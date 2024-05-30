@@ -26,14 +26,12 @@ describe("Order Settlement Payment 3", () => {
     orderPks.push(await market.againstOrder(outcome, 200, 2.01, purchaser)); // 2
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 100, 2.0, purchaser)); // 3
     orderPks.push(await market.againstOrder(outcome, 200, 1.99, purchaser)); // 4
     orderPks.push(await market.forOrder(outcome, 100, 2.01, purchaser)); // 5
     orderPks.push(await market.forOrder(outcome, 250, 1.97, purchaser)); // 6
 
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     orderPks.push(await market.againstOrder(outcome, 100, 2, purchaser)); // 7
@@ -43,7 +41,6 @@ describe("Order Settlement Payment 3", () => {
 
     orderPks.push(await market.forOrder(outcome, 250, 1.99, purchaser)); // 9
 
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     // All orders are created
@@ -168,12 +165,6 @@ describe("Order Settlement Payment 3", () => {
       ],
     );
 
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     // All orders are matched
