@@ -1,11 +1,9 @@
-use std::cmp::Ordering;
-use std::string::ToString;
-
-use anchor_lang::prelude::*;
-
 use crate::error::CoreError;
 use crate::state::market_account::MarketOrderBehaviour;
 use crate::state::type_size::*;
+use anchor_lang::prelude::*;
+use std::cmp::Ordering;
+use std::string::ToString;
 
 #[account]
 pub struct MarketLiquidities {
@@ -155,6 +153,64 @@ impl MarketLiquidities {
         }
     }
 
+    pub fn set_liquidity_for(
+        &mut self,
+        outcome: u16,
+        price: f64,
+        liquidity: u64,
+        sources: Vec<LiquidityKey>,
+    ) {
+        Self::set_liquidity(
+            &mut self.liquidities_for,
+            Self::sorter_for(outcome, price),
+            outcome,
+            price,
+            liquidity,
+            sources,
+        )
+    }
+
+    pub fn set_liquidity_against(
+        &mut self,
+        outcome: u16,
+        price: f64,
+        liquidity: u64,
+        sources: Vec<LiquidityKey>,
+    ) {
+        Self::set_liquidity(
+            &mut self.liquidities_against,
+            Self::sorter_against(outcome, price),
+            outcome,
+            price,
+            liquidity,
+            sources,
+        )
+    }
+
+    fn set_liquidity(
+        liquidities: &mut Vec<MarketOutcomePriceLiquidity>,
+        search_function: impl FnMut(&MarketOutcomePriceLiquidity) -> Ordering,
+        outcome: u16,
+        price: f64,
+        liquidity: u64,
+        sources: Vec<LiquidityKey>,
+    ) {
+        match liquidities.binary_search_by(search_function) {
+            Ok(index) => {
+                liquidities[index].liquidity = liquidity;
+            }
+            Err(index) => liquidities.insert(
+                index,
+                MarketOutcomePriceLiquidity {
+                    outcome,
+                    price,
+                    liquidity,
+                    sources,
+                },
+            ),
+        }
+    }
+
     pub fn remove_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
         let liquidities = &mut self.liquidities_for;
         Self::remove_liquidity(liquidities, Self::sorter_for(outcome, price), liquidity)
@@ -259,6 +315,12 @@ impl MarketLiquidities {
 pub struct LiquidityKey {
     pub outcome: u16,
     pub price: f64,
+}
+
+impl LiquidityKey {
+    pub fn new(outcome: u16, price: f64) -> LiquidityKey {
+        LiquidityKey { outcome, price }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]

@@ -621,6 +621,12 @@ pub struct ProcessOrderMatchMaker<'info> {
 }
 
 #[derive(Accounts)]
+pub struct UpdateMarketLiquidities<'info> {
+    #[account(mut)]
+    pub market_liquidities: Account<'info, MarketLiquidities>,
+}
+
+#[derive(Accounts)]
 #[instruction(
     trade_for_seed: [u8; 16],
     trade_against_seed: [u8; 16],

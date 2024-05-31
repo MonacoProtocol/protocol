@@ -130,6 +130,10 @@ export class Monaco {
     return await this.program.account.marketOrderRequestQueue.fetch(pk);
   }
 
+  async fetchMarketLiquidities(pk: PublicKey) {
+    return await this.program.account.marketLiquidities.fetch(pk);
+  }
+
   async fetchMarketMatchingQueue(pk: PublicKey) {
     return await this.program.account.marketMatchingQueue.fetch(pk);
   }
@@ -202,6 +206,38 @@ export class Monaco {
       marketOutcomeIndex: orderRequest.marketOutcomeIndex,
       expectedPrice: orderRequest.expectedPrice,
       delayExpirationTimestamp: orderRequest.delayExpirationTimestamp,
+    };
+  }
+
+  async getMarketLiquidities(
+    marketLiquiditiesPk: PublicKey,
+    decimals = TOKEN_DECIMALS,
+  ) {
+    const decimalsMultiplier = 10 ** decimals;
+    const marketLiquidities = await this.fetchMarketLiquidities(
+      marketLiquiditiesPk,
+    );
+
+    const liquiditiesFor = marketLiquidities.liquiditiesFor.map((l) => {
+      return {
+        outcome: l.outcome,
+        price: l.price,
+        liquidity: l.liquidity.toNumber() / decimalsMultiplier,
+        sources: l.sources,
+      };
+    });
+    const liquiditiesAgainst = marketLiquidities.liquiditiesAgainst.map((l) => {
+      return {
+        outcome: l.outcome,
+        price: l.price,
+        liquidity: l.liquidity.toNumber() / decimalsMultiplier,
+        sources: l.sources,
+      };
+    });
+
+    return {
+      liquiditiesFor,
+      liquiditiesAgainst,
     };
   }
 
@@ -805,6 +841,10 @@ export class MonacoMarket {
     );
   }
 
+  async getMarketLiquidities() {
+    return await this.monaco.getMarketLiquidities(this.liquiditiesPk);
+  }
+
   async getMarketMatchingQueueHead() {
     return await this.monaco.getMarketMatchingQueueHead(this.matchingQueuePk);
   }
@@ -1030,6 +1070,27 @@ export class MonacoMarket {
     }
 
     return orderPks;
+  }
+
+  async updateMarketLiquiditiesWithCrossLiquidity(
+    sourceForOutcome: boolean,
+    sourceLiquidities: { outcome: number; price: number }[],
+    crossLiquidity: { outcome: number; price: number },
+  ) {
+    await this.monaco.program.methods
+      .updateMarketLiquiditiesWithCrossLiquidity(
+        sourceForOutcome,
+        sourceLiquidities,
+        crossLiquidity,
+      )
+      .accounts({
+        marketLiquidities: this.liquiditiesPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
   }
 
   async dequeueOrderRequest() {

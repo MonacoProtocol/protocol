@@ -1,9 +1,8 @@
-use std::ops::{Div, Mul, Sub};
-
 use crate::error::CoreError;
 use anchor_lang::{require, Result};
-use rust_decimal::prelude::{FromPrimitive, One, ToPrimitive};
+use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
+use std::ops::{Div, Mul, Sub};
 
 /// Converts at most precision 3 float to an equivalent Decimal - e.g., converting price (f64) to Decimal
 fn price_to_decimal(price: f64) -> Decimal {
@@ -35,10 +34,41 @@ pub fn calculate_stake_cross(stake: u64, price: f64, price_cross: f64) -> u64 {
 
     let stake_cross_decimal = stake_matched_decimal
         .mul(price_matched_decimal)
-        .checked_div(price_cross_decimal)
-        .unwrap();
+        .div(price_cross_decimal);
 
     stake_cross_decimal.to_u64().unwrap()
+}
+
+/// 2ways: price_cross = price_a / (price_a - 1)
+/// 3ways: price_cross = price_ab / (price_ab - price_a - price_b)
+/// 4ways: price_cross = price_abc / (price_abc - price_ab - price_bc - price_ac)
+pub fn calculate_price_cross(prices: &[f64]) -> Option<f64> {
+    let mut full = Decimal::ONE;
+    let mut partials = vec![Decimal::ONE; prices.len()];
+
+    for (price_index, price) in prices.iter().enumerate() {
+        let price_decimal = price_to_decimal(*price);
+
+        full = full.mul(price_decimal);
+        for (index, partial) in partials.iter_mut().enumerate() {
+            if index != price_index {
+                *partial = partial.mul(price_decimal);
+            }
+        }
+    }
+    let mut full_sub_partials = full;
+    for partial in partials {
+        full_sub_partials = full_sub_partials.sub(partial);
+    }
+
+    let result = full.div(full_sub_partials);
+    let result_truncated = result.trunc_with_scale(3);
+
+    if result.ne(&result_truncated) {
+        None // it needs to fit in 3 decimals
+    } else {
+        result_truncated.to_f64()
+    }
 }
 
 pub fn price_precision_is_within_range(price: f64) -> Result<()> {
@@ -119,6 +149,25 @@ mod tests {
         assert_eq!(calculate_for_payout(10000, 3.22), 32200);
         assert_eq!(calculate_for_payout(10000, 3.44), 34400);
         assert_eq!(calculate_for_payout(10000, 3.66), 36600);
+    }
+
+    #[test]
+    fn test_calculate_price_cross() {
+        let cross_price_2way = calculate_price_cross(&vec![3.0_f64]);
+        assert!(cross_price_2way.is_some());
+        assert_eq!(1.5_f64, cross_price_2way.unwrap());
+
+        assert!(calculate_price_cross(&vec![3.1_f64]).is_none());
+
+        let cross_price_3way = calculate_price_cross(&vec![2.0_f64, 3.0_f64]);
+        assert!(cross_price_3way.is_some());
+        assert_eq!(6.0_f64, cross_price_3way.unwrap());
+
+        let cross_price_4way_1 = calculate_price_cross(&vec![4.0_f64, 4.0_f64, 4.0_f64]);
+        assert!(cross_price_4way_1.is_some());
+        assert_eq!(4.0_f64, cross_price_4way_1.unwrap());
+
+        assert!(calculate_price_cross(&vec![4.0_f64, 4.0_f64, 5.0_f64]).is_none());
     }
 
     #[test]
