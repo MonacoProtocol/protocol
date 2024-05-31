@@ -993,25 +993,21 @@ mod test {
         let mut market_liquidities = mock_market_liquidities(market_pk);
         market_liquidities.add_liquidity_for(1, 2.8, 200).unwrap();
         market_liquidities.add_liquidity_for(2, 2.8, 200).unwrap();
-        market_liquidities
-            .add_liquidity_against(0, 3.5, 200)
-            .unwrap();
-        market_liquidities
-            .set_liquidity_against_sources(
-                0,
-                3.5,
-                vec![
-                    LiquidityKey {
-                        outcome: 1,
-                        price: 2.8,
-                    },
-                    LiquidityKey {
-                        outcome: 2,
-                        price: 2.8,
-                    },
-                ],
-            )
-            .unwrap();
+        market_liquidities.set_liquidity_against(
+            0,
+            3.5,
+            200,
+            vec![
+                LiquidityKey {
+                    outcome: 1,
+                    price: 2.8,
+                },
+                LiquidityKey {
+                    outcome: 2,
+                    price: 2.8,
+                },
+            ],
+        );
 
         let mut market_matching_queue = MarketMatchingQueue {
             market: market_pk,
@@ -1063,29 +1059,25 @@ mod test {
         market_liquidities
             .add_liquidity_for(3, prices[3], 200)
             .unwrap();
-        market_liquidities
-            .add_liquidity_against(0, prices[0], 121)
-            .unwrap();
-        market_liquidities
-            .set_liquidity_against_sources(
-                0,
-                3.0,
-                vec![
-                    LiquidityKey {
-                        outcome: 1,
-                        price: prices[1],
-                    },
-                    LiquidityKey {
-                        outcome: 2,
-                        price: prices[2],
-                    },
-                    LiquidityKey {
-                        outcome: 3,
-                        price: prices[3],
-                    },
-                ],
-            )
-            .unwrap();
+        market_liquidities.set_liquidity_against(
+            0,
+            prices[0],
+            121,
+            vec![
+                LiquidityKey {
+                    outcome: 1,
+                    price: prices[1],
+                },
+                LiquidityKey {
+                    outcome: 2,
+                    price: prices[2],
+                },
+                LiquidityKey {
+                    outcome: 3,
+                    price: prices[3],
+                },
+            ],
+        );
 
         let mut market_matching_queue = MarketMatchingQueue {
             market: market_pk,
@@ -1138,23 +1130,21 @@ mod test {
         market_liquidities
             .add_liquidity_against(2, 2.8, 200)
             .unwrap();
-        market_liquidities.add_liquidity_for(0, 3.5, 200).unwrap();
-        market_liquidities
-            .set_liquidity_for_sources(
-                0,
-                3.5,
-                vec![
-                    LiquidityKey {
-                        outcome: 1,
-                        price: 2.8,
-                    },
-                    LiquidityKey {
-                        outcome: 2,
-                        price: 2.8,
-                    },
-                ],
-            )
-            .unwrap();
+        market_liquidities.set_liquidity_for(
+            0,
+            3.5,
+            200,
+            vec![
+                LiquidityKey {
+                    outcome: 1,
+                    price: 2.8,
+                },
+                LiquidityKey {
+                    outcome: 2,
+                    price: 2.8,
+                },
+            ],
+        );
 
         let mut market_matching_queue = MarketMatchingQueue {
             market: market_pk,
