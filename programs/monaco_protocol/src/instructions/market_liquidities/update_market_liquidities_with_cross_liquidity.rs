@@ -1,3 +1,4 @@
+use crate::error::CoreError;
 use crate::instructions::{calculate_price_cross, calculate_stake_cross};
 use crate::state::market_liquidities::{LiquidityKey, MarketLiquidities};
 use anchor_lang::prelude::*;
@@ -8,6 +9,11 @@ pub fn update_market_liquidities_with_cross_liquidity(
     source_liquidities: Vec<LiquidityKey>,
     cross_liquidity: LiquidityKey,
 ) -> Result<()> {
+    require!(
+        market_liquidities.enable_cross_matching,
+        CoreError::MarketLiquiditiesUpdateError,
+    );
+
     // calculate price based on provided inputs
     let source_prices = source_liquidities
         .iter()

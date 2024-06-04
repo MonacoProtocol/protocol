@@ -14,6 +14,7 @@ use crate::state::payments_queue::{MarketPaymentsQueue, PaymentQueue};
 pub fn open(
     market_pk: &Pubkey,
     market: &mut Market,
+    enable_cross_matching: bool,
     liquidities: &mut MarketLiquidities,
     matching_queue: &mut MarketMatchingQueue,
     commission_payment_queue: &mut MarketPaymentsQueue,
@@ -28,7 +29,7 @@ pub fn open(
         CoreError::OpenMarketNotEnoughOutcomes
     );
 
-    intialize_liquidities(liquidities, market_pk)?;
+    intialize_liquidities(liquidities, market_pk, enable_cross_matching)?;
     market.increment_unclosed_accounts_count()?;
 
     intialize_matching_queue(matching_queue, market_pk)?;
@@ -44,8 +45,13 @@ pub fn open(
     Ok(())
 }
 
-fn intialize_liquidities(liquidities: &mut MarketLiquidities, market_pk: &Pubkey) -> Result<()> {
+fn intialize_liquidities(
+    liquidities: &mut MarketLiquidities,
+    market_pk: &Pubkey,
+    enable_cross_matching: bool,
+) -> Result<()> {
     liquidities.market = *market_pk;
+    liquidities.enable_cross_matching = enable_cross_matching;
     liquidities.liquidities_for = Vec::new();
     liquidities.liquidities_against = Vec::new();
     Ok(())
@@ -488,6 +494,7 @@ mod open_market_tests {
         let result = open(
             &market_pk,
             &mut market,
+            false,
             liquidities,
             matching_queue,
             payments_queue,
@@ -563,6 +570,7 @@ mod open_market_tests {
         let result = open(
             &market_pk,
             &mut market,
+            false,
             liquidities,
             matching_queue,
             payments_queue,
@@ -619,6 +627,7 @@ mod open_market_tests {
         let result = open(
             &market_pk,
             &mut market,
+            false,
             liquidities,
             matching_queue,
             payments_queue,

@@ -285,7 +285,7 @@ export async function createMarket(
   ]);
 
   await protocolProgram.methods
-    .openMarket()
+    .openMarket(false)
     .accounts({
       market: marketPda,
       liquidities: liquiditiesPk.data.pda,

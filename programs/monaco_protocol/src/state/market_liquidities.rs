@@ -8,6 +8,7 @@ use std::string::ToString;
 #[account]
 pub struct MarketLiquidities {
     pub market: Pubkey,
+    pub enable_cross_matching: bool,
     pub stake_matched_total: u64,
     pub liquidities_for: Vec<MarketOutcomePriceLiquidity>,
     pub liquidities_against: Vec<MarketOutcomePriceLiquidity>,

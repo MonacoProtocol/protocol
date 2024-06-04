@@ -1230,9 +1230,6 @@ export class MonacoMarket {
     if (orderMatch == null) {
       return { remainingMatches: 0 };
     }
-    console.log(
-      `forOutcome ${orderMatch.forOutcome} outcomeIndex ${orderMatch.outcomeIndex} price ${orderMatch.price} stake ${orderMatch.stake}`,
-    );
 
     if (orderMatch.pk) {
       const orderTradePk = await this.processMatchingQueueTakerOnce(
@@ -1514,9 +1511,9 @@ export class MonacoMarket {
       });
   }
 
-  async open() {
+  async open(enableCrossMatching?: boolean) {
     await this.monaco.program.methods
-      .openMarket()
+      .openMarket(enableCrossMatching)
       .accounts({
         market: this.pk,
         liquidities: this.liquiditiesPk,

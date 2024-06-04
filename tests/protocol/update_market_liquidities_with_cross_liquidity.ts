@@ -12,7 +12,7 @@ describe("Protocol: Cross Liquidity", () => {
       createWalletWithBalance(monaco.provider),
       monaco.createMarket(["A", "B"], [1.5, 3.0]),
     ]);
-    await market.open();
+    await market.open(true);
     await market.airdrop(purchaser, 1000.0);
 
     // orders
@@ -66,8 +66,9 @@ describe("Protocol: Cross Liquidity", () => {
     // market, purchaser
     const [purchaser, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([2.1, 3.0, 5.25]),
+      monaco.createMarket(["A", "B", "C"], [2.1, 3.0, 5.25]),
     ]);
+    await market.open(true);
     await market.airdrop(purchaser, 1000.0);
 
     // orders

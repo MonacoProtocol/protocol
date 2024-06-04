@@ -609,7 +609,7 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn open_market(ctx: Context<OpenMarket>) -> Result<()> {
+    pub fn open_market(ctx: Context<OpenMarket>, enable_cross_matching: bool) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -622,6 +622,7 @@ pub mod monaco_protocol {
         instructions::market::open(
             &ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            enable_cross_matching,
             &mut ctx.accounts.liquidities,
             &mut ctx.accounts.matching_queue,
             &mut ctx.accounts.commission_payment_queue,

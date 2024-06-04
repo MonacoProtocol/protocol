@@ -175,7 +175,7 @@ export async function buildMarketManagementInstruction(
         return response.body;
       }
       const instruction = await program.methods
-        .openMarket()
+        .openMarket(false)
         .accounts({
           market: new PublicKey(marketPk),
           liquidities: liquiditiesPk.data.pda,
