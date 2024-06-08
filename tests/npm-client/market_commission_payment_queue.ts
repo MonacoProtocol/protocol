@@ -41,6 +41,10 @@ describe("Market Commission Payment Queue", () => {
       monaco.program,
       queuePda.data.pda,
     );
+    // there's an object transformation happening so property needs to be checked
+    expect(queue1.data.account).toHaveProperty("commissionPayments");
+    expect(queue1.data.account).not.toHaveProperty("paymentQueue");
+
     assert.deepEqual(
       queue1.data.account.market.toBase58(),
       market.pk.toBase58(),
@@ -112,6 +116,14 @@ describe("Market Commission Payment Queue", () => {
         .length,
       2,
     );
+
+    // there's an object transformation happening so property needs to be checked
+    expect(
+      queues1.data.marketCommissionPaymentQueues[0].account,
+    ).toHaveProperty("commissionPayments");
+    expect(
+      queues1.data.marketCommissionPaymentQueues[0].account,
+    ).not.toHaveProperty("paymentQueue");
 
     await market1.processCommissionPayments();
 

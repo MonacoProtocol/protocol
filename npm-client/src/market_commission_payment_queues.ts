@@ -67,13 +67,9 @@ export async function getMarketCommissionPaymentQueue(
         marketCommissionPaymentQueuePk,
       );
 
-    // renaming paymentQueue -> payments
-    const { paymentQueue, ...otherProperties } =
-      marketCommissionPaymentQueueRaw;
-    const marketCommissionPaymentQueue = {
-      ...otherProperties,
-      commissionPayments: paymentQueue,
-    } as MarketCommissionPaymentQueue;
+    const marketCommissionPaymentQueue = toMarketCommissionPaymentQueue(
+      marketCommissionPaymentQueueRaw,
+    );
 
     response.addResponseData({
       publicKey: marketCommissionPaymentQueuePk,
@@ -101,10 +97,11 @@ export async function getNonEmptyMarketCommissionPaymentQueues(
     });
     const accountKeys = accounts.map((account) => account.pubkey);
 
-    const accountsWithData =
-      (await program.account.marketPaymentsQueue.fetchMultiple(
-        accountKeys,
-      )) as MarketCommissionPaymentQueue[];
+    const accountsWithData = (
+      await program.account.marketPaymentsQueue.fetchMultiple(accountKeys)
+    ).map((marketCommissionPaymentQueueRaw) =>
+      toMarketCommissionPaymentQueue(marketCommissionPaymentQueueRaw),
+    ) as MarketCommissionPaymentQueue[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -117,6 +114,17 @@ export async function getNonEmptyMarketCommissionPaymentQueues(
     response.addError(e);
   }
   return response.body;
+}
+
+function toMarketCommissionPaymentQueue(
+  marketCommissionPaymentQueueRaw: any,
+): MarketCommissionPaymentQueue {
+  // renaming paymentQueue -> payments
+  const { paymentQueue, ...otherProperties } = marketCommissionPaymentQueueRaw;
+  return {
+    ...otherProperties,
+    commissionPayments: paymentQueue,
+  } as MarketCommissionPaymentQueue;
 }
 
 export function toCommissionPayments(
