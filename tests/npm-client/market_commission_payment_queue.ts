@@ -3,11 +3,13 @@ import {
   GetAccount,
   findMarketCommissionPaymentQueuePda,
   getMarketCommissionPaymentQueue,
+  getNonEmptyMarketCommissionPaymentQueuePks,
   getNonEmptyMarketCommissionPaymentQueues,
   MarketCommissionPaymentQueue,
 } from "../../npm-client";
 import { externalPrograms, monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
+import { PublicKey } from "@solana/web3.js";
 
 describe("Market Commission Payment Queue", () => {
   it("fetch by public-key", async () => {
@@ -103,19 +105,26 @@ describe("Market Commission Payment Queue", () => {
     );
 
     // need to filter markets as markets from other parallel tests are reported too
-    const marketPkStrings = [market1.pk.toBase58(), market2.pk.toBase58()];
-    const marketPkStringsCheck = (
-      a: GetAccount<MarketCommissionPaymentQueue>,
-    ) => marketPkStrings.includes(a.account.market.toBase58());
+    const queuePkStrings = [
+      market1.paymentsQueuePk.toBase58(),
+      market2.paymentsQueuePk.toBase58(),
+    ];
+    const pkStringsCheck = (a: GetAccount<MarketCommissionPaymentQueue>) =>
+      queuePkStrings.includes(a.publicKey.toBase58());
+    const pkStringsCheck2 = (a: PublicKey) =>
+      queuePkStrings.includes(a.toBase58());
 
     const queues1 = await getNonEmptyMarketCommissionPaymentQueues(
       monaco.program,
     );
     assert.equal(
-      queues1.data.marketCommissionPaymentQueues.filter(marketPkStringsCheck)
-        .length,
+      queues1.data.marketCommissionPaymentQueues.filter(pkStringsCheck).length,
       2,
     );
+    const pks1 = await getNonEmptyMarketCommissionPaymentQueuePks(
+      monaco.program,
+    );
+    assert.equal(pks1.data.publicKeys.filter(pkStringsCheck2).length, 2);
 
     // there's an object transformation happening so property needs to be checked
     expect(
@@ -131,10 +140,13 @@ describe("Market Commission Payment Queue", () => {
       monaco.program,
     );
     assert.equal(
-      queues2.data.marketCommissionPaymentQueues.filter(marketPkStringsCheck)
-        .length,
+      queues2.data.marketCommissionPaymentQueues.filter(pkStringsCheck).length,
       1,
     );
+    const pks2 = await getNonEmptyMarketCommissionPaymentQueuePks(
+      monaco.program,
+    );
+    assert.equal(pks2.data.publicKeys.filter(pkStringsCheck2).length, 1);
 
     await market2.processCommissionPayments();
 
@@ -142,9 +154,12 @@ describe("Market Commission Payment Queue", () => {
       monaco.program,
     );
     assert.equal(
-      queues3.data.marketCommissionPaymentQueues.filter(marketPkStringsCheck)
-        .length,
+      queues3.data.marketCommissionPaymentQueues.filter(pkStringsCheck).length,
       0,
     );
+    const pks3 = await getNonEmptyMarketCommissionPaymentQueuePks(
+      monaco.program,
+    );
+    assert.equal(pks3.data.publicKeys.filter(pkStringsCheck2).length, 0);
   });
 });

@@ -8,6 +8,7 @@ import {
   MarketMatchingQueues,
   MarketMatchingQueue,
   OrderMatch,
+  GetPublicKeys,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
 
@@ -75,21 +76,27 @@ export async function getMarketMatchingQueue(
   return response.body;
 }
 
+export async function getNonEmptyMarketMatchingQueuePks(
+  program: Program,
+): Promise<ClientResponse<GetPublicKeys>> {
+  const response = new ResponseFactory({} as GetPublicKeys);
+
+  try {
+    const accountKeys = await getPublicKeys(program);
+    response.addResponseData({ publicKeys: accountKeys });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
 export async function getNonEmptyMarketMatchingQueues(
   program: Program,
 ): Promise<ClientResponse<MarketMatchingQueues>> {
   const response = new ResponseFactory({} as MarketMatchingQueues);
-  const connection = program.provider.connection;
 
   try {
-    const emptyFilter = new BooleanCriterion(8 + 32);
-    emptyFilter.setValue(false);
-
-    const accounts = await connection.getProgramAccounts(program.programId, {
-      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-      filters: toFilters("market_matching_queue", emptyFilter),
-    });
-    const accountKeys = accounts.map((account) => account.pubkey);
+    const accountKeys = await getPublicKeys(program);
 
     const accountsWithData =
       (await program.account.marketMatchingQueue.fetchMultiple(
@@ -107,6 +114,20 @@ export async function getNonEmptyMarketMatchingQueues(
     response.addError(e);
   }
   return response.body;
+}
+
+async function getPublicKeys(program: Program): Promise<PublicKey[]> {
+  const emptyFilter = new BooleanCriterion(8 + 32);
+  emptyFilter.setValue(false);
+
+  const accounts = await program.provider.connection.getProgramAccounts(
+    program.programId,
+    {
+      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
+      filters: toFilters("market_matching_queue", emptyFilter),
+    },
+  );
+  return accounts.map((account) => account.pubkey);
 }
 
 export function toOrderMatches(
