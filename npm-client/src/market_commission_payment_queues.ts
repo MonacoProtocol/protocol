@@ -8,6 +8,7 @@ import {
   MarketCommissionPaymentQueue,
   MarketCommissionPaymentQueues,
   CommissionPayment,
+  GetPublicKeys,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
 
@@ -67,13 +68,9 @@ export async function getMarketCommissionPaymentQueue(
         marketCommissionPaymentQueuePk,
       );
 
-    // renaming paymentQueue -> payments
-    const { paymentQueue, ...otherProperties } =
-      marketCommissionPaymentQueueRaw;
-    const marketCommissionPaymentQueue = {
-      ...otherProperties,
-      commissionPayments: paymentQueue,
-    } as MarketCommissionPaymentQueue;
+    const marketCommissionPaymentQueue = toMarketCommissionPaymentQueue(
+      marketCommissionPaymentQueueRaw,
+    );
 
     response.addResponseData({
       publicKey: marketCommissionPaymentQueuePk,
@@ -85,26 +82,33 @@ export async function getMarketCommissionPaymentQueue(
   return response.body;
 }
 
+export async function getNonEmptyMarketCommissionPaymentQueuePks(
+  program: Program,
+): Promise<ClientResponse<GetPublicKeys>> {
+  const response = new ResponseFactory({} as GetPublicKeys);
+
+  try {
+    const accountKeys = await getPublicKeys(program);
+    response.addResponseData({ publicKeys: accountKeys });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
 export async function getNonEmptyMarketCommissionPaymentQueues(
   program: Program,
 ): Promise<ClientResponse<MarketCommissionPaymentQueues>> {
   const response = new ResponseFactory({} as MarketCommissionPaymentQueues);
-  const connection = program.provider.connection;
 
   try {
-    const emptyFilter = new BooleanCriterion(8 + 32);
-    emptyFilter.setValue(false);
+    const accountKeys = await getPublicKeys(program);
 
-    const accounts = await connection.getProgramAccounts(program.programId, {
-      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-      filters: toFilters("market_payments_queue", emptyFilter),
-    });
-    const accountKeys = accounts.map((account) => account.pubkey);
-
-    const accountsWithData =
-      (await program.account.marketPaymentsQueue.fetchMultiple(
-        accountKeys,
-      )) as MarketCommissionPaymentQueue[];
+    const accountsWithData = (
+      await program.account.marketPaymentsQueue.fetchMultiple(accountKeys)
+    ).map((marketCommissionPaymentQueueRaw) =>
+      toMarketCommissionPaymentQueue(marketCommissionPaymentQueueRaw),
+    ) as MarketCommissionPaymentQueue[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -117,6 +121,31 @@ export async function getNonEmptyMarketCommissionPaymentQueues(
     response.addError(e);
   }
   return response.body;
+}
+
+async function getPublicKeys(program: Program): Promise<PublicKey[]> {
+  const emptyFilter = new BooleanCriterion(8 + 32);
+  emptyFilter.setValue(false);
+
+  const accounts = await program.provider.connection.getProgramAccounts(
+    program.programId,
+    {
+      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
+      filters: toFilters("market_payments_queue", emptyFilter),
+    },
+  );
+  return accounts.map((account) => account.pubkey);
+}
+
+function toMarketCommissionPaymentQueue(
+  marketCommissionPaymentQueueRaw: any,
+): MarketCommissionPaymentQueue {
+  // renaming paymentQueue -> payments
+  const { paymentQueue, ...otherProperties } = marketCommissionPaymentQueueRaw;
+  return {
+    ...otherProperties,
+    commissionPayments: paymentQueue,
+  } as MarketCommissionPaymentQueue;
 }
 
 export function toCommissionPayments(
