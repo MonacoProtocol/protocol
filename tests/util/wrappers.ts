@@ -1512,6 +1512,10 @@ export class MonacoMarket {
   }
 
   async open(enableCrossMatching?: boolean) {
+    if (enableCrossMatching === undefined) {
+      enableCrossMatching = false;
+    }
+
     await this.monaco.program.methods
       .openMarket(enableCrossMatching)
       .accounts({
