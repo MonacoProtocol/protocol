@@ -264,7 +264,7 @@ describe("Matching Crank", () => {
     const against11Pk = await market.againstOrder(1, 10, 4.0, purchaserA);
     const forPk = await market.forOrder(1, 110, 3.0, purchaserB);
 
-    assert.equal(await market.getMarketMatchingQueueLength(), 16);
+    assert.equal(await market.getMarketMatchingQueueLength(), 20);
 
     await market.processMatchingQueue();
 

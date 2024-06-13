@@ -6,7 +6,7 @@ use crate::state::market_matching_queue_account::*;
 use crate::state::order_account::*;
 use anchor_lang::prelude::*;
 
-pub const MATCH_CAPACITY: usize = 8_usize; // an arbitrary number
+pub const MATCH_CAPACITY: usize = 10_usize; // an arbitrary number
 
 pub fn on_order_creation(
     market_liquidities: &mut MarketLiquidities,
@@ -15,6 +15,8 @@ pub fn on_order_creation(
     order: &mut Order,
 ) -> Result<Vec<(u64, f64)>> {
     let mut order_matches = Vec::with_capacity(MATCH_CAPACITY);
+    // assuming every match is a cross-match we need n-1 times capacity for an n-way market
+    // we only support 2 and 3 way markets so 2 covers our needs
     let mut order_sources = Vec::with_capacity(MATCH_CAPACITY * 2);
 
     let order_outcome = order.market_outcome_index;
