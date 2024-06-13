@@ -5,6 +5,7 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
+  GetPublicKeys,
   MarketLiquidities,
   MarketLiquiditiesAccounts,
 } from "../types";
@@ -75,21 +76,27 @@ export async function getMarketLiquidities(
   return response.body;
 }
 
+export async function getCrossMatchEnabledMarketLiquiditiesPks(
+  program: Program,
+): Promise<ClientResponse<GetPublicKeys>> {
+  const response = new ResponseFactory({} as GetPublicKeys);
+
+  try {
+    const accountKeys = await getPublicKeys(program);
+    response.addResponseData({ publicKeys: accountKeys });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
 export async function getCrossMatchEnabledMarketLiquidities(
   program: Program,
 ): Promise<ClientResponse<MarketLiquiditiesAccounts>> {
   const response = new ResponseFactory({} as MarketLiquiditiesAccounts);
-  const connection = program.provider.connection;
 
   try {
-    const enableCrossMatchingFilter = new BooleanCriterion(8 + 32);
-    enableCrossMatchingFilter.setValue(true);
-
-    const accounts = await connection.getProgramAccounts(program.programId, {
-      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-      filters: toFilters("market_liquidities", enableCrossMatchingFilter),
-    });
-    const accountKeys = accounts.map((account) => account.pubkey);
+    const accountKeys = await getPublicKeys(program);
 
     const accountsWithData =
       (await program.account.marketLiquidities.fetchMultiple(
@@ -107,4 +114,18 @@ export async function getCrossMatchEnabledMarketLiquidities(
     response.addError(e);
   }
   return response.body;
+}
+
+async function getPublicKeys(program: Program): Promise<PublicKey[]> {
+  const enableCrossMatchingFilter = new BooleanCriterion(8 + 32);
+  enableCrossMatchingFilter.setValue(true);
+
+  const accounts = await program.provider.connection.getProgramAccounts(
+    program.programId,
+    {
+      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
+      filters: toFilters("market_liquidities", enableCrossMatchingFilter),
+    },
+  );
+  return accounts.map((account) => account.pubkey);
 }

@@ -2,6 +2,7 @@ import assert from "assert";
 import {
   findMarketLiquiditiesPda,
   getCrossMatchEnabledMarketLiquidities,
+  getCrossMatchEnabledMarketLiquiditiesPks,
   getMarketLiquidities,
   MarketLiquidity,
 } from "../../npm-client";
@@ -56,6 +57,12 @@ describe("Market Liquidities", () => {
     ]);
     await market3.open(true);
 
+    const pks = await getCrossMatchEnabledMarketLiquiditiesPks(monaco.program);
+    assert.equal(pks.data.publicKeys.length, 1);
+    assert.equal(
+      pks.data.publicKeys[0].toBase58(),
+      market3.liquiditiesPk.toBase58(),
+    );
     const accounts = await getCrossMatchEnabledMarketLiquidities(
       monaco.program,
     );
