@@ -305,6 +305,7 @@ impl MarketOutcomePriceLiquidity {
 pub fn mock_market_liquidities(market_pk: Pubkey) -> MarketLiquidities {
     MarketLiquidities {
         market: market_pk,
+        enable_cross_matching: true,
         liquidities_for: Vec::new(),
         liquidities_against: Vec::new(),
         stake_matched_total: 0_u64,
@@ -400,6 +401,7 @@ mod total_exposure_tests {
     fn test_remove_liquidity() {
         let mut market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
+            enable_cross_matching: true,
             liquidities_for: vec![
                 mock_liquidity(0, 2.111, 1001),
                 mock_liquidity(1, 2.111, 2001),
@@ -455,6 +457,7 @@ mod total_exposure_tests {
     fn test_get_liquidity_for() {
         let market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
+            enable_cross_matching: true,
             liquidities_for: vec![
                 mock_liquidity(0, 2.30, 1001),
                 mock_liquidity(0, 2.31, 1002),
@@ -486,6 +489,7 @@ mod total_exposure_tests {
     fn test_get_liquidity_against() {
         let market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
+            enable_cross_matching: true,
             liquidities_for: vec![],
             liquidities_against: vec![
                 mock_liquidity(0, 2.33, 1004),

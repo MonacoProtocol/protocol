@@ -61,7 +61,6 @@ pub fn on_order_match_taker(
 }
 
 pub fn on_order_match_maker(
-    market_pk: &Pubkey,
     market: &mut Market,
     market_matching_queue: &mut MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
@@ -124,12 +123,6 @@ pub fn on_order_match_maker(
                 *payer,
             );
             market.increment_unclosed_accounts_count()?;
-
-            emit!(TradeEvent {
-                amount: matched_stake,
-                price: matched_price,
-                market: *market_pk,
-            });
 
             // dequeue empty matches (needs to be last due to borrowing)
             if order_match.stake == 0_u64 {
@@ -204,7 +197,6 @@ mod test {
         let mut maker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match_maker(
-            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,
@@ -294,7 +286,6 @@ mod test {
         let mut maker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match_maker(
-            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,
@@ -380,7 +371,6 @@ mod test {
         let mut maker_order_trade = Trade::default();
 
         let on_order_match_testable_result = on_order_match_maker(
-            &market_pk,
             &mut market,
             &mut market_matching_queue,
             &mut market_matching_pool,

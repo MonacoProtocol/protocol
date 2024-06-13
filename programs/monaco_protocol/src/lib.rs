@@ -316,7 +316,6 @@ pub mod monaco_protocol {
         order_trade_seed: [u8; 16],
     ) -> Result<()> {
         let refund_amount = instructions::matching::on_order_match_maker(
-            &ctx.accounts.market.key(),
             &mut ctx.accounts.market,
             &mut ctx.accounts.market_matching_queue,
             &mut ctx.accounts.market_matching_pool,

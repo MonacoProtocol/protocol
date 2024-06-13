@@ -290,7 +290,7 @@ mod test {
         let payer_pk = Pubkey::new_unique();
 
         let order_pk = Pubkey::new_unique();
-        let mut order = mock_order(market_pk, market_outcome_index, false, 1.8, 100, payer_pk);
+        let mut order = mock_order(market_pk, market_outcome_index, false, 1.8, 120, payer_pk);
 
         let mut market_liquidities = mock_market_liquidities(market_pk);
         for price in market_price_ladder.iter() {
@@ -314,16 +314,16 @@ mod test {
         assert!(on_order_creation_result.is_ok());
 
         assert_eq!(
-            vec!((1.6, 10), (1.65, 10), (1.7, 10), (1.75, 10)),
+            vec!((1.7, 10), (1.75, 10)),
             liquidities(&market_liquidities.liquidities_for)
         );
         assert_eq!(
             vec!((1.8, 20)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(80_u64, market_liquidities.stake_matched_total);
+        assert_eq!(100_u64, market_liquidities.stake_matched_total);
         assert_eq!(
-            vec!(
+            vec![
                 (true, 1.2, 10),
                 (false, 1.2, 10),
                 (true, 1.25, 10),
@@ -340,12 +340,16 @@ mod test {
                 (false, 1.5, 10),
                 (true, 1.55, 10),
                 (false, 1.55, 10),
-            ),
+                (true, 1.6, 10),
+                (false, 1.6, 10),
+                (true, 1.65, 10),
+                (false, 1.65, 10)
+            ],
             matches(&market_matching_queue.matches) // vec max length
         );
 
         assert_eq!(20_u64, order.stake_unmatched);
-        assert_eq!(108_u64, order.payout);
+        assert_eq!(140_u64, order.payout);
     }
 
     #[test]
