@@ -7,7 +7,7 @@ use crate::instructions::market_position;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
-use crate::state::market_liquidities::LiquidityKey;
+use crate::state::market_liquidities::LiquiditySource;
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
@@ -31,7 +31,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
-    use crate::state::market_liquidities::LiquidityKey;
+    use crate::state::market_liquidities::LiquiditySource;
     use crate::state::market_matching_queue_account::MarketMatchingQueue;
 
     pub const PRICE_SCALE: u8 = 3_u8;
@@ -340,8 +340,8 @@ pub mod monaco_protocol {
     pub fn update_market_liquidities_with_cross_liquidity(
         ctx: Context<UpdateMarketLiquidities>,
         source_for_outcome: bool,
-        source_liquidities: Vec<LiquidityKey>,
-        cross_liquidity: LiquidityKey,
+        source_liquidities: Vec<LiquiditySource>,
+        cross_liquidity: LiquiditySource,
     ) -> Result<()> {
         instructions::market_liquidities::update_market_liquidities_with_cross_liquidity(
             &mut ctx.accounts.market_liquidities,

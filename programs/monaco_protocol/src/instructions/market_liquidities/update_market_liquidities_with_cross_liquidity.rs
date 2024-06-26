@@ -1,13 +1,13 @@
 use crate::error::CoreError;
 use crate::instructions::{calculate_price_cross, calculate_stake_cross};
-use crate::state::market_liquidities::{LiquidityKey, MarketLiquidities};
+use crate::state::market_liquidities::{LiquiditySource, MarketLiquidities};
 use anchor_lang::prelude::*;
 
 pub fn update_market_liquidities_with_cross_liquidity(
     market_liquidities: &mut MarketLiquidities,
     source_for_outcome: bool,
-    source_liquidities: Vec<LiquidityKey>,
-    cross_liquidity: LiquidityKey,
+    source_liquidities: Vec<LiquiditySource>,
+    cross_liquidity: LiquiditySource,
 ) -> Result<()> {
     require!(
         market_liquidities.enable_cross_matching,
@@ -96,24 +96,24 @@ mod test {
         update_market_liquidities_with_cross_liquidity(
             &mut market_liquidities,
             true,
-            vec![LiquidityKey::new(0, 3.0)],
-            LiquidityKey::new(1, 1.5),
+            vec![LiquiditySource::new(0, 3.0)],
+            LiquiditySource::new(1, 1.5),
         )
         .expect("update_market_liquidities_with_cross_liquidity failed");
 
         update_market_liquidities_with_cross_liquidity(
             &mut market_liquidities,
             true,
-            vec![LiquidityKey::new(0, 3.5)],
-            LiquidityKey::new(1, 1.4),
+            vec![LiquiditySource::new(0, 3.5)],
+            LiquiditySource::new(1, 1.4),
         )
         .expect("update_market_liquidities_with_cross_liquidity failed");
 
         update_market_liquidities_with_cross_liquidity(
             &mut market_liquidities,
             true,
-            vec![LiquidityKey::new(0, 4.125)],
-            LiquidityKey::new(1, 1.32),
+            vec![LiquiditySource::new(0, 4.125)],
+            LiquiditySource::new(1, 1.32),
         )
         .expect("update_market_liquidities_with_cross_liquidity failed");
 
@@ -142,15 +142,15 @@ mod test {
         update_market_liquidities_with_cross_liquidity(
             &mut market_liquidities,
             true,
-            vec![LiquidityKey::new(0, 2.1), LiquidityKey::new(1, 3.0)],
-            LiquidityKey::new(2, 5.25),
+            vec![LiquiditySource::new(0, 2.1), LiquiditySource::new(1, 3.0)],
+            LiquiditySource::new(2, 5.25),
         )
         .expect("update_market_liquidities_with_cross_liquidity failed");
         update_market_liquidities_with_cross_liquidity(
             &mut market_liquidities,
             true,
-            vec![LiquidityKey::new(0, 2.0), LiquidityKey::new(1, 3.0)],
-            LiquidityKey::new(2, 6.0),
+            vec![LiquiditySource::new(0, 2.0), LiquiditySource::new(1, 3.0)],
+            LiquiditySource::new(2, 6.0),
         )
         .expect("update_market_liquidities_with_cross_liquidity failed");
 

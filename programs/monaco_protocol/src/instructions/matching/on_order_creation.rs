@@ -291,7 +291,7 @@ fn match_against_order(
 mod test_match_for_order {
     use crate::instructions::matching::on_order_creation;
     use crate::instructions::matching::on_order_creation::{liquidities, liquidities2, matches};
-    use crate::state::market_liquidities::{mock_market_liquidities, LiquidityKey};
+    use crate::state::market_liquidities::{mock_market_liquidities, LiquiditySource};
     use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
     use crate::state::order_account::mock_order;
     use solana_program::pubkey::Pubkey;
@@ -311,8 +311,10 @@ mod test_match_for_order {
         market_liquidities
             .add_liquidity_against(2, 2.8, 125)
             .unwrap();
-        market_liquidities
-            .update_cross_liquidity_for(&[LiquidityKey::new(1, 2.8), LiquidityKey::new(2, 2.8)]);
+        market_liquidities.update_cross_liquidity_for(&[
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
+        ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
             market: market_pk,
@@ -356,8 +358,8 @@ mod test_match_for_order {
         market_liquidities.add_liquidity_for(1, 2.8, 125).unwrap();
         market_liquidities.add_liquidity_for(2, 2.8, 125).unwrap();
         market_liquidities.update_cross_liquidity_against(&[
-            LiquidityKey::new(1, 2.8),
-            LiquidityKey::new(2, 2.8),
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
         ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
@@ -402,8 +404,8 @@ mod test_match_for_order {
         market_liquidities.add_liquidity_for(1, 2.8, 250).unwrap();
         market_liquidities.add_liquidity_for(2, 2.8, 250).unwrap();
         market_liquidities.update_cross_liquidity_against(&[
-            LiquidityKey::new(1, 2.8),
-            LiquidityKey::new(2, 2.8),
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
         ]);
         // following removals make cross liquidity to be too big
         market_liquidities
@@ -456,9 +458,9 @@ mod test_match_for_order {
         market_liquidities.add_liquidity_for(2, 4.0, 180).unwrap();
         market_liquidities.add_liquidity_for(3, 7.2, 100).unwrap();
         market_liquidities.update_cross_liquidity_against(&[
-            LiquidityKey::new(1, 3.6),
-            LiquidityKey::new(2, 4.0),
-            LiquidityKey::new(3, 7.2),
+            LiquiditySource::new(1, 3.6),
+            LiquiditySource::new(2, 4.0),
+            LiquiditySource::new(3, 7.2),
         ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
@@ -501,7 +503,7 @@ mod test_match_for_order {
 mod test_match_against_order {
     use crate::instructions::matching::on_order_creation;
     use crate::instructions::matching::on_order_creation::{liquidities, liquidities2, matches};
-    use crate::state::market_liquidities::{mock_market_liquidities, LiquidityKey};
+    use crate::state::market_liquidities::{mock_market_liquidities, LiquiditySource};
     use crate::state::market_matching_queue_account::{MarketMatchingQueue, MatchingQueue};
     use crate::state::order_account::mock_order;
     use solana_program::pubkey::Pubkey;
@@ -518,8 +520,8 @@ mod test_match_against_order {
         market_liquidities.add_liquidity_for(1, 2.8, 125).unwrap();
         market_liquidities.add_liquidity_for(2, 2.8, 125).unwrap();
         market_liquidities.update_cross_liquidity_against(&[
-            LiquidityKey::new(1, 2.8),
-            LiquidityKey::new(2, 2.8),
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
         ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
@@ -567,8 +569,10 @@ mod test_match_against_order {
         market_liquidities
             .add_liquidity_against(2, 2.8, 125)
             .unwrap();
-        market_liquidities
-            .update_cross_liquidity_for(&[LiquidityKey::new(1, 2.8), LiquidityKey::new(2, 2.8)]);
+        market_liquidities.update_cross_liquidity_for(&[
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
+        ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
             market: market_pk,
@@ -615,8 +619,10 @@ mod test_match_against_order {
         market_liquidities
             .add_liquidity_against(2, 2.8, 250)
             .unwrap();
-        market_liquidities
-            .update_cross_liquidity_for(&[LiquidityKey::new(1, 2.8), LiquidityKey::new(2, 2.8)]);
+        market_liquidities.update_cross_liquidity_for(&[
+            LiquiditySource::new(1, 2.8),
+            LiquiditySource::new(2, 2.8),
+        ]);
         // following removals make cross liquidity to be too big
         market_liquidities
             .remove_liquidity_against(1, 2.8, &[], 125)
@@ -674,9 +680,9 @@ mod test_match_against_order {
             .add_liquidity_against(3, 7.2, 100)
             .unwrap();
         market_liquidities.update_cross_liquidity_for(&[
-            LiquidityKey::new(1, 3.6),
-            LiquidityKey::new(2, 4.0),
-            LiquidityKey::new(3, 7.2),
+            LiquiditySource::new(1, 3.6),
+            LiquiditySource::new(2, 4.0),
+            LiquiditySource::new(3, 7.2),
         ]);
 
         let mut market_matching_queue = MarketMatchingQueue {
