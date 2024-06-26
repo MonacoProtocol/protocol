@@ -55,6 +55,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
                 .remove_liquidity_for(
                     order.market_outcome_index,
                     order.expected_price,
+                    &[],
                     order.voided_stake,
                 )
                 .map_err(|_| CoreError::CancelOrderNotCancellable)?,
@@ -62,6 +63,7 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
                 .remove_liquidity_against(
                     order.market_outcome_index,
                     order.expected_price,
+                    &[],
                     order.voided_stake,
                 )
                 .map_err(|_| CoreError::CancelOrderNotCancellable)?,

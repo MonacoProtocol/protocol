@@ -286,8 +286,6 @@ describe("Matching Crank", () => {
       ]),
       [
         { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
-        { stakeUnmatched: 10, stakeVoided: 0, status: { open: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
@@ -296,7 +294,9 @@ describe("Matching Crank", () => {
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
         { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 30, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
+        { stakeUnmatched: 10, stakeVoided: 0, status: { matched: {} } },
         0,
       ],
     );

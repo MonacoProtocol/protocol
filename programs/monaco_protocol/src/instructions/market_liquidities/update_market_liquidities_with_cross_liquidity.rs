@@ -56,14 +56,14 @@ pub fn update_market_liquidities_with_cross_liquidity(
                     cross_liquidity.outcome,
                     cross_liquidity.price,
                     cross_liquidity_stake,
-                    source_liquidities,
+                    &source_liquidities,
                 );
             } else {
                 market_liquidities.set_liquidity_for(
                     cross_liquidity.outcome,
                     cross_liquidity.price,
                     cross_liquidity_stake,
-                    source_liquidities,
+                    &source_liquidities,
                 );
             }
         }

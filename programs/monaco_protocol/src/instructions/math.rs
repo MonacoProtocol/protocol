@@ -26,6 +26,12 @@ pub fn calculate_for_payout(stake: u64, price: f64) -> u64 {
     Decimal::from(stake).mul(price_decimal).to_u64().unwrap()
 }
 
+/// stake = payout / price
+pub fn calculate_stake_from_payout(payout: u64, price: f64) -> u64 {
+    let price_decimal = price_to_decimal(price);
+    Decimal::from(payout).div(price_decimal).to_u64().unwrap()
+}
+
 /// stake_cross = stake * price / price_cross
 pub fn calculate_stake_cross(stake: u64, price: f64, price_cross: f64) -> u64 {
     let stake_matched_decimal = Decimal::from_u64(stake).unwrap();
