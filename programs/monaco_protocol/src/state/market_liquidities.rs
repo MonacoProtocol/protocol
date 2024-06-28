@@ -282,7 +282,7 @@ impl MarketLiquidities {
         }
     }
 
-    pub fn sorter_for(
+    fn sorter_for(
         outcome: u16,
         price: f64,
         sources: &[LiquiditySource],
@@ -313,7 +313,7 @@ impl MarketLiquidities {
         }
     }
 
-    pub fn sorter_against(
+    fn sorter_against(
         outcome: u16,
         price: f64,
         sources: &[LiquiditySource],
