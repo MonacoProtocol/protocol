@@ -24,21 +24,6 @@ impl MarketLiquidities {
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
 
-    fn is_full(&self) -> bool {
-        Self::LIQUIDITIES_VEC_LENGTH + Self::LIQUIDITIES_VEC_LENGTH
-            <= self.liquidities_for.len() + self.liquidities_against.len()
-    }
-
-    pub fn update_stake_matched_total(&mut self, stake_matched: u64) -> Result<()> {
-        if stake_matched > 0_u64 {
-            self.stake_matched_total = self
-                .stake_matched_total
-                .checked_add(stake_matched)
-                .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
-        }
-        Ok(())
-    }
-
     pub fn get_liquidity_for(
         &self,
         outcome: u16,
@@ -343,6 +328,21 @@ impl MarketLiquidities {
 
     fn source_outcomes_sum(sources: &[LiquiditySource]) -> u16 {
         sources.iter().map(|source| source.outcome).sum()
+    }
+
+    fn is_full(&self) -> bool {
+        Self::LIQUIDITIES_VEC_LENGTH + Self::LIQUIDITIES_VEC_LENGTH
+            <= self.liquidities_for.len() + self.liquidities_against.len()
+    }
+
+    pub fn update_stake_matched_total(&mut self, stake_matched: u64) -> Result<()> {
+        if stake_matched > 0_u64 {
+            self.stake_matched_total = self
+                .stake_matched_total
+                .checked_add(stake_matched)
+                .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
+        }
+        Ok(())
     }
 
     pub fn move_to_inplay(&mut self, market_event_start_order_behaviour: &MarketOrderBehaviour) {
