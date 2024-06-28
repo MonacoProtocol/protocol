@@ -1,5 +1,5 @@
 use crate::error::CoreError;
-use crate::instructions::{calculate_price_cross, calculate_stake_cross};
+use crate::instructions::calculate_price_cross;
 use crate::state::market_liquidities::{LiquiditySource, MarketLiquidities};
 use anchor_lang::prelude::*;
 
@@ -23,49 +23,11 @@ pub fn update_market_liquidities_with_cross_liquidity(
     if let Some(cross_price) = calculate_price_cross(&source_prices) {
         // provided cross_liquidity.price is valid
         if cross_price == cross_liquidity.price {
-            // calculate stake
-            let cross_liquidity_stake = source_liquidities
-                .iter()
-                .map(|source_liquidity_key| {
-                    let source_liquidity = if source_for_outcome {
-                        market_liquidities.get_liquidity_for(
-                            source_liquidity_key.outcome,
-                            source_liquidity_key.price,
-                        )
-                    } else {
-                        market_liquidities.get_liquidity_against(
-                            source_liquidity_key.outcome,
-                            source_liquidity_key.price,
-                        )
-                    };
-
-                    calculate_stake_cross(
-                        source_liquidity
-                            .map(|source_liquidity| source_liquidity.liquidity)
-                            .unwrap_or(0_u64),
-                        source_liquidity_key.price,
-                        cross_price,
-                    )
-                })
-                .min()
-                .unwrap_or(0_u64);
-
-            // update liquidity
             if source_for_outcome {
-                market_liquidities.set_liquidity_against(
-                    cross_liquidity.outcome,
-                    cross_liquidity.price,
-                    cross_liquidity_stake,
-                    &source_liquidities,
-                );
+                market_liquidities.update_cross_liquidity_against(&source_liquidities);
             } else {
-                market_liquidities.set_liquidity_for(
-                    cross_liquidity.outcome,
-                    cross_liquidity.price,
-                    cross_liquidity_stake,
-                    &source_liquidities,
-                );
-            }
+                market_liquidities.update_cross_liquidity_for(&source_liquidities);
+            };
         }
     }
 
