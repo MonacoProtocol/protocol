@@ -158,6 +158,28 @@ mod tests {
     }
 
     #[test]
+    fn test_calculate_stake_from_payout() {
+        assert_eq!(calculate_stake_from_payout(300, 3.00), 100);
+        assert_eq!(calculate_stake_from_payout(322, 3.22), 100);
+        assert_eq!(calculate_stake_from_payout(344, 3.44), 100);
+        assert_eq!(calculate_stake_from_payout(366, 3.66), 100);
+    }
+
+    #[test]
+    fn test_calculate_stake_cross() {
+        // 2.800, 2.800, 3.500
+        assert_eq!(calculate_stake_cross(100, 2.8, 3.5), 80);
+        assert_eq!(calculate_stake_cross(100, 3.5, 2.8), 125);
+        // 2.700, 3.000, 3.375
+        assert_eq!(calculate_stake_cross(100, 2.7, 3.0), 90);
+        assert_eq!(calculate_stake_cross(100, 2.7, 3.375), 80);
+        assert_eq!(calculate_stake_cross(90, 3.0, 2.7), 100);
+        assert_eq!(calculate_stake_cross(90, 3.0, 3.375), 80);
+        assert_eq!(calculate_stake_cross(80, 3.375, 2.7), 100);
+        assert_eq!(calculate_stake_cross(80, 3.375, 3.0), 90);
+    }
+
+    #[test]
     fn test_calculate_price_cross() {
         let cross_price_2way = calculate_price_cross(&vec![3.0_f64]);
         assert!(cross_price_2way.is_some());
