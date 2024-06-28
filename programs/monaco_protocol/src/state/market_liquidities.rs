@@ -237,15 +237,9 @@ impl MarketLiquidities {
         }
     }
 
-    pub fn remove_liquidity_for(
-        &mut self,
-        outcome: u16,
-        price: f64,
-        sources: &[LiquiditySource],
-        liquidity: u64,
-    ) -> Result<()> {
+    pub fn remove_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
         let liquidities = &mut self.liquidities_for;
-        let sorter = Self::sorter_for(outcome, price, sources);
+        let sorter = Self::sorter_for(outcome, price, &[]);
         Self::remove_liquidity(liquidities, sorter, liquidity)
     }
 
@@ -253,11 +247,10 @@ impl MarketLiquidities {
         &mut self,
         outcome: u16,
         price: f64,
-        sources: &[LiquiditySource],
         liquidity: u64,
     ) -> Result<()> {
         let liquidities = &mut self.liquidities_against;
-        let sorter = Self::sorter_against(outcome, price, sources);
+        let sorter = Self::sorter_against(outcome, price, &[]);
         Self::remove_liquidity(liquidities, sorter, liquidity)
     }
 
@@ -555,13 +548,13 @@ mod tests {
             stake_matched_total: 0_u64,
         };
 
-        mls.remove_liquidity_for(0, 2.111, &[], 200).unwrap();
-        mls.remove_liquidity_for(1, 2.111, &[], 200).unwrap();
-        mls.remove_liquidity_for(2, 2.111, &[], 200).unwrap();
+        mls.remove_liquidity_for(0, 2.111, 200).unwrap();
+        mls.remove_liquidity_for(1, 2.111, 200).unwrap();
+        mls.remove_liquidity_for(2, 2.111, 200).unwrap();
 
-        mls.remove_liquidity_against(0, 2.111, &[], 200).unwrap();
-        mls.remove_liquidity_against(1, 2.111, &[], 200).unwrap();
-        mls.remove_liquidity_against(2, 2.111, &[], 200).unwrap();
+        mls.remove_liquidity_against(0, 2.111, 200).unwrap();
+        mls.remove_liquidity_against(1, 2.111, 200).unwrap();
+        mls.remove_liquidity_against(2, 2.111, 200).unwrap();
 
         assert_eq!(
             vec![

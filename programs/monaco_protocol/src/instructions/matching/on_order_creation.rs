@@ -126,14 +126,14 @@ fn match_for_order(
         if sources.is_empty() {
             // for direct liquidity match just remove it
             market_liquidities
-                .remove_liquidity_against(order.market_outcome_index, *price, &[], *stake)
+                .remove_liquidity_against(order.market_outcome_index, *price, *stake)
                 .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
         } else {
             // for cross liquidity match remove the sources and then update
             for source in sources {
                 let source_stake = calculate_stake_cross(*stake, *price, source.price);
                 market_liquidities
-                    .remove_liquidity_for(source.outcome, source.price, &[], source_stake)
+                    .remove_liquidity_for(source.outcome, source.price, source_stake)
                     .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
             }
             market_liquidities.update_cross_liquidity_against(sources);
@@ -257,14 +257,14 @@ fn match_against_order(
         if sources.is_empty() {
             // for direct liquidity match just remove it
             market_liquidities
-                .remove_liquidity_for(order.market_outcome_index, *price, &[], *stake)
+                .remove_liquidity_for(order.market_outcome_index, *price, *stake)
                 .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
         } else {
             // for cross liquidity match remove the sources and then update
             for source in sources {
                 let source_stake = calculate_stake_cross(*stake, *price, source.price);
                 market_liquidities
-                    .remove_liquidity_against(source.outcome, source.price, &[], source_stake)
+                    .remove_liquidity_against(source.outcome, source.price, source_stake)
                     .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
             }
             market_liquidities.update_cross_liquidity_for(sources);
@@ -409,10 +409,10 @@ mod test_match_for_order {
         ]);
         // following removals make cross liquidity to be too big
         market_liquidities
-            .remove_liquidity_for(1, 2.8, &[], 125)
+            .remove_liquidity_for(1, 2.8, 125)
             .unwrap();
         market_liquidities
-            .remove_liquidity_for(2, 2.8, &[], 125)
+            .remove_liquidity_for(2, 2.8, 125)
             .unwrap();
 
         let mut market_matching_queue = MarketMatchingQueue {
@@ -625,10 +625,10 @@ mod test_match_against_order {
         ]);
         // following removals make cross liquidity to be too big
         market_liquidities
-            .remove_liquidity_against(1, 2.8, &[], 125)
+            .remove_liquidity_against(1, 2.8, 125)
             .unwrap();
         market_liquidities
-            .remove_liquidity_against(2, 2.8, &[], 125)
+            .remove_liquidity_against(2, 2.8, 125)
             .unwrap();
 
         let mut market_matching_queue = MarketMatchingQueue {
