@@ -378,15 +378,14 @@ pub struct MarketOutcomePriceLiquidity {
     pub outcome: u16,
     pub price: f64,
     pub sources: Vec<LiquiditySource>,
-
     pub liquidity: u64,
 }
 
 impl MarketOutcomePriceLiquidity {
     pub const SIZE: usize = U16_SIZE // outcome
         + F64_SIZE // price
-        + U64_SIZE // liquidity
-        + vec_size(U16_SIZE + F64_SIZE, 3); // sources: sized to work for 3 and 4 way markets
+        + vec_size(U16_SIZE + F64_SIZE, 3) // sources: sized to work for 3 and 4 way markets
+        + U64_SIZE; // liquidity
 }
 
 #[cfg(test)]
