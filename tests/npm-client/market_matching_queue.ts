@@ -81,6 +81,7 @@ describe("Market Matching Queue", () => {
       queuePkStrings.includes(a.publicKey.toBase58());
     const pkStringsCheck2 = (a: PublicKey) =>
       queuePkStrings.includes(a.toBase58());
+    // need to filter markets as markets from other parallel tests are reported too
 
     const queues1 = await getNonEmptyMarketMatchingQueues(monaco.program);
     assert.equal(

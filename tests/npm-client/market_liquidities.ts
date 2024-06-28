@@ -8,6 +8,7 @@ import {
 } from "../../npm-client";
 import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
+import { PublicKey } from "@solana/web3.js";
 
 describe("Market Liquidities", () => {
   it("fetch by public-key", async () => {
@@ -50,19 +51,27 @@ describe("Market Liquidities", () => {
 
   it("fetch all enabled for cross matching", async () => {
     // Create market, purchaser
-    const [_1, _2, market3] = await Promise.all([
+    const [market1, market2, market3] = await Promise.all([
       monaco.create3WayMarket([3.0]),
       monaco.create3WayMarket([3.0]),
       monaco.createMarket(["A", "B", "C"], [2.1, 3.0, 5.25]),
     ]);
     await market3.open(true);
 
-    const pks = await getCrossMatchEnabledMarketLiquiditiesPks(monaco.program);
-    assert.equal(pks.data.publicKeys.length, 1);
-    assert.equal(
-      pks.data.publicKeys[0].toBase58(),
-      market3.liquiditiesPk.toBase58(),
+    // need to filter markets as markets from other parallel tests are reported too
+    const marketPkStrings = [market1, market2, market3].map((m) =>
+      m.liquiditiesPk.toBase58(),
     );
+    const marketPkStringsCheck = (v: PublicKey) =>
+      marketPkStrings.includes(v.toBase58());
+    // need to filter markets as markets from other parallel tests are reported too
+
+    const pks = (
+      await getCrossMatchEnabledMarketLiquiditiesPks(monaco.program)
+    ).data.publicKeys.filter(marketPkStringsCheck);
+
+    assert.equal(pks.length, 1);
+    assert.equal(pks[0].toBase58(), market3.liquiditiesPk.toBase58());
     const accounts = await getCrossMatchEnabledMarketLiquidities(
       monaco.program,
     );
