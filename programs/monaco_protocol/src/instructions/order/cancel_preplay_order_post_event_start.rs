@@ -436,14 +436,9 @@ mod test {
             payer: payer_pk,
         };
         let matching_queue = &mut mock_market_matching_queue(market_pk);
-        matching_queue.matches.enqueue(OrderMatch {
-            pk: Default::default(),
-            purchaser: Default::default(),
-            for_outcome: false,
-            outcome_index: 0,
-            price: 0.0,
-            stake: 0,
-        });
+        matching_queue
+            .matches
+            .enqueue(OrderMatch::maker(false, 0, 0.0, 0));
         let order_request_queue = &mock_order_request_queue(market_pk);
 
         let mut market_position = MarketPosition::default();

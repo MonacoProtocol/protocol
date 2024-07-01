@@ -143,7 +143,6 @@ describe("End to end test of", () => {
 
     // Match order with liquidity that is not yet visible (but should be)
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     matchingPool = await market.getForMatchingPool(2, 2.0);
     let order = await monaco.getOrder(inPlayOrder21.data.orderPk);

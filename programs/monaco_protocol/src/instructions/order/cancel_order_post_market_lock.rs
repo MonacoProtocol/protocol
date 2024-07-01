@@ -89,14 +89,9 @@ mod test {
             payer: Pubkey::new_unique(),
         };
         let matching_queue = &mut mock_market_matching_queue(order.market);
-        matching_queue.matches.enqueue(OrderMatch {
-            pk: Default::default(),
-            purchaser: Default::default(),
-            for_outcome: false,
-            outcome_index: 0,
-            price: 0.0,
-            stake: 0,
-        });
+        matching_queue
+            .matches
+            .enqueue(OrderMatch::maker(false, 0, 0.0, 0));
 
         let request_queue = &mut mock_order_request_queue(order.market);
         request_queue.order_requests.enqueue(order_request);

@@ -428,6 +428,7 @@ export async function updateMarketLocktimeToNow(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of the market to open
+ * @param enableCrossMatching {boolean} enable cross-matching for the market
  * @param options {TransactionOptions} optional parameters:
  *   <ul>
  *     <li> computeUnitLimit - number of compute units to limit the transaction to</li>
@@ -443,12 +444,14 @@ export async function updateMarketLocktimeToNow(
 export async function openMarket(
   program: Program,
   marketPk: PublicKey,
+  enableCrossMatching: boolean,
   options?: TransactionOptions,
 ): Promise<ClientResponse<TransactionResponse>> {
   const instruction = await buildMarketManagementInstruction(
     program,
     marketPk,
     MarketManagementInstructionType.OPEN,
+    { enableCrossMatching },
   );
   return await sendManagementTransaction(
     program,

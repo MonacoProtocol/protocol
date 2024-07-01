@@ -283,6 +283,7 @@ Once Open, outcomes can no longer be added to a market.
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of the market to open
+*   `enableCrossMatching` **[boolean][45]** {boolean} enable cross-matching for the market
 *   `options` **TransactionOptions?** {TransactionOptions} optional parameters:  <ul>
         <li> computeUnitLimit - number of compute units to limit the transaction to</li>
         <li> computeUnitPrice - price in micro lamports per compute unit for the transaction</li>
@@ -456,3 +457,5 @@ Returns **TransactionResponse** transaction ID of the request
 [43]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
 [44]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[45]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

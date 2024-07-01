@@ -52,7 +52,7 @@ mod tests {
 
     use crate::instructions::market_position::update_product_commission_contributions;
     use crate::state::market_position_account::{MarketPosition, ProductMatchedRiskAndRate};
-    use crate::state::order_account::{Order, OrderStatus};
+    use crate::state::order_account::mock_order_default;
 
     #[test]
     fn update_product_commissions_empty_vec() {
@@ -60,22 +60,9 @@ mod tests {
         let product_commission_rate = 1.0;
         let stake_matched = 10;
 
-        let order = Order {
-            product,
-            product_commission_rate: product_commission_rate,
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-        };
+        let mut order = mock_order_default();
+        order.product = product;
+        order.product_commission_rate = product_commission_rate;
 
         let mut market_position = MarketPosition {
             purchaser: Default::default(),
@@ -108,22 +95,9 @@ mod tests {
         let product_commission_rate = 7.0;
         let stake_matched = 10;
 
-        let order = Order {
-            product,
-            product_commission_rate,
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-        };
+        let mut order = mock_order_default();
+        order.product = product;
+        order.product_commission_rate = product_commission_rate;
 
         let matched_stake_per_rate = vec![
             ProductMatchedRiskAndRate {
@@ -286,22 +260,9 @@ mod tests {
         }];
         let new_product_commission_rate = 2.0;
 
-        let order = Order {
-            product,
-            product_commission_rate: new_product_commission_rate,
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-        };
+        let mut order = mock_order_default();
+        order.product = product;
+        order.product_commission_rate = new_product_commission_rate;
 
         let mut market_position = MarketPosition {
             matched_risk_per_product: product_stake_rates,
@@ -357,22 +318,9 @@ mod tests {
 
         let expected_stake_matched_at_rate_2 = existing_stake_matched + new_stake_matched;
 
-        let order = Order {
-            product,
-            product_commission_rate: product_commission_rate_2,
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-        };
+        let mut order = mock_order_default();
+        order.product = product;
+        order.product_commission_rate = product_commission_rate_2;
 
         let mut market_position = MarketPosition {
             matched_risk_per_product: product_stake_rates,
@@ -426,22 +374,9 @@ mod tests {
             },
         ];
 
-        let order = Order {
-            product: product_2,
-            product_commission_rate: product_commission_rate_2,
-            purchaser: Default::default(),
-            market: Default::default(),
-            market_outcome_index: 0,
-            for_outcome: false,
-            order_status: OrderStatus::Open,
-            stake: 0,
-            voided_stake: 0,
-            expected_price: 0.0,
-            creation_timestamp: 0,
-            stake_unmatched: 0,
-            payout: 0,
-            payer: Default::default(),
-        };
+        let mut order = mock_order_default();
+        order.product = product_2;
+        order.product_commission_rate = product_commission_rate_2;
 
         let mut market_position = MarketPosition {
             matched_risk_per_product: product_stake_rates,

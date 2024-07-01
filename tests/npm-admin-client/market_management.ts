@@ -160,7 +160,11 @@ describe("Open market", () => {
       ["TEAM_1_WIN", "DRAW", "TEAM_2_WIN"],
       [1.001],
     );
-    const openMarketResponse = await openMarket(protocolProgram, market.pk);
+    const openMarketResponse = await openMarket(
+      protocolProgram,
+      market.pk,
+      false,
+    );
     const updatedMarket = await monaco.fetchMarket(market.pk);
 
     assert(openMarketResponse.success);
@@ -172,7 +176,11 @@ describe("Open market", () => {
   it("Fails when market isn't in Initializing status", async () => {
     const protocolProgram = workspace.MonacoProtocol;
     const market = await monaco.create3WayMarket([1.001]);
-    const openMarketResponse = await openMarket(protocolProgram, market.pk);
+    const openMarketResponse = await openMarket(
+      protocolProgram,
+      market.pk,
+      false,
+    );
 
     assert.equal(openMarketResponse.success, false);
     assert.equal(openMarketResponse.data, undefined);

@@ -18,5 +18,6 @@ mod math;
 mod operator;
 mod payment;
 
+pub mod market_liquidities;
 pub mod market_position;
 pub mod transfer;

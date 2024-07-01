@@ -35,7 +35,6 @@ describe("Order Settlement Payment 2", () => {
     orderPks.push(await market.forOrder(outcome, 10, 2.01, purchaser));
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     // All orders are created
     assert.deepEqual(
@@ -137,9 +136,6 @@ describe("Order Settlement Payment 2", () => {
       ],
     );
 
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     // All orders are matched

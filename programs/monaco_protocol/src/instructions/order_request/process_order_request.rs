@@ -86,12 +86,12 @@ pub fn process_order_request<'info>(
 
     // calculate payment
     let mut total_refund = 0_u64;
-    for order_match in &order_matches {
+    for (matched_stake, matched_price) in order_matches {
         let refund = market_position::update_on_order_match(
             market_position,
             order,
-            order_match.stake,
-            order_match.price,
+            matched_stake,
+            matched_price,
         )?;
         total_refund = total_refund
             .checked_add(refund)
@@ -102,8 +102,8 @@ pub fn process_order_request<'info>(
             market_position,
             order,
             match order.for_outcome {
-                true => order_match.stake,
-                false => calculate_risk_from_stake(order_match.stake, order_match.price),
+                true => matched_stake,
+                false => calculate_risk_from_stake(matched_stake, matched_price),
             },
         )?;
     }

@@ -48,8 +48,6 @@ describe("Order Payments: Settlement Set 05", () => {
     );
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -139,8 +137,6 @@ describe("Order Payments: Settlement Set 05", () => {
     );
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -229,8 +225,6 @@ describe("Order Payments: Settlement Set 05", () => {
       ],
     );
 
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     assert.deepEqual(

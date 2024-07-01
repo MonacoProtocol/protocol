@@ -5,8 +5,11 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
+  GetPublicKeys,
   MarketLiquidities,
+  MarketLiquiditiesAccounts,
 } from "../types";
+import { BooleanCriterion, toFilters } from "./queries";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market liquidities account.
@@ -71,4 +74,58 @@ export async function getMarketLiquidities(
     response.addError(e);
   }
   return response.body;
+}
+
+export async function getCrossMatchEnabledMarketLiquiditiesPks(
+  program: Program,
+): Promise<ClientResponse<GetPublicKeys>> {
+  const response = new ResponseFactory({} as GetPublicKeys);
+
+  try {
+    const accountKeys = await getPublicKeys(program);
+    response.addResponseData({ publicKeys: accountKeys });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+export async function getCrossMatchEnabledMarketLiquidities(
+  program: Program,
+): Promise<ClientResponse<MarketLiquiditiesAccounts>> {
+  const response = new ResponseFactory({} as MarketLiquiditiesAccounts);
+
+  try {
+    const accountKeys = await getPublicKeys(program);
+
+    const accountsWithData =
+      (await program.account.marketLiquidities.fetchMultiple(
+        accountKeys,
+      )) as MarketLiquidities[];
+
+    const result = accountKeys
+      .map((accountKey, i) => {
+        return { publicKey: accountKey, account: accountsWithData[i] };
+      })
+      .filter((o) => o.account);
+
+    response.addResponseData({ accounts: result });
+  } catch (e) {
+    response.addError(e);
+  }
+  return response.body;
+}
+
+async function getPublicKeys(program: Program): Promise<PublicKey[]> {
+  const enableCrossMatchingFilter = new BooleanCriterion(8 + 32);
+  enableCrossMatchingFilter.setValue(true);
+
+  const accounts = await program.provider.connection.getProgramAccounts(
+    program.programId,
+    {
+      dataSlice: { offset: 0, length: 0 }, // fetch without any data.
+      filters: toFilters("market_liquidities", enableCrossMatchingFilter),
+    },
+  );
+  return accounts.map((account) => account.pubkey);
 }

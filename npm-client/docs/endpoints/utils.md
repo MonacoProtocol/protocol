@@ -26,6 +26,7 @@
 *   [confirmTransaction][22]
     *   [Parameters][23]
     *   [Examples][24]
+*   [randomSeed16][25]
 
 ## getMarketAccounts
 
@@ -35,9 +36,9 @@ For the provided market, outcome, price and forOutcome condition - return all th
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `forOutcome` **[boolean][25]** {boolean} bool representing for or against a market outcome
-*   `marketOutcomeIndex` **[number][26]** {number} index representing the chosen outcome of a market
-*   `price` **[number][26]** {number} price for order
+*   `forOutcome` **[boolean][26]** {boolean} bool representing for or against a market outcome
+*   `marketOutcomeIndex` **[number][27]** {number} index representing the chosen outcome of a market
+*   `price` **[number][27]** {number} price for order
 
 ### Examples
 
@@ -49,7 +50,7 @@ const price = 5.9
 const marketAccounts = await getMarketAccounts(program, marketPK, forOutcome, marketOutcomeIndex, price)
 ```
 
-Returns **[Promise][27]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
+Returns **[Promise][28]\<ClientResponse\<MarketAccountsForCreateOrder>>**&#x20;
 
 ## uiStakeToInteger
 
@@ -58,9 +59,9 @@ For the provided stake and market, get a BN representation of the stake adjusted
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `stake` **[number][26]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
+*   `stake` **[number][27]** {number} ui stake amount, i.e. how many tokens a wallet wishes to stake on an outcome
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `mintDecimals` **[number][26]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
+*   `mintDecimals` **[number][27]?** {number} Optional: the decimal number used on the mint for the market (for example USDT has 6 decimals)
 
 ### Examples
 
@@ -114,7 +115,7 @@ For the provided product title, get the pda for the Product account
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `productTitle` **[string][28]** title of product
+*   `productTitle` **[string][29]** title of product
 
 ### Examples
 
@@ -122,7 +123,7 @@ For the provided product title, get the pda for the Product account
 const productPk = await findProductPda(program, "EXAMPLE_BETTING_EXCHANGE")
 ```
 
-Returns **[Promise][27]\<PublicKey>**&#x20;
+Returns **[Promise][28]\<PublicKey>**&#x20;
 
 ## signAndSendInstructions
 
@@ -131,8 +132,8 @@ Sign and send, as the provider authority, the given transaction instructions.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `instructions` **[Array][29]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
-*   `computeUnitLimit` **[number][26]?** {number} optional limit on the number of compute units to be used by the transaction
+*   `instructions` **[Array][30]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `computeUnitLimit` **[number][27]?** {number} optional limit on the number of compute units to be used by the transaction
 
 ### Examples
 
@@ -153,9 +154,9 @@ Note: batches can be optimised for size by ensuring that instructions have commo
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `instructions` **[Array][29]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
-*   `batchSize` **[number][26]** {number} number of instructions to be included in each transaction
-*   `computeUnitLimit` **[number][26]?** {number} optional limit on the number of compute units to be used by the transaction
+*   `instructions` **[Array][30]\<TransactionInstruction>** {TransactionInstruction\[]} list of instruction for the transaction
+*   `batchSize` **[number][27]** {number} number of instructions to be included in each transaction
+*   `computeUnitLimit` **[number][27]?** {number} optional limit on the number of compute units to be used by the transaction
 
 ### Examples
 
@@ -179,7 +180,7 @@ For the provided transaction signature, confirm the transaction.
 ### Parameters
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
-*   `signature` **([string][28] | void)** {string | void} signature of the transaction
+*   `signature` **([string][29] | void)** {string | void} signature of the transaction
 
 ### Examples
 
@@ -190,6 +191,12 @@ const confirmation = await confirmTransaction(program, transaction.data.signatur
 ```
 
 Returns **ClientResponse\<unknown>** empty client response containing no data, only success state and errors
+
+## randomSeed16
+
+Return a new seed 16 bytes long as Uint8Array
+
+Returns **[Uint8Array][31]**&#x20;
 
 [1]: #getmarketaccounts
 
@@ -239,12 +246,16 @@ Returns **ClientResponse\<unknown>** empty client response containing no data, o
 
 [24]: #examples-7
 
-[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[25]: #randomseed16
 
-[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
 
-[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[30]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[31]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
