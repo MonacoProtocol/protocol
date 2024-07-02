@@ -20,6 +20,7 @@ impl MarketLiquidities {
     const LIQUIDITIES_VEC_LENGTH: usize = 30_usize;
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + PUB_KEY_SIZE // market
+        + BOOL_SIZE // enable_cross_matching
         + U64_SIZE // stake_matched_total
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
@@ -49,13 +50,13 @@ impl MarketLiquidities {
     pub fn add_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
         let is_full = self.is_full();
         let liquidities = &mut self.liquidities_for;
-        let sources = &[];
+        let sources = [];
         Self::add_liquidity(
             liquidities,
-            Self::sorter_for(outcome, price, sources),
+            Self::sorter_for(outcome, price, &sources),
             outcome,
             price,
-            sources,
+            &sources,
             liquidity,
             is_full,
         )
@@ -69,13 +70,13 @@ impl MarketLiquidities {
     ) -> Result<()> {
         let is_full = self.is_full();
         let liquidities = &mut self.liquidities_against;
-        let sources = &[];
+        let sources = [];
         Self::add_liquidity(
             liquidities,
-            Self::sorter_against(outcome, price, sources),
+            Self::sorter_against(outcome, price, &sources),
             outcome,
             price,
-            sources,
+            &sources,
             liquidity,
             is_full,
         )
