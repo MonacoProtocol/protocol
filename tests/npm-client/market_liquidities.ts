@@ -1,9 +1,11 @@
 import assert from "assert";
 import {
   findMarketLiquiditiesPda,
+  GetAccount,
   getCrossMatchEnabledMarketLiquidities,
   getCrossMatchEnabledMarketLiquiditiesPks,
   getMarketLiquidities,
+  MarketLiquidities,
   MarketLiquidity,
 } from "../../npm-client";
 import { monaco } from "../util/wrappers";
@@ -64,6 +66,8 @@ describe("Market Liquidities", () => {
     );
     const marketPkStringsCheck = (v: PublicKey) =>
       marketPkStrings.includes(v.toBase58());
+    const marketPkStringsCheck2 = (v: GetAccount<MarketLiquidities>) =>
+      marketPkStrings.includes(v.publicKey.toBase58());
     // need to filter markets as markets from other parallel tests are reported too
 
     const pks = (
@@ -72,12 +76,12 @@ describe("Market Liquidities", () => {
 
     assert.equal(pks.length, 1);
     assert.equal(pks[0].toBase58(), market3.liquiditiesPk.toBase58());
-    const accounts = await getCrossMatchEnabledMarketLiquidities(
-      monaco.program,
-    );
-    assert.equal(accounts.data.accounts.length, 1);
+    const accounts = (
+      await getCrossMatchEnabledMarketLiquidities(monaco.program)
+    ).data.accounts.filter(marketPkStringsCheck2);
+    assert.equal(accounts.length, 1);
     assert.equal(
-      accounts.data.accounts[0].publicKey.toBase58(),
+      accounts[0].publicKey.toBase58(),
       market3.liquiditiesPk.toBase58(),
     );
   });
