@@ -74,7 +74,7 @@ fn match_for_order(
 
         let stake_matched = liquidity_value.min(order.stake_unmatched);
         if liquidity.sources.is_empty() {
-            // straight match
+            // direct match
             market_matching_queue
                 .matches
                 .enqueue(OrderMatch::maker(
@@ -204,7 +204,7 @@ fn match_against_order(
 
         let stake_matched = liquidity_value.min(order.stake_unmatched);
         if liquidity.sources.is_empty() {
-            // straight match
+            // direct match
             market_matching_queue
                 .matches
                 .enqueue(OrderMatch::maker(
@@ -297,7 +297,7 @@ mod test_match_for_order {
     use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn straight_match() {
+    fn direct_match() {
         let market_pk = Pubkey::new_unique();
         let payer_pk = Pubkey::new_unique();
 
@@ -509,7 +509,7 @@ mod test_match_against_order {
     use solana_program::pubkey::Pubkey;
 
     #[test]
-    fn straight_match() {
+    fn direct_match() {
         let market_pk = Pubkey::new_unique();
         let payer_pk = Pubkey::new_unique();
 
