@@ -526,7 +526,8 @@ pub struct ProcessOrderMatchTaker<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-fn market_matching_pool_constraint(
+// used by ProcessOrderMatchMaker to validate correctness of MarketMatchingPool account
+fn maker_market_matching_pool_constraint(
     market_matching_queue: &Account<MarketMatchingQueue>,
     market_matching_pool: &Account<MarketMatchingPool>,
 ) -> bool {
@@ -540,6 +541,7 @@ fn market_matching_pool_constraint(
     }
 }
 
+// used by ProcessOrderMatchMaker to validate correctness of Order account
 fn maker_order_constraint(
     market_matching_pool: &Account<MarketMatchingPool>,
     maker_order: &Account<Order>,
@@ -570,14 +572,14 @@ pub struct ProcessOrderMatchMaker<'info> {
             @ CoreError::MatchingQueueIsEmpty,
     )]
     pub market_matching_queue: Box<Account<'info, MarketMatchingQueue>>,
-
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
-        constraint = market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
+        constraint = maker_market_matching_pool_constraint(&market_matching_queue, &market_matching_pool)
             @ CoreError::MatchingMarketMatchingPoolMismatch,
     )]
     pub market_matching_pool: Box<Account<'info, MarketMatchingPool>>,
+
     #[account(
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,

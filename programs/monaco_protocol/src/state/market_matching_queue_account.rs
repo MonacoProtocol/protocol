@@ -112,6 +112,8 @@ impl MatchingQueue {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
 pub struct OrderMatch {
+    // if None then it represents maker side and order needs to be determined from the pool
+    // otherwise it indicates taker's order pk that needs to be processed
     pub pk: Option<Pubkey>,
 
     pub for_outcome: bool,
