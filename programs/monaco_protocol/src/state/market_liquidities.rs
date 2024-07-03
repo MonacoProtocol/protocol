@@ -209,17 +209,25 @@ impl MarketLiquidities {
     ) {
         match liquidities.binary_search_by(search_function) {
             Ok(index) => {
-                liquidities[index].liquidity = liquidity;
+                if liquidity == 0 {
+                    liquidities.remove(index);
+                } else {
+                    liquidities[index].liquidity = liquidity;
+                }
             }
-            Err(index) => liquidities.insert(
-                index,
-                MarketOutcomePriceLiquidity {
-                    outcome,
-                    price,
-                    liquidity,
-                    sources,
-                },
-            ),
+            Err(index) => {
+                if liquidity > 0 {
+                    liquidities.insert(
+                        index,
+                        MarketOutcomePriceLiquidity {
+                            outcome,
+                            price,
+                            liquidity,
+                            sources,
+                        },
+                    )
+                }
+            }
         }
     }
 
@@ -506,6 +514,15 @@ mod tests {
             ],
             mls.liquidities_for
         );
+
+        mls.remove_liquidity_against(0, 2.700, 100).unwrap();
+        mls.update_cross_liquidity_for(&sources1);
+        mls.update_cross_liquidity_for(&sources2);
+
+        assert_eq!(
+            vec![mock_liquidity_with_sources(2, 3.375, &sources2, 40,),],
+            mls.liquidities_for
+        );
     }
 
     #[test]
@@ -527,6 +544,15 @@ mod tests {
                 mock_liquidity_with_sources(2, 3.375, &sources1, 80,),
                 mock_liquidity_with_sources(2, 3.375, &sources2, 40,),
             ],
+            mls.liquidities_against
+        );
+
+        mls.remove_liquidity_for(0, 2.700, 100).unwrap();
+        mls.update_cross_liquidity_against(&sources1);
+        mls.update_cross_liquidity_against(&sources2);
+
+        assert_eq!(
+            vec![mock_liquidity_with_sources(2, 3.375, &sources2, 40,),],
             mls.liquidities_against
         );
     }
