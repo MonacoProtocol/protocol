@@ -1,5 +1,7 @@
 use crate::error::CoreError;
-use crate::instructions::{calculate_price_cross, calculate_stake_cross};
+use crate::instructions::{
+    calculate_for_payout, calculate_price_cross, calculate_stake_from_payout,
+};
 use crate::state::market_account::MarketOrderBehaviour;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
@@ -119,6 +121,40 @@ impl MarketLiquidities {
         Ok(())
     }
 
+    // this method does not validate parameters so value returned might not be real
+    // assumption is that all (n-1) different sources were passed for the n-outcome market and the price is of the n-th outcome
+    pub fn get_cross_liquidity_for(&self, sources: &[LiquiditySource], price: f64) -> u64 {
+        calculate_stake_from_payout(
+            sources
+                .iter()
+                .map(|liquidity_source| {
+                    self.get_liquidity_against(liquidity_source.outcome, liquidity_source.price)
+                        .map(|l| calculate_for_payout(l.liquidity, l.price))
+                        .unwrap_or(0_u64)
+                })
+                .min()
+                .unwrap_or(0_u64),
+            price,
+        )
+    }
+
+    // this method does not validate parameters so value returned might not be real
+    // assumption is that all (n-1) different sources were passed for the n-outcome market and the price is of the n-th outcome
+    pub fn get_cross_liquidity_against(&self, sources: &[LiquiditySource], price: f64) -> u64 {
+        calculate_stake_from_payout(
+            sources
+                .iter()
+                .map(|liquidity_source| {
+                    self.get_liquidity_for(liquidity_source.outcome, liquidity_source.price)
+                        .map(|l| calculate_for_payout(l.liquidity, l.price))
+                        .unwrap_or(0_u64)
+                })
+                .min()
+                .unwrap_or(0_u64),
+            price,
+        )
+    }
+
     pub fn update_cross_liquidity_for(&mut self, sources: &[LiquiditySource]) {
         // silly way of detecting which outcome is supposed to be updated
         // sum of all the outcomes minus sum of all provided ones equals the one we want
@@ -130,24 +166,7 @@ impl MarketLiquidities {
             .map(|source| source.price)
             .collect::<Vec<f64>>();
         if let Some(cross_price) = calculate_price_cross(&source_prices) {
-            let cross_liquidity = sources
-                .iter()
-                .map(|source_liquidity_key| {
-                    let source_liquidity = self.get_liquidity_against(
-                        source_liquidity_key.outcome,
-                        source_liquidity_key.price,
-                    );
-                    calculate_stake_cross(
-                        source_liquidity
-                            .map(|source_liquidity| source_liquidity.liquidity)
-                            .unwrap_or(0_u64),
-                        source_liquidity_key.price,
-                        cross_price,
-                    )
-                })
-                .min()
-                .unwrap_or(0_u64);
-
+            let cross_liquidity = self.get_cross_liquidity_for(sources, cross_price);
             Self::set_liquidity(
                 &mut self.liquidities_for,
                 Self::sorter_for(outcome, cross_price, sources),
@@ -170,24 +189,7 @@ impl MarketLiquidities {
             .map(|source| source.price)
             .collect::<Vec<f64>>();
         if let Some(cross_price) = calculate_price_cross(&source_prices) {
-            let cross_liquidity = sources
-                .iter()
-                .map(|source_liquidity_key| {
-                    let source_liquidity = self.get_liquidity_for(
-                        source_liquidity_key.outcome,
-                        source_liquidity_key.price,
-                    );
-                    calculate_stake_cross(
-                        source_liquidity
-                            .map(|source_liquidity| source_liquidity.liquidity)
-                            .unwrap_or(0_u64),
-                        source_liquidity_key.price,
-                        cross_price,
-                    )
-                })
-                .min()
-                .unwrap_or(0_u64);
-
+            let cross_liquidity = self.get_cross_liquidity_against(sources, cross_price);
             Self::set_liquidity(
                 &mut self.liquidities_against,
                 Self::sorter_against(outcome, cross_price, sources),

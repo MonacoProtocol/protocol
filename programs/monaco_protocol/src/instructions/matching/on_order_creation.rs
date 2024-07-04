@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
 use crate::error::CoreError::MatchingQueueIsFull;
-use crate::instructions::{
-    calculate_for_payout, calculate_stake_cross, calculate_stake_from_payout,
-};
+use crate::instructions::calculate_stake_cross;
 use crate::state::market_liquidities::MarketLiquidities;
 use crate::state::market_matching_queue_account::*;
 use crate::state::order_account::*;
@@ -56,20 +54,7 @@ fn match_for_order(
             liquidity.liquidity
         } else {
             // jit cross liquidity calculation
-            calculate_stake_from_payout(
-                liquidity
-                    .sources
-                    .iter()
-                    .map(|liquidity_source| {
-                        market_liquidities
-                            .get_liquidity_for(liquidity_source.outcome, liquidity_source.price)
-                            .map(|l| calculate_for_payout(l.liquidity, l.price))
-                            .unwrap_or(0_u64)
-                    })
-                    .min()
-                    .unwrap_or(0_u64),
-                liquidity.price,
-            )
+            market_liquidities.get_cross_liquidity_against(&liquidity.sources, liquidity.price)
         };
 
         let stake_matched = liquidity_value.min(order.stake_unmatched);
@@ -186,20 +171,7 @@ fn match_against_order(
             liquidity.liquidity
         } else {
             // jit cross liquidity calculation
-            calculate_stake_from_payout(
-                liquidity
-                    .sources
-                    .iter()
-                    .map(|liquidity_source| {
-                        market_liquidities
-                            .get_liquidity_against(liquidity_source.outcome, liquidity_source.price)
-                            .map(|l| calculate_for_payout(l.liquidity, l.price))
-                            .unwrap_or(0_u64)
-                    })
-                    .min()
-                    .unwrap_or(0_u64),
-                liquidity.price,
-            )
+            market_liquidities.get_cross_liquidity_for(&liquidity.sources, liquidity.price)
         };
 
         let stake_matched = liquidity_value.min(order.stake_unmatched);
