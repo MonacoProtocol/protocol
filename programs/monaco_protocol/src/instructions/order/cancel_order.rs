@@ -5,6 +5,7 @@ use crate::error::CoreError;
 use crate::instructions::market::move_market_to_inplay;
 use crate::instructions::{market_position, matching, transfer};
 use crate::state::market_account::MarketStatus;
+use crate::state::market_liquidities::LiquiditySource;
 use crate::state::order_account::*;
 
 pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
@@ -51,20 +52,33 @@ pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
     // update liquidity if the order was still present in the matching pool
     if removed_from_queue {
         match order.for_outcome {
-            true => market_liquidities
-                .remove_liquidity_for(
-                    order.market_outcome_index,
-                    order.expected_price,
-                    order.voided_stake,
-                )
-                .map_err(|_| CoreError::CancelOrderNotCancellable)?,
-            false => market_liquidities
-                .remove_liquidity_against(
-                    order.market_outcome_index,
-                    order.expected_price,
-                    order.voided_stake,
-                )
-                .map_err(|_| CoreError::CancelOrderNotCancellable)?,
+            true => {
+                market_liquidities
+                    .remove_liquidity_for(
+                        order.market_outcome_index,
+                        order.expected_price,
+                        order.voided_stake,
+                    )
+                    .map_err(|_| CoreError::CancelOrderNotCancellable)?;
+
+                let liquidity_source =
+                    LiquiditySource::new(order.market_outcome_index, order.expected_price);
+                market_liquidities.update_all_cross_liquidity_against(&liquidity_source);
+            }
+
+            false => {
+                market_liquidities
+                    .remove_liquidity_against(
+                        order.market_outcome_index,
+                        order.expected_price,
+                        order.voided_stake,
+                    )
+                    .map_err(|_| CoreError::CancelOrderNotCancellable)?;
+
+                let liquidity_source =
+                    LiquiditySource::new(order.market_outcome_index, order.expected_price);
+                market_liquidities.update_all_cross_liquidity_for(&liquidity_source);
+            }
         }
     }
 

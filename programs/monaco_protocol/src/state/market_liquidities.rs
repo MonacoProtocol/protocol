@@ -233,6 +233,52 @@ impl MarketLiquidities {
         }
     }
 
+    pub fn update_all_cross_liquidity_for(&mut self, liquidity_source: &LiquiditySource) {
+        let indexed_liquidity_amounts = self
+            .liquidities_for
+            .iter()
+            .enumerate()
+            .filter(|(_, liquidity)| liquidity.sources.contains(liquidity_source))
+            .map(|(index, liquidity)| {
+                (
+                    index,
+                    self.get_cross_liquidity_for(&liquidity.sources, liquidity.price),
+                )
+            })
+            .collect::<Vec<(usize, u64)>>();
+
+        for (index, liquidity_amount) in indexed_liquidity_amounts {
+            if liquidity_amount == 0 {
+                self.liquidities_for.remove(index);
+            } else {
+                self.liquidities_for[index].liquidity = liquidity_amount;
+            }
+        }
+    }
+
+    pub fn update_all_cross_liquidity_against(&mut self, liquidity_source: &LiquiditySource) {
+        let indexed_liquidity_amounts = self
+            .liquidities_against
+            .iter()
+            .enumerate()
+            .filter(|(_, liquidity)| liquidity.sources.contains(liquidity_source))
+            .map(|(index, liquidity)| {
+                (
+                    index,
+                    self.get_cross_liquidity_against(&liquidity.sources, liquidity.price),
+                )
+            })
+            .collect::<Vec<(usize, u64)>>();
+
+        for (index, liquidity_amount) in indexed_liquidity_amounts {
+            if liquidity_amount == 0 {
+                self.liquidities_against.remove(index);
+            } else {
+                self.liquidities_against[index].liquidity = liquidity_amount;
+            }
+        }
+    }
+
     pub fn remove_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
         let liquidities = &mut self.liquidities_for;
         let sorter = Self::sorter_for(outcome, price, &[]);
