@@ -80,7 +80,7 @@ mod test {
         .expect("update_market_liquidities_with_cross_liquidity failed");
 
         assert_eq!(
-            vec!((1, 1.5, 2000), (1, 1.4, 2500), (1, 1.32, 3125)),
+            vec!((1, 1.5, 2000), (1, 1.4, 2000), (1, 1.32, 3000)),
             liquidities(&market_liquidities.liquidities_against)
         );
     }
@@ -90,12 +90,18 @@ mod test {
         // 2.0, 3.0, 6.0
         // 2.1, 3.0, 5.25
         let mut market_liquidities = mock_market_liquidities(Pubkey::new_unique());
-        market_liquidities.add_liquidity_for(0, 2.0, 100).unwrap();
-        market_liquidities.add_liquidity_for(0, 2.1, 100).unwrap();
-        market_liquidities.add_liquidity_for(1, 3.0, 100).unwrap();
+        market_liquidities
+            .add_liquidity_for(0, 2.0, 100_000)
+            .unwrap();
+        market_liquidities
+            .add_liquidity_for(0, 2.1, 100_000)
+            .unwrap();
+        market_liquidities
+            .add_liquidity_for(1, 3.0, 100_000)
+            .unwrap();
 
         assert_eq!(
-            vec!((0, 2.0, 100), (0, 2.1, 100), (1, 3.0, 100)),
+            vec!((0, 2.0, 100_000), (0, 2.1, 100_000), (1, 3.0, 100_000)),
             liquidities(&market_liquidities.liquidities_for)
         );
 
@@ -117,7 +123,7 @@ mod test {
         .expect("update_market_liquidities_with_cross_liquidity failed");
 
         assert_eq!(
-            vec!((2, 6.0, 33), (2, 5.25, 40)),
+            vec!((2, 6.0, 33_000), (2, 5.25, 40_000)),
             liquidities(&market_liquidities.liquidities_against)
         );
     }
