@@ -80,7 +80,6 @@ describe("Order Wholesale Payment 04", () => {
     // MATCH ---------------------------------------------------------------------
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([
@@ -211,7 +210,6 @@ describe("Order Wholesale Payment 04", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     assert.deepEqual(
@@ -344,7 +342,6 @@ describe("Order Wholesale Payment 04", () => {
 
     // MATCH ---------------------------------------------------------------------
 
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     assert.deepEqual(

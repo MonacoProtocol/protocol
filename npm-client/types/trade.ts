@@ -25,5 +25,5 @@ export type CreateTradeResponse = {
 
 export type TradePdaResponse = {
   tradePk: PublicKey;
-  distinctSeed: string;
+  distinctSeed: Uint8Array;
 };

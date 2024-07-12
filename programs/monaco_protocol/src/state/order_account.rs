@@ -1,3 +1,5 @@
+use crate::error::CoreError;
+use crate::instructions::calculate_for_payout;
 use crate::state::type_size::*;
 use anchor_lang::prelude::*;
 
@@ -46,6 +48,19 @@ impl Order {
             || self.order_status == OrderStatus::Voided
     }
 
+    pub fn match_stake_unmatched(&mut self, stake_matched: u64, price_matched: f64) -> Result<()> {
+        self.stake_unmatched = self
+            .stake_unmatched
+            .checked_sub(stake_matched)
+            .ok_or(CoreError::ArithmeticError)?;
+        self.payout = self
+            .payout
+            .checked_add(calculate_for_payout(stake_matched, price_matched))
+            .ok_or(CoreError::ArithmeticError)?;
+        self.order_status = OrderStatus::Matched;
+        Ok(())
+    }
+
     pub fn void_stake_unmatched(&mut self) {
         self.voided_stake = self.stake_unmatched;
         self.stake_unmatched = 0_u64;
@@ -63,4 +78,138 @@ pub enum OrderStatus {
     SettledLose, // order lost, nothing to pay out
     Cancelled,   // order cancelled
     Voided,      // order voided
+}
+
+#[cfg(test)]
+use crate::state::market_order_request_queue::OrderRequest;
+
+#[cfg(test)]
+pub fn mock_order_default() -> Order {
+    mock_order(Pubkey::new_unique(), 0, true, 0.0, 0, Pubkey::new_unique())
+}
+
+#[cfg(test)]
+pub fn mock_order_from_order_request(
+    market: Pubkey,
+    order_request: OrderRequest,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        market,
+        purchaser: order_request.purchaser,
+        market_outcome_index: order_request.market_outcome_index,
+        for_outcome: order_request.for_outcome,
+        stake: order_request.stake,
+        expected_price: order_request.expected_price,
+        stake_unmatched: order_request.stake,
+        voided_stake: 0_u64,
+        payout: 0_u64,
+        order_status: OrderStatus::Open,
+        product: order_request.product,
+        product_commission_rate: order_request.product_commission_rate,
+        creation_timestamp: 0,
+        payer,
+    }
+}
+
+#[cfg(test)]
+pub fn mock_order(
+    market: Pubkey,
+    market_outcome_index: u16,
+    for_outcome: bool,
+    expected_price: f64,
+    stake: u64,
+    payer: Pubkey,
+) -> Order {
+    Order {
+        purchaser: Pubkey::new_unique(),
+        market,
+        market_outcome_index,
+        for_outcome,
+        order_status: OrderStatus::Open,
+        product: None,
+        product_commission_rate: 0.0,
+        stake,
+        voided_stake: 0,
+        expected_price,
+        creation_timestamp: 0,
+        stake_unmatched: stake,
+        payout: 0,
+        payer,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::order_account::OrderStatus;
+    use anchor_lang::prelude::Pubkey;
+
+    #[test]
+    fn test_match_order_no_match() {
+        // given
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            1000,
+            Pubkey::new_unique(),
+        );
+
+        // when
+        let result = order.match_stake_unmatched(1001, 2.10);
+
+        // then
+        assert!(result.is_err());
+        assert_eq!(order.order_status, OrderStatus::Open);
+        assert_eq!(order.stake_unmatched, 1000);
+        assert_eq!(order.payout, 0);
+    }
+
+    #[test]
+    fn test_match_order_partial_match() {
+        // given
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            1000,
+            Pubkey::new_unique(),
+        );
+        let stake_matched = order.stake_unmatched - 10;
+
+        // when
+        let result = order.match_stake_unmatched(stake_matched, 2.10);
+
+        // then
+        assert!(result.is_ok());
+        assert_eq!(order.order_status, OrderStatus::Matched);
+        assert_eq!(order.stake_unmatched, 10);
+        assert_eq!(order.payout, 2079);
+    }
+
+    #[test]
+    fn test_match_order_full_match() {
+        // when
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            1000,
+            Pubkey::new_unique(),
+        );
+        let stake_matched = order.stake_unmatched;
+
+        // when
+        let result = order.match_stake_unmatched(stake_matched, 2.10);
+
+        // then
+        assert!(result.is_ok());
+        assert_eq!(order.order_status, OrderStatus::Matched);
+        assert_eq!(order.stake_unmatched, 0);
+        assert_eq!(order.payout, 2100);
+    }
 }

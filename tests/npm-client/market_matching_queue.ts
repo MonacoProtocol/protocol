@@ -39,7 +39,7 @@ describe("Market Matching Queue", () => {
     );
     assert.equal(queue1.data.account.matches.empty, false);
     assert.equal(queue1.data.account.matches.front, 0);
-    assert.equal(queue1.data.account.matches.len, 1);
+    assert.equal(queue1.data.account.matches.len, 2);
 
     await market.processMatchingQueue();
 
@@ -52,7 +52,7 @@ describe("Market Matching Queue", () => {
       market.pk.toBase58(),
     );
     assert.equal(queue2.data.account.matches.empty, true);
-    assert.equal(queue2.data.account.matches.front, 1);
+    assert.equal(queue2.data.account.matches.front, 2);
     assert.equal(queue2.data.account.matches.len, 0);
   });
 
@@ -81,6 +81,7 @@ describe("Market Matching Queue", () => {
       queuePkStrings.includes(a.publicKey.toBase58());
     const pkStringsCheck2 = (a: PublicKey) =>
       queuePkStrings.includes(a.toBase58());
+    // need to filter markets as markets from other parallel tests are reported too
 
     const queues1 = await getNonEmptyMarketMatchingQueues(monaco.program);
     assert.equal(

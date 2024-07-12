@@ -7,6 +7,7 @@ use crate::instructions::market_position;
 use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
+use crate::state::market_liquidities::LiquiditySource;
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
@@ -30,6 +31,7 @@ declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
+    use crate::state::market_liquidities::LiquiditySource;
     use crate::state::market_matching_queue_account::MarketMatchingQueue;
 
     pub const PRICE_SCALE: u8 = 3_u8;
@@ -290,46 +292,73 @@ pub mod monaco_protocol {
         Ok(())
     }
 
-    pub fn process_order_match(ctx: Context<ProcessOrderMatch>) -> Result<()> {
-        let stake_unmatched = ctx.accounts.maker_order.stake_unmatched;
-
-        // if there's nothing to match close the trades
-        if stake_unmatched == 0 {
-            ctx.accounts
-                .taker_order_trade
-                .close(ctx.accounts.crank_operator.to_account_info())?;
-            ctx.accounts
-                .maker_order_trade
-                .close(ctx.accounts.crank_operator.to_account_info())?;
-
-        // otherwise just do the matching
-        } else {
-            let refund_amount = instructions::matching::on_order_match(
-                &ctx.accounts.market.key(),
-                &mut ctx.accounts.market,
-                &mut ctx.accounts.market_matching_queue,
-                &mut ctx.accounts.market_matching_pool,
-                &ctx.accounts.maker_order.key(),
-                &mut ctx.accounts.maker_order,
-                &mut ctx.accounts.market_position,
-                &mut ctx.accounts.maker_order_trade,
-                &mut ctx.accounts.taker_order_trade,
-                &ctx.accounts.crank_operator.key(),
-            )?;
-
-            transfer::transfer_from_market_escrow(
-                &ctx.accounts.market_escrow,
-                &ctx.accounts.purchaser_token,
-                &ctx.accounts.token_program,
-                &ctx.accounts.market,
-                refund_amount,
-            )?;
-        }
+    #[allow(unused_variables)]
+    pub fn process_order_match_taker(
+        ctx: Context<ProcessOrderMatchTaker>,
+        order_trade_seed: [u8; 16],
+    ) -> Result<()> {
+        instructions::matching::on_order_match_taker(
+            &ctx.accounts.market.key(),
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.market_matching_queue,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.order_trade,
+            &ctx.accounts.crank_operator.key(),
+        )?;
 
         Ok(())
     }
 
-    pub fn match_orders(mut ctx: Context<MatchOrders>) -> Result<()> {
+    #[allow(unused_variables)]
+    pub fn process_order_match_maker(
+        ctx: Context<ProcessOrderMatchMaker>,
+        order_trade_seed: [u8; 16],
+    ) -> Result<()> {
+        let refund_amount = instructions::matching::on_order_match_maker(
+            &mut ctx.accounts.market,
+            &mut ctx.accounts.market_matching_queue,
+            &mut ctx.accounts.market_matching_pool,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+            &mut ctx.accounts.order_trade,
+            &ctx.accounts.crank_operator.key(),
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
+
+        Ok(())
+    }
+
+    pub fn update_market_liquidities_with_cross_liquidity(
+        ctx: Context<UpdateMarketLiquidities>,
+        source_for_outcome: bool,
+        source_liquidities: Vec<LiquiditySource>,
+        cross_liquidity: LiquiditySource,
+    ) -> Result<()> {
+        instructions::market_liquidities::update_market_liquidities_with_cross_liquidity(
+            &mut ctx.accounts.market_liquidities,
+            source_for_outcome,
+            source_liquidities,
+            cross_liquidity,
+        )?;
+
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn match_orders(
+        mut ctx: Context<MatchOrders>,
+        trade_for_seed: [u8; 16],
+        trade_against_seed: [u8; 16],
+    ) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.crank_operator.key,
             &ctx.accounts.authorised_operators,
@@ -349,8 +378,8 @@ pub mod monaco_protocol {
 
         if for_stake_unmatched == 0
             || against_stake_unmatched == 0
-            || liquidity_for.liquidity < against_stake_unmatched
-            || liquidity_against.liquidity < for_stake_unmatched
+            || liquidity_for.map_or(0_u64, |x| x.liquidity) < against_stake_unmatched
+            || liquidity_against.map_or(0_u64, |x| x.liquidity) < for_stake_unmatched
         {
             ctx.accounts
                 .trade_for
@@ -579,7 +608,7 @@ pub mod monaco_protocol {
         )
     }
 
-    pub fn open_market(ctx: Context<OpenMarket>) -> Result<()> {
+    pub fn open_market(ctx: Context<OpenMarket>, enable_cross_matching: bool) -> Result<()> {
         verify_operator_authority(
             ctx.accounts.market_operator.key,
             &ctx.accounts.authorised_operators,
@@ -592,6 +621,7 @@ pub mod monaco_protocol {
         instructions::market::open(
             &ctx.accounts.market.key(),
             &mut ctx.accounts.market,
+            enable_cross_matching,
             &mut ctx.accounts.liquidities,
             &mut ctx.accounts.matching_queue,
             &mut ctx.accounts.commission_payment_queue,

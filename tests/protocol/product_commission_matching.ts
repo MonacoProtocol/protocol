@@ -171,7 +171,8 @@ describe("Product commissions", () => {
       forPurchaser.publicKey,
     );
 
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     const forMarketPositionMatch1 =
       await monaco.program.account.marketPosition.fetch(
@@ -194,7 +195,8 @@ describe("Product commissions", () => {
       productCommission,
     );
 
-    await market.processMatchingQueue();
+    await market.processMatchingQueueOnce();
+    await market.processMatchingQueueOnce();
 
     const forMarketPositionMatch2 =
       await monaco.program.account.marketPosition.fetch(

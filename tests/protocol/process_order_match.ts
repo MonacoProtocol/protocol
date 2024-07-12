@@ -33,74 +33,6 @@ describe("Matching Crank", () => {
     );
   });
 
-  /**
-   * Trying to test passing a maker order that has no more unmatched stake.
-   * However, such situation would mean order would be off the matching queue.
-   */
-  it("Fail: maker order processed twice", async () => {
-    // GIVEN
-
-    // Create market, purchaser
-    const [purchaserA, purchaserB, market] = await Promise.all([
-      createWalletWithBalance(monaco.provider),
-      createWalletWithBalance(monaco.provider),
-      monaco.create3WayMarket([3.0]),
-    ]);
-    await market.airdrop(purchaserA, 100.0);
-    await market.airdrop(purchaserB, 100.0);
-
-    const makerOrderPk = await market.againstOrder(1, 10, 3.0, purchaserA);
-    await market.againstOrder(1, 10, 3.0, purchaserA);
-    const takerOrderPk = await market.forOrder(1, 20, 3.0, purchaserB);
-
-    const result = await market.processMatchingQueue();
-
-    assert.deepEqual(
-      await Promise.all([
-        monaco.getOrder(makerOrderPk),
-        monaco.getOrder(takerOrderPk),
-      ]),
-      [
-        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-        { stakeUnmatched: 0, stakeVoided: 0, status: { matched: {} } },
-      ],
-    );
-
-    // THEN
-    await monaco.program.methods
-      .processOrderMatch()
-      .accounts({
-        market: market.pk,
-        marketEscrow: market.escrowPk,
-        marketMatchingPool: result.matchingPool,
-        marketMatchingQueue: market.matchingQueuePk,
-        makerOrder: makerOrderPk,
-        marketPosition: await market.cacheMarketPositionPk(
-          purchaserA.publicKey,
-        ),
-        purchaserToken: await market.cachePurchaserTokenPk(
-          purchaserA.publicKey,
-        ),
-        makerOrderTrade: result.makerOrderTrade,
-        takerOrderTrade: result.takerOrderTrade,
-        crankOperator: monaco.operatorPk,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc()
-      .then(
-        function (_) {
-          assert.fail("This test should have thrown an error");
-        },
-        function (e: Error) {
-          assert.equal(
-            e,
-            "Error: failed to send transaction: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x0",
-          );
-        },
-      );
-  });
-
   it("Failure: wrong maker order (outcome)", async () => {
     // GIVEN
 
@@ -115,33 +47,30 @@ describe("Matching Crank", () => {
 
     await market.againstOrder(1, 10, 3.0, purchaserA); // true maker order
     const makerOrderPk = await market.againstOrder(2, 10, 3.0, purchaserA); // fake maker order
-    const takerOrderPk = await market.forOrder(1, 20, 3.0, purchaserB);
+    await market.forOrder(1, 20, 3.0, purchaserB);
 
     const marketMatchingPoolPk = market.matchingPools[1][3.0].against;
-    const [makerOrderTrade, takerOrderTrade] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), makerOrderPk, takerOrderPk, false),
-        findTradePda(monaco.getRawProgram(), makerOrderPk, takerOrderPk, true),
-      ])
-    ).map((result) => result.data.tradePk);
+    const makerOrderTradePk = await findTradePda(
+      monaco.getRawProgram(),
+      makerOrderPk,
+    );
 
     // THEN
     await monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatchMaker(Array.from(makerOrderTradePk.data.distinctSeed))
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
         marketMatchingPool: marketMatchingPoolPk,
         marketMatchingQueue: market.matchingQueuePk,
-        makerOrder: makerOrderPk, // incorrect
+        order: makerOrderPk, // incorrect
         marketPosition: await market.cacheMarketPositionPk(
           purchaserA.publicKey,
         ),
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: makerOrderTrade,
-        takerOrderTrade: takerOrderTrade,
+        orderTrade: makerOrderTradePk.data.tradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -171,33 +100,29 @@ describe("Matching Crank", () => {
 
     await market.againstOrder(1, 10, 3.0, purchaserA); // true maker order
     const makerOrderPk = await market.againstOrder(1, 10, 2.9, purchaserA); // fake maker order
-    const takerOrderPk = await market.forOrder(1, 20, 3.0, purchaserB);
+    await market.forOrder(1, 20, 3.0, purchaserB);
 
     const marketMatchingPoolPk = market.matchingPools[1][3.0].against;
-    const [makerOrderTrade, takerOrderTrade] = (
-      await Promise.all([
-        findTradePda(monaco.getRawProgram(), makerOrderPk, takerOrderPk, false),
-        findTradePda(monaco.getRawProgram(), makerOrderPk, takerOrderPk, true),
-      ])
-    ).map((result) => result.data.tradePk);
-
+    const makerOrderTrade = await findTradePda(
+      monaco.getRawProgram(),
+      makerOrderPk,
+    );
     // THEN
     await monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatchMaker(Array.from(makerOrderTrade.data.distinctSeed))
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
         marketMatchingPool: marketMatchingPoolPk,
         marketMatchingQueue: market.matchingQueuePk,
-        makerOrder: makerOrderPk, // incorrect
+        order: makerOrderPk, // incorrect
         marketPosition: await market.cacheMarketPositionPk(
           purchaserA.publicKey,
         ),
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: makerOrderTrade,
-        takerOrderTrade: takerOrderTrade,
+        orderTrade: makerOrderTrade.data.tradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -226,7 +151,7 @@ describe("Matching Crank", () => {
     await market.airdrop(purchaserB, 100.0);
 
     await market.againstOrder(1, 10, 3.0, purchaserA); // true maker order
-    const takerOrderPk = await market.forOrder(1, 10, 3.0, purchaserB);
+    await market.forOrder(1, 10, 3.0, purchaserB);
     const fakeMakerOrder1Pk = await market.againstOrder(1, 10, 2.9, purchaserA); // fake maker order
     const fakeMakerOrder2Pk = await market.againstOrder(2, 10, 3.0, purchaserA); // fake maker order
 
@@ -235,36 +160,25 @@ describe("Matching Crank", () => {
     const fakeMakerMatchingPool2Pk = market.matchingPools[2][3.0].against;
 
     // THEN
+    const makerOrderTradePk_1 = await findTradePda(
+      monaco.getRawProgram(),
+      fakeMakerOrder1Pk,
+    );
     await monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatchMaker(Array.from(makerOrderTradePk_1.data.distinctSeed))
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
         marketMatchingPool: fakeMakerMatchingPool1Pk, // fake 1
         marketMatchingQueue: market.matchingQueuePk,
-        makerOrder: fakeMakerOrder1Pk, // fake 1
+        order: fakeMakerOrder1Pk, // fake 1
         marketPosition: await market.cacheMarketPositionPk(
           purchaserA.publicKey,
         ),
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: (
-          await findTradePda(
-            monaco.getRawProgram(),
-            fakeMakerOrder1Pk,
-            takerOrderPk,
-            false,
-          )
-        ).data.tradePk,
-        takerOrderTrade: (
-          await findTradePda(
-            monaco.getRawProgram(),
-            fakeMakerOrder1Pk,
-            takerOrderPk,
-            true,
-          )
-        ).data.tradePk,
+        orderTrade: makerOrderTradePk_1.data.tradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -283,36 +197,25 @@ describe("Matching Crank", () => {
       );
 
     // THEN
+    const makerOrderTradePk_2 = await findTradePda(
+      monaco.getRawProgram(),
+      fakeMakerOrder2Pk,
+    );
     await monaco.program.methods
-      .processOrderMatch()
+      .processOrderMatchMaker(Array.from(makerOrderTradePk_2.data.distinctSeed))
       .accounts({
         market: market.pk,
         marketEscrow: market.escrowPk,
         marketMatchingPool: fakeMakerMatchingPool2Pk, // fake 2
         marketMatchingQueue: market.matchingQueuePk,
-        makerOrder: fakeMakerOrder2Pk, // fake 1
+        order: fakeMakerOrder2Pk, // fake 1
         marketPosition: await market.cacheMarketPositionPk(
           purchaserA.publicKey,
         ),
         purchaserToken: await market.cachePurchaserTokenPk(
           purchaserA.publicKey,
         ),
-        makerOrderTrade: (
-          await findTradePda(
-            monaco.getRawProgram(),
-            fakeMakerOrder2Pk,
-            takerOrderPk,
-            false,
-          )
-        ).data.tradePk,
-        takerOrderTrade: (
-          await findTradePda(
-            monaco.getRawProgram(),
-            fakeMakerOrder2Pk,
-            takerOrderPk,
-            true,
-          )
-        ).data.tradePk,
+        orderTrade: makerOrderTradePk_2.data.tradePk,
         crankOperator: monaco.operatorPk,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -361,17 +264,8 @@ describe("Matching Crank", () => {
     const against11Pk = await market.againstOrder(1, 10, 4.0, purchaserA);
     const forPk = await market.forOrder(1, 110, 3.0, purchaserB);
 
-    assert.equal(10, await market.getMarketMatchingQueueLength());
+    assert.equal(await market.getMarketMatchingQueueLength(), 20);
 
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
-    await market.processMatchingQueue();
     await market.processMatchingQueue();
 
     assert.deepEqual(

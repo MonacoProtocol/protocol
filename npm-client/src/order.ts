@@ -1,15 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import {
+  ClientResponse,
+  GetAccount,
   Order,
   OrderAccounts,
   orderPdaResponse,
   PendingOrders,
-} from "../types/order";
-import { ClientResponse, ResponseFactory } from "../types/client";
-import { GetAccount } from "../types/get_account";
+  ResponseFactory,
+} from "../types";
 import { Orders, OrderStatusFilter } from "./order_query";
-import { v4 as uuid } from "uuid";
+import { randomSeed16 } from "./utils";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -34,9 +35,7 @@ export async function findOrderPda(
 ): Promise<ClientResponse<orderPdaResponse>> {
   const response = new ResponseFactory({} as orderPdaResponse);
 
-  const distinctSeed = existingOrderSeed
-    ? existingOrderSeed
-    : newUuidAsByteArray();
+  const distinctSeed = existingOrderSeed ? existingOrderSeed : randomSeed16();
 
   try {
     const [orderPk, _] = PublicKey.findProgramAddressSync(
@@ -53,17 +52,6 @@ export async function findOrderPda(
   }
 
   return response.body;
-}
-
-/**
- * Return a new UUID as Uint8Array to be used as a unique seed for an order PDA
- *
- * @returns {Uint8Array}
- */
-function newUuidAsByteArray(): Uint8Array {
-  const buffer = new Uint8Array(16);
-  uuid(null, buffer, 0);
-  return buffer;
 }
 
 /**

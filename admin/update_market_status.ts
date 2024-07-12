@@ -26,7 +26,7 @@ export async function openMarket() {
   const marketPk = new PublicKey(marketID);
 
   const protocolProgram = await getProtocolProgram();
-  checkResponse(await openMarketClient(protocolProgram, marketPk));
+  checkResponse(await openMarketClient(protocolProgram, marketPk, false));
 }
 
 export async function settle_market() {

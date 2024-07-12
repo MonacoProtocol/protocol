@@ -40,6 +40,7 @@ export type MarketUpdateInstructionData = {
   marketLockTimestamp?: number;
   marketMatchingQueuePk?: PublicKey;
   eventStartTimeTimestamp?: number;
+  enableCrossMatching?: boolean;
 };
 
 export async function buildMarketManagementInstruction(
@@ -145,6 +146,11 @@ export async function buildMarketManagementInstruction(
       break;
     }
     case MarketManagementInstructionType.OPEN: {
+      const enableCrossMatching =
+        instructionData?.enableCrossMatching === undefined
+          ? false
+          : instructionData?.enableCrossMatching;
+
       const [
         liquiditiesPk,
         matchingQueuePk,
@@ -175,7 +181,7 @@ export async function buildMarketManagementInstruction(
         return response.body;
       }
       const instruction = await program.methods
-        .openMarket()
+        .openMarket(enableCrossMatching)
         .accounts({
           market: new PublicKey(marketPk),
           liquidities: liquiditiesPk.data.pda,

@@ -112,7 +112,6 @@ describe("Security: Settle Order", () => {
     await market.againstOrder(outcomeA, 11, price, purchaserC);
 
     await market.processMatchingQueue();
-    await market.processMatchingQueue();
 
     assert.deepEqual(
       await Promise.all([

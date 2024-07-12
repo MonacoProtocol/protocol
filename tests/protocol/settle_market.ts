@@ -41,7 +41,7 @@ describe("Security: Settle Market", () => {
       ]),
       [
         {
-          forOutcome: false,
+          forOutcome: true,
           outcomeIndex: 0,
           price: 3,
           stake: 10,
