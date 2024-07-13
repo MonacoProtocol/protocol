@@ -1,6 +1,6 @@
 [package]
 name = "monaco_protocol"
-version = "0.15.0-dev"
+version = "0.15.0-rc1"
 description = "Created with Anchor"
 edition = "2018"
 
