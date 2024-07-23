@@ -8,7 +8,7 @@ export type MarketCommissionPaymentQueues = {
 
 export type MarketCommissionPaymentQueue = {
   market: PublicKey;
-  commissionPayments: CommissionPaymentQueue;
+  paymentQueue: CommissionPaymentQueue;
 };
 
 export type CommissionPaymentQueue = {
