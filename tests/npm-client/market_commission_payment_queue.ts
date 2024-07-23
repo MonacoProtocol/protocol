@@ -43,17 +43,14 @@ describe("Market Commission Payment Queue", () => {
       monaco.program,
       queuePda.data.pda,
     );
-    // there's an object transformation happening so property needs to be checked
-    expect(queue1.data.account).toHaveProperty("commissionPayments");
-    expect(queue1.data.account).not.toHaveProperty("paymentQueue");
 
     assert.deepEqual(
       queue1.data.account.market.toBase58(),
       market.pk.toBase58(),
     );
-    assert.equal(queue1.data.account.commissionPayments.empty, false);
-    assert.equal(queue1.data.account.commissionPayments.front, 0);
-    assert.equal(queue1.data.account.commissionPayments.len, 2);
+    assert.equal(queue1.data.account.paymentQueue.empty, false);
+    assert.equal(queue1.data.account.paymentQueue.front, 0);
+    assert.equal(queue1.data.account.paymentQueue.len, 2);
 
     await market.processCommissionPayments();
 
@@ -65,9 +62,9 @@ describe("Market Commission Payment Queue", () => {
       queue2.data.account.market.toBase58(),
       market.pk.toBase58(),
     );
-    assert.equal(queue2.data.account.commissionPayments.empty, true);
-    assert.equal(queue2.data.account.commissionPayments.front, 2);
-    assert.equal(queue2.data.account.commissionPayments.len, 0);
+    assert.equal(queue2.data.account.paymentQueue.empty, true);
+    assert.equal(queue2.data.account.paymentQueue.front, 2);
+    assert.equal(queue2.data.account.paymentQueue.len, 0);
   });
 
   it("fetch all non empty", async () => {
@@ -125,14 +122,6 @@ describe("Market Commission Payment Queue", () => {
       monaco.program,
     );
     assert.equal(pks1.data.publicKeys.filter(pkStringsCheck2).length, 2);
-
-    // there's an object transformation happening so property needs to be checked
-    expect(
-      queues1.data.marketCommissionPaymentQueues[0].account,
-    ).toHaveProperty("commissionPayments");
-    expect(
-      queues1.data.marketCommissionPaymentQueues[0].account,
-    ).not.toHaveProperty("paymentQueue");
 
     await market1.processCommissionPayments();
 

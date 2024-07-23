@@ -63,14 +63,10 @@ export async function getMarketCommissionPaymentQueue(
     {} as GetAccount<MarketCommissionPaymentQueue>,
   );
   try {
-    const marketCommissionPaymentQueueRaw =
-      await program.account.marketPaymentsQueue.fetch(
+    const marketCommissionPaymentQueue =
+      (await program.account.marketPaymentsQueue.fetch(
         marketCommissionPaymentQueuePk,
-      );
-
-    const marketCommissionPaymentQueue = toMarketCommissionPaymentQueue(
-      marketCommissionPaymentQueueRaw,
-    );
+      )) as MarketCommissionPaymentQueue;
 
     response.addResponseData({
       publicKey: marketCommissionPaymentQueuePk,
@@ -104,11 +100,10 @@ export async function getNonEmptyMarketCommissionPaymentQueues(
   try {
     const accountKeys = await getPublicKeys(program);
 
-    const accountsWithData = (
-      await program.account.marketPaymentsQueue.fetchMultiple(accountKeys)
-    ).map((marketCommissionPaymentQueueRaw) =>
-      toMarketCommissionPaymentQueue(marketCommissionPaymentQueueRaw),
-    ) as MarketCommissionPaymentQueue[];
+    const accountsWithData =
+      (await program.account.marketPaymentsQueue.fetchMultiple(
+        accountKeys,
+      )) as MarketCommissionPaymentQueue[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -137,21 +132,10 @@ async function getPublicKeys(program: Program): Promise<PublicKey[]> {
   return accounts.map((account) => account.pubkey);
 }
 
-function toMarketCommissionPaymentQueue(
-  marketCommissionPaymentQueueRaw: any,
-): MarketCommissionPaymentQueue {
-  // renaming paymentQueue -> payments
-  const { paymentQueue, ...otherProperties } = marketCommissionPaymentQueueRaw;
-  return {
-    ...otherProperties,
-    commissionPayments: paymentQueue,
-  } as MarketCommissionPaymentQueue;
-}
-
 export function toCommissionPayments(
   marketCommissionPaymentQueue: MarketCommissionPaymentQueue,
 ): CommissionPayment[] {
-  const commissionPayments = marketCommissionPaymentQueue.commissionPayments;
+  const commissionPayments = marketCommissionPaymentQueue.paymentQueue;
   const frontIndex = commissionPayments.front;
   const allItems = commissionPayments.items;
   const backIndex =
