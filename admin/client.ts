@@ -1,9 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import {
-  create_market,
-  getMarketsByStatus,
-  print_market,
-} from "./create_market";
+import { create_market, getMarketsByStatus } from "./create_market";
 import { create_order } from "./create_order";
 import {
   lockMarket,
@@ -32,6 +28,7 @@ import {
   printMarketTypeByName,
 } from "./market_types";
 import { createPriceLadder } from "./price_ladders";
+import { printMarket } from "./print_market";
 
 if (process.argv.length < 3) {
   printUsageAndExit();
@@ -70,8 +67,8 @@ switch (script) {
   case "create_market":
     create_market();
     break;
-  case "print_market":
-    print_market();
+  case "printMarket":
+    printMarket();
     break;
   case "openMarket":
     openMarket();

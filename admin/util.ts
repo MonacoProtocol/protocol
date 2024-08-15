@@ -11,15 +11,8 @@ import process from "process";
 const PROGRAM_TYPE = {
   stable: new PublicKey("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr"),
   dev: new PublicKey("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9"),
+  edge: new PublicKey("mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU"),
 };
-
-export async function findPdaWithSeeds(
-  seeds: (Buffer | Uint8Array)[],
-  programId: PublicKey,
-) {
-  const [pda] = await PublicKey.findProgramAddress(seeds, programId);
-  return pda;
-}
 
 export async function getProtocolProgram() {
   const provider = getAnchorProvider();
