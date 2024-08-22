@@ -181,21 +181,35 @@ mod tests {
 
     #[test]
     fn test_calculate_price_cross() {
-        let cross_price_2way = calculate_price_cross(&vec![3.0_f64]);
-        assert!(cross_price_2way.is_some());
-        assert_eq!(1.5_f64, cross_price_2way.unwrap());
-
         assert!(calculate_price_cross(&vec![3.1_f64]).is_none());
 
-        let cross_price_3way = calculate_price_cross(&vec![2.0_f64, 3.0_f64]);
+        let cross_price_2way = calculate_price_cross(&vec![2.0_f64; 1]);
+        assert!(cross_price_2way.is_some());
+        assert_eq!(2.0_f64, cross_price_2way.unwrap());
+
+        let cross_price_3way = calculate_price_cross(&vec![3.0_f64; 2]);
         assert!(cross_price_3way.is_some());
-        assert_eq!(6.0_f64, cross_price_3way.unwrap());
+        assert_eq!(3.0_f64, cross_price_3way.unwrap());
 
-        let cross_price_4way_1 = calculate_price_cross(&vec![4.0_f64, 4.0_f64, 4.0_f64]);
-        assert!(cross_price_4way_1.is_some());
-        assert_eq!(4.0_f64, cross_price_4way_1.unwrap());
+        let cross_price_4way = calculate_price_cross(&vec![4.0_f64; 3]);
+        assert!(cross_price_4way.is_some());
+        assert_eq!(4.0_f64, cross_price_4way.unwrap());
 
-        assert!(calculate_price_cross(&vec![4.0_f64, 4.0_f64, 5.0_f64]).is_none());
+        let cross_price_5way = calculate_price_cross(&vec![5.0_f64; 4]);
+        assert!(cross_price_5way.is_some());
+        assert_eq!(5.0_f64, cross_price_5way.unwrap());
+
+        let cross_price_6way = calculate_price_cross(&vec![6.0_f64; 5]);
+        assert!(cross_price_6way.is_some());
+        assert_eq!(6.0_f64, cross_price_6way.unwrap());
+
+        let cross_price_7way = calculate_price_cross(&vec![7.0_f64; 6]);
+        assert!(cross_price_7way.is_some());
+        assert_eq!(7.0_f64, cross_price_7way.unwrap());
+
+        let cross_price_8way = calculate_price_cross(&vec![8.0_f64; 7]);
+        assert!(cross_price_8way.is_some());
+        assert_eq!(8.0_f64, cross_price_8way.unwrap());
     }
 
     #[test]
