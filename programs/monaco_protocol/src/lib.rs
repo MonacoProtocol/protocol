@@ -341,13 +341,11 @@ pub mod monaco_protocol {
         ctx: Context<UpdateMarketLiquidities>,
         source_for_outcome: bool,
         source_liquidities: Vec<LiquiditySource>,
-        cross_liquidity: LiquiditySource,
     ) -> Result<()> {
         instructions::market_liquidities::update_market_liquidities_with_cross_liquidity(
             &mut ctx.accounts.market_liquidities,
             source_for_outcome,
             source_liquidities,
-            cross_liquidity,
         )?;
 
         Ok(())
