@@ -1082,6 +1082,7 @@ export class MonacoMarket {
         sourceLiquidities,
       )
       .accounts({
+        market: this.pk,
         marketLiquidities: this.liquiditiesPk,
       })
       .rpc()

@@ -624,7 +624,12 @@ pub struct ProcessOrderMatchMaker<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateMarketLiquidities<'info> {
-    #[account(mut)]
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::MarketMismatch,
+    )]
     pub market_liquidities: Account<'info, MarketLiquidities>,
 }
 

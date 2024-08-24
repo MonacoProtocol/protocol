@@ -343,6 +343,7 @@ pub mod monaco_protocol {
         source_liquidities: Vec<LiquiditySource>,
     ) -> Result<()> {
         instructions::market_liquidities::update_market_liquidities_with_cross_liquidity(
+            &ctx.accounts.market,
             &mut ctx.accounts.market_liquidities,
             source_for_outcome,
             source_liquidities,
