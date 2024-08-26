@@ -33,6 +33,63 @@ describe("Matching Crank", () => {
     );
   });
 
+  it("Failure: queue head is not taker", async () => {
+    // GIVEN
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([3.0]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+
+    const againstPk = await market.againstOrder(1, 10, 3.0, purchaserA);
+    await market.forOrder(1, 10, 3.0, purchaserB);
+
+    await market.processMatchingQueueTakerOnce(againstPk).then(
+      function (_) {
+        assert.fail("This test should have thrown an error");
+      },
+      function (e: AnchorError) {
+        assert.equal(
+          e.logs[e.logs.length - 3],
+          "Program log: AnchorError caused by account: market_matching_queue. Error Code: MatchingQueueHeadNotTaker. Error Number: 6072. Error Message: Core Matching: market matching queue head is not taker.",
+        );
+      },
+    );
+  });
+
+  it("Failure: queue head is not maker", async () => {
+    // GIVEN
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([3.0]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+
+    await market.againstOrder(1, 10, 3.0, purchaserA);
+    await market.forOrder(1, 20, 3.0, purchaserB);
+
+    await market.processMatchingQueueMakerOnce(false, 1, 3.0);
+    await market.processMatchingQueueMakerOnce(true, 1, 3.0).then(
+      function (_) {
+        assert.fail("This test should have thrown an error");
+      },
+      function (e: AnchorError) {
+        assert.equal(
+          e.logs[e.logs.length - 3],
+          "Program log: AnchorError caused by account: market_matching_queue. Error Code: MatchingQueueHeadNotMaker. Error Number: 6073. Error Message: Core Matching: market matching queue head is not maker.",
+        );
+      },
+    );
+  });
+
   it("Failure: wrong maker order (outcome)", async () => {
     // GIVEN
 
