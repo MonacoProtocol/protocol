@@ -28,6 +28,12 @@ pub fn open(
         market.market_outcomes_count > 1,
         CoreError::OpenMarketNotEnoughOutcomes
     );
+    if enable_cross_matching {
+        require!(
+            market.market_outcomes_count < 6,
+            CoreError::MarketTooManyOutcomes
+        );
+    }
 
     intialize_liquidities(liquidities, market_pk, enable_cross_matching)?;
     market.increment_unclosed_accounts_count()?;
