@@ -4,10 +4,18 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
+
     #[msg("MarketLiquidities: is full")]
     MarketLiquiditiesIsFull,
     #[msg("MarketLiquidities: update error")]
     MarketLiquiditiesUpdateError,
+    #[msg("MarketLiquidities: cross matching disabled")]
+    MarketLiquiditiesCrossMatchingDisabled,
+    #[msg("MarketLiquidities: source_liquidities invalid")]
+    MarketLiquiditiesSourceLiquiditiesInvalid,
+
+    #[msg("Market: mismatch")]
+    MarketMismatch,
 
     /*
     Order Creation

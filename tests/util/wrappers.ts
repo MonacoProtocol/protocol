@@ -1084,15 +1084,14 @@ export class MonacoMarket {
   async updateMarketLiquiditiesWithCrossLiquidity(
     sourceForOutcome: boolean,
     sourceLiquidities: { outcome: number; price: number }[],
-    crossLiquidity: { outcome: number; price: number },
   ) {
     await this.monaco.program.methods
       .updateMarketLiquiditiesWithCrossLiquidity(
         sourceForOutcome,
         sourceLiquidities,
-        crossLiquidity,
       )
       .accounts({
+        market: this.pk,
         marketLiquidities: this.liquiditiesPk,
       })
       .rpc()
