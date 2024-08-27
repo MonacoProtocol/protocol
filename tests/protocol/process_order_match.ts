@@ -52,7 +52,7 @@ describe("Matching Crank", () => {
       function (_) {
         assert.fail("This test should have thrown an error");
       },
-      function (e: AnchorError) {
+      function (e) {
         assert.equal(
           e.logs[e.logs.length - 3],
           "Program log: AnchorError caused by account: market_matching_queue. Error Code: MatchingQueueHeadNotTaker. Error Number: 6072. Error Message: Core Matching: market matching queue head is not taker.",
@@ -81,7 +81,7 @@ describe("Matching Crank", () => {
       function (_) {
         assert.fail("This test should have thrown an error");
       },
-      function (e: AnchorError) {
+      function (e) {
         assert.equal(
           e.logs[e.logs.length - 3],
           "Program log: AnchorError caused by account: market_matching_queue. Error Code: MatchingQueueHeadNotMaker. Error Number: 6073. Error Message: Core Matching: market matching queue head is not maker.",
