@@ -194,8 +194,6 @@ mod tests {
             market: Pubkey::new_unique(),
             index: 0,
             title: "title".to_string(),
-            latest_matched_price: 2.1_f64,
-            matched_total: 0_u64,
             prices: Some(Pubkey::new_unique()),
             price_ladder: vec![],
         };

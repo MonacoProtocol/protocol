@@ -21,15 +21,13 @@ Type: {publicKeys: [Array][9]\<PublicKey>}
 
 ## MarketOutcomeAccount
 
-Type: {index: [number][10], title: [string][11], market: PublicKey, latestMatchedPrice: [number][10], matchedTotal: BN, prices: (PublicKey | null), priceLadder: [Array][9]<[number][10]>}
+Type: {index: [number][10], title: [string][11], market: PublicKey, prices: (PublicKey | null), priceLadder: [Array][9]<[number][10]>}
 
 ### Properties
 
 *   `index` **[number][10]**&#x20;
 *   `title` **[string][11]**&#x20;
 *   `market` **PublicKey**&#x20;
-*   `latestMatchedPrice` **[number][10]**&#x20;
-*   `matchedTotal` **BN**&#x20;
 *   `prices` **(PublicKey | null)**&#x20;
 *   `priceLadder` **[Array][9]<[number][10]>**&#x20;
 
