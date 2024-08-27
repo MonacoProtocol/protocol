@@ -33,6 +33,59 @@ describe("Matching Crank", () => {
     );
   });
 
+  it("Failure: queue head is not taker", async () => {
+    // GIVEN
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([3.0]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+
+    const againstPk = await market.againstOrder(1, 10, 3.0, purchaserA);
+    await market.forOrder(1, 10, 3.0, purchaserB);
+
+    await market.processMatchingQueueTakerOnce(againstPk).then(
+      function (_) {
+        assert.fail("This test should have thrown an error");
+      },
+      function (e) {
+        const error = AnchorError.parse(e.logs);
+        assert.equal(error.error.errorCode.code, "MatchingQueueHeadNotTaker");
+      },
+    );
+  });
+
+  it("Failure: queue head is not maker", async () => {
+    // GIVEN
+
+    // Create market, purchaser
+    const [purchaserA, purchaserB, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([3.0]),
+    ]);
+    await market.airdrop(purchaserA, 100.0);
+    await market.airdrop(purchaserB, 100.0);
+
+    await market.againstOrder(1, 10, 3.0, purchaserA);
+    await market.forOrder(1, 20, 3.0, purchaserB);
+
+    await market.processMatchingQueueMakerOnce(false, 1, 3.0);
+    await market.processMatchingQueueMakerOnce(true, 1, 3.0).then(
+      function (_) {
+        assert.fail("This test should have thrown an error");
+      },
+      function (e) {
+        const error = AnchorError.parse(e.logs);
+        assert.equal(error.error.errorCode.code, "MatchingQueueHeadNotMaker");
+      },
+    );
+  });
+
   it("Failure: wrong maker order (outcome)", async () => {
     // GIVEN
 

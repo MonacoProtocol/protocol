@@ -175,6 +175,12 @@ pub enum CoreError {
     MatchingMarketPriceMismatch,
     #[msg("Core Matching: market matching pool mismatch")]
     MatchingMarketMatchingPoolMismatch,
+    #[msg("Core Matching: market matching queue head is not taker")]
+    MatchingQueueHeadNotTaker,
+    #[msg("Core Matching: market matching queue head is not maker")]
+    MatchingQueueHeadNotMaker,
+    #[msg("Core Matching: market matching queue head mismatch")]
+    MatchingQueueHeadMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
