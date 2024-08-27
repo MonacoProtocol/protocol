@@ -22,6 +22,7 @@ pub fn update_market_liquidities_with_cross_liquidity(
     // ensuring that all newly created cross liquidity has sources sorted the same way
     let mut source_liquidities_sorted = source_liquidities.to_vec();
     source_liquidities_sorted.sort_by(|a, b| a.outcome.partial_cmp(&b.outcome).unwrap());
+    source_liquidities_sorted.retain(|v| v.outcome < market.market_outcomes_count);
     source_liquidities_sorted.dedup_by(|a, b| a.outcome == b.outcome);
 
     // making sure there were no duplicates
@@ -91,6 +92,18 @@ mod test {
         assert_eq!(
             Err(error!(CoreError::MarketLiquiditiesSourceLiquiditiesInvalid)),
             result2
+        );
+
+        let result3 = update_market_liquidities_with_cross_liquidity(
+            &market,
+            &mut market_liquidities,
+            true,
+            vec![LiquiditySource::new(1, 3.0), LiquiditySource::new(3, 2.0)], // incorrect outcomes
+        );
+        assert!(result3.is_err());
+        assert_eq!(
+            Err(error!(CoreError::MarketLiquiditiesSourceLiquiditiesInvalid)),
+            result3
         );
 
         assert_eq!(
