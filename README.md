@@ -20,10 +20,11 @@ The protocol is currently in beta, though it is available both on devnet and mai
 
 # Mainnet upgrades :satellite:
 
-Current version of the protocol on mainnet-beta: [0.14.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.2).
+Current version of the protocol on mainnet-beta: [0.15.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.0).
 
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
+| 2024-09-15 | [0.15.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-05-24 | [0.14.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.2) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-04-29 | [0.14.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-01-24 | [0.13.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.13.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
@@ -44,6 +45,7 @@ Protocol releases, along with their corresponding client versions and audit repo
 
 | Protocol version                                                          | Client       | Admin client | Audit reports                                                                      |
 |---------------------------------------------------------------------------|--------------|--------------|------------------------------------------------------------------------------------|
+| [0.15.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.0) | 12.0.0       | 12.0.0       | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.15.0.pdf) |
 | [0.14.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.2) | 11.2.0       | 10.2.0       | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.14.2.pdf) |
 | [0.14.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.1) | 11.1.0       | 10.1.0       | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.14.1.pdf) |
 | [0.14.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.0) | 11.0.0       | 10.0.0       | [Sec3](https://github.com/MonacoProtocol/protocol/tree/main/audit/sec3/0.14.0.pdf) |
