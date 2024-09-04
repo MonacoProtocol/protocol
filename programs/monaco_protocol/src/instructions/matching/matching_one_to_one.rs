@@ -133,7 +133,7 @@ pub fn match_orders(ctx: &mut Context<MatchOrders>) -> Result<()> {
     )?;
     ctx.accounts
         .market_liquidities
-        .update_stake_matched_total(stake_matched)?;
+        .update_match_totals(stake_matched, selected_price)?;
 
     // 4. if any refunds are due to change in exposure, transfer them
     if change_in_exposure_refund_against > 0_u64 {

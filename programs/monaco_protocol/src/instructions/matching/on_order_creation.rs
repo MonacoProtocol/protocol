@@ -131,7 +131,7 @@ fn match_for_order(
             // always update even if it's 0
             market_liquidities.update_cross_liquidity_against(sources);
         }
-        market_liquidities.update_stake_matched_total(*stake)?;
+        market_liquidities.update_match_totals(*stake, *price)?;
     }
 
     // remainder is added to liquidities
@@ -258,7 +258,7 @@ fn match_against_order(
             // always update even if it's 0
             market_liquidities.update_cross_liquidity_for(sources);
         }
-        market_liquidities.update_stake_matched_total(*stake)?;
+        market_liquidities.update_match_totals(*stake, *price)?;
     }
 
     // remainder is added to liquidities
@@ -959,7 +959,8 @@ mod test {
             vec!((1.8, 20)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(100_u64, market_liquidities.stake_matched_total);
+        assert_eq!(100_u64, market_liquidities.stake_traded);
+        assert_eq!(140_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec![
                 (true, 1.2, 10),
@@ -1029,7 +1030,8 @@ mod test {
             vec!((1.1, 100)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(0_u64, market_liquidities.stake_matched_total);
+        assert_eq!(0_u64, market_liquidities.stake_traded);
+        assert_eq!(0_u64, market_liquidities.volume_traded);
         assert_eq!(
             Vec::<(bool, f64, u64)>::new(),
             matches(&market_matching_queue.matches)
@@ -1126,7 +1128,8 @@ mod test {
             vec!((1.3, 80)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(20_u64, market_liquidities.stake_matched_total);
+        assert_eq!(20_u64, market_liquidities.stake_traded);
+        assert_eq!(25_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (true, 1.2, 10),
@@ -1180,7 +1183,8 @@ mod test {
             vec!((1.4, 70)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(30_u64, market_liquidities.stake_matched_total);
+        assert_eq!(30_u64, market_liquidities.stake_traded);
+        assert_eq!(39_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (true, 1.2, 10),
@@ -1236,7 +1240,8 @@ mod test {
             vec!((1.5, 70)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(30_u64, market_liquidities.stake_matched_total);
+        assert_eq!(30_u64, market_liquidities.stake_traded);
+        assert_eq!(39_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (true, 1.2, 10),
@@ -1340,7 +1345,8 @@ mod test {
             Vec::<(f64, u64)>::new(),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(60_u64, market_liquidities.stake_matched_total);
+        assert_eq!(60_u64, market_liquidities.stake_traded);
+        assert_eq!(87_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (false, 1.7, 10),
@@ -1402,7 +1408,8 @@ mod test {
             Vec::<(f64, u64)>::new(),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(30_u64, market_liquidities.stake_matched_total);
+        assert_eq!(30_u64, market_liquidities.stake_traded);
+        assert_eq!(39_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (false, 1.4, 10),
@@ -1458,7 +1465,8 @@ mod test {
             Vec::<(f64, u64)>::new(),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(30_u64, market_liquidities.stake_matched_total);
+        assert_eq!(30_u64, market_liquidities.stake_traded);
+        assert_eq!(39_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (false, 1.4, 10),
@@ -1514,7 +1522,8 @@ mod test {
             vec!((1.2, 10)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(20_u64, market_liquidities.stake_matched_total);
+        assert_eq!(20_u64, market_liquidities.stake_traded);
+        assert_eq!(27_u64, market_liquidities.volume_traded);
         assert_eq!(
             vec!(
                 (false, 1.4, 10),
@@ -1616,7 +1625,8 @@ mod test {
             vec!((1.4, 10), (1.3, 10), (1.2, 10)),
             liquidities(&market_liquidities.liquidities_against)
         );
-        assert_eq!(0_u64, market_liquidities.stake_matched_total);
+        assert_eq!(0_u64, market_liquidities.stake_traded);
+        assert_eq!(0_u64, market_liquidities.volume_traded);
         assert_eq!(
             Vec::<(bool, f64, u64)>::new(),
             matches(&market_matching_queue.matches)

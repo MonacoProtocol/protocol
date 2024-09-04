@@ -13,7 +13,8 @@ use std::string::ToString;
 pub struct MarketLiquidities {
     pub market: Pubkey,
     pub enable_cross_matching: bool,
-    pub stake_matched_total: u64,
+    pub stake_traded: u64,
+    pub volume_traded: u64,
     pub liquidities_for: Vec<MarketOutcomePriceLiquidity>,
     pub liquidities_against: Vec<MarketOutcomePriceLiquidity>,
 }
@@ -23,7 +24,8 @@ impl MarketLiquidities {
     pub const SIZE: usize = DISCRIMINATOR_SIZE
         + PUB_KEY_SIZE // market
         + BOOL_SIZE // enable_cross_matching
-        + U64_SIZE // stake_matched_total
+        + U64_SIZE // stake_traded
+        + U64_SIZE // volume_traded
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH) // for
         + vec_size(MarketOutcomePriceLiquidity::SIZE, MarketLiquidities::LIQUIDITIES_VEC_LENGTH); // against
 
@@ -408,11 +410,15 @@ impl MarketLiquidities {
             <= self.liquidities_for.len() + self.liquidities_against.len()
     }
 
-    pub fn update_stake_matched_total(&mut self, stake_matched: u64) -> Result<()> {
+    pub fn update_match_totals(&mut self, stake_matched: u64, price_matched: f64) -> Result<()> {
         if stake_matched > 0_u64 {
-            self.stake_matched_total = self
-                .stake_matched_total
+            self.stake_traded = self
+                .stake_traded
                 .checked_add(stake_matched)
+                .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
+            self.volume_traded = self
+                .volume_traded
+                .checked_add(calculate_for_payout(stake_matched, price_matched))
                 .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
         }
         Ok(())
@@ -459,9 +465,10 @@ pub fn mock_market_liquidities(market_pk: Pubkey) -> MarketLiquidities {
     MarketLiquidities {
         market: market_pk,
         enable_cross_matching: true,
+        stake_traded: 0_u64,
+        volume_traded: 0_u64,
         liquidities_for: Vec::new(),
         liquidities_against: Vec::new(),
-        stake_matched_total: 0_u64,
     }
 }
 
@@ -626,6 +633,8 @@ mod tests {
         let mut mls: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
             enable_cross_matching: true,
+            stake_traded: 0_u64,
+            volume_traded: 0_u64,
             liquidities_for: vec![
                 mock_liquidity(0, 2.111, 1001),
                 mock_liquidity(1, 2.111, 2001),
@@ -636,7 +645,6 @@ mod tests {
                 mock_liquidity(1, 2.111, 2001),
                 mock_liquidity(0, 2.111, 1001),
             ],
-            stake_matched_total: 0_u64,
         };
 
         mls.remove_liquidity_for(0, 2.111, 200).unwrap();
@@ -670,6 +678,8 @@ mod tests {
         let market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
             enable_cross_matching: true,
+            stake_traded: 0_u64,
+            volume_traded: 0_u64,
             liquidities_for: vec![
                 mock_liquidity(0, 2.30, 1001),
                 mock_liquidity(0, 2.31, 1002),
@@ -677,7 +687,6 @@ mod tests {
                 mock_liquidity(0, 2.33, 1004),
             ],
             liquidities_against: vec![],
-            stake_matched_total: 0_u64,
         };
 
         assert_eq!(
@@ -695,6 +704,8 @@ mod tests {
         let market_liquidities: MarketLiquidities = MarketLiquidities {
             market: Pubkey::default(),
             enable_cross_matching: true,
+            stake_traded: 0_u64,
+            volume_traded: 0_u64,
             liquidities_for: vec![],
             liquidities_against: vec![
                 mock_liquidity(0, 2.33, 1004),
@@ -702,7 +713,6 @@ mod tests {
                 mock_liquidity(0, 2.31, 1002),
                 mock_liquidity(0, 2.30, 1001),
             ],
-            stake_matched_total: 0_u64,
         };
 
         assert_eq!(
@@ -820,19 +830,22 @@ mod update_stake_matched_total_tests {
         let market_pk = Pubkey::new_unique();
         let mut market_liquidities = mock_market_liquidities(market_pk);
 
-        let result_1 = market_liquidities.update_stake_matched_total(0);
+        let result_1 = market_liquidities.update_match_totals(0, 0.0);
 
         assert!(result_1.is_ok());
-        assert_eq!(market_liquidities.stake_matched_total, 0);
+        assert_eq!(market_liquidities.stake_traded, 0);
+        assert_eq!(market_liquidities.volume_traded, 0);
 
-        let result_2 = market_liquidities.update_stake_matched_total(1);
+        let result_2 = market_liquidities.update_match_totals(1, 3.0);
 
         assert!(result_2.is_ok());
-        assert_eq!(market_liquidities.stake_matched_total, 1);
+        assert_eq!(market_liquidities.stake_traded, 1);
+        assert_eq!(market_liquidities.volume_traded, 3);
 
-        let result_3 = market_liquidities.update_stake_matched_total(u64::MAX);
+        let result_3 = market_liquidities.update_match_totals(u64::MAX, 3.0);
 
         assert!(result_3.is_err());
-        assert_eq!(market_liquidities.stake_matched_total, 1);
+        assert_eq!(market_liquidities.stake_traded, 1);
+        assert_eq!(market_liquidities.volume_traded, 3);
     }
 }
