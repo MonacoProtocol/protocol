@@ -472,6 +472,19 @@ pub struct AuthoriseOperator<'info> {
     pub system_program: Program<'info, System>,
 }
 
+// used by ProcessOrderMatchTaker
+// validates correctness of MarketMatchingQueue account
+fn taker_market_matching_queue_constraint(
+    market_matching_queue: &Account<MarketMatchingQueue>,
+) -> bool {
+    match market_matching_queue.matches.peek() {
+        Some(head) => head.pk.is_some(),
+        None => false,
+    }
+}
+
+// used by ProcessOrderMatchTaker
+// validates correctness of Order account
 fn taker_order_constraint(
     market_matching_queue: &Account<MarketMatchingQueue>,
     order: &Account<Order>,
@@ -495,6 +508,8 @@ pub struct ProcessOrderMatchTaker<'info> {
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = !market_matching_queue.matches.is_empty()
             @ CoreError::MatchingQueueIsEmpty,
+        constraint = taker_market_matching_queue_constraint(&market_matching_queue)
+            @ CoreError::MatchingQueueHeadNotTaker,
     )]
     pub market_matching_queue: Box<Account<'info, MarketMatchingQueue>>,
 
@@ -502,7 +517,7 @@ pub struct ProcessOrderMatchTaker<'info> {
         mut,
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = taker_order_constraint(&market_matching_queue, &order)
-            @ CoreError::MatchingPoolHeadMismatch,
+            @ CoreError::MatchingQueueHeadMismatch,
     )]
     pub order: Account<'info, Order>,
     #[account(
@@ -526,7 +541,19 @@ pub struct ProcessOrderMatchTaker<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-// used by ProcessOrderMatchMaker to validate correctness of MarketMatchingPool account
+// used by ProcessOrderMatchMaker
+// validates correctness of MarketMatchingQueue account
+fn maker_market_matching_queue_constraint(
+    market_matching_queue: &Account<MarketMatchingQueue>,
+) -> bool {
+    match market_matching_queue.matches.peek() {
+        Some(head) => head.pk.is_none(),
+        None => false,
+    }
+}
+
+// used by ProcessOrderMatchMaker
+// validates correctness of MarketMatchingPool account
 fn maker_market_matching_pool_constraint(
     market_matching_queue: &Account<MarketMatchingQueue>,
     market_matching_pool: &Account<MarketMatchingPool>,
@@ -541,13 +568,14 @@ fn maker_market_matching_pool_constraint(
     }
 }
 
-// used by ProcessOrderMatchMaker to validate correctness of Order account
+// used by ProcessOrderMatchMaker
+// validates correctness of Order account
 fn maker_order_constraint(
     market_matching_pool: &Account<MarketMatchingPool>,
-    maker_order: &Account<Order>,
+    order: &Account<Order>,
 ) -> bool {
     match market_matching_pool.orders.peek(0) {
-        Some(head) => maker_order.key().eq(head),
+        Some(head_pk) => order.key().eq(head_pk),
         None => false,
     }
 }
@@ -570,6 +598,8 @@ pub struct ProcessOrderMatchMaker<'info> {
         has_one = market @ CoreError::MatchingMarketMismatch,
         constraint = !market_matching_queue.matches.is_empty()
             @ CoreError::MatchingQueueIsEmpty,
+        constraint = maker_market_matching_queue_constraint(&market_matching_queue)
+            @ CoreError::MatchingQueueHeadNotMaker,
     )]
     pub market_matching_queue: Box<Account<'info, MarketMatchingQueue>>,
     #[account(
@@ -624,7 +654,12 @@ pub struct ProcessOrderMatchMaker<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateMarketLiquidities<'info> {
-    #[account(mut)]
+    #[account()]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::MarketMismatch,
+    )]
     pub market_liquidities: Account<'info, MarketLiquidities>,
 }
 

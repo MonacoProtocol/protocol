@@ -51,24 +51,6 @@ export async function create_market() {
   }
 }
 
-export function print_market() {
-  if (process.argv.length != 4) {
-    console.log("Usage: yarn run printMarket <ADDRESS>");
-    process.exit(1);
-  }
-
-  const marketPK = new PublicKey(process.argv[3]);
-  get_market(marketPK).then(
-    (market) => console.log(JSON.stringify(market)),
-    (reason) => console.log(reason),
-  );
-}
-
-async function get_market(marketPK: PublicKey) {
-  const program = await getProtocolProgram();
-  return await program.account.market.fetch(marketPK);
-}
-
 export async function getMarketsByStatus() {
   const program = await getProtocolProgram();
   const query = Markets.marketQuery(program);

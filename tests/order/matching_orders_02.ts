@@ -26,14 +26,10 @@ describe("Order Matching: Cross Liquidity", () => {
     const orderB = await market.forOrder(1, 0.009, PRICES[1], purchaserB);
 
     // cross liquidities
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      true,
-      [
-        { outcome: 0, price: PRICES[0] },
-        { outcome: 1, price: PRICES[1] },
-      ],
-      { outcome: 2, price: 3.375 },
-    );
+    await market.updateMarketLiquiditiesWithCrossLiquidity(true, [
+      { outcome: 0, price: PRICES[0] },
+      { outcome: 1, price: PRICES[1] },
+    ]);
 
     // validate expected liquidity
     assert.deepEqual(await monaco.getMarketLiquidities(market.liquiditiesPk), {
@@ -277,14 +273,10 @@ describe("Order Matching: Cross Liquidity", () => {
     const orderB = await market.forOrder(1, 0.009, PRICES[1], purchaserB);
 
     // cross liquidities
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      true,
-      [
-        { outcome: 0, price: PRICES[0] },
-        { outcome: 1, price: PRICES[1] },
-      ],
-      { outcome: 2, price: 3.375 },
-    );
+    await market.updateMarketLiquiditiesWithCrossLiquidity(true, [
+      { outcome: 0, price: PRICES[0] },
+      { outcome: 1, price: PRICES[1] },
+    ]);
 
     // cancel one of the sources
     await market.cancel(orderA, purchaserA);

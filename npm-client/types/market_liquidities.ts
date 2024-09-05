@@ -17,5 +17,11 @@ export type MarketLiquidities = {
 export type MarketLiquidity = {
   outcome: number;
   price: number;
+  sources: LiquiditySource[];
   liquidity: BN;
+};
+
+export type LiquiditySource = {
+  outcome: number;
+  price: number;
 };

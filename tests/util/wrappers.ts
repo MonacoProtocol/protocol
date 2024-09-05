@@ -1010,6 +1010,11 @@ export class MonacoMarket {
     const firstOrderRequest = await this.monaco.getMarketOrderRequestQueueHead(
       this.orderRequestQueuePk,
     );
+
+    if (firstOrderRequest === null) {
+      return null;
+    }
+
     const orderPk = (
       await findOrderPda(
         this.monaco.program,
@@ -1060,14 +1065,18 @@ export class MonacoMarket {
   }
 
   async processOrderRequests(): Promise<PublicKey[]> {
-    const marketOrderRequestQueue =
-      await this.monaco.fetchMarketOrderRequestQueue(this.orderRequestQueuePk);
-
     const orderPks: PublicKey[] = [];
-    for (let i = 0; i < marketOrderRequestQueue.orderRequests.len; i++) {
+
+    // chain delays workaround
+    let tryMore = 2;
+    do {
       const orderPk = await this.processNextOrderRequest();
-      orderPks.push(orderPk);
-    }
+      if (orderPk === null) {
+        tryMore--;
+      } else {
+        orderPks.push(orderPk);
+      }
+    } while (tryMore > 0);
 
     return orderPks;
   }
@@ -1075,15 +1084,14 @@ export class MonacoMarket {
   async updateMarketLiquiditiesWithCrossLiquidity(
     sourceForOutcome: boolean,
     sourceLiquidities: { outcome: number; price: number }[],
-    crossLiquidity: { outcome: number; price: number },
   ) {
     await this.monaco.program.methods
       .updateMarketLiquiditiesWithCrossLiquidity(
         sourceForOutcome,
         sourceLiquidities,
-        crossLiquidity,
       )
       .accounts({
+        market: this.pk,
         marketLiquidities: this.liquiditiesPk,
       })
       .rpc()

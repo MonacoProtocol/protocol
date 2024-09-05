@@ -4,10 +4,18 @@ use anchor_lang::prelude::*;
 pub enum CoreError {
     #[msg("Generic: math operation has failed")]
     ArithmeticError,
+
     #[msg("MarketLiquidities: is full")]
     MarketLiquiditiesIsFull,
     #[msg("MarketLiquidities: update error")]
     MarketLiquiditiesUpdateError,
+    #[msg("MarketLiquidities: cross matching disabled")]
+    MarketLiquiditiesCrossMatchingDisabled,
+    #[msg("MarketLiquidities: source_liquidities invalid")]
+    MarketLiquiditiesSourceLiquiditiesInvalid,
+
+    #[msg("Market: mismatch")]
+    MarketMismatch,
 
     /*
     Order Creation
@@ -175,6 +183,12 @@ pub enum CoreError {
     MatchingMarketPriceMismatch,
     #[msg("Core Matching: market matching pool mismatch")]
     MatchingMarketMatchingPoolMismatch,
+    #[msg("Core Matching: market matching queue head is not taker")]
+    MatchingQueueHeadNotTaker,
+    #[msg("Core Matching: market matching queue head is not maker")]
+    MatchingQueueHeadNotMaker,
+    #[msg("Core Matching: market matching queue head mismatch")]
+    MatchingQueueHeadMismatch,
 
     #[msg("Order Matching: status closed")]
     MatchingStatusClosed,
@@ -296,6 +310,8 @@ pub enum CoreError {
     VoidMarketNotInitializingOrOpen,
     #[msg("Market: cannot open market, must have more than 1 outcome")]
     OpenMarketNotEnoughOutcomes,
+    #[msg("Market: too many outcomes for this operation")]
+    MarketTooManyOutcomes,
     #[msg("Market: market is not settled or voided")]
     MarketNotSettledOrVoided,
     #[msg("Market: market is not ready to close")]

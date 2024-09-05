@@ -43,7 +43,7 @@
     "getAllMarkets": "ts-node admin/client.ts getAllMarkets",
     "getMarketsByStatus": "ts-node admin/client.ts getMarketsByStatus",
     "createMarket": "ts-node admin/client.ts create_market",
-    "printMarket": "ts-node admin/client.ts print_market",
+    "printMarket": "ts-node admin/client.ts printMarket",
     "openMarket": "ts-node admin/client.ts openMarket",
     "settleMarket": "ts-node admin/client.ts settle_market",
     "setMarketReadyToClose": "ts-node admin/client.ts setMarketReadyToClose",

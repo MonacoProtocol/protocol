@@ -27,16 +27,12 @@ describe("Protocol: Cross Liquidity", () => {
     );
 
     // When
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      true,
-      [{ outcome: 0, price: 1.5 }],
-      { outcome: 1, price: 3.0 },
-    );
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      false,
-      [{ outcome: 1, price: 1.5 }],
-      { outcome: 0, price: 3.0 },
-    );
+    await market.updateMarketLiquiditiesWithCrossLiquidity(true, [
+      { outcome: 0, price: 1.5 },
+    ]);
+    await market.updateMarketLiquiditiesWithCrossLiquidity(false, [
+      { outcome: 1, price: 1.5 },
+    ]);
 
     // Then
     assert.deepEqual(await market.getMarketLiquidities(), {
@@ -86,22 +82,14 @@ describe("Protocol: Cross Liquidity", () => {
     );
 
     // When
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      true,
-      [
-        { outcome: 0, price: 2.1 },
-        { outcome: 1, price: 3.0 },
-      ],
-      { outcome: 2, price: 5.25 },
-    );
-    await market.updateMarketLiquiditiesWithCrossLiquidity(
-      false,
-      [
-        { outcome: 1, price: 2.1 },
-        { outcome: 2, price: 3.0 },
-      ],
-      { outcome: 0, price: 5.25 },
-    );
+    await market.updateMarketLiquiditiesWithCrossLiquidity(true, [
+      { outcome: 0, price: 2.1 },
+      { outcome: 1, price: 3.0 },
+    ]);
+    await market.updateMarketLiquiditiesWithCrossLiquidity(false, [
+      { outcome: 1, price: 2.1 },
+      { outcome: 2, price: 3.0 },
+    ]);
 
     // Then
     assert.deepEqual(await market.getMarketLiquidities(), {

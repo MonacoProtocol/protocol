@@ -645,7 +645,7 @@ export async function processCommissionPayments(
     )
   ).data.account;
 
-  if (marketCommissionPaymentQueue.commissionPayments.empty) {
+  if (marketCommissionPaymentQueue.paymentQueue.empty) {
     return;
   }
 
