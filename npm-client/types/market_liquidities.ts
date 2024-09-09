@@ -9,7 +9,8 @@ export type MarketLiquiditiesAccounts = {
 export type MarketLiquidities = {
   market: PublicKey;
   enableCrossMatching: boolean;
-  stakeMatchedTotal: BN;
+  stakeTraded: BN;
+  volumeTraded: BN;
   liquiditiesFor: MarketLiquidity[];
   liquiditiesAgainst: MarketLiquidity[];
 };

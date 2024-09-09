@@ -41,7 +41,7 @@ describe("Market Liquidities", () => {
       market.pk.toBase58(),
     );
     assert.deepEqual(
-      marketLiquidities.data.account.stakeMatchedTotal.toNumber(),
+      marketLiquidities.data.account.stakeTraded.toNumber(),
       10000000,
     );
     assert.deepEqual(

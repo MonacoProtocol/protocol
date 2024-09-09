@@ -10,7 +10,7 @@ use crate::state::order_account::*;
 #[cfg(test)]
 use crate::state::market_liquidities::MarketOutcomePriceLiquidity;
 
-pub const MATCH_CAPACITY: usize = 10_usize; // an arbitrary number
+pub const MATCH_CAPACITY: usize = 8_usize; // an arbitrary number
 
 pub fn on_order_creation(
     market_liquidities: &mut MarketLiquidities,
