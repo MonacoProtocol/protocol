@@ -124,7 +124,8 @@ pub fn update_on_cancel(
     market: &Market,
     market_matching_queue: &MarketMatchingQueue,
     matching_pool: &mut MarketMatchingPool,
-    order: &Account<Order>,
+    order_pk: &Pubkey,
+    order: &Order,
 ) -> Result<bool> {
     if market.is_inplay() && !matching_pool.inplay {
         require!(
@@ -134,7 +135,7 @@ pub fn update_on_cancel(
         matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    if matching_pool.orders.remove(&order.key()).is_some() {
+    if matching_pool.orders.remove(order_pk).is_some() {
         matching_pool.liquidity_amount = matching_pool
             .liquidity_amount
             .checked_sub(order.voided_stake)

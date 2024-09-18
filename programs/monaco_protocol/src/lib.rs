@@ -33,6 +33,7 @@ pub mod monaco_protocol {
     use crate::instructions::current_timestamp;
     use crate::state::market_liquidities::LiquiditySource;
     use crate::state::market_matching_queue_account::MarketMatchingQueue;
+    use crate::state::order_account::OrderStatus;
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -167,7 +168,31 @@ pub mod monaco_protocol {
     }
 
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
-        instructions::order::cancel_order(ctx)?;
+        let refund_amount = instructions::order::cancel_order(
+            &mut ctx.accounts.market,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+            &mut ctx.accounts.market_liquidities,
+            &ctx.accounts.market_matching_queue,
+            &mut ctx.accounts.market_matching_pool,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token_account,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
+
+        // if never matched, close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_account_counts()?;
+            ctx.accounts
+                .order
+                .close(ctx.accounts.payer.to_account_info())?;
+        }
 
         Ok(())
     }
