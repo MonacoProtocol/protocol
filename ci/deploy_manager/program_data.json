@@ -2,18 +2,14 @@
     "monaco_protocol": {
         "devnet": {
             "stable": {
-                "program_id": "5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr",
-                "idl_account": "Bw1JY5jbKTfyQBvFHCs3HjS6y4bjd8vhDbYvcGx4tKKE"
-            },
-            "dev": {
-                "program_id": "yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9",
-                "idl_account": "FwLPLLyhQoPKJZYSdNxaP8KBQV1MCLC7FBuXe15gJZqJ"
+                "program_id": null,
+                "idl_account": null
             }
         },
         "testnet": {
             "stable": {
-                "program_id": "5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr",
-                "idl_account": "Bw1JY5jbKTfyQBvFHCs3HjS6y4bjd8vhDbYvcGx4tKKE"
+                "program_id": null,
+                "idl_account": null
             }
         },
         "mainnet": {
