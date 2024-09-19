@@ -78,7 +78,7 @@ fn remove_liquidity_for(
             order.expected_price,
             order.voided_stake,
         )
-        .map_err(|_| CoreError::CancelOrderNotCancellable)?;
+        .map_err(|_| CoreError::CancelationLowLiquidity)?;
 
     // disabled in production, but left in for further testing
     // compute cost of this operation grows linear with the number of liquidity points
@@ -102,7 +102,7 @@ fn remove_liquidity_against(
             order.expected_price,
             order.voided_stake,
         )
-        .map_err(|_| CoreError::CancelOrderNotCancellable)?;
+        .map_err(|_| CoreError::CancelationLowLiquidity)?;
 
     // disabled in production, but left in for further testing
     // compute cost of this operation grows linear with the number of liquidity points
@@ -113,4 +113,169 @@ fn remove_liquidity_against(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::state::market_account::{mock_market, MarketStatus};
+    use crate::state::market_liquidities::{mock_market_liquidities, MarketOutcomePriceLiquidity};
+    use crate::state::market_matching_pool_account::mock_market_matching_pool;
+    use crate::state::market_matching_queue_account::mock_market_matching_queue;
+
+    #[test]
+    fn success() {
+        let market_outcome_index = 1;
+        let for_outcome = true;
+        let price = 3.0_f64;
+        let stake = 10_u64;
+        let payer_pk = Pubkey::new_unique();
+
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::Open);
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+        let mut market_matching_queue = mock_market_matching_queue(market_pk);
+
+        let order_pk = Pubkey::new_unique();
+        let mut order = mock_order(
+            market_pk,
+            market_outcome_index,
+            for_outcome,
+            price,
+            stake,
+            payer_pk,
+        );
+
+        let mut market_position = MarketPosition::default();
+        let mut market_matching_pool =
+            mock_market_matching_pool(market_pk, market_outcome_index, for_outcome, price);
+
+        // add order to market position
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        market_position::update_on_order_request_creation(
+            &mut market_position,
+            market_outcome_index,
+            for_outcome,
+            stake,
+            price,
+        )
+        .expect("");
+        assert_eq!(vec!(10, 0, 10), market_position.unmatched_exposures);
+
+        // add order to market matching pool
+        market_matching_pool.orders.enqueue(order_pk);
+        market_matching_pool.liquidity_amount = stake;
+
+        // add order to market position
+        market_liquidities
+            .add_liquidity_for(market_outcome_index, price, stake)
+            .expect("");
+        assert_eq!(
+            vec!((1, 3.0, 10)),
+            liquidities(&market_liquidities.liquidities_for)
+        );
+
+        // when
+        let result = cancel_order(
+            &mut market,
+            &order_pk,
+            &mut order,
+            &mut market_position,
+            &mut market_liquidities,
+            &mut market_matching_queue,
+            &mut market_matching_pool,
+        );
+
+        // then
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 10);
+        assert_eq!(vec!(0, 0, 0), market_position.unmatched_exposures);
+        assert_eq!(0, market_liquidities.liquidities_for.len());
+    }
+
+    #[test]
+    fn low_liqudity() {
+        let market_outcome_index = 1;
+        let for_outcome = true;
+        let price = 3.0_f64;
+        let stake = 10_u64;
+        let payer_pk = Pubkey::new_unique();
+
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market(MarketStatus::Open);
+        let mut market_liquidities = mock_market_liquidities(market_pk);
+        let mut market_matching_queue = mock_market_matching_queue(market_pk);
+
+        let order_pk = Pubkey::new_unique();
+        let mut order = mock_order(
+            market_pk,
+            market_outcome_index,
+            for_outcome,
+            price,
+            stake,
+            payer_pk,
+        );
+
+        let mut market_position = MarketPosition::default();
+        let mut market_matching_pool =
+            mock_market_matching_pool(market_pk, market_outcome_index, for_outcome, price);
+
+        // add order to market position
+        market_position.market_outcome_sums.resize(3, 0_i128);
+        market_position.unmatched_exposures.resize(3, 0_u64);
+        market_position::update_on_order_request_creation(
+            &mut market_position,
+            market_outcome_index,
+            for_outcome,
+            stake,
+            price,
+        )
+        .expect("");
+        assert_eq!(vec!(0, 0, 0), market_position.market_outcome_sums);
+        assert_eq!(vec!(10, 0, 10), market_position.unmatched_exposures);
+
+        // add order to market matching pool
+        market_matching_pool.orders.enqueue(order_pk);
+        market_matching_pool.liquidity_amount = stake;
+
+        // add order to market position
+        market_liquidities
+            .add_liquidity_for(market_outcome_index, price, stake - 1) // less than unmatched stake
+            .expect("");
+        assert_eq!(
+            vec!((1, 3.0, 9)),
+            liquidities(&market_liquidities.liquidities_for)
+        );
+
+        // when
+        let result = cancel_order(
+            &mut market,
+            &order_pk,
+            &mut order,
+            &mut market_position,
+            &mut market_liquidities,
+            &mut market_matching_queue,
+            &mut market_matching_pool,
+        );
+
+        // then
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            error!(CoreError::CancelationLowLiquidity)
+        );
+        assert_eq!(vec!(10, 0, 10), market_position.unmatched_exposures);
+        assert_eq!(
+            vec!((1, 3.0, 9)),
+            liquidities(&market_liquidities.liquidities_for)
+        );
+    }
+
+    fn liquidities(liquidities: &Vec<MarketOutcomePriceLiquidity>) -> Vec<(u16, f64, u64)> {
+        liquidities
+            .iter()
+            .map(|v| (v.outcome, v.price, v.liquidity))
+            .collect::<Vec<(u16, f64, u64)>>()
+    }
 }
