@@ -423,9 +423,9 @@ describe("Security: Cancel Order", () => {
     try {
       await market.settle(0);
       await market.cancel(orderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
+      assert.fail("expected CancelationMarketStatusInvalid");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+      assert.equal(e.error.errorCode.code, "CancelationMarketStatusInvalid");
     }
 
     // check the order wasn't cancelled
