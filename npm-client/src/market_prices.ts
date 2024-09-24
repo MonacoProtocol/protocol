@@ -7,13 +7,13 @@ import {
   getMarketMatchingPoolAccounts,
 } from "./market_matching_pools";
 import {
+  ClientResponse,
+  GetAccount,
   MarketPrice,
   MarketPrices,
   MarketPricesAndPendingOrders,
-  ClientResponse,
-  ResponseFactory,
-  GetAccount,
   Order,
+  ResponseFactory,
 } from "../types";
 import { getPendingOrdersForMarket } from "./order";
 
@@ -55,7 +55,7 @@ export async function getMarketPrices(
   }
 
   const pendingOrders = pendingOrdersResponse.data.pendingOrders;
-  const marketOutcomeTitles = marketOutcomes.data.marketOutcomeAccounts.map(
+  const marketOutcomeTitles = marketOutcomes.data.accounts.map(
     (market) => market.account.title,
   );
 
@@ -70,7 +70,9 @@ export async function getMarketPrices(
     market: market.data.account,
     pendingOrders: pendingOrders,
     marketPrices: marketPrices.data.marketPrices,
-    marketOutcomeAccounts: marketOutcomes.data.marketOutcomeAccounts,
+    marketOutcomeAccounts: marketOutcomes.data.accounts.map(
+      (account) => account.account,
+    ),
   });
 
   return response.body;
@@ -185,9 +187,7 @@ function marketPricesFromOrders(
     marketPricesSet.add(JSON.stringify(price));
   });
 
-  const marketPrices = Array.from(marketPricesSet).map(function (price) {
+  return Array.from(marketPricesSet).map(function (price) {
     return JSON.parse(price as string) as MarketPrice;
   });
-
-  return marketPrices;
 }

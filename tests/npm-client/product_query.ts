@@ -1,9 +1,8 @@
 import { createProduct, getAnchorProvider } from "../util/test_util";
 import { externalPrograms } from "../util/wrappers";
 import { Program } from "@coral-xyz/anchor";
-import { Products } from "../../npm-client/src/product_query";
+import { createProduct as createProductNpm, Products } from "../../npm-client";
 import assert from "assert";
-import { createProduct as createProductNpm } from "../../npm-client/src/product";
 import { Keypair } from "@solana/web3.js";
 
 describe("Products Query", () => {
@@ -21,9 +20,9 @@ describe("Products Query", () => {
     const products = await Products.productQuery(productProgram).fetch();
 
     // should always return MONACO_PROTOCOL product and newly created product (may be more if other tests have ran)
-    assert.ok(products.data.productAccounts.length >= 2);
+    assert.ok(products.data.accounts.length >= 2);
 
-    const returnedProduct = products.data.productAccounts.filter(
+    const returnedProduct = products.data.accounts.filter(
       (p) => p.account.productTitle == productTitle,
     )[0];
 
@@ -49,7 +48,7 @@ describe("Products Query", () => {
       .filterByAuthority(productAuthority.publicKey)
       .fetch();
 
-    const returnedProduct = products.data.productAccounts.filter(
+    const returnedProduct = products.data.accounts.filter(
       (p) => p.account.productTitle == productTitle,
     )[0];
 
@@ -80,7 +79,7 @@ describe("Products Query", () => {
       .filterByPayer(getAnchorProvider().publicKey)
       .fetch();
 
-    const returnedProduct = products.data.productAccounts.filter(
+    const returnedProduct = products.data.accounts.filter(
       (p) => p.account.productTitle == productTitle,
     )[0];
 

@@ -8,6 +8,8 @@
 
 ## Products
 
+**Extends AccountQuery**
+
 Base product query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
 
 ### Parameters

@@ -106,7 +106,7 @@ For the provided market publicKey and outcome index, return all pending orders m
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `outcomeIndex` **[number][21]**&#x20;
+*   `outcomeIndex` **[number][21]** {number} index of outcome
 
 ### Examples
 
@@ -126,7 +126,7 @@ For the provided market publicKey, outcome index and forOrder bool, return all p
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `outcomeIndex` **[number][21]**&#x20;
+*   `outcomeIndex` **[number][21]** {number} index of outcome
 *   `forOutcome` **[boolean][22]** {boolean} filter for orders that are for or against the outcome
 
 ### Examples
