@@ -40,28 +40,59 @@ pub fn cancel_order(
     if market.is_inplay() && !market.inplay {
         move_market_to_inplay(market, market_liquidities)?;
     }
+    if market.is_inplay() && !market_matching_pool.inplay {
+        require!(
+            market_matching_queue.matches.is_empty(),
+            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
+        );
+        market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    }
 
-    order.void_stake_unmatched(); // TODO replace
+    // check how much liquidity is left
+    let liquidity = match order.for_outcome {
+        true => market_liquidities
+            .get_liquidity_for(order.market_outcome_index, order.expected_price)
+            .map(|v| v.liquidity)
+            .unwrap_or(0),
+        false => market_liquidities
+            .get_liquidity_against(order.market_outcome_index, order.expected_price)
+            .map(|v| v.liquidity)
+            .unwrap_or(0),
+    };
+    require!(liquidity > 0_u64, CoreError::CancelationLowLiquidity);
+
+    // void only up to available liquidity
+    let stake_to_void = order.void_stake_unmatched_up_to(liquidity)?;
 
     // remove from matching pool
-    let removed_from_queue = matching::matching_pool::update_on_cancel(
-        market,
-        market_matching_queue,
+    matching::matching_pool::update_on_cancel(
         market_matching_pool,
+        stake_to_void,
         order_pk,
-        order,
+        order.stake_unmatched == 0_u64,
     )?;
 
     // update liquidity if the order was still present in the matching pool
     let update_derived_liquidity = false; // flag indicating removal of cross liquidity
-    if removed_from_queue {
-        match order.for_outcome {
-            true => remove_liquidity_for(market_liquidities, order, update_derived_liquidity)?,
-            false => remove_liquidity_against(market_liquidities, order, update_derived_liquidity)?,
-        }
+    match order.for_outcome {
+        true => remove_liquidity_for(
+            market_liquidities,
+            order.market_outcome_index,
+            order.expected_price,
+            stake_to_void,
+            update_derived_liquidity,
+        )?,
+        false => remove_liquidity_against(
+            market_liquidities,
+            order.market_outcome_index,
+            order.expected_price,
+            stake_to_void,
+            update_derived_liquidity,
+        )?,
     }
 
     // calculate refund
+    // TODO need to pass the voided stake value as this might be second (or third, etc) void
     let refund = market_position::update_on_order_cancellation(market_position, order)?;
 
     Ok(refund)
@@ -69,22 +100,19 @@ pub fn cancel_order(
 
 fn remove_liquidity_for(
     market_liquidities: &mut MarketLiquidities,
-    order: &Order,
+    outcome: u16,
+    price: f64,
+    liquidity: u64,
     update_derived_liquidity: bool,
 ) -> Result<()> {
     market_liquidities
-        .remove_liquidity_for(
-            order.market_outcome_index,
-            order.expected_price,
-            order.voided_stake,
-        )
+        .remove_liquidity_for(outcome, price, liquidity)
         .map_err(|_| CoreError::CancelationLowLiquidity)?;
 
     // disabled in production, but left in for further testing
     // compute cost of this operation grows linear with the number of liquidity points
     if update_derived_liquidity {
-        let liquidity_source =
-            LiquiditySource::new(order.market_outcome_index, order.expected_price);
+        let liquidity_source = LiquiditySource::new(outcome, price);
         market_liquidities.update_all_cross_liquidity_against(&liquidity_source);
     }
 
@@ -93,22 +121,19 @@ fn remove_liquidity_for(
 
 fn remove_liquidity_against(
     market_liquidities: &mut MarketLiquidities,
-    order: &Order,
+    outcome: u16,
+    price: f64,
+    liquidity: u64,
     update_derived_liquidity: bool,
 ) -> Result<()> {
     market_liquidities
-        .remove_liquidity_against(
-            order.market_outcome_index,
-            order.expected_price,
-            order.voided_stake,
-        )
+        .remove_liquidity_against(outcome, price, liquidity)
         .map_err(|_| CoreError::CancelationLowLiquidity)?;
 
     // disabled in production, but left in for further testing
     // compute cost of this operation grows linear with the number of liquidity points
     if update_derived_liquidity {
-        let liquidity_source =
-            LiquiditySource::new(order.market_outcome_index, order.expected_price);
+        let liquidity_source = LiquiditySource::new(outcome, price);
         market_liquidities.update_all_cross_liquidity_for(&liquidity_source);
     }
 
@@ -195,7 +220,7 @@ mod test {
     }
 
     #[test]
-    fn low_liqudity() {
+    fn low_liquidity() {
         let market_outcome_index = 1;
         let for_outcome = true;
         let price = 3.0_f64;
@@ -260,14 +285,10 @@ mod test {
         );
 
         // then
-        assert!(result.is_err());
+        assert!(result.is_ok());
+        assert_eq!(vec!(1, 0, 1), market_position.unmatched_exposures);
         assert_eq!(
-            result.unwrap_err(),
-            error!(CoreError::CancelationLowLiquidity)
-        );
-        assert_eq!(vec!(10, 0, 10), market_position.unmatched_exposures);
-        assert_eq!(
-            vec!((1, 3.0, 9)),
+            Vec::<(u16, f64, u64)>::new(),
             liquidities(&market_liquidities.liquidities_for)
         );
     }
