@@ -19,7 +19,7 @@ pub fn cancel_order(
     market_matching_queue: &MarketMatchingQueue,
     market_matching_pool: &mut MarketMatchingPool,
 ) -> Result<u64> {
-    // market is open + should be locked and cancellation is the intended behaviour
+    // market is open
     require!(
         [MarketStatus::Open].contains(&market.market_status),
         CoreError::CancelationMarketStatusInvalid
