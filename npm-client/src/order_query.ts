@@ -2,7 +2,6 @@ import { PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { GetAccount } from "../types/get_account";
 import {
-  Order,
   ClientResponse,
   ResponseFactory,
   GetPublicKeys,
@@ -15,6 +14,7 @@ import {
   ByteCriterion,
   toFilters,
 } from "./queries";
+import { OrderAccount } from "@monaco-protocol/client-account-types";
 
 export enum OrderStatusFilter {
   Open = 0x00,
@@ -140,7 +140,7 @@ export class Orders {
     try {
       const accountsWithData = (await this.program.account.order.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-      )) as Order[];
+      )) as unknown as OrderAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {
@@ -257,7 +257,7 @@ export async function getOrdersByEventForProviderWallet(
     return response.body;
   }
 
-  const orderAccounts = [] as GetAccount<Order>[];
+  const orderAccounts = [] as GetAccount<OrderAccount>[];
 
   await Promise.all(
     marketPks.data.markets.map(async function (market) {

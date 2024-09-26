@@ -1,25 +1,6 @@
-import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
+import { MarketCommissionPaymentQueueAccount } from "@monaco-protocol/client-account-types";
 
 export type MarketCommissionPaymentQueues = {
-  marketCommissionPaymentQueues: GetAccount<MarketCommissionPaymentQueue>[];
-};
-
-export type MarketCommissionPaymentQueue = {
-  market: PublicKey;
-  paymentQueue: CommissionPaymentQueue;
-};
-
-export type CommissionPaymentQueue = {
-  empty: boolean;
-  front: number;
-  len: number;
-  items: CommissionPayment[];
-};
-
-export type CommissionPayment = {
-  from: PublicKey;
-  to: PublicKey;
-  amount: BN;
+  marketCommissionPaymentQueues: GetAccount<MarketCommissionPaymentQueueAccount>[];
 };

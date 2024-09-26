@@ -50,7 +50,7 @@ const purchaserPk = new PublicKey('5BZWY6XWPxuWFxs2jagkmUkCoBWmJ6c4YEArr83hYBWk'
 const marketPosition = await getMarketPosition(program, marketPK, purchaserPk)
 ```
 
-Returns **MarketPosition** market position account info
+Returns **MarketPositionAccount** market position account info
 
 ## createMarketPosition
 

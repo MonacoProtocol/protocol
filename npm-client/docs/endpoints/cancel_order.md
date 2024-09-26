@@ -68,8 +68,8 @@ For the provided order and market position calculate amount that will be refunde
 
 ### Parameters
 
-*   `order` **Order** {Order} order to be canceled
-*   `marketPosition` **MarketPosition** {MarketPosition} market position of the order's owner
+*   `order` **OrderAccount** {OrderAccount} order to be canceled
+*   `marketPosition` **MarketPositionAccount** {MarketPositionAccount} market position of the order's owner
 
 ### Examples
 

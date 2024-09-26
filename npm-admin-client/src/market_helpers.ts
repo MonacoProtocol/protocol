@@ -7,14 +7,16 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
-  MarketAccount,
   GetPublicKeys,
-  MarketOutcomeAccount,
   MarketOutcomeAccounts,
   MarketOutcomeTitlesResponse,
 } from "../types";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { Mint, getMint } from "@solana/spl-token";
+import {
+  MarketAccount,
+  MarketOutcomeAccount,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided event publicKey, market type and mint publicKey return a Program Derived Address (PDA). This PDA is used for market creation.
@@ -97,7 +99,7 @@ export async function getMarket(
   try {
     const market = (await program.account.market.fetch(
       marketPk,
-    )) as MarketAccount;
+    )) as unknown as MarketAccount;
     response.addResponseData({
       publicKey: marketPk,
       account: market,
@@ -113,7 +115,7 @@ export async function getMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param mintPK {PublicKey} publicKey of an spl-token
- * @returns {MintInfo} mint information including mint authority and decimals
+ * @returns {Mint} mint information including mint authority and decimals
  *
  * @example
  *
@@ -415,7 +417,7 @@ export class MarketOutcomes {
       const accountsWithData =
         (await this.program.account.marketOutcome.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-        )) as MarketOutcomeAccount[];
+        )) as unknown as MarketOutcomeAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

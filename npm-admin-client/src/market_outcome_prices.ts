@@ -8,10 +8,10 @@ import {
   Operator,
   ClientResponse,
   ResponseFactory,
-  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import { findMarketOutcomePda } from "./market_outcome_instruction";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the given market and outcome index, add the provided prices to the price ladder for that outcome - program must be initialized by the `MARKET` operator that initialised the market
@@ -160,7 +160,7 @@ export async function batchAddPricesToAllOutcomePools(
   const response = new ResponseFactory({} as BatchAddPricesToOutcomesResponse);
   const market = (await program.account.market.fetch(
     marketPk,
-  )) as MarketAccount;
+  )) as unknown as MarketAccount;
 
   const results = [] as BatchAddPricesToOutcomes[];
   for (
@@ -168,11 +168,7 @@ export async function batchAddPricesToAllOutcomePools(
     outcomeIndex < market.marketOutcomesCount;
     outcomeIndex++
   ) {
-    const outcomePda = await findMarketOutcomePda(
-      program,
-      marketPk,
-      outcomeIndex,
-    );
+    const outcomePda = findMarketOutcomePda(program, marketPk, outcomeIndex);
     const batches = await batchAddPricesToOutcomePool(
       program,
       marketPk,

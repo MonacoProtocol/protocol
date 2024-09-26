@@ -6,11 +6,13 @@ import {
   FindPdaResponse,
   GetAccount,
   MarketOrderRequestQueues,
-  MarketOrderRequestQueue,
-  OrderRequest,
   GetPublicKeys,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
+import {
+  MarketOrderRequestQueueAccount,
+  OrderRequest,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market order-request-queue account.
@@ -48,7 +50,7 @@ export async function findMarketOrderRequestQueuePda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketOrderRequestQueuePk {PublicKey} publicKey of the order-request-queue
- * @returns {GetAccount<MarketOrderRequestQueue>} market order-request-queue account details
+ * @returns {GetAccount<MarketOrderRequestQueueAccount>} market order-request-queue account details
  *
  * @example
  *
@@ -58,16 +60,15 @@ export async function findMarketOrderRequestQueuePda(
 export async function getMarketOrderRequestQueue(
   program: Program,
   marketOrderRequestQueuePk: PublicKey,
-): Promise<ClientResponse<GetAccount<MarketOrderRequestQueue>>> {
+): Promise<ClientResponse<GetAccount<MarketOrderRequestQueueAccount>>> {
   const response = new ResponseFactory(
-    {} as GetAccount<MarketOrderRequestQueue>,
+    {} as GetAccount<MarketOrderRequestQueueAccount>,
   );
   try {
     const marketMatchingQueue =
       (await program.account.marketOrderRequestQueue.fetch(
         marketOrderRequestQueuePk,
-      )) as MarketOrderRequestQueue;
-
+      )) as unknown as MarketOrderRequestQueueAccount;
     response.addResponseData({
       publicKey: marketOrderRequestQueuePk,
       account: marketMatchingQueue,
@@ -103,7 +104,7 @@ export async function getNonEmptyMarketOrderRequestQueues(
     const accountsWithData =
       (await program.account.marketOrderRequestQueue.fetchMultiple(
         accountKeys,
-      )) as MarketOrderRequestQueue[];
+      )) as unknown as MarketOrderRequestQueueAccount[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -133,7 +134,7 @@ async function getPublicKeys(program: Program): Promise<PublicKey[]> {
 }
 
 export function toOrderRequests(
-  marketOrderRequestQueue: MarketOrderRequestQueue,
+  marketOrderRequestQueue: MarketOrderRequestQueueAccount,
 ): OrderRequest[] {
   const orderRequests = marketOrderRequestQueue.orderRequests;
   const frontIndex = orderRequests.front;

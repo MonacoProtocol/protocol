@@ -1,7 +1,6 @@
 import {
   ClientResponse,
   GetPublicKeys,
-  MarketMatchingPoolAccount,
   MarketMatchingPoolAccounts,
   ResponseFactory,
 } from "../types";
@@ -13,6 +12,7 @@ import {
 } from "./queries";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { MarketMatchingPoolAccount } from "@monaco-protocol/client-account-types";
 
 export class MarketMatchingPools {
   public static marketMatchingPoolQuery(program: Program) {
@@ -90,7 +90,7 @@ export class MarketMatchingPools {
       const accountsWithData =
         (await this.program.account.marketMatchingPool.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-        )) as MarketMatchingPoolAccount[];
+        )) as unknown as MarketMatchingPoolAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

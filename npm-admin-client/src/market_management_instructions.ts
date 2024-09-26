@@ -6,7 +6,6 @@ import {
   ResponseFactory,
   ClientResponse,
   MarketInstructionResponse,
-  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -17,6 +16,7 @@ import {
   findMarketMatchingQueuePda,
   findMarketOrderRequestQueuePda,
 } from "./market_helpers";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 export enum MarketManagementInstructionType {
   PUBLISH = 0,
@@ -222,7 +222,9 @@ export async function buildMarketManagementInstruction(
     case MarketManagementInstructionType.VOID: {
       const [marketEscrow, market] = await Promise.all([
         findEscrowPda(program, marketPk),
-        (await program.account.market.fetch(marketPk)) as MarketAccount,
+        (await program.account.market.fetch(
+          marketPk,
+        )) as unknown as MarketAccount,
       ]);
       if (!marketEscrow.success) {
         response.addErrors(marketEscrow.errors);

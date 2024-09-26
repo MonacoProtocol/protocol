@@ -1,13 +1,13 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
-  Trade,
   ClientResponse,
   ResponseFactory,
   GetPublicKeys,
   TradeAccounts,
 } from "../types";
 import { PublicKeyCriterion, toFilters } from "./queries";
+import { TradeAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * Base trade query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -105,7 +105,7 @@ export class Trades {
     try {
       const accountsWithData = (await this.program.account.trade.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-      )) as Trade[];
+      )) as unknown as TradeAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

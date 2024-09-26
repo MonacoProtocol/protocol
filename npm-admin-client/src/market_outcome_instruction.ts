@@ -5,13 +5,13 @@ import {
   ClientResponse,
   ResponseFactory,
   FindPdaResponse,
-  MarketAccount,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
   MarketOutcomeInstructionResponse,
   MarketOutcomesInstructionsResponse,
 } from "../types/transactions";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 export async function buildInitialiseOutcomeInstruction(
   program: Program,
@@ -80,7 +80,7 @@ export async function buildInitialiseOutcomesInstructions(
   if (startingIndex == undefined) {
     const market = (await program.account.market.fetch(
       marketPk,
-    )) as MarketAccount;
+    )) as unknown as MarketAccount;
     resolvedIndex = market.marketOutcomesCount;
   }
   const instructions = await Promise.all(
