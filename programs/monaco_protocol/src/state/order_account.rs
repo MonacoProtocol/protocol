@@ -69,8 +69,7 @@ impl Order {
         }
     }
 
-    pub fn void_stake_unmatched_up_to(&mut self, limit: u64) -> Result<u64> {
-        let stake_to_void = limit.min(self.stake_unmatched);
+    pub fn void_stake_unmatched_by(&mut self, stake_to_void: u64) -> Result<()> {
         self.voided_stake = self
             .voided_stake
             .checked_add(stake_to_void)
@@ -84,7 +83,7 @@ impl Order {
             self.order_status = OrderStatus::Cancelled;
         }
 
-        Ok(stake_to_void)
+        Ok(())
     }
 }
 
