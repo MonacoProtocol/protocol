@@ -16,6 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 stable = []
 dev = []
+edge = []
 
 [dependencies]
 solana-program = "= 1.17.2"
