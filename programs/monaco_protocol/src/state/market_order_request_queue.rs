@@ -9,7 +9,7 @@ pub struct MarketOrderRequestQueue {
 }
 
 impl MarketOrderRequestQueue {
-    pub const QUEUE_LENGTH: u32 = 30;
+    pub const QUEUE_LENGTH: u32 = 75;
 
     pub const SIZE: usize = DISCRIMINATOR_SIZE +
         PUB_KEY_SIZE + // market
