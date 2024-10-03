@@ -1,5 +1,5 @@
 import {OrderAccount} from "../accounts";
-export interface OrderPrimitive extends Omit<OrderAccount, 'purchaser' | 'market' | 'product' | 'stake' | 'voidedStake' | 'creationTimestamp' | 'stakeUnmatched' | 'payout' | 'payer'> {
+export interface OrderPrimitive extends Omit<OrderAccount, 'purchaser' | 'market' | 'product' | 'stake' | 'voidedStake' | 'creationTimestamp' | 'stakeUnmatched' | 'payout' | 'payer' | 'orderStatus'> {
   purchaser: string;
   market: string;
   product: string | null;
@@ -9,4 +9,5 @@ export interface OrderPrimitive extends Omit<OrderAccount, 'purchaser' | 'market
   stakeUnmatched: number;
   payout: number;
   payer: string;
+  orderStatus: string;
 }
