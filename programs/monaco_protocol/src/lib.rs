@@ -24,7 +24,9 @@ pub mod state;
 declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
 #[cfg(feature = "dev")]
 declare_id!("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9");
-#[cfg(not(any(feature = "stable", feature = "dev")))]
+#[cfg(feature = "edge")]
+declare_id!("mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU");
+#[cfg(not(any(feature = "stable", feature = "dev", feature = "edge")))]
 declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 
 #[program]

@@ -28,7 +28,12 @@
     "typescript": "^4.5.4"
   },
   "scripts": {
-    "build": "cd npm-client && npm install && npm run build && cd - && cd npm-admin-client && npm install && npm run build && cd - && anchor build",
+    "buildClient": "cd npm-client && npm install && npm run build && cd -",
+    "buildAdminClient": "cd npm-admin-client && npm install && npm run build && cd -",
+    "buildMonaco": "anchor build -v",
+    "buildMonacoForEdge": "anchor build -v -- --features edge",
+    "build": "yarn buildClient && yarn buildAdminClient && yarn buildMonaco",
+
     "test": "anchor test",
     "runJestTests": "jest --silent --forceExit",
     "lint": "eslint --fix .",
