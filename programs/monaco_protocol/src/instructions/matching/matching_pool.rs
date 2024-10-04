@@ -121,26 +121,19 @@ pub fn update_matching_pool_with_matched_order(
 }
 
 pub fn update_on_cancel(
-    market: &Market,
-    market_matching_queue: &MarketMatchingQueue,
     matching_pool: &mut MarketMatchingPool,
-    order: &Account<Order>,
-) -> Result<bool> {
-    if market.is_inplay() && !matching_pool.inplay {
-        require!(
-            market_matching_queue.matches.is_empty(),
-            CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
-        );
-        matching_pool.move_to_inplay(&market.event_start_order_behaviour);
+    amount_voided: u64,
+    voided_order: &Pubkey,
+    fully_voided: bool,
+) -> Result<()> {
+    if fully_voided {
+        matching_pool.orders.remove(voided_order);
     }
 
-    if matching_pool.orders.remove(&order.key()).is_some() {
-        matching_pool.liquidity_amount = matching_pool
-            .liquidity_amount
-            .checked_sub(order.voided_stake)
-            .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
-        Ok(true)
-    } else {
-        Ok(false)
-    }
+    matching_pool.liquidity_amount = matching_pool
+        .liquidity_amount
+        .checked_sub(amount_voided)
+        .ok_or(CoreError::MatchingLiquidityAmountUpdateError)?;
+
+    Ok(())
 }

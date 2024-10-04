@@ -10,6 +10,5 @@ export * from "./market_order_request_queue";
 export * from "./market_commission_payment_queue";
 export * from "./market_position";
 export * from "./wallet_tokens";
-export * from "./protocol";
 export * from "./trade";
 export * from "./transactions";

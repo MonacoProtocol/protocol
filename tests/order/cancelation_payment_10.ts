@@ -94,12 +94,7 @@ describe("Order Cancelation Payment 10", () => {
     );
 
     // Cancel For 10
-    try {
-      await market.cancel(forOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
-    }
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -110,8 +105,8 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [5, -15, 5], unmatched: [10, 0, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [5, -15, 5], unmatched: [5, 0, 5] },
+        { len: 1, liquidity: 5, matched: 0 },
         { len: 0, liquidity: 0, matched: 5 },
         15,
         85,
@@ -159,12 +154,7 @@ describe("Order Cancelation Payment 10", () => {
     );
 
     // Cancel For 10
-    try {
-      await market.cancel(forOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
-    } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
-    }
+    await market.cancel(forOrderPk, purchaser);
 
     assert.deepEqual(
       await Promise.all([
@@ -175,8 +165,8 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [5, -15, 5], unmatched: [10, 0, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [5, -15, 5], unmatched: [5, 0, 5] },
+        { len: 1, liquidity: 5, matched: 0 },
         { len: 0, liquidity: 0, matched: 5 },
         15,
         85,
@@ -200,8 +190,8 @@ describe("Order Cancelation Payment 10", () => {
         market.getTokenBalance(purchaser),
       ]),
       [
-        { matched: [5, -15, 5], unmatched: [10, 0, 10] },
-        { len: 1, liquidity: 10, matched: 0 },
+        { matched: [5, -15, 5], unmatched: [5, 0, 5] },
+        { len: 1, liquidity: 5, matched: 0 },
         { len: 0, liquidity: 0, matched: 5 },
         15,
         85,
@@ -251,9 +241,9 @@ describe("Order Cancelation Payment 10", () => {
     // Cancel Against 5
     try {
       await market.cancel(againstOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
+      assert.fail("expected CancelationLowLiquidity");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+      assert.equal(e.error.errorCode.code, "CancelationLowLiquidity");
     }
 
     assert.deepEqual(
@@ -356,9 +346,9 @@ describe("Order Cancelation Payment 10", () => {
     // Cancel Against 5
     try {
       await market.cancel(againstOrderPk, purchaser);
-      assert.fail("expected CancelOrderNotCancellable");
+      assert.fail("expected CancelationLowLiquidity");
     } catch (e) {
-      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+      assert.equal(e.error.errorCode.code, "CancelationLowLiquidity");
     }
 
     assert.deepEqual(
