@@ -13,11 +13,10 @@
     "url": "https://github.com/MonacoProtocol/protocol/issues"
   },
   "homepage": "https://github.com/MonacoProtocol/protocol/blob/main/npm-client/README.md",
-  "main": "src/index.js",
-  "module": "src/index.js",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
   "files": [
-    "/src",
-    "/types"
+    "/dist"
   ],
   "scripts": {
     "build": "tsc --downlevelIteration",

@@ -1,9 +1,11 @@
 {
     "compilerOptions": {
-      "target": "es5",
+      "target": "ES2019",
+      "lib": ["ES2019"],
       "module": "commonjs",
-      "allowJs": true,
       "declaration": true,
+      "outDir": "./dist",
+      "allowJs": true,
       "strict": true,
       "noImplicitAny": false,
       "esModuleInterop": true,
