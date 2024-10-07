@@ -20,12 +20,7 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
-#[cfg(feature = "stable")]
-declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
-#[cfg(feature = "dev")]
-declare_id!("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9");
-#[cfg(not(any(feature = "stable", feature = "dev")))]
-declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
+declare_id!("mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU");
 
 #[program]
 pub mod monaco_protocol {
