@@ -68,6 +68,23 @@ impl Order {
             self.order_status = OrderStatus::Cancelled;
         }
     }
+
+    pub fn void_stake_unmatched_by(&mut self, stake_to_void: u64) -> Result<()> {
+        self.voided_stake = self
+            .voided_stake
+            .checked_add(stake_to_void)
+            .ok_or(CoreError::ArithmeticError)?;
+        self.stake_unmatched = self
+            .stake_unmatched
+            .checked_sub(stake_to_void)
+            .ok_or(CoreError::ArithmeticError)?;
+
+        if self.stake == self.voided_stake && self.order_status == OrderStatus::Open {
+            self.order_status = OrderStatus::Cancelled;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, PartialEq, Eq)]

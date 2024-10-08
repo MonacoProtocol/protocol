@@ -57,6 +57,18 @@ impl MarketPosition {
 }
 
 #[cfg(test)]
+pub fn mock_market_position(number_of_market_outcomes: usize) -> MarketPosition {
+    let mut market_position = MarketPosition::default();
+    market_position
+        .market_outcome_sums
+        .resize(number_of_market_outcomes, 0_i128);
+    market_position
+        .unmatched_exposures
+        .resize(number_of_market_outcomes, 0_u64);
+    market_position
+}
+
+#[cfg(test)]
 mod total_exposure_tests {
     use super::*;
 

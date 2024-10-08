@@ -115,17 +115,25 @@ fn match_for_order(
     for (price, sources, stake) in &order_matches {
         if sources.is_empty() {
             // for direct liquidity match just remove it
-            market_liquidities
-                .remove_liquidity_against(order.market_outcome_index, *price, *stake)
-                .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
+            require_eq!(
+                market_liquidities
+                    .remove_liquidity_against(order.market_outcome_index, *price, *stake)
+                    .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?,
+                *stake,
+                CoreError::MatchingRemainingLiquidityTooSmall
+            );
         } else {
             // for cross liquidity match remove the sources
             if *stake > 0_u64 {
                 for source in sources {
                     let source_stake = calculate_stake_cross(*stake, *price, source.price);
-                    market_liquidities
-                        .remove_liquidity_for(source.outcome, source.price, source_stake)
-                        .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
+                    require_eq!(
+                        market_liquidities
+                            .remove_liquidity_for(source.outcome, source.price, source_stake)
+                            .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?,
+                        source_stake,
+                        CoreError::MatchingRemainingLiquidityTooSmall
+                    );
                 }
             }
             // always update even if it's 0
@@ -242,17 +250,25 @@ fn match_against_order(
     for (price, sources, stake) in &order_matches {
         if sources.is_empty() {
             // for direct liquidity match just remove it
-            market_liquidities
-                .remove_liquidity_for(order.market_outcome_index, *price, *stake)
-                .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
+            require_eq!(
+                market_liquidities
+                    .remove_liquidity_for(order.market_outcome_index, *price, *stake)
+                    .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?,
+                *stake,
+                CoreError::MatchingRemainingLiquidityTooSmall
+            );
         } else {
             // for cross liquidity match remove the sources
             if *stake > 0_u64 {
                 for source in sources {
                     let source_stake = calculate_stake_cross(*stake, *price, source.price);
-                    market_liquidities
-                        .remove_liquidity_against(source.outcome, source.price, source_stake)
-                        .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?;
+                    require_eq!(
+                        market_liquidities
+                            .remove_liquidity_against(source.outcome, source.price, source_stake)
+                            .map_err(|_| CoreError::MatchingRemainingLiquidityTooSmall)?,
+                        source_stake,
+                        CoreError::MatchingRemainingLiquidityTooSmall
+                    );
                 }
             }
             // always update even if it's 0

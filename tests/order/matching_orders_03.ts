@@ -54,11 +54,16 @@ async function execute(outcomesCount: number) {
   );
 
   // create (n-1) orders to generate cross liquidity
-  const orders = await Promise.all(
-    makerOutcomes.map((_, outcomeIndex) =>
-      market.forOrder(outcomeIndex, 1, price, purchasers[outcomeIndex]),
-    ),
-  );
+  const orders = [];
+  for (let outcomeIndex = 0; outcomeIndex < outcomesCount - 1; outcomeIndex++) {
+    const order = await market.forOrder(
+      outcomeIndex,
+      1,
+      price,
+      purchasers[outcomeIndex],
+    );
+    orders.push(order);
+  }
   await market.processOrderRequests();
 
   // update cross liquidity
@@ -68,7 +73,6 @@ async function execute(outcomesCount: number) {
   await market.updateMarketLiquiditiesWithCrossLiquidity(
     true,
     sourceLiquidities,
-    { outcome: outcomesLastIndex, price },
   );
 
   // validate expected liquidity

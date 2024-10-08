@@ -194,6 +194,26 @@ impl Cirque {
 }
 
 #[cfg(test)]
+pub fn mock_market_matching_pool(
+    market_pk: Pubkey,
+    market_outcome_index: u16,
+    for_outcome: bool,
+    price: f64,
+) -> MarketMatchingPool {
+    MarketMatchingPool {
+        market: market_pk,
+        market_outcome_index,
+        for_outcome,
+        price,
+        liquidity_amount: 0_u64,
+        matched_amount: 0_u64,
+        inplay: false,
+        orders: Cirque::new(1),
+        payer: Pubkey::new_unique(),
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use crate::state::market_matching_pool_account::Cirque;
     use solana_program::pubkey::Pubkey;
