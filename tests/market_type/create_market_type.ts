@@ -2,7 +2,7 @@ import { monaco } from "../util/wrappers";
 import assert from "assert";
 import { PublicKey } from "@solana/web3.js";
 
-describe("Attempt to create market src with", () => {
+describe("Attempt to create market type with", () => {
   it("a valid name and a duplicate name", async () => {
     const name = "NAME";
 
