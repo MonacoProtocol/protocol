@@ -1,21 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
-
-export type Trade = {
-  purchaser: PublicKey;
-  market: PublicKey;
-  order: PublicKey;
-  marketOutcomeIndex: number;
-  forOutcome: boolean;
-  stake: BN;
-  price: number;
-  creationTimestamp: BN;
-  payer: PublicKey;
-};
+import { TradeAccount } from "@monaco-protocol/client-account-types";
 
 export type TradeAccounts = {
-  tradeAccounts: GetAccount<Trade>[];
+  tradeAccounts: GetAccount<TradeAccount>[];
 };
 
 export type CreateTradeResponse = {

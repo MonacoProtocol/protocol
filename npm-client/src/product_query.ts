@@ -2,7 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import { ClientResponse, ResponseFactory, GetPublicKeys } from "../types";
 import { PublicKeyCriterion, toFilters } from "./queries";
-import { Product, ProductAccounts } from "../types/product";
+import { ProductAccounts } from "../types/product";
+import { ProductAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * Base product query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -89,7 +90,7 @@ export class Products {
       const accountsWithData =
         (await this.program.account.product.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-        )) as Product[];
+        )) as unknown as ProductAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

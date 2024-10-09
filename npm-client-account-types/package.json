@@ -1,0 +1,38 @@
+{
+  "name": "@monaco-protocol/client-account-types",
+  "version": "13.0.0-dev",
+  "description": "Client types package for the Monaco Protocol accounts",
+  "author": "Monaco Protocol",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MonacoProtocol/protocol.git",
+    "directory": "npm-client-account-types"
+  },
+  "bugs": {
+    "url": "https://github.com/MonacoProtocol/protocol/issues"
+  },
+  "homepage": "https://github.com/MonacoProtocol/protocol/blob/main/npm-client-account-types/README.md",
+  "main": "dist/index.js",
+  "types": "dist",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p .",
+    "clean": "tsc --build --clean",
+    "generateDocs": "./generate_docs.sh",
+    "publishClient": "npm install && npm run build && npm publish --access public && npm run clean",
+    "publishDevClient": "npm install && npm run build && npm publish --tag dev --access public && npm run clean",
+    "publishRCClient": "npm install && npm run build && npm publish --tag rc --access public && npm run clean"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.75.0",
+    "bn.js": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "documentation": "^14.0.3",
+    "typescript": "^4.5.4"
+  }
+}

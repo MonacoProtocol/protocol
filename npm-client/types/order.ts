@@ -1,37 +1,7 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { GetAccount } from "./get_account";
-
-export interface OrderStatus {
-  readonly open?: Record<string, never>;
-  readonly matched?: Record<string, never>;
-  readonly settledWin?: Record<string, never>;
-  readonly settledLose?: Record<string, never>;
-  readonly cancelled?: Record<string, never>;
-  readonly voided?: Record<string, never>;
-}
-
-export type Match = {
-  price: number;
-  stake: number;
-};
-
-export type Order = {
-  purchaser: PublicKey;
-  market: PublicKey;
-  marketOutcomeIndex: number;
-  forOutcome: boolean;
-  orderStatus: OrderStatus;
-  product: PublicKey | null;
-  stake: BN;
-  voidedStake: BN;
-  expectedPrice: number;
-  creationTimestamp: BN;
-  stakeUnmatched: BN;
-  payout: BN;
-  payer: PublicKey;
-  productCommissionRate: number;
-};
+import { OrderAccount } from "@monaco-protocol/client-account-types";
 
 export type OrderInstructionResponse = {
   orderPk: PublicKey;
@@ -43,11 +13,11 @@ export type OrderInstructionsResponse = {
 };
 
 export type PendingOrders = {
-  pendingOrders: GetAccount<Order>[];
+  pendingOrders: GetAccount<OrderAccount>[];
 };
 
 export type OrderAccounts = {
-  orderAccounts: GetAccount<Order>[];
+  orderAccounts: GetAccount<OrderAccount>[];
 };
 
 export type OrderTransactionResponse = {

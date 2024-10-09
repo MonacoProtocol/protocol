@@ -5,12 +5,14 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
-  MarketCommissionPaymentQueue,
   MarketCommissionPaymentQueues,
-  CommissionPayment,
   GetPublicKeys,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
+import {
+  CommissionPayment,
+  MarketCommissionPaymentQueueAccount,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market's commission payment queue account.
@@ -48,7 +50,7 @@ export async function findMarketCommissionPaymentQueuePda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketCommissionPaymentQueuePk {PublicKey} publicKey of the commission payment queue
- * @returns {ClientResponse<GetAccount<MarketCommissionPaymentQueue>>} market commission payment queue account details
+ * @returns {ClientResponse<GetAccount<MarketCommissionPaymentQueueAccount>>} market commission payment queue account details
  *
  * @example
  *
@@ -58,15 +60,15 @@ export async function findMarketCommissionPaymentQueuePda(
 export async function getMarketCommissionPaymentQueue(
   program: Program,
   marketCommissionPaymentQueuePk: PublicKey,
-): Promise<ClientResponse<GetAccount<MarketCommissionPaymentQueue>>> {
+): Promise<ClientResponse<GetAccount<MarketCommissionPaymentQueueAccount>>> {
   const response = new ResponseFactory(
-    {} as GetAccount<MarketCommissionPaymentQueue>,
+    {} as GetAccount<MarketCommissionPaymentQueueAccount>,
   );
   try {
     const marketCommissionPaymentQueue =
       (await program.account.marketPaymentsQueue.fetch(
         marketCommissionPaymentQueuePk,
-      )) as MarketCommissionPaymentQueue;
+      )) as unknown as MarketCommissionPaymentQueueAccount;
 
     response.addResponseData({
       publicKey: marketCommissionPaymentQueuePk,
@@ -103,7 +105,7 @@ export async function getNonEmptyMarketCommissionPaymentQueues(
     const accountsWithData =
       (await program.account.marketPaymentsQueue.fetchMultiple(
         accountKeys,
-      )) as MarketCommissionPaymentQueue[];
+      )) as unknown as MarketCommissionPaymentQueueAccount[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -133,7 +135,7 @@ async function getPublicKeys(program: Program): Promise<PublicKey[]> {
 }
 
 export function toCommissionPayments(
-  marketCommissionPaymentQueue: MarketCommissionPaymentQueue,
+  marketCommissionPaymentQueue: MarketCommissionPaymentQueueAccount,
 ): CommissionPayment[] {
   const commissionPayments = marketCommissionPaymentQueue.paymentQueue;
   const frontIndex = commissionPayments.front;

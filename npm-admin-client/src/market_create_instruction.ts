@@ -6,8 +6,8 @@ import {
   ClientResponse,
   ResponseFactory,
   EpochTimeStamp,
-  MarketOrderBehaviourValue,
   MarketInstructionOptions,
+  MarketOrderBehaviourValue,
 } from "../types";
 import { findAuthorisedOperatorsAccountPda } from "./operators";
 import {
@@ -19,6 +19,7 @@ import {
 } from "./market_helpers";
 import { findMarketTypePda } from "./market_type_create";
 import { MarketInstructionResponse } from "../types/transactions";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 export async function buildCreateMarketInstruction(
   program: Program,
@@ -74,7 +75,7 @@ export async function buildCreateMarketInstruction(
       }
       existingMarket = existingMarketResponse.data.account;
     }
-    version = existingMarket.version + 1;
+    version = (existingMarket as MarketAccount).version + 1;
   }
 
   const marketPda = (

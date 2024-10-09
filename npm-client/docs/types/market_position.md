@@ -2,65 +2,19 @@
 
 ### Table of Contents
 
-*   [MarketPosition][1]
+*   [MarketPositionAccounts][1]
     *   [Properties][2]
-*   [MarketPositionAccounts][3]
-    *   [Properties][4]
-*   [ProductMatchedRiskAndRate][5]
-    *   [Properties][6]
-
-## MarketPosition
-
-Type: {purchaser: PublicKey, market: PublicKey, paid: [boolean][7], marketOutcomeSums: [Array][8]\<BN>, unmatchedExposures: [Array][8]\<BN>, outcomePositions: [Map][9]<[string][10], BN>, payer: PublicKey, matchedRisk: BN, matchedRiskPerProduct: [Array][8]<[ProductMatchedRiskAndRate][5]>}
-
-### Properties
-
-*   `purchaser` **PublicKey**&#x20;
-*   `market` **PublicKey**&#x20;
-*   `paid` **[boolean][7]**&#x20;
-*   `marketOutcomeSums` **[Array][8]\<BN>**&#x20;
-*   `unmatchedExposures` **[Array][8]\<BN>**&#x20;
-*   `outcomePositions` **[Map][9]<[string][10], BN>**&#x20;
-*   `payer` **PublicKey**&#x20;
-*   `matchedRisk` **BN**&#x20;
-*   `matchedRiskPerProduct` **[Array][8]<[ProductMatchedRiskAndRate][5]>**&#x20;
 
 ## MarketPositionAccounts
 
-Type: {marketPositionAccounts: [Array][8]\<GetAccount<[MarketPosition][1]>>}
+Type: {marketPositionAccounts: [Array][3]\<GetAccount\<MarketPositionAccount>>}
 
 ### Properties
 
-*   `marketPositionAccounts` **[Array][8]\<GetAccount<[MarketPosition][1]>>**&#x20;
+*   `marketPositionAccounts` **[Array][3]\<GetAccount\<MarketPositionAccount>>**&#x20;
 
-## ProductMatchedRiskAndRate
-
-Type: {product: PublicKey, risk: BN, rate: [number][11]}
-
-### Properties
-
-*   `product` **PublicKey**&#x20;
-*   `risk` **BN**&#x20;
-*   `rate` **[number][11]**&#x20;
-
-[1]: #marketposition
+[1]: #marketpositionaccounts
 
 [2]: #properties
 
-[3]: #marketpositionaccounts
-
-[4]: #properties-1
-
-[5]: #productmatchedriskandrate
-
-[6]: #properties-2
-
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
-
-[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
-
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map
-
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[3]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

@@ -3,8 +3,6 @@ import { PublicKey } from "@solana/web3.js";
 import {
   ClientResponse,
   GetAccount,
-  MarketAccount,
-  MarketMatchingPoolAccount,
   MarketMatchingPoolAccounts,
   MarketMatchingPoolPublicKeysWithSeeds,
   MarketMatchingPoolPublicKeyWithSeeds,
@@ -15,6 +13,10 @@ import {
 import { FindPdaResponse } from "../types";
 import { getMarketOutcomesByMarket } from "./market_outcome_query";
 import { MarketMatchingPools } from "./market_matching_pool_query";
+import {
+  MarketAccount,
+  MarketMatchingPoolAccount,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey, outcome, price and forOutcome, return the PDA (publicKey) of the matching account.
@@ -82,7 +84,7 @@ export async function getMarketMatchingPool(
   try {
     const marketMatchingPool = (await program.account.marketMatchingPool.fetch(
       marketMatchingPoolPk,
-    )) as MarketMatchingPoolAccount;
+    )) as unknown as MarketMatchingPoolAccount;
 
     response.addResponseData({
       publicKey: marketMatchingPoolPk,
@@ -117,7 +119,7 @@ export async function getMarketMatchingPoolAccounts(
     const matchingPools =
       (await program.account.marketMatchingPool.fetchMultiple(
         marketMatchingPoolPDAs,
-      )) as MarketMatchingPoolAccount[];
+      )) as unknown as MarketMatchingPoolAccount[];
     const result = marketMatchingPoolPDAs
       .map((pda, i) => {
         return { publicKey: pda, account: matchingPools[i] };
@@ -163,7 +165,7 @@ export async function getAllMarketMatchingPools(
 
     const market = (await program.account.market.fetch(
       marketPk,
-    )) as MarketAccount;
+    )) as unknown as MarketAccount;
 
     for (let i = 0; i < market.marketOutcomesCount; i++) {
       const perOutcomeResponse = await query

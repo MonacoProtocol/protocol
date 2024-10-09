@@ -6,10 +6,10 @@ import {
   FindPdaResponse,
   GetAccount,
   GetPublicKeys,
-  MarketLiquidities,
   MarketLiquiditiesAccounts,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
+import { MarketLiquiditiesAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market liquidities account.
@@ -49,7 +49,7 @@ export async function findMarketLiquiditiesPda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketLiquiditiesPk {PublicKey} publicKey of the market-liquidities
- * @returns {MarketLiquidities} market-liquidities account info
+ * @returns {MarketLiquiditiesAccount} market-liquidities account info
  *
  * @example
  *
@@ -59,12 +59,14 @@ export async function findMarketLiquiditiesPda(
 export async function getMarketLiquidities(
   program: Program,
   marketLiquiditiesPk: PublicKey,
-): Promise<ClientResponse<GetAccount<MarketLiquidities>>> {
-  const response = new ResponseFactory({} as GetAccount<MarketLiquidities>);
+): Promise<ClientResponse<GetAccount<MarketLiquiditiesAccount>>> {
+  const response = new ResponseFactory(
+    {} as GetAccount<MarketLiquiditiesAccount>,
+  );
   try {
     const marketLiquidities = (await program.account.marketLiquidities.fetch(
       marketLiquiditiesPk,
-    )) as MarketLiquidities;
+    )) as unknown as MarketLiquiditiesAccount;
 
     response.addResponseData({
       publicKey: marketLiquiditiesPk,
@@ -101,7 +103,7 @@ export async function getCrossMatchEnabledMarketLiquidities(
     const accountsWithData =
       (await program.account.marketLiquidities.fetchMultiple(
         accountKeys,
-      )) as MarketLiquidities[];
+      )) as unknown as MarketLiquiditiesAccount[];
 
     const result = accountKeys
       .map((accountKey, i) => {

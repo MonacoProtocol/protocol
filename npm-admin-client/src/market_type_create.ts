@@ -6,7 +6,7 @@ import {
   GetOrCreateAccountResponse,
   FindPdaResponse,
 } from "../types";
-import { MarketType } from "../types/market_type";
+import { MarketTypeAccount } from "@monaco-protocol/client-account-types";
 
 export function findMarketTypePda(
   program: Program,
@@ -46,7 +46,7 @@ export async function getOrCreateMarketType(
   marketTypeName: string,
   requiresDiscriminator = false,
   requiresValue = false,
-): Promise<ClientResponse<GetOrCreateAccountResponse<MarketType>>> {
+): Promise<ClientResponse<GetOrCreateAccountResponse<MarketTypeAccount>>> {
   const response = new ResponseFactory({});
 
   let txId;

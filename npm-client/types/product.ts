@@ -1,13 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { GetAccount } from "./get_account";
-
-export type Product = {
-  authority: PublicKey;
-  payer: PublicKey;
-  commissionEscrow: PublicKey;
-  productTitle: string;
-  commissionRate: number;
-};
+import { ProductAccount } from "@monaco-protocol/client-account-types";
 
 export type CreateProductResponse = {
   productPk: PublicKey;
@@ -15,5 +8,5 @@ export type CreateProductResponse = {
 };
 
 export type ProductAccounts = {
-  productAccounts: GetAccount<Product>[];
+  productAccounts: GetAccount<ProductAccount>[];
 };

@@ -1,8 +1,8 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { Program, BN } from "@coral-xyz/anchor";
-import { MarketPosition } from "../types";
 import { ClientResponse, ResponseFactory, FindPdaResponse } from "../types";
 import { getMarketOutcomeTitlesByMarket } from "./market_outcome_query";
+import { MarketPositionAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey and purchaser wallet publicKey, return the PDA (publicKey) of that wallets market position account.
@@ -40,7 +40,7 @@ export async function findMarketPositionPda(
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
  * @param purchaserPk {PublicKey} publicKey of the purchasing wallet
- * @returns {MarketPosition} market position account info
+ * @returns {MarketPositionAccount} market position account info
  *
  * @example
  *
@@ -52,10 +52,10 @@ export async function getMarketPosition(
   program: Program,
   marketPk: PublicKey,
   purchaserPk: PublicKey,
-): Promise<ClientResponse<MarketPosition>> {
-  const response = new ResponseFactory({} as MarketPosition);
+): Promise<ClientResponse<MarketPositionAccount>> {
+  const response = new ResponseFactory({} as MarketPositionAccount);
 
-  let marketPosition = {} as MarketPosition;
+  let marketPosition = {} as MarketPositionAccount;
   let marketOutcomeTitles = [] as string[];
 
   try {
@@ -72,7 +72,7 @@ export async function getMarketPosition(
 
     marketPosition = (await program.account.marketPosition.fetch(
       marketPositionPda.data.pda,
-    )) as MarketPosition;
+    )) as unknown as MarketPositionAccount;
 
     const marketOutcomeTitlesResponse = await getMarketOutcomeTitlesByMarket(
       program,
@@ -124,7 +124,7 @@ export async function createMarketPosition(
   marketPk: PublicKey,
   purchaserPk: PublicKey,
 ): Promise<ClientResponse<PublicKey>> {
-  const response = new ResponseFactory({} as MarketPosition);
+  const response = new ResponseFactory({} as MarketPositionAccount);
 
   try {
     const marketPositionPk = await findMarketPositionPda(

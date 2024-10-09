@@ -5,11 +5,11 @@ import {
   ClientResponse,
   ResponseFactory,
   GetAccount,
-  MarketOutcomeAccount,
   ValidateMarketResponse,
   ValidateMarketOutcomePriceLadder,
   ValidateMarketOutcomeTitles,
 } from "../types";
+import { MarketOutcomeAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the given market account, validate that all expected outcomes exist on that market and that all outcomes have the expected price ladder

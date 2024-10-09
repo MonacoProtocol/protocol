@@ -47,7 +47,7 @@ Market prices are all unique pending order combinations (OUTCOME, PRICE, FOR) an
 
 *   `program` **Program** {program} anchor program initialized by the consuming client
 *   `marketPk` **PublicKey** {PublicKey} publicKey of a market
-*   `orders` **[Array][7]\<GetAccount\<Order>>** {GetAccount<Order>\[]} list of orders obtained through an Orders query
+*   `orders` **[Array][7]\<GetAccount\<OrderAccount>>** {GetAccount<Order>\[]} list of orders obtained through an Orders query
 *   `marketOutcomeTitles` **[Array][7]<[string][8]>** {string\[]} ordered list of the market outcome titles obtained through `getMarketOutcomesByMarket` or `getMarketOutcomeTitlesByMarket`
 
 ### Examples

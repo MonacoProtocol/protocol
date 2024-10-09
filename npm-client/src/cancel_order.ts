@@ -11,7 +11,10 @@ import {
   buildCancelOrderInstruction,
   buildCancelOrdersForMarketInstructions,
 } from "./cancel_order_instruction";
-import { MarketPosition, Order } from "../types";
+import {
+  MarketPositionAccount,
+  OrderAccount,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided order publicKey, cancel the order if the program provider owns the order.Orders can be cancelled if they:
@@ -120,8 +123,8 @@ export async function cancelOrdersForMarket(
 /**
  * For the provided order and market position calculate amount that will be refunded if order gets canceled.
  *
- * @param order {Order} order to be canceled
- * @param marketPosition {MarketPosition} market position of the order's owner
+ * @param order {OrderAccount} order to be canceled
+ * @param marketPosition {MarketPositionAccount} market position of the order's owner
  * @returns the amount of the refund in raw form; this means it needs to be divided by the mint decimals before it can be dispalyed
  *
  * @example
@@ -133,8 +136,8 @@ export async function cancelOrdersForMarket(
  * const refundAmount = await calculateOrderCancellationRefund(order, marketPosition);
  */
 export function calculateOrderCancellationRefund(
-  order: Order,
-  marketPosition: MarketPosition,
+  order: OrderAccount,
+  marketPosition: MarketPositionAccount,
 ): number {
   const unmatchedExposures = marketPosition.unmatchedExposures.map((value) =>
     value.toNumber(),
@@ -148,16 +151,16 @@ export function calculateOrderCancellationRefund(
     matchedExposures,
   );
 
+  const stakeUnmatched = order.stakeUnmatched.toNumber();
   if (order.forOutcome) {
     for (let i = 0; i < unmatchedExposures.length; i++) {
       if (i == order.marketOutcomeIndex) {
         continue;
       }
-      unmatchedExposures[i] -= order.stakeUnmatched;
+      unmatchedExposures[i] -= stakeUnmatched;
     }
   } else {
-    const orderExposure =
-      order.stakeUnmatched * order.expectedPrice - order.stakeUnmatched;
+    const orderExposure = stakeUnmatched * order.expectedPrice - stakeUnmatched;
     unmatchedExposures[order.marketOutcomeIndex] -= orderExposure;
   }
 

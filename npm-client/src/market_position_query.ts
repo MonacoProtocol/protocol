@@ -4,10 +4,10 @@ import bs58 from "bs58";
 import {
   ClientResponse,
   GetPublicKeys,
-  MarketPosition,
   MarketPositionAccounts,
   ResponseFactory,
 } from "../types";
+import { MarketPositionAccount } from "@monaco-protocol/client-account-types";
 /**
  * Base market position query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
  *
@@ -104,7 +104,7 @@ export class MarketPositions {
       const accountsWithData =
         (await this.program.account.marketPosition.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-        )) as MarketPosition[];
+        )) as unknown as MarketPositionAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

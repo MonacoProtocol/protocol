@@ -2,56 +2,36 @@
 
 ### Table of Contents
 
-*   [Product][1]
+*   [CreateProductResponse][1]
     *   [Properties][2]
-*   [CreateProductResponse][3]
+*   [ProductAccounts][3]
     *   [Properties][4]
-*   [ProductAccounts][5]
-    *   [Properties][6]
-
-## Product
-
-Type: {authority: PublicKey, payer: PublicKey, commissionEscrow: PublicKey, productTitle: [string][7], commissionRate: [number][8]}
-
-### Properties
-
-*   `authority` **PublicKey**&#x20;
-*   `payer` **PublicKey**&#x20;
-*   `commissionEscrow` **PublicKey**&#x20;
-*   `productTitle` **[string][7]**&#x20;
-*   `commissionRate` **[number][8]**&#x20;
 
 ## CreateProductResponse
 
-Type: {productPk: PublicKey, tnxID: ([string][7] | void)}
+Type: {productPk: PublicKey, tnxID: ([string][5] | void)}
 
 ### Properties
 
 *   `productPk` **PublicKey**&#x20;
-*   `tnxID` **([string][7] | void)**&#x20;
+*   `tnxID` **([string][5] | void)**&#x20;
 
 ## ProductAccounts
 
-Type: {productAccounts: [Array][9]\<GetAccount<[Product][1]>>}
+Type: {productAccounts: [Array][6]\<GetAccount\<ProductAccount>>}
 
 ### Properties
 
-*   `productAccounts` **[Array][9]\<GetAccount<[Product][1]>>**&#x20;
+*   `productAccounts` **[Array][6]\<GetAccount\<ProductAccount>>**&#x20;
 
-[1]: #product
+[1]: #createproductresponse
 
 [2]: #properties
 
-[3]: #createproductresponse
+[3]: #productaccounts
 
 [4]: #properties-1
 
-[5]: #productaccounts
+[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[6]: #properties-2
-
-[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
-
-[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

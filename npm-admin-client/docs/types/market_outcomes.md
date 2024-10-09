@@ -4,67 +4,47 @@
 
 *   [GetPublicKeys][1]
     *   [Properties][2]
-*   [MarketOutcomeAccount][3]
+*   [MarketOutcomeAccounts][3]
     *   [Properties][4]
-*   [MarketOutcomeAccounts][5]
+*   [MarketOutcomeTitlesResponse][5]
     *   [Properties][6]
-*   [MarketOutcomeTitlesResponse][7]
-    *   [Properties][8]
 
 ## GetPublicKeys
 
-Type: {publicKeys: [Array][9]\<PublicKey>}
+Type: {publicKeys: [Array][7]\<PublicKey>}
 
 ### Properties
 
-*   `publicKeys` **[Array][9]\<PublicKey>**&#x20;
-
-## MarketOutcomeAccount
-
-Type: {index: [number][10], title: [string][11], market: PublicKey, prices: (PublicKey | null), priceLadder: [Array][9]<[number][10]>}
-
-### Properties
-
-*   `index` **[number][10]**&#x20;
-*   `title` **[string][11]**&#x20;
-*   `market` **PublicKey**&#x20;
-*   `prices` **(PublicKey | null)**&#x20;
-*   `priceLadder` **[Array][9]<[number][10]>**&#x20;
+*   `publicKeys` **[Array][7]\<PublicKey>**&#x20;
 
 ## MarketOutcomeAccounts
 
-Type: {marketOutcomeAccounts: [Array][9]\<GetAccount<[MarketOutcomeAccount][3]>>}
+Type: {marketOutcomeAccounts: [Array][7]\<GetAccount\<MarketOutcomeAccount>>}
 
 ### Properties
 
-*   `marketOutcomeAccounts` **[Array][9]\<GetAccount<[MarketOutcomeAccount][3]>>**&#x20;
+*   `marketOutcomeAccounts` **[Array][7]\<GetAccount\<MarketOutcomeAccount>>**&#x20;
 
 ## MarketOutcomeTitlesResponse
 
-Type: {marketOutcomeTitles: [Array][9]<[string][11]>}
+Type: {marketOutcomeTitles: [Array][7]<[string][8]>}
 
 ### Properties
 
-*   `marketOutcomeTitles` **[Array][9]<[string][11]>**&#x20;
+*   `marketOutcomeTitles` **[Array][7]<[string][8]>**&#x20;
 
 [1]: #getpublickeys
 
 [2]: #properties
 
-[3]: #marketoutcomeaccount
+[3]: #marketoutcomeaccounts
 
 [4]: #properties-1
 
-[5]: #marketoutcomeaccounts
+[5]: #marketoutcometitlesresponse
 
 [6]: #properties-2
 
-[7]: #marketoutcometitlesresponse
+[7]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
-[8]: #properties-3
-
-[9]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
-
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
-
-[11]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[8]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

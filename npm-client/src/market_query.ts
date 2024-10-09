@@ -4,7 +4,6 @@ import {
   ClientResponse,
   ResponseFactory,
   MarketAccounts,
-  MarketAccount,
   GetPublicKeys,
 } from "../types";
 import {
@@ -13,6 +12,7 @@ import {
   ByteCriterion,
   toFilters,
 } from "./queries";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 export enum MarketStatusFilter {
   Initializing = 0x00,
@@ -149,7 +149,7 @@ export class Markets {
     try {
       const accountsWithData = (await this.program.account.market.fetchMultiple(
         accountPublicKeys.data.publicKeys,
-      )) as MarketAccount[];
+      )) as unknown as MarketAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {
