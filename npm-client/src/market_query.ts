@@ -1,18 +1,13 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import {
-  ClientResponse,
-  ResponseFactory,
-  MarketAccounts,
-  MarketAccount,
-  GetPublicKeys,
-} from "../types";
+import { ClientResponse, MarketAccount } from "../types";
 import {
   BooleanCriterion,
   PublicKeyCriterion,
   ByteCriterion,
-  toFilters,
-} from "./queries";
+} from "./queries/filtering";
+import { AccountQuery } from "./queries/account_query";
+import { AccountQueryResult } from "../types/account_query";
 
 export enum MarketStatusFilter {
   Initializing = 0x00,
@@ -25,7 +20,7 @@ export enum MarketStatusFilter {
   Voided = 0x07,
 }
 
-export class Markets {
+export class Markets extends AccountQuery<MarketAccount> {
   /**
    * Base market query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
    *
@@ -53,8 +48,6 @@ export class Markets {
     return new Markets(program);
   }
 
-  private program: Program;
-
   private authority: PublicKeyCriterion = new PublicKeyCriterion(8);
   private event: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
   private mintAccount: PublicKeyCriterion = new PublicKeyCriterion(8 + 32 + 32);
@@ -67,7 +60,15 @@ export class Markets {
   );
 
   constructor(program: Program) {
-    this.program = program;
+    super(program, "Market");
+    this.setFilterCriteria(
+      this.authority,
+      this.event,
+      this.mintAccount,
+      this.status,
+      this.inplayEnabled,
+      this.inplay,
+    );
   }
 
   filterByAuthority(authority: PublicKey): Markets {
@@ -99,70 +100,6 @@ export class Markets {
     this.inplay.setValue(inplay);
     return this;
   }
-
-  /**
-   *
-   * @returns {GetPublicKeys} list of all fetched market publicKeys
-   */
-  async fetchPublicKeys(): Promise<ClientResponse<GetPublicKeys>> {
-    const response = new ResponseFactory({} as GetPublicKeys);
-    const connection = this.program.provider.connection;
-
-    try {
-      const accounts = await connection.getProgramAccounts(
-        this.program.programId,
-        {
-          dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: toFilters(
-            "market",
-            this.authority,
-            this.event,
-            this.mintAccount,
-            this.status,
-            this.inplayEnabled,
-            this.inplay,
-          ),
-        },
-      );
-      const publicKeys = accounts.map((account) => account.pubkey);
-      response.addResponseData({ publicKeys: publicKeys });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
-
-  /**
-   *
-   * @returns {MarketAccounts} fetched market accounts mapped to their publicKey
-   */
-  async fetch(): Promise<ClientResponse<MarketAccounts>> {
-    const response = new ResponseFactory({} as MarketAccounts);
-    const accountPublicKeys = await this.fetchPublicKeys();
-
-    if (!accountPublicKeys.success) {
-      response.addErrors(accountPublicKeys.errors);
-      return response.body;
-    }
-
-    try {
-      const accountsWithData = (await this.program.account.market.fetchMultiple(
-        accountPublicKeys.data.publicKeys,
-      )) as MarketAccount[];
-
-      const result = accountPublicKeys.data.publicKeys
-        .map((accountPublicKey, i) => {
-          return { publicKey: accountPublicKey, account: accountsWithData[i] };
-        })
-        .filter((o) => o.account);
-
-      response.addResponseData({ markets: result });
-    } catch (e) {
-      response.addError(e);
-    }
-    return response.body;
-  }
 }
 
 /**
@@ -170,7 +107,7 @@ export class Markets {
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param status {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
- * @returns { MarketAccounts } fetched market accounts mapped to their publicKey
+ * @returns { AccountQueryResult<MarketAccount> } fetched market accounts mapped to their publicKey
  *
  * @example
  * const status = MarketStatusFilter.Open
@@ -179,7 +116,7 @@ export class Markets {
 export async function getMarketAccountsByStatus(
   program: Program,
   status: MarketStatusFilter,
-): Promise<ClientResponse<MarketAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<MarketAccount>>> {
   return await Markets.marketQuery(program).filterByStatus(status).fetch();
 }
 
@@ -188,7 +125,7 @@ export async function getMarketAccountsByStatus(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param eventPk {PublicKey} publicKey of the event
- * @returns { MarketAccounts } fetched market accounts mapped to their publicKey
+ * @returns { AccountQueryResult<MarketAccount> } fetched market accounts mapped to their publicKey
  *
  * @example
  * const eventPk = new PublicKey("EMBekXVLLKVxteFvme4tjUfruv8WvMCQkp5xydaLzDEP")
@@ -197,7 +134,7 @@ export async function getMarketAccountsByStatus(
 export async function getMarketAccountsByEvent(
   program: Program,
   eventPk: PublicKey,
-): Promise<ClientResponse<MarketAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<MarketAccount>>> {
   return await Markets.marketQuery(program).filterByEvent(eventPk).fetch();
 }
 
@@ -207,7 +144,7 @@ export async function getMarketAccountsByEvent(
  * @param program {program} anchor program initialized by the consuming client
  * @param status {MarketStatusFilter} status of the market, provided by the MarketStatusFilter enum
  * @param mintAccount {PublicKey} publicKey of the mint account
- * @returns {MarketAccounts} fetched market accounts mapped to their publicKey
+ * @returns {AccountQueryResult<MarketAccount>} fetched market accounts mapped to their publicKey
  *
  * @example
  * const status = MarketStatusFilter.Open
@@ -218,7 +155,7 @@ export async function getMarketAccountsByStatusAndMintAccount(
   program: Program,
   status: MarketStatusFilter,
   mintAccount: PublicKey,
-): Promise<ClientResponse<MarketAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<MarketAccount>>> {
   return await Markets.marketQuery(program)
     .filterByStatus(status)
     .filterByMintAccount(mintAccount)

@@ -14,6 +14,8 @@
 
 ## MarketOutcomes
 
+**Extends AccountQuery**
+
 Base market outcome query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
 
 Some preset queries are available for convenience:

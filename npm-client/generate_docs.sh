@@ -3,6 +3,7 @@
 cd $(dirname $0)
 
 declare -a endpoints=(
+    "queries/account_query"
     "order"
     "order_query"
     "cancel_order"
@@ -27,6 +28,7 @@ declare -a endpoints=(
 )
 
 declare -a types=(
+    "account_query"
     "order"
     "client"
     "default_price_ladder"
@@ -47,6 +49,7 @@ wait
 
 createDocs(){
     rm -R -f docs/${1}/${3}.md &&
+    mkdir -p `dirname docs/${1}/${3}.md`
     echo "Generating docs for ${2}/${3}" &&
     npm exec -- documentation build --document-exported ${2}/${3}.d.ts -f md >> docs/${1}/${3}.md
 }

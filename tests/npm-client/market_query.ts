@@ -5,7 +5,7 @@ import {
   getMarketAccountsByStatusAndMintAccount,
   Markets,
   MarketStatusFilter,
-} from "../../npm-client/src/";
+} from "../../npm-client";
 import { monaco } from "../util/wrappers";
 
 describe("Market Query", () => {
@@ -20,7 +20,7 @@ describe("Market Query", () => {
     assert(responseOpen.success);
     assert(responseOpen.data);
     assert(
-      responseOpen.data.markets.find(
+      responseOpen.data.accounts.find(
         (foundMarket) =>
           foundMarket.publicKey.toString() == market.pk.toString(),
       ),
@@ -51,9 +51,9 @@ describe("Market Query", () => {
 
       assert(response.success);
       assert(response.data);
-      assert.equal(response.data.markets.length, 1);
+      assert.equal(response.data.accounts.length, 1);
       assert.equal(
-        response.data.markets[0].publicKey.toBase58(),
+        response.data.accounts[0].publicKey.toBase58(),
         market1.pk.toBase58(),
       );
     }
@@ -66,9 +66,9 @@ describe("Market Query", () => {
 
       assert(response.success);
       assert(response.data);
-      assert.equal(response.data.markets.length, 1);
+      assert.equal(response.data.accounts.length, 1);
       assert.equal(
-        response.data.markets[0].publicKey.toBase58(),
+        response.data.accounts[0].publicKey.toBase58(),
         market2.pk.toBase58(),
       );
     }
@@ -87,9 +87,9 @@ describe("Market Query", () => {
 
       assert(response.success);
       assert(response.data);
-      assert.equal(response.data.markets.length, 1);
+      assert.equal(response.data.accounts.length, 1);
       assert.equal(
-        response.data.markets[0].publicKey.toBase58(),
+        response.data.accounts[0].publicKey.toBase58(),
         market1.pk.toBase58(),
       );
     }
@@ -103,9 +103,9 @@ describe("Market Query", () => {
 
       assert(response.success);
       assert(response.data);
-      assert.equal(response.data.markets.length, 1);
+      assert.equal(response.data.accounts.length, 1);
       assert.equal(
-        response.data.markets[0].publicKey.toBase58(),
+        response.data.accounts[0].publicKey.toBase58(),
         market2.pk.toBase58(),
       );
     }

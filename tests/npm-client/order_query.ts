@@ -1,15 +1,15 @@
 import { PublicKey } from "@solana/web3.js";
 import assert from "assert";
 import {
+  confirmTransaction,
+  createOrderUiStake as createOrderNpm,
   getOrdersByMarketForProviderWallet,
   getOrdersByStatusForProviderWallet,
   getOrdersByEventForProviderWallet,
   getCancellableOrdersByMarketForProviderWallet,
   OrderStatusFilter,
   Orders,
-  confirmTransaction,
-} from "../../npm-client/src";
-import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
+} from "../../npm-client";
 import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
 
@@ -49,7 +49,7 @@ describe("Order Query", () => {
 
     assert(responseByMarket.success);
     assert(responseByMarket.data);
-    assert.equal(responseByMarket.data.orderAccounts.length, 1);
+    assert.equal(responseByMarket.data.accounts.length, 1);
     assert.deepEqual(responseByMarket.errors, []);
 
     const responseByEvent = await getOrdersByEventForProviderWallet(
@@ -59,7 +59,7 @@ describe("Order Query", () => {
 
     assert(responseByEvent.success);
     assert(responseByEvent.data);
-    assert.equal(responseByEvent.data.orderAccounts.length, 1);
+    assert.equal(responseByEvent.data.accounts.length, 1);
     assert.deepEqual(responseByMarket.errors, []);
 
     const responseByStatus = await getOrdersByStatusForProviderWallet(
@@ -69,7 +69,7 @@ describe("Order Query", () => {
 
     assert(responseByStatus.success);
     assert(responseByStatus.data);
-    assert(responseByStatus.data.orderAccounts.length > 0);
+    assert(responseByStatus.data.accounts.length > 0);
     assert.deepEqual(responseByStatus.errors, []);
 
     const responseCancellable =
@@ -80,7 +80,7 @@ describe("Order Query", () => {
 
     assert(responseCancellable.success);
     assert(responseCancellable.data);
-    assert.equal(responseCancellable.data.orderAccounts.length, 1);
+    assert.equal(responseCancellable.data.accounts.length, 1);
     assert.deepEqual(responseCancellable.errors, []);
   });
 

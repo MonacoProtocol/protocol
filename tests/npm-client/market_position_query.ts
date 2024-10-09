@@ -27,7 +27,7 @@ describe("Market Position", () => {
       .filterByMarket(market.pk)
       .fetch();
 
-    const marketPositions = marketPositionQuery.data.marketPositionAccounts.map(
+    const marketPositions = marketPositionQuery.data.accounts.map(
       (mp) => mp.account,
     );
 
@@ -93,7 +93,7 @@ describe("Market Position", () => {
       .filterByPurchaser(purchaserFor.publicKey)
       .fetch();
 
-    const marketPositions = marketPositionQuery.data.marketPositionAccounts.map(
+    const marketPositions = marketPositionQuery.data.accounts.map(
       (mp) => mp.account,
     );
     assert.equal(marketPositions.length, 1);
@@ -135,15 +135,13 @@ describe("Market Position", () => {
         .filterByPaid(false)
         .fetch();
 
-    const paidMarketPositions =
-      marketPositionQueryPaid.data.marketPositionAccounts.map(
-        (mp) => mp.account,
-      );
+    const paidMarketPositions = marketPositionQueryPaid.data.accounts.map(
+      (mp) => mp.account,
+    );
     assert.equal(paidMarketPositions.length, 1);
-    const notPaidMarketPositions =
-      marketPositionQueryNotPaid.data.marketPositionAccounts.map(
-        (mp) => mp.account,
-      );
+    const notPaidMarketPositions = marketPositionQueryNotPaid.data.accounts.map(
+      (mp) => mp.account,
+    );
     assert.equal(notPaidMarketPositions.length, 1);
 
     const forPosition = paidMarketPositions.filter(

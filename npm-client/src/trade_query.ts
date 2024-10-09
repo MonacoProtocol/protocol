@@ -1,13 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import {
-  Trade,
-  ClientResponse,
-  ResponseFactory,
-  GetPublicKeys,
-  TradeAccounts,
-} from "../types";
-import { PublicKeyCriterion, toFilters } from "./queries";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { ClientResponse, Trade } from "../types";
+import { PublicKeyCriterion } from "./queries/filtering";
+import { AccountQuery } from "./queries/account_query";
+import { AccountQueryResult } from "../types/account_query";
 
 /**
  * Base trade query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -32,19 +28,18 @@ import { PublicKeyCriterion, toFilters } from "./queries";
  *
  * // Returns all open trade accounts for the specified market and purchasing wallet.
  */
-export class Trades {
+export class Trades extends AccountQuery<Trade> {
   public static tradeQuery(program: Program) {
     return new Trades(program);
   }
-
-  private program: Program;
 
   private purchaser: PublicKeyCriterion = new PublicKeyCriterion(8);
   private market: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
   private order: PublicKeyCriterion = new PublicKeyCriterion(8 + 32 + 32);
 
   constructor(program: Program) {
-    this.program = program;
+    super(program, "Trade");
+    this.setFilterCriteria(this.purchaser, this.market, this.order);
   }
 
   filterByPurchaser(purchaser: PublicKey): Trades {
@@ -61,67 +56,6 @@ export class Trades {
     this.order.setValue(order);
     return this;
   }
-
-  /**
-   *
-   * @returns {GetPublicKeys} list of all fetched trade publicKeys
-   */
-  async fetchPublicKeys(): Promise<ClientResponse<GetPublicKeys>> {
-    const response = new ResponseFactory({} as GetPublicKeys);
-    const connection = this.program.provider.connection;
-
-    try {
-      const accounts = await connection.getProgramAccounts(
-        this.program.programId,
-        {
-          dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: toFilters("trade", this.purchaser, this.market, this.order),
-        },
-      );
-      const publicKeys = accounts.map((account) => account.pubkey);
-      response.addResponseData({
-        publicKeys: publicKeys,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
-
-  /**
-   *
-   * @returns {TradeAccounts} fetched trade accounts mapped to their publicKey
-   */
-  async fetch(): Promise<ClientResponse<TradeAccounts>> {
-    const response = new ResponseFactory({} as TradeAccounts);
-    const accountPublicKeys = await this.fetchPublicKeys();
-
-    if (!accountPublicKeys.success) {
-      response.addErrors(accountPublicKeys.errors);
-      return response.body;
-    }
-
-    try {
-      const accountsWithData = (await this.program.account.trade.fetchMultiple(
-        accountPublicKeys.data.publicKeys,
-      )) as Trade[];
-
-      const result = accountPublicKeys.data.publicKeys
-        .map((accountPublicKey, i) => {
-          return { publicKey: accountPublicKey, account: accountsWithData[i] };
-        })
-        .filter((o) => o.account);
-
-      response.addResponseData({
-        tradeAccounts: result,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
 }
 
 /**
@@ -135,7 +69,7 @@ export class Trades {
  */
 export async function getTradesForProviderWallet(
   program: Program,
-): Promise<ClientResponse<TradeAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Trade>>> {
   const provider = program.provider as AnchorProvider;
   return await Trades.tradeQuery(program)
     .filterByPurchaser(provider.wallet.publicKey)
@@ -156,7 +90,7 @@ export async function getTradesForProviderWallet(
 export async function getTradesForMarket(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<TradeAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Trade>>> {
   return await Trades.tradeQuery(program).filterByMarket(marketPk).fetch();
 }
 
@@ -174,6 +108,6 @@ export async function getTradesForMarket(
 export async function getTradesForOrder(
   program: Program,
   orderPk: PublicKey,
-): Promise<ClientResponse<TradeAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Trade>>> {
   return await Trades.tradeQuery(program).filterByOrder(orderPk).fetch();
 }

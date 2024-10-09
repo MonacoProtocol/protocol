@@ -1,13 +1,8 @@
-import { BorshAccountsCoder, Program } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { MemcmpFilter, PublicKey } from "@solana/web3.js";
-import bs58 from "bs58";
-import {
-  ClientResponse,
-  GetPublicKeys,
-  MarketPosition,
-  MarketPositionAccounts,
-  ResponseFactory,
-} from "../types";
+import { MarketPosition } from "../types";
+import { AccountQuery } from "./queries/account_query";
+import { BooleanCriterion, PublicKeyCriterion } from "./queries/filtering";
 /**
  * Base market position query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
  *
@@ -24,22 +19,18 @@ import {
  *
  * Returns all market positions created for the given market that have not yet been paid out.
  */
-export class MarketPositions {
+export class MarketPositions extends AccountQuery<MarketPosition> {
   public static marketPositionQuery(program: Program) {
     return new MarketPositions(program);
   }
 
-  private program: Program;
-  private _filter: MemcmpFilter[] = [];
+  private purchaser = new PublicKeyCriterion(8);
+  private market = new PublicKeyCriterion(8 + 32);
+  private paid = new BooleanCriterion(8 + 32 + 32);
 
   constructor(program: Program) {
-    this.program = program;
-    this._filter.push(
-      this.toFilter(
-        0,
-        bs58.encode(BorshAccountsCoder.accountDiscriminator("market_position")),
-      ),
-    );
+    super(program, "MarketPosition");
+    this.setFilterCriteria(this.purchaser, this.market, this.paid);
   }
 
   private toFilter(offset: number, bytes: string): MemcmpFilter {
@@ -47,78 +38,16 @@ export class MarketPositions {
   }
 
   filterByPurchaser(purchaser: PublicKey): MarketPositions {
-    this._filter.push(this.toFilter(8, purchaser.toBase58()));
+    this.purchaser.setValue(purchaser);
     return this;
   }
 
   filterByMarket(market: PublicKey): MarketPositions {
-    this._filter.push(this.toFilter(8 + 32, market.toBase58()));
+    this.market.setValue(market);
     return this;
   }
   filterByPaid(paid: boolean): MarketPositions {
-    this._filter.push(this.toFilter(8 + 32 + 32, bs58.encode([paid ? 1 : 0])));
+    this.paid.setValue(paid);
     return this;
-  }
-
-  /**
-   *
-   * @returns {GetPublicKeys} list of all fetched market position publicKeys
-   */
-  async fetchPublicKeys(): Promise<ClientResponse<GetPublicKeys>> {
-    const response = new ResponseFactory({} as GetPublicKeys);
-    const connection = this.program.provider.connection;
-
-    try {
-      const accounts = await connection.getProgramAccounts(
-        this.program.programId,
-        {
-          dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: this._filter,
-        },
-      );
-      const publicKeys = accounts.map((account) => account.pubkey);
-      response.addResponseData({
-        publicKeys: publicKeys,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
-
-  /**
-   *
-   * @returns {MarketPositionAccounts} fetched market position accounts mapped to their publicKey
-   */
-  async fetch(): Promise<ClientResponse<MarketPositionAccounts>> {
-    const response = new ResponseFactory({} as MarketPositionAccounts);
-    const accountPublicKeys = await this.fetchPublicKeys();
-
-    if (!accountPublicKeys.success) {
-      response.addErrors(accountPublicKeys.errors);
-      return response.body;
-    }
-
-    try {
-      const accountsWithData =
-        (await this.program.account.marketPosition.fetchMultiple(
-          accountPublicKeys.data.publicKeys,
-        )) as MarketPosition[];
-
-      const result = accountPublicKeys.data.publicKeys
-        .map((accountPublicKey, i) => {
-          return { publicKey: accountPublicKey, account: accountsWithData[i] };
-        })
-        .filter((o) => o.account);
-
-      response.addResponseData({
-        marketPositionAccounts: result,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
   }
 }

@@ -1,20 +1,19 @@
 import { PublicKey } from "@solana/web3.js";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { GetAccount } from "../types/get_account";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
-  Order,
   ClientResponse,
-  ResponseFactory,
-  GetPublicKeys,
+  Order,
   OrderAccounts,
+  ResponseFactory,
 } from "../types";
 import { Markets } from "./market_query";
 import {
+  ByteCriterion,
   PublicKeyCriterion,
   U16Criterion,
-  ByteCriterion,
-  toFilters,
-} from "./queries";
+} from "./queries/filtering";
+import { AccountQuery } from "./queries/account_query";
+import { AccountQueryResult, AccountResult } from "../types/account_query";
 
 export enum OrderStatusFilter {
   Open = 0x00,
@@ -48,12 +47,10 @@ export enum OrderStatusFilter {
  *
  * // Returns all open order accounts for the specified market and purchasing wallet.
  */
-export class Orders {
+export class Orders extends AccountQuery<Order> {
   public static orderQuery(program: Program) {
     return new Orders(program);
   }
-
-  private program: Program;
 
   private purchaser: PublicKeyCriterion = new PublicKeyCriterion(8);
   private market: PublicKeyCriterion = new PublicKeyCriterion(8 + 32);
@@ -62,7 +59,14 @@ export class Orders {
   private status: ByteCriterion = new ByteCriterion(8 + 32 + 32 + 2 + 1);
 
   constructor(program: Program) {
-    this.program = program;
+    super(program, "Order");
+    this.setFilterCriteria(
+      this.purchaser,
+      this.market,
+      this.marketOutcomeIndex,
+      this.forOutcome,
+      this.status,
+    );
   }
 
   filterByPurchaser(purchaser: PublicKey): Orders {
@@ -89,74 +93,6 @@ export class Orders {
     this.status.setValue(status);
     return this;
   }
-
-  /**
-   *
-   * @returns {GetPublicKeys} list of all fetched order publicKeys
-   */
-  async fetchPublicKeys(): Promise<ClientResponse<GetPublicKeys>> {
-    const response = new ResponseFactory({} as GetPublicKeys);
-    const connection = this.program.provider.connection;
-
-    try {
-      const accounts = await connection.getProgramAccounts(
-        this.program.programId,
-        {
-          dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: toFilters(
-            "order",
-            this.purchaser,
-            this.market,
-            this.marketOutcomeIndex,
-            this.forOutcome,
-            this.status,
-          ),
-        },
-      );
-      const publicKeys = accounts.map((account) => account.pubkey);
-      response.addResponseData({
-        publicKeys: publicKeys,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
-
-  /**
-   *
-   * @returns {OrderAccounts} fetched order accounts mapped to their publicKey
-   */
-  async fetch(): Promise<ClientResponse<OrderAccounts>> {
-    const response = new ResponseFactory({} as OrderAccounts);
-    const accountPublicKeys = await this.fetchPublicKeys();
-
-    if (!accountPublicKeys.success) {
-      response.addErrors(accountPublicKeys.errors);
-      return response.body;
-    }
-
-    try {
-      const accountsWithData = (await this.program.account.order.fetchMultiple(
-        accountPublicKeys.data.publicKeys,
-      )) as Order[];
-
-      const result = accountPublicKeys.data.publicKeys
-        .map((accountPublicKey, i) => {
-          return { publicKey: accountPublicKey, account: accountsWithData[i] };
-        })
-        .filter((o) => o.account);
-
-      response.addResponseData({
-        orderAccounts: result,
-      });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
 }
 
 /**
@@ -173,7 +109,7 @@ export class Orders {
 export async function getOrdersByStatusForProviderWallet(
   program: Program,
   status: OrderStatusFilter,
-): Promise<ClientResponse<OrderAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Order>>> {
   const provider = program.provider as AnchorProvider;
   return await Orders.orderQuery(program)
     .filterByPurchaser(provider.wallet.publicKey)
@@ -195,13 +131,14 @@ export async function getOrdersByStatusForProviderWallet(
 export async function getOrdersByMarketForProviderWallet(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<OrderAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Order>>> {
   const provider = program.provider as AnchorProvider;
   return await Orders.orderQuery(program)
     .filterByPurchaser(provider.wallet.publicKey)
     .filterByMarket(marketPk)
     .fetch();
 }
+
 /**
  * Get all cancellable orders owned by the program provider for the given market. Orders can be cancelled if they:
  *
@@ -219,14 +156,14 @@ export async function getOrdersByMarketForProviderWallet(
 export async function getCancellableOrdersByMarketForProviderWallet(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<OrderAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Order>>> {
   const provider = program.provider as AnchorProvider;
   const orders = await Orders.orderQuery(program)
     .filterByPurchaser(provider.wallet.publicKey)
     .filterByMarket(marketPk)
     .fetch();
-  orders.data.orderAccounts = orders.data.orderAccounts.filter(
-    (order) => order.account.stakeUnmatched.toNumber() > 0,
+  orders.data.accounts = orders.data.accounts.filter(
+    (result) => result.account.stakeUnmatched.toNumber() > 0,
   );
   return orders;
 }
@@ -245,36 +182,36 @@ export async function getCancellableOrdersByMarketForProviderWallet(
 export async function getOrdersByEventForProviderWallet(
   program: Program,
   eventPk: PublicKey,
-): Promise<ClientResponse<OrderAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<Order>>> {
   const response = new ResponseFactory({} as OrderAccounts);
   const provider = program.provider as AnchorProvider;
   const marketPks = await Markets.marketQuery(program)
     .filterByEvent(eventPk)
-    .fetch();
+    .fetchPublicKeys();
 
   if (!marketPks.success) {
     response.addErrors(marketPks.errors);
     return response.body;
   }
 
-  const orderAccounts = [] as GetAccount<Order>[];
+  const accounts = [] as AccountResult<Order>[];
+  let slot = 0;
 
   await Promise.all(
-    marketPks.data.markets.map(async function (market) {
+    marketPks.data.publicKeys.map(async function (marketPk) {
       const orderResponse = await Orders.orderQuery(program)
         .filterByPurchaser(provider.wallet.publicKey)
-        .filterByMarket(market.publicKey)
+        .filterByMarket(marketPk)
         .fetch();
       if (orderResponse.success) {
-        orderAccounts.push(...orderResponse.data.orderAccounts);
+        accounts.push(...orderResponse.data.accounts);
+        slot = orderResponse.data.slot;
       } else {
         response.addErrors(orderResponse.errors);
       }
     }),
   );
 
-  response.addResponseData({
-    orderAccounts: orderAccounts,
-  });
+  response.addResponseData({ accounts, slot });
   return response.body;
 }

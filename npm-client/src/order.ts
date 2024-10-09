@@ -11,6 +11,7 @@ import {
 } from "../types";
 import { Orders, OrderStatusFilter } from "./order_query";
 import { randomSeed16 } from "./utils";
+import { AccountResult, AccountQueryResult } from "../types/account_query";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -163,6 +164,7 @@ export async function getPendingOrdersForMarket(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
+ * @param outcomeIndex {number} index of outcome
  * @returns {PendingOrders} a list of all pending order accounts
  *
  * @example
@@ -203,6 +205,7 @@ export async function getPendingOrdersForMarketByOutcomeIndex(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketPk {PublicKey} publicKey of a market
+ * @param outcomeIndex {number} index of outcome
  * @param forOutcome {boolean} filter for orders that are for or against the outcome
  * @returns {PendingOrders} a list of all pending order accounts
  *
@@ -260,8 +263,8 @@ export async function filterByMarketAndMarketOutcomeIndexAndStatusAndForOutcome(
  */
 function constructPendingOrdersResponse(
   response: ResponseFactory,
-  matchedOrders: ClientResponse<OrderAccounts>,
-  openOrders: ClientResponse<OrderAccounts>,
+  matchedOrders: ClientResponse<AccountQueryResult<Order>>,
+  openOrders: ClientResponse<AccountQueryResult<Order>>,
 ): ResponseFactory {
   if (!matchedOrders.success || !openOrders.success) {
     response.addErrors(matchedOrders.errors);
@@ -270,8 +273,8 @@ function constructPendingOrdersResponse(
   }
 
   const pendingOrders = filterPendingOrders(
-    matchedOrders.data.orderAccounts,
-    openOrders.data.orderAccounts,
+    matchedOrders.data.accounts,
+    openOrders.data.accounts,
   );
 
   response.addResponseData({
@@ -295,14 +298,11 @@ function constructPendingOrdersResponse(
  * const pendingOrders = filterPendingOrders(matchedOrders.data.orderAccounts, openOrders.data.orderAccounts)
  */
 function filterPendingOrders(
-  matchedOrders: GetAccount<Order>[],
-  openOrders: GetAccount<Order>[],
+  matchedOrders: AccountResult<Order>[],
+  openOrders: AccountResult<Order>[],
 ): GetAccount<Order>[] {
   const partiallyMatchedOrders = matchedOrders.filter(
     (order) => order.account.stakeUnmatched.toNumber() > 0,
   );
-
-  const pendingOrders = partiallyMatchedOrders.concat(openOrders);
-
-  return pendingOrders;
+  return partiallyMatchedOrders.concat(openOrders);
 }

@@ -18,6 +18,8 @@
 
 ## Markets
 
+**Extends AccountQuery**
+
 ## getMarketAccountsByStatus
 
 Get all market accounts for the provided market status.
@@ -34,7 +36,7 @@ const status = MarketStatusFilter.Open
 const marketAccounts = await getMarketAccountsByStatus(program, status)
 ```
 
-Returns **MarketAccounts** fetched market accounts mapped to their publicKey
+Returns **AccountQueryResult\<MarketAccount>** fetched market accounts mapped to their publicKey
 
 ## getMarketAccountsByEvent
 
@@ -52,7 +54,7 @@ const eventPk = new PublicKey("EMBekXVLLKVxteFvme4tjUfruv8WvMCQkp5xydaLzDEP")
 const marketAccounts = await getMarketAccountsByEvent(program, eventPk)
 ```
 
-Returns **MarketAccounts** fetched market accounts mapped to their publicKey
+Returns **AccountQueryResult\<MarketAccount>** fetched market accounts mapped to their publicKey
 
 ## getMarketAccountsByStatusAndMintAccount
 
@@ -72,7 +74,7 @@ const mintAccount = new PublicKey("7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
 const marketAccounts = await getMarketAccountsByStatusAndMintAccount(program, status, mintAccount)
 ```
 
-Returns **MarketAccounts** fetched market accounts mapped to their publicKey
+Returns **AccountQueryResult\<MarketAccount>** fetched market accounts mapped to their publicKey
 
 [1]: #marketstatusfilter
 

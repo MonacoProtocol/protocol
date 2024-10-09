@@ -1,10 +1,10 @@
 import assert from "assert";
 import {
   confirmTransaction,
+  createOrderUiStake as createOrderNpm,
   getOrders,
   getOrdersByMarketForProviderWallet,
-} from "../../npm-client/src";
-import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
+} from "../../npm-client";
 import { monaco } from "../util/wrappers";
 
 describe("Multi Order Query", () => {
@@ -58,7 +58,7 @@ describe("Multi Order Query", () => {
     //verify all 3 were saved
     assert(responseByMarket.success);
     assert(responseByMarket.data);
-    assert.equal(responseByMarket.data.orderAccounts.length, 3);
+    assert.equal(responseByMarket.data.accounts.length, 3);
     assert.deepEqual(responseByMarket.errors, []);
 
     const orderPk1 = createdOrderPks[0];
