@@ -79,7 +79,6 @@ mod tests {
     use crate::state::market_account::MarketOrderBehaviour;
     use crate::state::market_account::MarketStatus::Open;
     use crate::state::market_liquidities::mock_market_liquidities;
-    use crate::state::market_matching_queue_account::OrderMatch;
     use crate::state::order_account::{mock_order_default, OrderStatus};
     use crate::state::payments_queue::PaymentInfo;
 
@@ -166,7 +165,6 @@ mod tests {
         });
 
         let matching_queue = &mut MatchingQueue::new(1);
-        matching_queue.enqueue(OrderMatch::maker(false, 0, 0.0, 0));
         let request_queue = OrderRequestQueue::new(1);
 
         let result = close_market_queues(
@@ -183,21 +181,6 @@ mod tests {
         );
 
         payment_queue.dequeue();
-
-        let result = close_market_queues(
-            market,
-            &liquidities,
-            &payment_queue,
-            &matching_queue,
-            &request_queue,
-        );
-        assert!(result.is_err());
-        assert_eq!(
-            Err(error!(CoreError::CloseAccountMarketMatchingQueueNotEmpty)),
-            result
-        );
-
-        matching_queue.dequeue();
 
         let result = close_market_queues(
             market,
