@@ -39,7 +39,7 @@ pub fn close_market_queues(
     // nothing really to check or do for now for this account
     _liquidities: &MarketLiquidities,
     payment_queue: &PaymentQueue,
-    matching_queue: &MatchingQueue,
+    _matching_queue: &MatchingQueue, // TODO unused
     order_requests: &OrderRequestQueue,
 ) -> Result<()> {
     require!(
@@ -49,10 +49,6 @@ pub fn close_market_queues(
     require!(
         payment_queue.is_empty(),
         CoreError::CloseAccountMarketPaymentQueueNotEmpty
-    );
-    require!(
-        matching_queue.is_empty(),
-        CoreError::CloseAccountMarketMatchingQueueNotEmpty
     );
     require!(
         order_requests.is_empty(),

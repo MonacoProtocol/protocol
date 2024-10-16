@@ -130,6 +130,36 @@ pub fn void(
     Ok(())
 }
 
+pub fn force_void(
+    market: &mut Market,
+    void_time: UnixTimestamp,
+    order_request_queue: &Option<MarketOrderRequestQueue>,
+) -> Result<()> {
+    require!(
+        Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
+        CoreError::VoidMarketNotInitializingOrOpen
+    );
+
+    if market.market_status != Initializing {
+        require!(
+            order_request_queue.is_some(),
+            CoreError::VoidMarketRequestQueueNotProvided
+        );
+        require!(
+            order_request_queue
+                .as_ref()
+                .unwrap()
+                .order_requests
+                .is_empty(),
+            CoreError::OrderRequestQueueIsNotEmpty
+        );
+    }
+
+    market.market_settle_timestamp = Option::from(void_time);
+    market.market_status = ReadyToVoid;
+    Ok(())
+}
+
 pub fn complete_void(market: &mut Market) -> Result<()> {
     require!(
         ReadyToVoid.eq(&market.market_status),

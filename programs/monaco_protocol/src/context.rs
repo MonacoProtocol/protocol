@@ -1098,6 +1098,21 @@ pub struct VoidMarket<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ForceVoidMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        has_one = market @ CoreError::VoidMarketMismatch,
+    )]
+    pub order_request_queue: Option<Account<'info, MarketOrderRequestQueue>>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 pub struct OpenMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
