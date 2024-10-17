@@ -5,14 +5,6 @@ import { Trades } from "../../npm-client/src";
 
 describe("Force void market", () => {
   it("void while items remain in matching queue", async () => {
-    /*
-    If an order is cancelled at market lock, and then the lock time is moved forward
-    into the future, the order becomes available for matching again.
-
-    However when the order is cancelled at market lock, the unsettled_accounts_count
-    is decremented. If the order is then matched again, the unsettled_accounts_count
-    is not incremented. This can cause the unsettled_accounts_count to be incorrect.
-     */
     const price = 2.0;
     const [p1, p2, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
@@ -84,6 +76,16 @@ describe("Force void market", () => {
   });
 
   it("void with force_unsettled_account_count", async () => {
+    /*
+  If an order is cancelled at market lock, the unsettled_accounts_count is decremented.
+  If the lock time is then moved forward into the future, the order becomes
+  available for matching again. This causes issues at settlement and during voiding
+  as the unsettled_accounts_count will always be incorrect.
+
+  force_unsettled_account_count should allow market operators to correct the
+  count in these situations
+ */
+
     const price = 2.0;
     const [p1, p2, p3, p4, p5, market] = await Promise.all([
       createWalletWithBalance(monaco.provider),
