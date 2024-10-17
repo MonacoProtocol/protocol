@@ -173,23 +173,7 @@ pub mod monaco_protocol {
     }
 
     pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
-        let refund_amount = instructions::order::cancel_order_post_market_lock(
-            &mut ctx.accounts.market,
-            &mut ctx.accounts.order,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.matching_queue,
-            &ctx.accounts.order_request_queue,
-        )?;
-
-        transfer::transfer_from_market_escrow(
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            &ctx.accounts.market,
-            refund_amount,
-        )?;
-
-        Ok(())
+        instructions::order::cancel_order_post_market_lock(ctx)
     }
 
     pub fn cancel_preplay_order_post_event_start(
