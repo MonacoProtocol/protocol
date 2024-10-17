@@ -701,6 +701,23 @@ pub mod monaco_protocol {
         )
     }
 
+    pub fn force_unsettled_count(ctx: Context<ForceUnsettledCount>, new_count: u32) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        instructions::market::force_unsettled_count(
+            &mut ctx.accounts.market,
+            ctx.accounts.market_escrow.amount,
+            new_count,
+        )
+    }
+
     pub fn complete_market_void(ctx: Context<CompleteMarketVoid>) -> Result<()> {
         instructions::market::complete_void(&mut ctx.accounts.market)
     }

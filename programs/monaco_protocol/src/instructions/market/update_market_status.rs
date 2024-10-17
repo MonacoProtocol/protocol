@@ -160,6 +160,40 @@ pub fn force_void(
     Ok(())
 }
 
+pub fn force_unsettled_count(
+    market: &mut Market,
+    escrow_amount: u64,
+    new_count: u32,
+) -> Result<()> {
+    require!(
+        ReadyToVoid.eq(&market.market_status),
+        CoreError::MarketInvalidStatus
+    );
+
+    let old_count = market.unsettled_accounts_count;
+    if old_count == new_count {
+        return Ok(());
+    }
+
+    let count_increasing: bool = new_count > old_count;
+
+    if count_increasing {
+        require!(
+            escrow_amount > 0,
+            CoreError::MarketUnsettledCountIncreaseWithZeroEscrow
+        );
+    } else {
+        require!(
+            escrow_amount == 0,
+            CoreError::MarketUnsettledCountDecreaseWithNonZeroEscrow
+        );
+    }
+
+    market.unsettled_accounts_count = new_count;
+
+    Ok(())
+}
+
 pub fn complete_void(market: &mut Market) -> Result<()> {
     require!(
         ReadyToVoid.eq(&market.market_status),
@@ -1061,6 +1095,65 @@ mod void_market_tests {
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketMatchingQueueNotProvided));
+        assert_eq!(expected_error, result)
+    }
+}
+
+#[cfg(test)]
+mod force_unsettled_count_tests {
+    use crate::error::CoreError;
+    use crate::instructions::market::force_unsettled_count;
+    use crate::state::market_account::{mock_market, MarketStatus};
+    use anchor_lang::error;
+
+    #[test]
+    fn force_unsettled_count_happy_path() {
+        let mut market = mock_market(MarketStatus::ReadyToVoid);
+        market.unsettled_accounts_count = 0;
+
+        let result = force_unsettled_count(&mut market, 100, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(1, market.unsettled_accounts_count)
+    }
+
+    #[test]
+    fn force_unsettled_count_incorrect_market_status() {
+        let mut market = mock_market(MarketStatus::Open);
+        market.unsettled_accounts_count = 0;
+
+        let result = force_unsettled_count(&mut market, 100, 1);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(CoreError::MarketInvalidStatus));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn force_unsettled_count_increase_with_zero_escrow() {
+        let mut market = mock_market(MarketStatus::ReadyToVoid);
+        market.unsettled_accounts_count = 0;
+
+        let result = force_unsettled_count(&mut market, 0, 1);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(
+            CoreError::MarketUnsettledCountIncreaseWithZeroEscrow
+        ));
+        assert_eq!(expected_error, result)
+    }
+
+    #[test]
+    fn force_unsettled_count_decrease_with_non_zero_escrow() {
+        let mut market = mock_market(MarketStatus::ReadyToVoid);
+        market.unsettled_accounts_count = 1;
+
+        let result = force_unsettled_count(&mut market, 100, 0);
+
+        assert!(result.is_err());
+        let expected_error = Err(error!(
+            CoreError::MarketUnsettledCountDecreaseWithNonZeroEscrow
+        ));
         assert_eq!(expected_error, result)
     }
 }

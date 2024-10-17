@@ -340,6 +340,11 @@ pub enum CoreError {
     #[msg("Market: cannot recreate market, provided mint does not match existing market")]
     MarketMintMismatch,
 
+    #[msg("Market: attempted to increase market unsettled count with zero escrow")]
+    MarketUnsettledCountIncreaseWithZeroEscrow,
+    #[msg("Market: attempted to decrease market unsettled count with non-zero escrow")]
+    MarketUnsettledCountDecreaseWithNonZeroEscrow,
+
     /*
     Close Account
      */
