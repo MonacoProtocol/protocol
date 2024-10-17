@@ -1467,6 +1467,25 @@ export class MonacoMarket {
       });
   }
 
+  async forceUnsettledCount(newCount: number) {
+    await this.monaco.program.methods
+      .forceUnsettledCount(newCount)
+      .accounts({
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async cacheProductCommissionEscrowPk(productPk: PublicKey) {
     if (this.productEscrowCache.get(productPk) == undefined) {
       const wallet = this.monaco.provider.wallet as NodeWallet;
@@ -1570,6 +1589,25 @@ export class MonacoMarket {
   async updateMarketLockTimeToNow() {
     await this.monaco.program.methods
       .updateMarketLocktimeToNow()
+      .accounts({
+        market: this.pk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async updateMarketLockTime(marketLockTime: number) {
+    await this.monaco.program.methods
+      .updateMarketLocktime(new BN(marketLockTime))
       .accounts({
         market: this.pk,
         authorisedOperators:
@@ -1748,6 +1786,18 @@ export class MonacoMarket {
       .closeOrder()
       .accounts({
         order: orderPk,
+        payer: this.monaco.operatorPk,
+        market: this.pk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async closeTrade(tradePk: PublicKey) {
+    await monaco.program.methods
+      .closeTrade()
+      .accounts({
+        trade: tradePk,
         payer: this.monaco.operatorPk,
         market: this.pk,
       })
