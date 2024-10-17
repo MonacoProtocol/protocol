@@ -175,14 +175,7 @@ pub fn force_unsettled_count(
         return Ok(());
     }
 
-    let count_increasing: bool = new_count > old_count;
-
-    if count_increasing {
-        require!(
-            escrow_amount > 0,
-            CoreError::MarketUnsettledCountIncreaseWithZeroEscrow
-        );
-    } else {
+    if new_count < old_count {
         require!(
             escrow_amount == 0,
             CoreError::MarketUnsettledCountDecreaseWithNonZeroEscrow
@@ -1126,20 +1119,6 @@ mod force_unsettled_count_tests {
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::MarketInvalidStatus));
-        assert_eq!(expected_error, result)
-    }
-
-    #[test]
-    fn force_unsettled_count_increase_with_zero_escrow() {
-        let mut market = mock_market(MarketStatus::ReadyToVoid);
-        market.unsettled_accounts_count = 0;
-
-        let result = force_unsettled_count(&mut market, 0, 1);
-
-        assert!(result.is_err());
-        let expected_error = Err(error!(
-            CoreError::MarketUnsettledCountIncreaseWithZeroEscrow
-        ));
         assert_eq!(expected_error, result)
     }
 
