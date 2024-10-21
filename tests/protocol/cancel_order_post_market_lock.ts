@@ -25,14 +25,25 @@ describe("Security: Cancel Order Post Market Lock", () => {
       await Promise.all([
         monaco.getOrder(orderPk),
         market.getMarketPosition(purchaser),
-        market.getEscrowBalance(),
         market.getTokenBalance(purchaser),
+        market.getEscrowBalance(),
+        market.getMarketLiquidities(),
+        market.getForMatchingPool(outcomeIndex, price),
       ]),
       [
         { stakeUnmatched: 0, stakeVoided: 2000, status: { cancelled: {} } },
         { matched: [0, 0, 0], unmatched: [0, 0, 0] },
-        0,
         10000,
+        0,
+        {
+          liquiditiesFor: [],
+          liquiditiesAgainst: [],
+        },
+        {
+          len: 0,
+          liquidity: 0,
+          matched: 0,
+        },
       ],
     );
   });
