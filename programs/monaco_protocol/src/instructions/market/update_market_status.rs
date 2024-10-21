@@ -1097,7 +1097,6 @@ mod force_void_tests {
     use crate::error::CoreError;
     use crate::instructions::market::force_void;
     use crate::state::market_account::{mock_market, MarketStatus};
-    use crate::state::market_matching_queue_account::mock_market_matching_queue;
     use crate::state::market_order_request_queue::{mock_order_request_queue, OrderRequest};
     use anchor_lang::error;
     use solana_program::pubkey::Pubkey;
@@ -1107,7 +1106,6 @@ mod force_void_tests {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market(MarketStatus::Open);
         let order_request_queue = mock_order_request_queue(market_pk);
-        let mut market_matching_queue = mock_market_matching_queue(market_pk);
 
         let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 

@@ -162,6 +162,10 @@ describe("Force void market", () => {
     // force void market
     await market.voidMarket(true);
 
+    const matchingQueueLenPostVoid =
+      await market.getMarketMatchingQueueLength();
+    assert.equal(matchingQueueLenPostVoid, 0);
+
     // void market positions to return funds to purchasers
     await market.voidMarketPositionForPurchaser(p1.publicKey);
     await market.voidMarketPositionForPurchaser(p2.publicKey);
