@@ -8,6 +8,7 @@ use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
 use crate::state::market_liquidities::LiquiditySource;
+use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
@@ -32,7 +33,6 @@ pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
     use crate::state::market_liquidities::LiquiditySource;
-    use crate::state::market_matching_queue_account::MarketMatchingQueue;
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -661,6 +661,56 @@ pub mod monaco_protocol {
                 .order_request_queue
                 .clone()
                 .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
+        )
+    }
+
+    pub fn force_void_market(ctx: Context<ForceVoidMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let void_time = current_timestamp();
+        instructions::market::force_void(
+            &mut ctx.accounts.market,
+            void_time,
+            &ctx.accounts
+                .order_request_queue
+                .clone()
+                .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
+        )?;
+
+        // clear matching queue
+        if let Some(ref mut _queue) = ctx.accounts.market_matching_queue {
+            ctx.accounts
+                .market_matching_queue
+                .as_mut()
+                .unwrap()
+                .matches
+                .clear();
+        }
+
+        Ok(())
+    }
+
+    pub fn force_unsettled_count(ctx: Context<ForceUnsettledCount>, new_count: u32) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        instructions::market::force_unsettled_count(
+            &mut ctx.accounts.market,
+            ctx.accounts.market_escrow.amount,
+            new_count,
         )
     }
 

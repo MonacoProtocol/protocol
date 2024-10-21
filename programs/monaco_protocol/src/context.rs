@@ -1120,6 +1120,44 @@ pub struct VoidMarket<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ForceVoidMarket<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        has_one = market @ CoreError::VoidMarketMismatch,
+    )]
+    pub market_matching_queue: Option<Account<'info, MarketMatchingQueue>>,
+    #[account(
+        has_one = market @ CoreError::VoidMarketMismatch,
+    )]
+    pub order_request_queue: Option<Account<'info, MarketOrderRequestQueue>>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
+pub struct ForceUnsettledCount<'info> {
+    #[account(mut)]
+    pub market: Account<'info, Market>,
+    #[account(
+        token::mint = market.mint_account,
+        token::authority = market_escrow,
+        seeds = [b"escrow".as_ref(), market.key().as_ref()],
+        bump,
+    )]
+    pub market_escrow: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub market_operator: Signer<'info>,
+    #[account(seeds = [b"authorised_operators".as_ref(), b"MARKET".as_ref()], bump)]
+    pub authorised_operators: Account<'info, AuthorisedOperators>,
+}
+
+#[derive(Accounts)]
 pub struct OpenMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
