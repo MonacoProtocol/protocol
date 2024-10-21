@@ -1102,6 +1102,11 @@ pub struct ForceVoidMarket<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
     #[account(
+        mut,
+        has_one = market @ CoreError::VoidMarketMismatch,
+    )]
+    pub market_matching_queue: Option<Account<'info, MarketMatchingQueue>>,
+    #[account(
         has_one = market @ CoreError::VoidMarketMismatch,
     )]
     pub order_request_queue: Option<Account<'info, MarketOrderRequestQueue>>,

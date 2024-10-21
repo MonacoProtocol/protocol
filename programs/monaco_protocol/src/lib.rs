@@ -694,6 +694,11 @@ pub mod monaco_protocol {
         instructions::market::force_void(
             &mut ctx.accounts.market,
             void_time,
+            &mut ctx
+                .accounts
+                .market_matching_queue
+                .clone()
+                .map(|queue: Account<MarketMatchingQueue>| queue.into_inner()),
             &ctx.accounts
                 .order_request_queue
                 .clone()

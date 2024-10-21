@@ -1423,6 +1423,7 @@ export class MonacoMarket {
             ? this.marketAuthority.publicKey
             : this.monaco.operatorPk,
           authorisedOperators: authorisedOperatorsPk,
+          marketMatchingQueue: marketMatchingQueuePk,
           orderRequestQueue: orderRequestQueuePk,
         })
         .signers(this.marketAuthority ? [this.marketAuthority] : [])

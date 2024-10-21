@@ -23,11 +23,15 @@ describe("Force void market", () => {
     const p2OrderPk = await market.againstOrder(0, 20.0, price, p2);
 
     // ensure there are items still on matching queue
-    const matchingQueue = await market.getMarketMatchingQueueLength();
-    assert.equal(matchingQueue, 2);
+    const matchingQueueLen = await market.getMarketMatchingQueueLength();
+    assert.equal(matchingQueueLen, 2);
 
     // force void market
     await market.voidMarket(true);
+
+    const matchingQueueLenPostVoid =
+      await market.getMarketMatchingQueueLength();
+    assert.equal(matchingQueueLenPostVoid, 0);
 
     // void market positions to return funds to purchasers
     await market.voidMarketPositionForPurchaser(p1.publicKey);
