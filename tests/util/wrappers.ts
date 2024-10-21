@@ -1203,6 +1203,11 @@ export class MonacoMarket {
   async cancelOrderPostMarketLock(orderPk: PublicKey) {
     const [order] = await Promise.all([this.monaco.fetchOrder(orderPk)]);
     const purchaserTokenPk = await this.cachePurchaserTokenPk(order.purchaser);
+    const matchingPoolPk = order.forOutcome
+      ? this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .forOutcome
+      : this.matchingPools[order.marketOutcomeIndex][order.expectedPrice]
+          .against;
     await this.monaco.program.methods
       .cancelOrderPostMarketLock()
       .accounts({
@@ -1214,6 +1219,8 @@ export class MonacoMarket {
         marketEscrow: this.escrowPk,
         orderRequestQueue: this.orderRequestQueuePk,
         matchingQueue: this.matchingQueuePk,
+        marketMatchingPool: matchingPoolPk,
+        marketLiquidities: this.liquiditiesPk,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc()
@@ -1393,7 +1400,7 @@ export class MonacoMarket {
       });
   }
 
-  async voidMarket() {
+  async voidMarket(force = false) {
     const authorisedOperatorsPk =
       await this.monaco.findMarketAuthorisedOperatorsPda();
 
@@ -1413,6 +1420,27 @@ export class MonacoMarket {
             this.pk,
           )
         ).data.pda;
+
+    if (force) {
+      await this.monaco.program.methods
+        .forceVoidMarket()
+        .accounts({
+          market: this.pk,
+          marketOperator: this.marketAuthority
+            ? this.marketAuthority.publicKey
+            : this.monaco.operatorPk,
+          authorisedOperators: authorisedOperatorsPk,
+          marketMatchingQueue: marketMatchingQueuePk,
+          orderRequestQueue: orderRequestQueuePk,
+        })
+        .signers(this.marketAuthority ? [this.marketAuthority] : [])
+        .rpc()
+        .catch((e) => {
+          console.error(e);
+          throw e;
+        });
+      return;
+    }
 
     await this.monaco.program.methods
       .voidMarket()
@@ -1439,6 +1467,25 @@ export class MonacoMarket {
       .accounts({
         market: this.pk,
         order: orderPk,
+      })
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
+  async forceUnsettledCount(newCount: number) {
+    await this.monaco.program.methods
+      .forceUnsettledCount(newCount)
+      .accounts({
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
       })
       .rpc()
       .catch((e) => {
@@ -1566,6 +1613,25 @@ export class MonacoMarket {
       });
   }
 
+  async updateMarketLockTime(marketLockTime: number) {
+    await this.monaco.program.methods
+      .updateMarketLocktime(new BN(marketLockTime))
+      .accounts({
+        market: this.pk,
+        authorisedOperators:
+          await this.monaco.findMarketAuthorisedOperatorsPda(),
+        marketOperator: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+      })
+      .signers(this.marketAuthority ? [this.marketAuthority] : [])
+      .rpc()
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
+  }
+
   async updateMarketEventStartTimeToNow() {
     await this.monaco.program.methods
       .updateMarketEventStartTimeToNow()
@@ -1674,7 +1740,9 @@ export class MonacoMarket {
       .closeMarketOutcome()
       .accounts({
         market: this.pk,
-        authority: this.marketAuthority.publicKey,
+        authority: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
         marketOutcome: (
           await findMarketOutcomePda(
             monaco.program as Program,
@@ -1696,7 +1764,79 @@ export class MonacoMarket {
         matchingQueue: this.matchingQueuePk,
         commissionPaymentQueue: this.paymentsQueuePk,
         orderRequestQueue: this.orderRequestQueuePk,
-        authority: this.marketAuthority.publicKey,
+        authority: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async closeMarketMatchingPool(
+    outcomeIndex: number,
+    price: number,
+    forOutcome: boolean,
+  ) {
+    const matchingPool = this.matchingPools[outcomeIndex][price];
+    await monaco.program.methods
+      .closeMarketMatchingPool()
+      .accounts({
+        market: this.pk,
+        payer: monaco.operatorPk,
+        marketMatchingPool: matchingPool[forOutcome ? "forOutcome" : "against"],
+      })
+      .rpc()
+      .catch((e) => console.error(e));
+  }
+
+  async closeOrder(orderPk: PublicKey) {
+    await monaco.program.methods
+      .closeOrder()
+      .accounts({
+        order: orderPk,
+        payer: this.monaco.operatorPk,
+        market: this.pk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async closeTrade(tradePk: PublicKey) {
+    await monaco.program.methods
+      .closeTrade()
+      .accounts({
+        trade: tradePk,
+        payer: this.monaco.operatorPk,
+        market: this.pk,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async closeMarketPosition(purchaser: PublicKey) {
+    const marketPositionPk = await this.cacheMarketPositionPk(purchaser);
+    await monaco.program.methods
+      .closeMarketPosition()
+      .accounts({
+        market: this.pk,
+        marketPosition: marketPositionPk,
+        payer: purchaser,
+      })
+      .rpc()
+      .catch((e) => console.log(e));
+  }
+
+  async close() {
+    await monaco.program.methods
+      .closeMarket()
+      .accounts({
+        market: this.pk,
+        marketEscrow: this.escrowPk,
+        marketFunding: this.fundingPk,
+        authority: this.marketAuthority
+          ? this.marketAuthority.publicKey
+          : this.monaco.operatorPk,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc()
       .catch((e) => console.log(e));
