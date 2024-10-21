@@ -133,7 +133,6 @@ pub fn void(
 pub fn force_void(
     market: &mut Market,
     void_time: UnixTimestamp,
-    market_matching_queue: &mut Option<MarketMatchingQueue>,
     order_request_queue: &Option<MarketOrderRequestQueue>,
 ) -> Result<()> {
     require!(
@@ -154,9 +153,6 @@ pub fn force_void(
                 .is_empty(),
             CoreError::OrderRequestQueueIsNotEmpty
         );
-
-        market_matching_queue.as_mut().unwrap().matches =
-            MatchingQueue::new(MarketMatchingQueue::QUEUE_LENGTH);
     }
 
     market.market_settle_timestamp = Option::from(void_time);
@@ -1111,22 +1107,12 @@ mod force_void_tests {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market(MarketStatus::Open);
         let order_request_queue = mock_order_request_queue(market_pk);
-
         let mut market_matching_queue = mock_market_matching_queue(market_pk);
-        market_matching_queue.matches.enqueue(Default::default());
 
-        let mut matching_queue_option = Some(market_matching_queue);
-
-        let result = force_void(
-            &mut market,
-            1665483869,
-            &mut matching_queue_option,
-            &Some(order_request_queue),
-        );
+        let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 
         assert!(result.is_ok());
         assert_eq!(MarketStatus::ReadyToVoid, market.market_status);
-        assert!(matching_queue_option.unwrap().matches.is_empty());
     }
 
     #[test]
@@ -1135,17 +1121,7 @@ mod force_void_tests {
         let mut market = mock_market(MarketStatus::Settled);
         let order_request_queue = mock_order_request_queue(market_pk);
 
-        let mut market_matching_queue = mock_market_matching_queue(market_pk);
-        market_matching_queue.matches.enqueue(Default::default());
-
-        let mut matching_queue_option = Some(market_matching_queue);
-
-        let result = force_void(
-            &mut market,
-            1665483869,
-            &mut matching_queue_option,
-            &Some(order_request_queue),
-        );
+        let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
@@ -1156,19 +1132,13 @@ mod force_void_tests {
     fn force_void_request_queue_not_empty() {
         let market_pk = Pubkey::new_unique();
         let mut market = mock_market(MarketStatus::Open);
-        let market_matching_queue = mock_market_matching_queue(market_pk);
 
         let mut order_request_queue = mock_order_request_queue(market_pk);
         order_request_queue
             .order_requests
             .enqueue(OrderRequest::new_unique());
 
-        let result = force_void(
-            &mut market,
-            1665483869,
-            &mut Some(market_matching_queue),
-            &Some(order_request_queue),
-        );
+        let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 
         assert!(result.is_err());
         let expected_error = Err(error!(CoreError::OrderRequestQueueIsNotEmpty));
