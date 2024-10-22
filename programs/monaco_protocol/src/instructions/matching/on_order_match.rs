@@ -141,7 +141,7 @@ pub fn on_order_match_maker(
 #[cfg(test)]
 mod test {
     use crate::state::market_order_request_queue::mock_order_request;
-    use crate::state::order_account::mock_order_from_order_request;
+    use crate::state::order_account::{mock_order_from_order_request, OrderStatus};
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
         market_matching_pool_account::Cirque,
