@@ -1306,7 +1306,7 @@ dependencies = [
 
 [[package]]
 name = "monaco_protocol"
-version = "0.15.4"
+version = "0.15.5"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
