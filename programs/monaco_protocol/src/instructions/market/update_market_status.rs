@@ -136,8 +136,8 @@ pub fn force_void(
     order_request_queue: &Option<MarketOrderRequestQueue>,
 ) -> Result<()> {
     require!(
-        Initializing.eq(&market.market_status) || Open.eq(&market.market_status),
-        CoreError::VoidMarketNotInitializingOrOpen
+        [Initializing, Open, Voided].contains(&market.market_status),
+        CoreError::VoidMarketInvalidStatus
     );
 
     if market.market_status != Initializing {
@@ -1103,14 +1103,16 @@ mod force_void_tests {
 
     #[test]
     fn force_void_happy_path() {
-        let market_pk = Pubkey::new_unique();
-        let mut market = mock_market(MarketStatus::Open);
-        let order_request_queue = mock_order_request_queue(market_pk);
+        for status in [MarketStatus::Open, MarketStatus::Voided] {
+            let market_pk = Pubkey::new_unique();
+            let mut market = mock_market(status);
+            let order_request_queue = mock_order_request_queue(market_pk);
 
-        let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
+            let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 
-        assert!(result.is_ok());
-        assert_eq!(MarketStatus::ReadyToVoid, market.market_status);
+            assert!(result.is_ok());
+            assert_eq!(MarketStatus::ReadyToVoid, market.market_status);
+        }
     }
 
     #[test]
@@ -1122,7 +1124,7 @@ mod force_void_tests {
         let result = force_void(&mut market, 1665483869, &Some(order_request_queue));
 
         assert!(result.is_err());
-        let expected_error = Err(error!(CoreError::VoidMarketNotInitializingOrOpen));
+        let expected_error = Err(error!(CoreError::VoidMarketInvalidStatus));
         assert_eq!(expected_error, result)
     }
 
