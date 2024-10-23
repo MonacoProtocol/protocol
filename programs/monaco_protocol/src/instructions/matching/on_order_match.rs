@@ -1,17 +1,15 @@
-use anchor_lang::prelude::*;
-
+use crate::error::CoreError;
+use crate::events::trade::TradeEvent;
 use crate::instructions::market_position::update_product_commission_contributions;
 use crate::instructions::matching::create_trade::create_trade;
 use crate::instructions::{calculate_risk_from_stake, current_timestamp, market_position};
-
-use crate::error::CoreError;
-use crate::events::trade::TradeEvent;
 use crate::state::market_account::Market;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::trade_account::Trade;
+use anchor_lang::prelude::*;
 
 use super::update_matching_pool_with_matched_order;
 
@@ -140,15 +138,14 @@ pub fn on_order_match_maker(
 
 #[cfg(test)]
 mod test {
-    use crate::state::market_order_request_queue::mock_order_request;
-    use crate::state::order_account::{mock_order_from_order_request, OrderStatus};
+    use super::*;
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
         market_matching_pool_account::Cirque,
         market_matching_queue_account::{MatchingQueue, OrderMatch},
+        market_order_request_queue::mock_order_request,
+        order_account::{mock_order_from_order_request, OrderStatus},
     };
-
-    use super::*;
 
     #[test]
     fn error_empty_queue() {

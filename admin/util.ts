@@ -9,8 +9,7 @@ import { Buffer } from "buffer";
 import process from "process";
 
 const PROGRAM_TYPE = {
-  stable: new PublicKey("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr"),
-  dev: new PublicKey("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9"),
+  release: new PublicKey("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih"),
   edge: new PublicKey("mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU"),
 };
 
@@ -21,7 +20,7 @@ export async function getProtocolProgram() {
   if (programId == undefined) {
     const program = process.env.PROGRAM_TYPE;
     if (program == undefined) {
-      console.log("Please ensure PROGRAM_TYPE variable is set <stable|dev>");
+      console.log("Please ensure PROGRAM_TYPE variable is set <release|edge>");
       process.exit(1);
       return;
     }

@@ -295,7 +295,12 @@ impl MarketLiquidities {
         }
     }
 
-    pub fn remove_liquidity_for(&mut self, outcome: u16, price: f64, liquidity: u64) -> Result<()> {
+    pub fn remove_liquidity_for(
+        &mut self,
+        outcome: u16,
+        price: f64,
+        liquidity: u64,
+    ) -> Result<u64> {
         let liquidities = &mut self.liquidities_for;
         let sorter = Self::sorter_for(outcome, price, &[]);
         Self::remove_liquidity(liquidities, sorter, liquidity)
@@ -306,7 +311,7 @@ impl MarketLiquidities {
         outcome: u16,
         price: f64,
         liquidity: u64,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         let liquidities = &mut self.liquidities_against;
         let sorter = Self::sorter_against(outcome, price, &[]);
         Self::remove_liquidity(liquidities, sorter, liquidity)
@@ -316,18 +321,19 @@ impl MarketLiquidities {
         liquidities: &mut Vec<MarketOutcomePriceLiquidity>,
         search_function: impl FnMut(&MarketOutcomePriceLiquidity) -> Ordering,
         liquidity: u64,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         match liquidities.binary_search_by(search_function) {
             Ok(index) => {
                 let value = &mut liquidities[index];
+                let liquidity_removed = liquidity.min(value.liquidity);
                 value.liquidity = value
                     .liquidity
-                    .checked_sub(liquidity)
+                    .checked_sub(liquidity_removed)
                     .ok_or(CoreError::MarketLiquiditiesUpdateError)?;
                 if value.liquidity == 0 {
                     liquidities.remove(index);
                 }
-                Ok(())
+                Ok(liquidity_removed)
             }
             Err(_) => Err(error!(CoreError::MarketLiquiditiesUpdateError)),
         }

@@ -8,7 +8,6 @@ use crate::instructions::transfer;
 use crate::instructions::verify_operator_authority;
 use crate::state::market_account::{Market, MarketOrderBehaviour};
 use crate::state::market_liquidities::LiquiditySource;
-use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_order_request_queue::{MarketOrderRequestQueue, OrderRequestData};
 use crate::state::market_position_account::MarketPosition;
 use crate::state::operator_account::AuthorisedOperators;
@@ -25,7 +24,9 @@ pub mod state;
 declare_id!("5Q2hKsxShaPxFqgVtQH3ErTkiBf8NGb99nmpaGw7FCrr");
 #[cfg(feature = "dev")]
 declare_id!("yxvZ2jHThHQPTN6mGC8Z4i7iVBtQb3eBGeURQuLSrG9");
-#[cfg(not(any(feature = "stable", feature = "dev")))]
+#[cfg(feature = "edge")]
+declare_id!("mpDEVnZKneBb4w1vQsoTgMkNqnFe1rwW8qjmf3NsrAU");
+#[cfg(not(any(feature = "stable", feature = "dev", feature = "edge")))]
 declare_id!("monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih");
 
 #[program]
@@ -33,6 +34,8 @@ pub mod monaco_protocol {
     use super::*;
     use crate::instructions::current_timestamp;
     use crate::state::market_liquidities::LiquiditySource;
+    use crate::state::market_matching_queue_account::MarketMatchingQueue;
+    use crate::state::order_account::OrderStatus;
 
     pub const PRICE_SCALE: u8 = 3_u8;
     pub const SEED_SEPARATOR_CHAR: char = '␞';
@@ -167,13 +170,65 @@ pub mod monaco_protocol {
     }
 
     pub fn cancel_order(ctx: Context<CancelOrder>) -> Result<()> {
-        instructions::order::cancel_order(ctx)?;
+        let refund_amount = instructions::order::cancel_order(
+            &mut ctx.accounts.market,
+            &ctx.accounts.order.key(),
+            &mut ctx.accounts.order,
+            &mut ctx.accounts.market_position,
+            &mut ctx.accounts.market_liquidities,
+            &ctx.accounts.market_matching_queue,
+            &mut ctx.accounts.market_matching_pool,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            &ctx.accounts.market_escrow,
+            &ctx.accounts.purchaser_token_account,
+            &ctx.accounts.token_program,
+            &ctx.accounts.market,
+            refund_amount,
+        )?;
+
+        // if never matched, close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_account_counts()?;
+            ctx.accounts
+                .order
+                .close(ctx.accounts.payer.to_account_info())?;
+        }
 
         Ok(())
     }
 
     pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
-        instructions::order::cancel_order_post_market_lock(ctx)
+        let market = &mut ctx.accounts.market;
+        let order = &mut ctx.accounts.order;
+        let market_position = &mut ctx.accounts.market_position;
+        let market_matching_pool = &mut ctx.accounts.market_matching_pool;
+        let market_liquidities = &mut ctx.accounts.market_liquidities;
+        let matching_queue = &ctx.accounts.matching_queue;
+        let order_request_queue = &ctx.accounts.order_request_queue;
+        let escrow = &ctx.accounts.market_escrow;
+        let purchaser_token = &ctx.accounts.purchaser_token;
+        let token_program = &ctx.accounts.token_program;
+
+        let refund_amount = instructions::order::cancel_order_post_market_lock(
+            market,
+            &order.key(),
+            order,
+            market_position,
+            market_matching_pool,
+            market_liquidities,
+            matching_queue,
+            order_request_queue,
+        )?;
+
+        transfer::transfer_from_market_escrow(
+            escrow,
+            purchaser_token,
+            token_program,
+            market,
+            refund_amount,
+        )
     }
 
     pub fn cancel_preplay_order_post_event_start(
