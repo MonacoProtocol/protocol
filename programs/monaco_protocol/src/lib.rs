@@ -205,7 +205,6 @@ pub mod monaco_protocol {
         let market_position = &mut ctx.accounts.market_position;
         let market_matching_pool = &mut ctx.accounts.market_matching_pool;
         let market_liquidities = &mut ctx.accounts.market_liquidities;
-        let matching_queue = &ctx.accounts.matching_queue;
         let order_request_queue = &ctx.accounts.order_request_queue;
         let escrow = &ctx.accounts.market_escrow;
         let purchaser_token = &ctx.accounts.purchaser_token;
@@ -216,9 +215,8 @@ pub mod monaco_protocol {
             &order.key(),
             order,
             market_position,
-            market_matching_pool,
             market_liquidities,
-            matching_queue,
+            market_matching_pool,
             order_request_queue,
         )?;
 
@@ -228,7 +226,14 @@ pub mod monaco_protocol {
             token_program,
             market,
             refund_amount,
-        )
+        )?;
+
+        // if never matched, TODO close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_unsettled_accounts_count()?;
+        }
+
+        Ok(())
     }
 
     pub fn cancel_preplay_order_post_event_start(
@@ -251,6 +256,11 @@ pub mod monaco_protocol {
             &ctx.accounts.market,
             refund_amount,
         )?;
+
+        // if never matched, TODO close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_unsettled_accounts_count()?;
+        }
 
         Ok(())
     }
