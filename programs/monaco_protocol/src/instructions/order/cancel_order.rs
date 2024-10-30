@@ -36,6 +36,7 @@ pub fn cancel_order(
 
     move_market_to_inplay_if_needed(market, market_liquidities)?;
     // move_market_matching_pool_to_inplay_if_needed
+    // !!! move_market_to_inplay_if_needed needs to be called first
     if market.inplay && !market_matching_pool.inplay {
         require!(
             market_matching_queue.matches.is_empty(),

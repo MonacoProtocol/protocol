@@ -26,16 +26,6 @@ pub fn cancel_preplay_order_post_event_start(
         [MarketStatus::Open].contains(&market.market_status),
         CoreError::CancelationMarketStatusInvalid
     );
-    // order is (open or matched) + created before market event start
-    require!(
-        [OrderStatus::Open, OrderStatus::Matched].contains(&order.order_status),
-        CoreError::CancelationOrderStatusInvalid
-    );
-    require!(
-        order.stake_unmatched > 0_u64,
-        CoreError::CancelOrderNotCancellable
-    );
-
     require!(market.is_inplay(), CoreError::CancelationMarketNotInplay);
     require!(
         order.creation_timestamp < market.event_start_timestamp,
@@ -44,6 +34,16 @@ pub fn cancel_preplay_order_post_event_start(
     require!(
         MarketOrderBehaviour::CancelUnmatched.eq(&market.event_start_order_behaviour),
         CoreError::CancelationMarketOrderBehaviourInvalid
+    );
+
+    // order is (open or matched) + created before market event start
+    require!(
+        [OrderStatus::Open, OrderStatus::Matched].contains(&order.order_status),
+        CoreError::CancelationOrderStatusInvalid
+    );
+    require!(
+        order.stake_unmatched > 0_u64,
+        CoreError::CancelOrderNotCancellable
     );
 
     // make sure that all orders had a chance to match
@@ -56,6 +56,7 @@ pub fn cancel_preplay_order_post_event_start(
 
     move_market_to_inplay_if_needed(market, market_liquidities)?;
     // move_market_matching_pool_to_inplay_if_needed
+    // !!! move_market_to_inplay_if_needed needs to be called first
     if market.inplay && !market_matching_pool.inplay {
         require!(
             matching_queue.matches.is_empty(),
@@ -65,9 +66,7 @@ pub fn cancel_preplay_order_post_event_start(
     }
 
     order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
-    let refund = market_position::update_on_order_cancellation(market_position, order)?;
-
-    Ok(refund)
+    market_position::update_on_order_cancellation(market_position, order)
 }
 
 #[cfg(test)]

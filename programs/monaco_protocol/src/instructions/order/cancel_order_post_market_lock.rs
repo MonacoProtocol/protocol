@@ -18,12 +18,11 @@ pub fn cancel_order_post_market_lock(
     market_matching_pool: &mut MarketMatchingPool,
     order_request_queue: &MarketOrderRequestQueue,
 ) -> Result<u64> {
-    // market is open
+    // market is open + should be locked and cancellation is the intended behaviour
     require!(
         [MarketStatus::Open].contains(&market.market_status),
         CoreError::CancelationMarketStatusInvalid
     );
-    // market should be locked and cancellation is the intended behaviour
     require!(
         market.market_lock_timestamp <= current_timestamp(),
         CoreError::CancelationMarketNotLocked
