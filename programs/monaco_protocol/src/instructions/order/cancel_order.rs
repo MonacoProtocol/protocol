@@ -101,8 +101,7 @@ pub fn cancel_order_common(
     }
 
     // calculate refund
-    // TODO need to pass the voided stake value as this might be second (or third, etc) void
-    market_position::update_on_order_cancellation(market_position, order)
+    market_position::update_on_order_cancellation(market_position, order, stake_to_void)
 }
 
 #[cfg(test)]

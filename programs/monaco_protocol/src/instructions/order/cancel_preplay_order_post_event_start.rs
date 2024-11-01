@@ -65,8 +65,10 @@ pub fn cancel_preplay_order_post_event_start(
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
-    market_position::update_on_order_cancellation(market_position, order)
+    // liquidity check is not needed since all matches were processed before we got here
+    let stake_to_void = order.stake_unmatched;
+    order.void_stake_unmatched();
+    market_position::update_on_order_cancellation(market_position, order, stake_to_void)
 }
 
 #[cfg(test)]

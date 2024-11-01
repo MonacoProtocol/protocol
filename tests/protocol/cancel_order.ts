@@ -615,6 +615,85 @@ describe("Security: Cancel Order", () => {
     }
   });
 
+  it("cancel matched order: success after liquidity top up", async () => {
+    // Set up Market and related accounts
+    // Create market, purchaser
+    const [market, purchaser1, purchaser2] = await Promise.all([
+      monaco.create3WayMarket([2.0, 3.0]),
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+    ]);
+    await market.airdrop(purchaser1, 1_000);
+    await market.airdrop(purchaser2, 1_000);
+
+    // create some liquidity and match half of it
+    const makerPk = await market.forOrder(0, 10, 3.0, purchaser1);
+    await market.againstOrder(0, 5, 3.0, purchaser2);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getTokenBalance(purchaser1),
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        990,
+        {
+          liquiditiesAgainst: [],
+          liquiditiesFor: [{ liquidity: 5, outcome: 0, price: 3, sources: [] }],
+        },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
+    );
+
+    // cancel remaining liquidity
+    await market.cancel(makerPk, purchaser1);
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getTokenBalance(purchaser1),
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        995,
+        { liquiditiesAgainst: [], liquiditiesFor: [] },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
+    );
+
+    // create more liquidity and cancel first order again
+    await market.forOrder(0, 2, 3.0, purchaser2);
+    await market.cancel(makerPk, purchaser1);
+    await market.forOrder(0, 2, 3.0, purchaser2);
+    await market.cancel(makerPk, purchaser1);
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(makerPk),
+        market.getTokenBalance(purchaser1),
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        { stakeUnmatched: 1, stakeVoided: 9, status: { open: {} } },
+        999,
+        { liquiditiesAgainst: [], liquiditiesFor: [] },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
+    );
+
+    // create more liquidity and cancel first order till canceled
+    await market.forOrder(0, 2, 3.0, purchaser2);
+    await market.cancel(makerPk, purchaser1);
+
+    // matching pools being still full lets us do this
+    await monaco.getOrder(makerPk).then(
+      (_) => assert.fail("An error should have been thrown"),
+      (err) => expect(err.message).toContain("Account does not exist"),
+    );
+  });
+
   it("cancel unmatched order (inplay): fails as liquidity removed", async () => {
     // Set up Market and related accounts
     // Create market, purchaser
