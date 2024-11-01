@@ -653,85 +653,85 @@ describe("Security: Cancel Order", () => {
       liquiditiesFor: [],
     });
   });
-});
 
-it("cancel matched order (inplay): fails as liquidity removed", async () => {
-  // Set up Market and related accounts
-  // Create market, purchaser
-  const [market, purchaser1, purchaser2] = await Promise.all([
-    monaco.create3WayMarketWithInplay([2.0, 3.0]),
-    createWalletWithBalance(monaco.provider),
-    createWalletWithBalance(monaco.provider),
-  ]);
-  await market.airdrop(purchaser1, 10_000);
-  await market.airdrop(purchaser2, 10_000);
+  it("cancel matched order (inplay): fails as liquidity removed", async () => {
+    // Set up Market and related accounts
+    // Create market, purchaser
+    const [market, purchaser1, purchaser2] = await Promise.all([
+      monaco.create3WayMarketWithInplay([2.0, 3.0]),
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+    ]);
+    await market.airdrop(purchaser1, 10_000);
+    await market.airdrop(purchaser2, 10_000);
 
-  const makerPk = await market.forOrder(0, 10, 3.0, purchaser1);
-  await market.againstOrder(0, 5, 3.0, purchaser2);
-  await market.updateMarketEventStartTimeToNow();
+    const makerPk = await market.forOrder(0, 10, 3.0, purchaser1);
+    await market.againstOrder(0, 5, 3.0, purchaser2);
+    await market.updateMarketEventStartTimeToNow();
 
-  assert.deepEqual(await market.getMarketLiquidities(), {
-    liquiditiesAgainst: [],
-    liquiditiesFor: [{ liquidity: 5, outcome: 0, price: 3, sources: [] }],
-  });
+    assert.deepEqual(await market.getMarketLiquidities(), {
+      liquiditiesAgainst: [],
+      liquiditiesFor: [{ liquidity: 5, outcome: 0, price: 3, sources: [] }],
+    });
 
-  try {
-    await market.cancel(makerPk, purchaser1);
-    assert.fail("expected InplayTransitionMarketMatchingQueueIsNotEmpty");
-  } catch (e) {
-    assert.equal(
-      e.error.errorCode.code,
-      "InplayTransitionMarketMatchingQueueIsNotEmpty",
+    try {
+      await market.cancel(makerPk, purchaser1);
+      assert.fail("expected InplayTransitionMarketMatchingQueueIsNotEmpty");
+    } catch (e) {
+      assert.equal(
+        e.error.errorCode.code,
+        "InplayTransitionMarketMatchingQueueIsNotEmpty",
+      );
+    }
+
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        {
+          liquiditiesAgainst: [],
+          liquiditiesFor: [{ liquidity: 5, outcome: 0, price: 3, sources: [] }],
+        },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
     );
-  }
 
-  assert.deepEqual(
-    await Promise.all([
-      market.getMarketLiquidities(),
-      market.getMarketMatchingQueueHead(),
-    ]),
-    [
-      {
-        liquiditiesAgainst: [],
-        liquiditiesFor: [{ liquidity: 5, outcome: 0, price: 3, sources: [] }],
-      },
-      { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
-    ],
-  );
+    // will erase liquidity but not matching pools
+    await market.moveMarketToInplay();
 
-  // will erase liquidity but not matching pools
-  await market.moveMarketToInplay();
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        {
+          liquiditiesAgainst: [],
+          liquiditiesFor: [],
+        },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
+    );
 
-  assert.deepEqual(
-    await Promise.all([
-      market.getMarketLiquidities(),
-      market.getMarketMatchingQueueHead(),
-    ]),
-    [
-      {
-        liquiditiesAgainst: [],
-        liquiditiesFor: [],
-      },
-      { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
-    ],
-  );
+    // matching pools being still full lets us do this
+    await market.processMatchingQueue();
 
-  // matching pools being still full lets us do this
-  await market.processMatchingQueue();
-
-  assert.deepEqual(
-    await Promise.all([
-      market.getMarketLiquidities(),
-      market.getMarketMatchingQueueHead(),
-    ]),
-    [
-      {
-        liquiditiesAgainst: [],
-        liquiditiesFor: [],
-      },
-      null,
-    ],
-  );
+    assert.deepEqual(
+      await Promise.all([
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        {
+          liquiditiesAgainst: [],
+          liquiditiesFor: [],
+        },
+        null,
+      ],
+    );
+  });
 });
 
 async function setupUnmatchedOrder(
