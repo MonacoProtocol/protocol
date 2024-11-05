@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::error::CoreError;
-use crate::instructions::market::move_market_to_inplay;
+use crate::instructions::market::move_market_to_inplay_if_needed;
 use crate::instructions::market_position;
 use crate::state::market_account::{Market, MarketOrderBehaviour, MarketStatus};
 use crate::state::market_liquidities::MarketLiquidities;
@@ -28,6 +28,10 @@ pub fn cancel_preplay_order_post_event_start(
     );
     require!(market.is_inplay(), CoreError::CancelationMarketNotInplay);
     require!(
+        order.creation_timestamp < market.event_start_timestamp,
+        CoreError::CancelationOrderCreatedAfterMarketEventStarted
+    );
+    require!(
         MarketOrderBehaviour::CancelUnmatched.eq(&market.event_start_order_behaviour),
         CoreError::CancelationMarketOrderBehaviourInvalid
     );
@@ -41,11 +45,8 @@ pub fn cancel_preplay_order_post_event_start(
         order.stake_unmatched > 0_u64,
         CoreError::CancelOrderNotCancellable
     );
-    require!(
-        order.creation_timestamp < market.event_start_timestamp,
-        CoreError::CancelationOrderCreatedAfterMarketEventStarted
-    );
 
+    // make sure that all orders had a chance to match
     if let Some(order_request) = order_request_queue.order_requests.peek_front() {
         require!(
             market.event_start_timestamp <= order_request.creation_timestamp,
@@ -53,13 +54,10 @@ pub fn cancel_preplay_order_post_event_start(
         );
     }
 
-    // if market is inplay, but the inplay flag hasn't been flipped yet, do it now
-    // and zero liquidities before cancelling the order if that's what the market is
-    // configured for
-    if market.is_inplay() && !market.inplay {
-        move_market_to_inplay(market, market_liquidities)?;
-    }
-    if !market_matching_pool.inplay {
+    move_market_to_inplay_if_needed(market, market_liquidities)?;
+    // move_market_matching_pool_to_inplay_if_needed
+    // !!! move_market_to_inplay_if_needed needs to be called first
+    if market.inplay && !market_matching_pool.inplay {
         require!(
             matching_queue.matches.is_empty(),
             CoreError::InplayTransitionMarketMatchingQueueIsNotEmpty
@@ -67,16 +65,10 @@ pub fn cancel_preplay_order_post_event_start(
         market_matching_pool.move_to_inplay(&market.event_start_order_behaviour);
     }
 
-    order.void_stake_unmatched(); // <-- void needs to happen before refund calculation
-    let refund = market_position::update_on_order_cancellation(market_position, order)?;
-
-    // if never matched
-    if order.stake == order.voided_stake {
-        // no more settlement needed
-        market.decrement_unsettled_accounts_count()?;
-    }
-
-    Ok(refund)
+    // liquidity check is not needed since all matches were processed before we got here
+    let stake_to_void = order.stake_unmatched;
+    order.void_stake_unmatched();
+    market_position::update_on_order_cancellation(market_position, order, stake_to_void)
 }
 
 #[cfg(test)]

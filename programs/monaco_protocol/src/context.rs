@@ -371,12 +371,6 @@ pub struct CancelOrderPostMarketLock<'info> {
     pub order_request_queue: Account<'info, MarketOrderRequestQueue>,
 
     #[account(
-        seeds = [b"matching".as_ref(), market.key().as_ref()],
-        bump,
-    )]
-    pub matching_queue: Account<'info, MarketMatchingQueue>,
-
-    #[account(
         mut,
         seeds = [
             market.key().as_ref(),

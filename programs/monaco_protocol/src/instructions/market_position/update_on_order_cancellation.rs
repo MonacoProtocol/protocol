@@ -8,12 +8,13 @@ use anchor_lang::prelude::*;
 pub fn update_on_order_cancellation(
     market_position: &mut MarketPosition,
     order: &Order,
+    stake_to_void: u64,
 ) -> Result<u64> {
     let outcome_index = order.market_outcome_index as usize;
     let for_outcome = order.for_outcome;
     let order_exposure = match for_outcome {
-        true => order.voided_stake,
-        false => calculate_risk_from_stake(order.voided_stake, order.expected_price),
+        true => stake_to_void,
+        false => calculate_risk_from_stake(stake_to_void, order.expected_price),
     };
 
     update_exposures(market_position, outcome_index, for_outcome, order_exposure)
