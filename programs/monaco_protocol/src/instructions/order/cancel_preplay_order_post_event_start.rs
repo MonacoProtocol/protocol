@@ -67,7 +67,7 @@ pub fn cancel_preplay_order_post_event_start(
 
     // liquidity check is not needed since all matches were processed before we got here
     let stake_to_void = order.stake_unmatched;
-    order.void_stake_unmatched();
+    order.void_stake_unmatched()?;
     market_position::update_on_order_cancellation(market_position, order, stake_to_void)
 }
 

@@ -39,7 +39,7 @@ pub fn settle_order(ctx: Context<SettleOrder>) -> Result<()> {
     }
 
     if ctx.accounts.order.stake_unmatched > 0_u64 {
-        ctx.accounts.order.void_stake_unmatched();
+        ctx.accounts.order.void_stake_unmatched()?;
     }
     match is_winning_order(&ctx.accounts.order, market_account) {
         true => ctx.accounts.order.order_status = SettledWin,
