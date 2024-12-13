@@ -4,11 +4,11 @@ import {
   ResponseFactory,
   ClientResponse,
   GetPublicKeys,
-  MarketOutcomeAccount,
   MarketOutcomeAccounts,
   MarketOutcomeTitlesResponse,
 } from "../types";
 import { PublicKeyCriterion, toFilters } from "./queries";
+import { MarketOutcomeAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * Base market outcome query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -88,7 +88,7 @@ export class MarketOutcomes {
       const accountsWithData =
         (await this.program.account.marketOutcome.fetchMultiple(
           accountPublicKeys.data.publicKeys,
-        )) as MarketOutcomeAccount[];
+        )) as unknown as MarketOutcomeAccount[];
 
       const result = accountPublicKeys.data.publicKeys
         .map((accountPublicKey, i) => {

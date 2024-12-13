@@ -5,9 +5,9 @@ import {
   ResponseFactory,
   FindPdaResponse,
   GetAccount,
-  MarketAccount,
   MarketAccounts,
 } from "../types";
+import { MarketAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided event publicKey, market type and mint publicKey return a Program Derived Address (PDA). This PDA is used for market creation.
@@ -90,7 +90,7 @@ export async function getMarket(
   try {
     const market = (await program.account.market.fetch(
       marketPk,
-    )) as MarketAccount;
+    )) as unknown as MarketAccount;
     response.addResponseData({
       publicKey: marketPk,
       account: market,

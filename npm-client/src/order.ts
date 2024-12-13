@@ -3,7 +3,6 @@ import { Program } from "@coral-xyz/anchor";
 import {
   ClientResponse,
   GetAccount,
-  Order,
   OrderAccounts,
   orderPdaResponse,
   PendingOrders,
@@ -11,6 +10,7 @@ import {
 } from "../types";
 import { Orders, OrderStatusFilter } from "./order_query";
 import { randomSeed16 } from "./utils";
+import { OrderAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey and wallet publicKey: add a date seed and return a Program Derived Address (PDA) and the seed used. This PDA is used for order creation.
@@ -69,10 +69,12 @@ export async function findOrderPda(
 export async function getOrder(
   program: Program,
   orderPk: PublicKey,
-): Promise<ClientResponse<GetAccount<Order>>> {
-  const response = new ResponseFactory({} as GetAccount<Order>);
+): Promise<ClientResponse<GetAccount<OrderAccount>>> {
+  const response = new ResponseFactory({} as GetAccount<OrderAccount>);
   try {
-    const order = (await program.account.order.fetch(orderPk)) as Order;
+    const order = (await program.account.order.fetch(
+      orderPk,
+    )) as unknown as OrderAccount;
     response.addResponseData({
       publicKey: orderPk,
       account: order,
@@ -105,7 +107,7 @@ export async function getOrders(
   try {
     const orders = (await program.account.order.fetchMultiple(
       orderPks,
-    )) as Order[];
+    )) as unknown as OrderAccount[];
 
     const result = orderPks
       .map((orderPk, i) => {
@@ -295,14 +297,11 @@ function constructPendingOrdersResponse(
  * const pendingOrders = filterPendingOrders(matchedOrders.data.orderAccounts, openOrders.data.orderAccounts)
  */
 function filterPendingOrders(
-  matchedOrders: GetAccount<Order>[],
-  openOrders: GetAccount<Order>[],
-): GetAccount<Order>[] {
+  matchedOrders: GetAccount<OrderAccount>[],
+  openOrders: GetAccount<OrderAccount>[],
+): GetAccount<OrderAccount>[] {
   const partiallyMatchedOrders = matchedOrders.filter(
     (order) => order.account.stakeUnmatched.toNumber() > 0,
   );
-
-  const pendingOrders = partiallyMatchedOrders.concat(openOrders);
-
-  return pendingOrders;
+  return partiallyMatchedOrders.concat(openOrders);
 }

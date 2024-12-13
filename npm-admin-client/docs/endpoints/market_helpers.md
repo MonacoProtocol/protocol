@@ -100,7 +100,7 @@ const mintPk = new PublicKey('7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU')
 const mintInfo = await getMintInfo(program, mintPk)
 ```
 
-Returns **MintInfo** mint information including mint authority and decimals
+Returns **Mint** mint information including mint authority and decimals
 
 ## findEscrowPda
 

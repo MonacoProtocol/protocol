@@ -13,9 +13,9 @@ import {
   ClientResponse,
   ResponseFactory,
   GetAccount,
-  Order,
 } from "../types";
 import { getPendingOrdersForMarket } from "./order";
+import { OrderAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey return:
@@ -99,7 +99,7 @@ export async function getMarketPrices(
 export async function getMarketPricesWithMatchingPoolsFromOrders(
   program: Program,
   marketPk: PublicKey,
-  orders: GetAccount<Order>[],
+  orders: GetAccount<OrderAccount>[],
   marketOutcomeTitles: string[],
 ): Promise<ClientResponse<MarketPrices>> {
   const response = new ResponseFactory({} as MarketPrice);
@@ -169,7 +169,7 @@ export async function getMarketPricesWithMatchingPoolsFromOrders(
  * const marketPrices = await getMarketPrices(program, pendingOrders.data.pendingOrders, marketTitles.data.marketOutcomeTitles)
  */
 function marketPricesFromOrders(
-  orders: GetAccount<Order>[],
+  orders: GetAccount<OrderAccount>[],
   marketOutcomeTitles: string[],
 ): MarketPrice[] {
   const marketPricesSet = new Set();

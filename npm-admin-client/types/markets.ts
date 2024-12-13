@@ -1,6 +1,13 @@
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { BN, web3 } from "@coral-xyz/anchor";
+import {
+  PublicKey,
+  TransactionInstruction,
+  TransactionSignature,
+} from "@solana/web3.js";
 import { TransactionOptionsBatch } from "./transactions";
+import {
+  MarketAccount,
+  MarketOrderBehaviour,
+} from "@monaco-protocol/client-account-types";
 
 export type GetOrCreateAccountResponse<T> = {
   account: T;
@@ -17,7 +24,7 @@ export type CreateMarketResponse = {
 export type CreateMarketWithOutcomesAndPriceLadderResponse =
   CreateMarketResponse & {
     priceLadderResults: BatchAddPricesToOutcomes[];
-    signatures: web3.TransactionSignature[];
+    signatures: TransactionSignature[];
     failedInstructions: TransactionInstruction[];
   };
 
@@ -83,54 +90,9 @@ export type ValidateMarketResponse = {
   priceLadderValidation: ValidateMarketOutcomePriceLadder[];
 };
 
-// Duplicates from primary client
-
-export class MarketStatus {
-  initializing?: Record<string, never>;
-  open?: Record<string, never>;
-  locked?: Record<string, never>;
-  readyForSettlement?: Record<string, never>;
-  settled?: Record<string, never>;
-  readyToClose?: Record<string, never>;
-}
-
-export class MarketOrderBehaviour {
-  none?: Record<string, never>;
-  cancelUnmatched?: Record<string, never>;
-}
-
 export const MarketOrderBehaviourValue = {
   none: { none: {} } as MarketOrderBehaviour,
   cancelUnmatched: { cancelUnmatched: {} } as MarketOrderBehaviour,
-};
-
-export type MarketAccount = {
-  authority: BN;
-  decimalLimit: number;
-  escrowAccountBump: number;
-  fundingAccountBump: number;
-  eventAccount: PublicKey;
-  eventStartTimestamp: BN;
-  marketLockTimestamp: BN;
-  marketOutcomesCount: number;
-  marketSettleTimestamp?: BN;
-  marketStatus: MarketStatus;
-  marketType: PublicKey;
-  marketTypeDiscriminator: string;
-  marketTypeValue: string;
-  marketWinningOutcomeIndex?: number;
-  mintAccount: PublicKey;
-  published: boolean;
-  suspended: boolean;
-  title: string;
-  inplay: boolean;
-  inplayEnabled: boolean;
-  inplayDelay: number;
-  eventStartOrderBehaviour: MarketOrderBehaviour;
-  marketLockedOrderBehaviour: MarketOrderBehaviour;
-  unsettledAccountsCount: number;
-  unclosedAccountsCount: number;
-  version: number;
 };
 
 export type EpochTimeStamp = number;

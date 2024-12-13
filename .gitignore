@@ -65,4 +65,7 @@ npm-client/**/*.d.ts
 npm-admin-client/**/*.js
 npm-admin-client/**/*.d.ts
 
+# npm package
+npm-client-account-types/dist
+
 .eslintcache

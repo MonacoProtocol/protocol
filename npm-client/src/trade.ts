@@ -4,10 +4,10 @@ import {
   ClientResponse,
   GetAccount,
   ResponseFactory,
-  Trade,
   TradePdaResponse,
 } from "../types";
 import { randomSeed16 } from "./utils";
+import { TradeAccount } from "@monaco-protocol/client-account-types";
 
 /**
  * For a given order PublicKey return a Program Derived Address (PDA) and the seed used. If a seed override is provided, it will be used instead of generating a new one. This PDA can be used for trade creation.
@@ -69,10 +69,12 @@ export async function findTradePda(
 export async function getTrade(
   program: Program,
   tradePk: PublicKey,
-): Promise<ClientResponse<GetAccount<Trade>>> {
-  const response = new ResponseFactory({} as GetAccount<Trade>);
+): Promise<ClientResponse<GetAccount<TradeAccount>>> {
+  const response = new ResponseFactory({} as GetAccount<TradeAccount>);
   try {
-    const trade = (await program.account.trade.fetch(tradePk)) as Trade;
+    const trade = (await program.account.trade.fetch(
+      tradePk,
+    )) as unknown as TradeAccount;
     response.addResponseData({
       publicKey: tradePk,
       account: trade,

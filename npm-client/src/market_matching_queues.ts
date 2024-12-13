@@ -6,11 +6,13 @@ import {
   FindPdaResponse,
   GetAccount,
   MarketMatchingQueues,
-  MarketMatchingQueue,
-  OrderMatch,
   GetPublicKeys,
 } from "../types";
 import { BooleanCriterion, toFilters } from "./queries";
+import {
+  MarketMatchingQueueAccount,
+  OrderMatch,
+} from "@monaco-protocol/client-account-types";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market matching-queue account.
@@ -48,7 +50,7 @@ export async function findMarketMatchingQueuePda(
  *
  * @param program {program} anchor program initialized by the consuming client
  * @param marketMatchingQueuePk {PublicKey} publicKey of the market matching queue
- * @returns {GetAccount<MarketMatchingQueue>} market matching queue account details
+ * @returns {GetAccount<MarketMatchingQueueAccount>} market matching queue account details
  *
  * @example
  *
@@ -58,13 +60,15 @@ export async function findMarketMatchingQueuePda(
 export async function getMarketMatchingQueue(
   program: Program,
   marketMatchingQueuePk: PublicKey,
-): Promise<ClientResponse<GetAccount<MarketMatchingQueue>>> {
-  const response = new ResponseFactory({} as GetAccount<MarketMatchingQueue>);
+): Promise<ClientResponse<GetAccount<MarketMatchingQueueAccount>>> {
+  const response = new ResponseFactory(
+    {} as GetAccount<MarketMatchingQueueAccount>,
+  );
   try {
     const marketMatchingQueue =
       (await program.account.marketMatchingQueue.fetch(
         marketMatchingQueuePk,
-      )) as MarketMatchingQueue;
+      )) as unknown as MarketMatchingQueueAccount;
 
     response.addResponseData({
       publicKey: marketMatchingQueuePk,
@@ -101,7 +105,7 @@ export async function getNonEmptyMarketMatchingQueues(
     const accountsWithData =
       (await program.account.marketMatchingQueue.fetchMultiple(
         accountKeys,
-      )) as MarketMatchingQueue[];
+      )) as unknown as MarketMatchingQueueAccount[];
 
     const result = accountKeys
       .map((accountKey, i) => {
@@ -131,7 +135,7 @@ async function getPublicKeys(program: Program): Promise<PublicKey[]> {
 }
 
 export function toOrderMatches(
-  marketMatchingQueue: MarketMatchingQueue,
+  marketMatchingQueue: MarketMatchingQueueAccount,
 ): OrderMatch[] {
   const matches = marketMatchingQueue.matches;
   const frontIndex = matches.front;

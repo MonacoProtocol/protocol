@@ -1,16 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
 import { GetAccount } from "./account";
+import { MarketOutcomeAccount } from "@monaco-protocol/client-account-types";
 
 export type GetPublicKeys = {
   publicKeys: PublicKey[];
-};
-
-export type MarketOutcomeAccount = {
-  index: number;
-  title: string;
-  market: PublicKey;
-  prices: PublicKey | null;
-  priceLadder: number[];
 };
 
 export type MarketOutcomeAccounts = {
