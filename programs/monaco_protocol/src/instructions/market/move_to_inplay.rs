@@ -35,6 +35,25 @@ pub fn move_market_to_inplay(
     Ok(())
 }
 
+pub fn move_market_to_inplay_if_needed(
+    market: &mut Market,
+    market_liquidities: &mut MarketLiquidities,
+) -> Result<()> {
+    let now = current_timestamp();
+
+    require!(
+        Open.eq(&market.market_status),
+        CoreError::MarketNotOpenForInplay
+    );
+
+    if market.inplay_enabled && market.event_start_timestamp <= now && !market.inplay {
+        market.move_to_inplay();
+        market_liquidities.move_to_inplay(&market.event_start_order_behaviour);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::instructions::current_timestamp;

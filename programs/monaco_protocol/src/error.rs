@@ -306,6 +306,8 @@ pub enum CoreError {
     MarketOutcomeMarketInvalidStatus,
     #[msg("Market: cannot open market, market not initializing")]
     OpenMarketNotInitializing,
+    #[msg("Market: cannot void market, market status invalid for voiding")]
+    VoidMarketInvalidStatus,
     #[msg("Market: cannot void market, market not open or initializing")]
     VoidMarketNotInitializingOrOpen,
     #[msg("Market: cannot open market, must have more than 1 outcome")]
@@ -339,6 +341,9 @@ pub enum CoreError {
     MarketTypeValueMismatch,
     #[msg("Market: cannot recreate market, provided mint does not match existing market")]
     MarketMintMismatch,
+
+    #[msg("Market: attempted to decrease market unsettled count with non-zero escrow")]
+    MarketUnsettledCountDecreaseWithNonZeroEscrow,
 
     /*
     Close Account

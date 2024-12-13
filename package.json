@@ -31,7 +31,7 @@
     "buildClientAccountTypes": "cd npm-client-account-types && npm install && npm run build && cd -",
     "buildClient": "cd npm-client && npm install && npm link ../npm-client-account-types && npm run build && cd -",
     "buildAdminClient": "cd npm-admin-client && npm install && npm link ../npm-client-account-types && npm run build && cd -",
-    "buildMonaco": "anchor build -v",
+    "buildMonaco": "anchor build",
     "buildMonacoForEdge": "anchor build -v -- --features edge",
     "build": "yarn buildClientAccountTypes && yarn buildClient && yarn buildAdminClient && yarn buildMonaco",
 

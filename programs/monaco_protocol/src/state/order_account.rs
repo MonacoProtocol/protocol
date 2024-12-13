@@ -61,12 +61,8 @@ impl Order {
         Ok(())
     }
 
-    pub fn void_stake_unmatched(&mut self) {
-        self.voided_stake = self.stake_unmatched;
-        self.stake_unmatched = 0_u64;
-        if self.order_status == OrderStatus::Open {
-            self.order_status = OrderStatus::Cancelled;
-        }
+    pub fn void_stake_unmatched(&mut self) -> Result<()> {
+        self.void_stake_unmatched_by(self.stake_unmatched)
     }
 
     pub fn void_stake_unmatched_by(&mut self, stake_to_void: u64) -> Result<()> {
@@ -228,5 +224,44 @@ mod tests {
         assert_eq!(order.order_status, OrderStatus::Matched);
         assert_eq!(order.stake_unmatched, 0);
         assert_eq!(order.payout, 2100);
+    }
+
+    #[test]
+    fn test_void_stake_unmatched() {
+        // when
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            1000,
+            Pubkey::new_unique(),
+        );
+        let _ = order.void_stake_unmatched();
+
+        // then
+        assert_eq!(order.order_status, OrderStatus::Cancelled);
+        assert_eq!(order.stake_unmatched, 0);
+        assert_eq!(order.voided_stake, 1000);
+    }
+
+    #[test]
+    fn test_void_stake_unmatched_after_partial() {
+        // when
+        let mut order = mock_order(
+            Pubkey::new_unique(),
+            1,
+            true,
+            2.10,
+            1000,
+            Pubkey::new_unique(),
+        );
+        let _ = order.void_stake_unmatched_by(200);
+        let _ = order.void_stake_unmatched();
+
+        // then
+        assert_eq!(order.order_status, OrderStatus::Cancelled);
+        assert_eq!(order.stake_unmatched, 0);
+        assert_eq!(order.voided_stake, 1000);
     }
 }

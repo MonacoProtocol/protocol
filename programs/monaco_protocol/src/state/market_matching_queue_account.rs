@@ -108,6 +108,12 @@ impl MatchingQueue {
         }
         clone
     }
+
+    pub fn clear(&mut self) {
+        self.front = 0;
+        self.len = 0;
+        self.empty = true;
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default)]
@@ -321,5 +327,18 @@ mod tests_matching_queue {
 
         queue.peek_mut().unwrap().stake = 10;
         assert_eq!(10, queue.peek().unwrap().stake);
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut queue = MatchingQueue::new(3);
+        queue.enqueue(OrderMatch::default());
+        queue.enqueue(OrderMatch::default());
+        assert_eq!(2, queue.len());
+
+        queue.clear();
+        assert_eq!(0, queue.len());
+        assert_eq!(0, queue.front);
+        assert_eq!(0, queue.back());
     }
 }

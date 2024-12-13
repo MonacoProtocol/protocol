@@ -81,6 +81,95 @@ describe("Security: Cancel Inplay Order Post Event Start", () => {
     );
   });
 
+  it("success: partially matched and canceled order", async () => {
+    // Set up Market and related accounts
+    // Create market, purchaser
+    const [market, purchaser1, purchaser2] = await Promise.all([
+      monaco.create3WayMarketWithInplay([2.0, 3.0]),
+      createWalletWithBalance(monaco.provider),
+      createWalletWithBalance(monaco.provider),
+    ]);
+    await market.airdrop(purchaser1, 1_000);
+    await market.airdrop(purchaser2, 1_000);
+
+    // create some liquidity, match half of it, cancel the rest and then add more liquidity
+    const makerPk = await market.forOrder(0, 10, 3.0, purchaser1);
+    await market.againstOrder(0, 5, 3.0, purchaser2);
+    await market.cancel(makerPk, purchaser1);
+    await market.forOrder(0, 2, 3.0, purchaser2);
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(makerPk),
+        market.getTokenBalance(purchaser1),
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        { stakeUnmatched: 5, stakeVoided: 5, status: { open: {} } },
+        995,
+        {
+          liquiditiesAgainst: [],
+          liquiditiesFor: [{ liquidity: 2, outcome: 0, price: 3, sources: [] }],
+        },
+        { forOutcome: true, outcomeIndex: 0, pk: null, price: 3, stake: 5 },
+      ],
+    );
+
+    // Update Market's evenet start time
+    await market.updateMarketEventStartTimeToNow();
+    await market.moveMarketToInplay();
+    await market.processMatchingQueue();
+
+    await market.cancelPreplayOrderPostEventStart(makerPk).then(
+      (_) => assert.fail("CancelOrderNotCancellable expected"),
+      (e) => assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable"),
+    );
+
+    assert.deepEqual(
+      await Promise.all([
+        monaco.getOrder(makerPk),
+        market.getTokenBalance(purchaser1),
+        market.getMarketLiquidities(),
+        market.getMarketMatchingQueueHead(),
+      ]),
+      [
+        { stakeUnmatched: 0, stakeVoided: 5, status: { matched: {} } },
+        995,
+        { liquiditiesAgainst: [], liquiditiesFor: [] },
+        null,
+      ],
+    );
+  });
+
+  it("cancel fully matched order fails", async () => {
+    // Create market, purchaser
+    const [purchaser, market] = await Promise.all([
+      createWalletWithBalance(monaco.provider),
+      monaco.create3WayMarket([price]),
+    ]);
+    await market.airdrop(purchaser, 100.0);
+
+    // Create a couple of opposing orders
+    const forOrderPk = await market.forOrder(0, 10.0, price, purchaser);
+    const againstOrderPk = await market.againstOrder(0, 10.0, price, purchaser);
+
+    await market.processMatchingQueue(); // TODO move this lower after cancel method updated
+
+    try {
+      await market.cancel(forOrderPk, purchaser);
+      assert.fail("expected CancelOrderNotCancellable");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+    }
+    try {
+      await market.cancel(againstOrderPk, purchaser);
+      assert.fail("expected CancelOrderNotCancellable");
+    } catch (e) {
+      assert.equal(e.error.errorCode.code, "CancelOrderNotCancellable");
+    }
+  });
+
   // -----------------------------------------------------------------------------------------------------
 
   it("failure: matched order", async () => {

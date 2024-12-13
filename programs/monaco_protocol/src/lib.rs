@@ -200,21 +200,38 @@ pub mod monaco_protocol {
     }
 
     pub fn cancel_order_post_market_lock(ctx: Context<CancelOrderPostMarketLock>) -> Result<()> {
+        let market = &mut ctx.accounts.market;
+        let order = &mut ctx.accounts.order;
+        let market_position = &mut ctx.accounts.market_position;
+        let market_matching_pool = &mut ctx.accounts.market_matching_pool;
+        let market_liquidities = &mut ctx.accounts.market_liquidities;
+        let order_request_queue = &ctx.accounts.order_request_queue;
+        let escrow = &ctx.accounts.market_escrow;
+        let purchaser_token = &ctx.accounts.purchaser_token;
+        let token_program = &ctx.accounts.token_program;
+
         let refund_amount = instructions::order::cancel_order_post_market_lock(
-            &mut ctx.accounts.market,
-            &mut ctx.accounts.order,
-            &mut ctx.accounts.market_position,
-            &ctx.accounts.matching_queue,
-            &ctx.accounts.order_request_queue,
+            market,
+            &order.key(),
+            order,
+            market_position,
+            market_liquidities,
+            market_matching_pool,
+            order_request_queue,
         )?;
 
         transfer::transfer_from_market_escrow(
-            &ctx.accounts.market_escrow,
-            &ctx.accounts.purchaser_token,
-            &ctx.accounts.token_program,
-            &ctx.accounts.market,
+            escrow,
+            purchaser_token,
+            token_program,
+            market,
             refund_amount,
         )?;
+
+        // if never matched, TODO close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_unsettled_accounts_count()?;
+        }
 
         Ok(())
     }
@@ -239,6 +256,11 @@ pub mod monaco_protocol {
             &ctx.accounts.market,
             refund_amount,
         )?;
+
+        // if never matched, TODO close
+        if ctx.accounts.order.order_status == OrderStatus::Cancelled {
+            ctx.accounts.market.decrement_unsettled_accounts_count()?;
+        }
 
         Ok(())
     }
@@ -704,6 +726,56 @@ pub mod monaco_protocol {
                 .order_request_queue
                 .clone()
                 .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
+        )
+    }
+
+    pub fn force_void_market(ctx: Context<ForceVoidMarket>) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        let void_time = current_timestamp();
+        instructions::market::force_void(
+            &mut ctx.accounts.market,
+            void_time,
+            &ctx.accounts
+                .order_request_queue
+                .clone()
+                .map(|queue: Account<MarketOrderRequestQueue>| queue.into_inner()),
+        )?;
+
+        // clear matching queue
+        if let Some(ref mut _queue) = ctx.accounts.market_matching_queue {
+            ctx.accounts
+                .market_matching_queue
+                .as_mut()
+                .unwrap()
+                .matches
+                .clear();
+        }
+
+        Ok(())
+    }
+
+    pub fn force_unsettled_count(ctx: Context<ForceUnsettledCount>, new_count: u32) -> Result<()> {
+        verify_operator_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.authorised_operators,
+        )?;
+        verify_market_authority(
+            ctx.accounts.market_operator.key,
+            &ctx.accounts.market.authority,
+        )?;
+
+        instructions::market::force_unsettled_count(
+            &mut ctx.accounts.market,
+            ctx.accounts.market_escrow.amount,
+            new_count,
         )
     }
 

@@ -1,17 +1,15 @@
-use anchor_lang::prelude::*;
-
+use crate::error::CoreError;
+use crate::events::trade::TradeEvent;
 use crate::instructions::market_position::update_product_commission_contributions;
 use crate::instructions::matching::create_trade::create_trade;
 use crate::instructions::{calculate_risk_from_stake, current_timestamp, market_position};
-
-use crate::error::CoreError;
-use crate::events::trade::TradeEvent;
 use crate::state::market_account::Market;
 use crate::state::market_matching_pool_account::MarketMatchingPool;
 use crate::state::market_matching_queue_account::MarketMatchingQueue;
 use crate::state::market_position_account::MarketPosition;
 use crate::state::order_account::Order;
 use crate::state::trade_account::Trade;
+use anchor_lang::prelude::*;
 
 use super::update_matching_pool_with_matched_order;
 
@@ -24,6 +22,8 @@ pub fn on_order_match_taker(
     order_trade: &mut Trade,
     payer: &Pubkey,
 ) -> Result<()> {
+    require!(!order.is_completed(), CoreError::StatusClosed);
+
     let now = current_timestamp();
 
     match market_matching_queue.matches.peek_mut() {
@@ -70,6 +70,8 @@ pub fn on_order_match_maker(
     order_trade: &mut Trade,
     payer: &Pubkey,
 ) -> Result<u64> {
+    require!(!order.is_completed(), CoreError::StatusClosed);
+
     let now = current_timestamp();
 
     match market_matching_queue.matches.peek_mut() {
@@ -136,15 +138,14 @@ pub fn on_order_match_maker(
 
 #[cfg(test)]
 mod test {
-    use crate::state::market_order_request_queue::mock_order_request;
-    use crate::state::order_account::mock_order_from_order_request;
+    use super::*;
     use crate::state::{
         market_account::{MarketOrderBehaviour, MarketStatus},
         market_matching_pool_account::Cirque,
         market_matching_queue_account::{MatchingQueue, OrderMatch},
+        market_order_request_queue::mock_order_request,
+        order_account::{mock_order_from_order_request, OrderStatus},
     };
-
-    use super::*;
 
     #[test]
     fn error_empty_queue() {
@@ -396,6 +397,73 @@ mod test {
         assert_eq!(false, maker_order_trade.for_outcome);
         assert_eq!(10_u64, maker_order_trade.stake);
         assert_eq!(2.2_f64, maker_order_trade.price);
+    }
+
+    #[test]
+    fn test_invalid_order_status() {
+        let market_pk = Pubkey::new_unique();
+        let mut market = mock_market();
+        let market_outcome_index = 1;
+        let matched_price = 2.2_f64;
+        let payer_pk = Pubkey::new_unique();
+
+        let order_request = mock_order_request(
+            Pubkey::new_unique(),
+            false,
+            market_outcome_index,
+            100_u64,
+            2.4_f64,
+        );
+        let order_pk = Pubkey::new_unique();
+        let mut order = mock_order_from_order_request(market_pk, order_request, payer_pk);
+        order.order_status = OrderStatus::Voided;
+
+        let mut market_position = mock_market_position(market_pk, order_request.purchaser, 3);
+
+        let mut market_matching_pool = MarketMatchingPool {
+            market: market_pk,
+            market_outcome_index,
+            for_outcome: false,
+            price: matched_price,
+            liquidity_amount: 100_u64,
+            matched_amount: 0_u64,
+            inplay: false,
+            orders: Cirque::new(1),
+            payer: payer_pk,
+        };
+        market_matching_pool.orders.enqueue(order_pk);
+
+        let mut market_matching_queue = MarketMatchingQueue {
+            market: market_pk,
+            matches: MatchingQueue::new(10),
+        };
+
+        let mut maker_order_trade = Trade::default();
+
+        let result_maker = on_order_match_maker(
+            &mut market,
+            &mut market_matching_queue,
+            &mut market_matching_pool,
+            &order_pk,
+            &mut order,
+            &mut market_position,
+            &mut maker_order_trade,
+            &payer_pk,
+        );
+        assert!(result_maker.is_err());
+        assert_eq!(error!(CoreError::StatusClosed), result_maker.unwrap_err());
+
+        let result_taker = on_order_match_taker(
+            &market_pk,
+            &mut market,
+            &mut market_matching_queue,
+            &order_pk,
+            &mut order,
+            &mut maker_order_trade,
+            &payer_pk,
+        );
+        assert!(result_taker.is_err());
+        assert_eq!(error!(CoreError::StatusClosed), result_taker.unwrap_err());
     }
 
     fn mock_market() -> Market {
