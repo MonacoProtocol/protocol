@@ -31,7 +31,7 @@ describe("Market Outcomes", () => {
       .filterByMarket(market.pk)
       .fetch();
 
-    const titles = response.data.marketOutcomeAccounts.map(
+    const titles = response.data.accounts.map(
       (account) => account.account.title,
     );
 
@@ -47,7 +47,7 @@ describe("Market Outcomes", () => {
       market.pk,
     );
 
-    const titles = response.data.marketOutcomeAccounts.map(
+    const titles = response.data.accounts.map(
       (account) => account.account.title,
     );
 

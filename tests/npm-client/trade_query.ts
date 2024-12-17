@@ -1,11 +1,11 @@
 import assert from "assert";
 import {
+  confirmTransaction,
+  createOrderUiStake as createOrderNpm,
   getTradesForProviderWallet,
   getTradesForMarket,
   getTradesForOrder,
-  confirmTransaction,
-} from "../../npm-client/src";
-import { createOrderUiStake as createOrderNpm } from "../../npm-client/src/create_order";
+} from "../../npm-client";
 import { monaco } from "../util/wrappers";
 import { createWalletWithBalance } from "../util/test_util";
 
@@ -46,7 +46,7 @@ describe("Trades Query", () => {
     assert(responseForProvider.success);
     assert(responseForProvider.data);
     assert.deepEqual(responseForProvider.errors, []);
-    assert(responseForProvider.data.tradeAccounts.length > 0);
+    assert(responseForProvider.data.accounts.length > 0);
 
     const responseForMarket = await getTradesForMarket(
       monaco.getRawProgram(),
@@ -56,7 +56,7 @@ describe("Trades Query", () => {
     assert(responseForMarket.success);
     assert(responseForMarket.data);
     assert.deepEqual(responseForMarket.errors, []);
-    assert.equal(responseForMarket.data.tradeAccounts.length, 2);
+    assert.equal(responseForMarket.data.accounts.length, 2);
 
     const responseForOrder = await getTradesForOrder(
       monaco.getRawProgram(),
@@ -66,6 +66,6 @@ describe("Trades Query", () => {
     assert(responseForOrder.success);
     assert(responseForOrder.data);
     assert.deepEqual(responseForOrder.errors, []);
-    assert.equal(responseForOrder.data.tradeAccounts.length, 1);
+    assert.equal(responseForOrder.data.accounts.length, 1);
   });
 });

@@ -177,7 +177,7 @@ export async function getAllMarketMatchingPools(
       }
 
       marketMatchingPoolsWithSeeds = marketMatchingPoolsWithSeeds.concat(
-        perOutcomeResponse.data.marketMatchingPools.map((pool) => {
+        perOutcomeResponse.data.accounts.map((pool) => {
           return {
             publicKey: pool.publicKey,
             account: {
@@ -227,15 +227,14 @@ export async function findAllMarketMatchingPoolPks(
 
   try {
     const outcomeAccounts = await getMarketOutcomesByMarket(program, marketPk);
-    if (outcomeAccounts.data.marketOutcomeAccounts.length == 0) {
+    if (outcomeAccounts.data.accounts.length == 0) {
       response.addResponseData({
         marketMatchingPoolPksWithSeeds: [],
       });
       return response.body;
     }
-    const priceLadder =
-      outcomeAccounts.data.marketOutcomeAccounts[0].account.priceLadder;
-    const outcomes = outcomeAccounts.data.marketOutcomeAccounts.map(
+    const priceLadder = outcomeAccounts.data.accounts[0].account.priceLadder;
+    const outcomes = outcomeAccounts.data.accounts.map(
       (outcome) => outcome.account.index,
     );
 

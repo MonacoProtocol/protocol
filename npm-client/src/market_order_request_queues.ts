@@ -10,7 +10,7 @@ import {
   OrderRequest,
   GetPublicKeys,
 } from "../types";
-import { BooleanCriterion, toFilters } from "./queries";
+import { BooleanCriterion, toFilters } from "./queries/filtering";
 
 /**
  * For the provided market publicKey, return the PDA (publicKey) of the market order-request-queue account.

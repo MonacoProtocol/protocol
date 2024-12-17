@@ -151,7 +151,7 @@ export async function buildCancelOrdersForMarketInstructions(
     getCancellableOrdersByMarketForProviderWallet(program, marketPk),
   ]);
 
-  const orders = ordersResponse.data.orderAccounts;
+  const orders = ordersResponse.data.accounts;
 
   if (orders.length < 1) {
     response.addError(NoCancellableOrdersFound);
