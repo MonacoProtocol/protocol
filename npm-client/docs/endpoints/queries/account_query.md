@@ -2,10 +2,8 @@
 
 ### Table of Contents
 
-*   [MarketMatchingPools][1]
+*   [AccountQuery][1]
 
-## MarketMatchingPools
+## AccountQuery
 
-**Extends AccountQuery**
-
-[1]: #marketmatchingpools
+[1]: #accountquery

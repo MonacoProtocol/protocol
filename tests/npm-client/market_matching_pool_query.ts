@@ -28,16 +28,16 @@ describe("Market Matching Pool Queries", () => {
     let response = await marketMatchingPoolQuery
       .filterByMarket(marketA.pk)
       .fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       marketA.matchingPools[0][2.0].forOutcome.toBase58(),
     );
 
     response = await marketMatchingPoolQuery.filterByMarket(marketB.pk).fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       marketB.matchingPools[0][2.0].forOutcome.toBase58(),
     );
   });
@@ -57,32 +57,32 @@ describe("Market Matching Pool Queries", () => {
     ).filterByMarket(market.pk);
 
     let response = await marketMatchingPoolQuery.fetch();
-    assert.equal(response.data.marketMatchingPools.length, 3);
+    assert.equal(response.data.accounts.length, 3);
 
     response = await marketMatchingPoolQuery
       .filterByMarketOutcomeIndex(0)
       .fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       market.matchingPools[0][2.0].forOutcome.toBase58(),
     );
 
     response = await marketMatchingPoolQuery
       .filterByMarketOutcomeIndex(1)
       .fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       market.matchingPools[1][2.0].forOutcome.toBase58(),
     );
 
     response = await marketMatchingPoolQuery
       .filterByMarketOutcomeIndex(2)
       .fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       market.matchingPools[2][2.0].forOutcome.toBase58(),
     );
   });
@@ -101,19 +101,19 @@ describe("Market Matching Pool Queries", () => {
     ).filterByMarket(market.pk);
 
     let response = await marketMatchingPoolQuery.fetch();
-    assert.equal(response.data.marketMatchingPools.length, 2);
+    assert.equal(response.data.accounts.length, 2);
 
     response = await marketMatchingPoolQuery.filterByForOutcome(true).fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       market.matchingPools[0][2.0].forOutcome.toBase58(),
     );
 
     response = await marketMatchingPoolQuery.filterByForOutcome(false).fetch();
-    assert.equal(response.data.marketMatchingPools.length, 1);
+    assert.equal(response.data.accounts.length, 1);
     assert.equal(
-      response.data.marketMatchingPools[0].publicKey.toBase58(),
+      response.data.accounts[0].publicKey.toBase58(),
       market.matchingPools[0][2.0].against.toBase58(),
     );
   });

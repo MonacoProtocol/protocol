@@ -1,14 +1,14 @@
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import {
-  ResponseFactory,
   ClientResponse,
-  GetPublicKeys,
   MarketOutcomeAccount,
-  MarketOutcomeAccounts,
   MarketOutcomeTitlesResponse,
+  ResponseFactory,
 } from "../types";
-import { PublicKeyCriterion, toFilters } from "./queries";
+import { PublicKeyCriterion } from "./queries/filtering";
+import { AccountQuery } from "./queries/account_query";
+import { AccountQueryResult } from "../types/account_query";
 
 /**
  * Base market outcome query builder allowing to filter by set fields. Returns publicKeys or accounts mapped to those publicKeys; filtered to remove any accounts closed during the query process.
@@ -29,80 +29,21 @@ import { PublicKeyCriterion, toFilters } from "./queries";
  *
  * Returns all market outcomes created for the given market.
  */
-export class MarketOutcomes {
+export class MarketOutcomes extends AccountQuery<MarketOutcomeAccount> {
   public static marketOutcomeQuery(program: Program) {
     return new MarketOutcomes(program);
   }
 
-  private program: Program;
   private market: PublicKeyCriterion = new PublicKeyCriterion(8);
 
   constructor(program: Program) {
-    this.program = program;
+    super(program, "MarketOutcome", (a, b) => (a.index > b.index ? 1 : -1));
+    this.setFilterCriteria(this.market);
   }
 
   filterByMarket(market: PublicKey): MarketOutcomes {
     this.market.setValue(market);
     return this;
-  }
-
-  /**
-   *
-   * @returns {GetPublicKeys} list of all fetched market outcome publicKeys
-   */
-  async fetchPublicKeys(): Promise<ClientResponse<GetPublicKeys>> {
-    const response = new ResponseFactory({} as GetPublicKeys);
-    const connection = this.program.provider.connection;
-
-    try {
-      const accounts = await connection.getProgramAccounts(
-        this.program.programId,
-        {
-          dataSlice: { offset: 0, length: 0 }, // fetch without any data.
-          filters: toFilters("market_outcome", this.market),
-        },
-      );
-      const publicKeys = accounts.map((account) => account.pubkey);
-      response.addResponseData({ publicKeys: publicKeys });
-    } catch (e) {
-      response.addError(e);
-    }
-
-    return response.body;
-  }
-
-  /**
-   *
-   * @returns {MarketOutcomeAccounts} fetched market outcome accounts mapped to their publicKey - ordered by index
-   */
-  async fetch(): Promise<ClientResponse<MarketOutcomeAccounts>> {
-    const response = new ResponseFactory({} as MarketOutcomeAccounts);
-    const accountPublicKeys = await this.fetchPublicKeys();
-
-    if (!accountPublicKeys.success) {
-      response.addErrors(accountPublicKeys.errors);
-      return response.body;
-    }
-
-    try {
-      const accountsWithData =
-        (await this.program.account.marketOutcome.fetchMultiple(
-          accountPublicKeys.data.publicKeys,
-        )) as MarketOutcomeAccount[];
-
-      const result = accountPublicKeys.data.publicKeys
-        .map((accountPublicKey, i) => {
-          return { publicKey: accountPublicKey, account: accountsWithData[i] };
-        })
-        .filter((o) => o.account);
-
-      result.sort((a, b) => (a.account.index > b.account.index ? 1 : -1));
-
-      response.addResponseData({ marketOutcomeAccounts: result });
-    } catch (e) {
-      response.addError(e);
-    }
-    return response.body;
   }
 }
 
@@ -120,7 +61,7 @@ export class MarketOutcomes {
 export async function getMarketOutcomesByMarket(
   program: Program,
   marketPk: PublicKey,
-): Promise<ClientResponse<MarketOutcomeAccounts>> {
+): Promise<ClientResponse<AccountQueryResult<MarketOutcomeAccount>>> {
   return await MarketOutcomes.marketOutcomeQuery(program)
     .filterByMarket(marketPk)
     .fetch();
@@ -155,8 +96,7 @@ export async function getMarketOutcomeTitlesByMarket(
     return response.body;
   }
 
-  const marketOutcomeAccounts =
-    marketOutcomesResponse.data.marketOutcomeAccounts;
+  const marketOutcomeAccounts = marketOutcomesResponse.data.accounts;
   marketOutcomeAccounts.forEach((marketOutcomeAccount) =>
     result.push(marketOutcomeAccount.account.title),
   );
