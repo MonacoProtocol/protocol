@@ -25,10 +25,10 @@ Current version of the protocol on mainnet-beta: [0.15.5](https://github.com/Mon
 | Date       | Protocol version                                                          | Program address                               |
 |------------|---------------------------------------------------------------------------|-----------------------------------------------|
 | 2024-12-17 | [0.15.5](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.5) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| 2024-09-16 | [0.15.4](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.4) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| 2024-09-16 | [0.15.3](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.3) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| 2024-09-16 | [0.15.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.2) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
-| 2024-09-16 | [0.15.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2024-10-22 | [0.15.4](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.4) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2024-10-22 | [0.15.3](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.3) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2024-10-09 | [0.15.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.2) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
+| 2024-10-08 | [0.15.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-09-16 | [0.15.0](https://github.com/MonacoProtocol/protocol/releases/tag/v0.15.0) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-05-24 | [0.14.2](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.2) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
 | 2024-04-29 | [0.14.1](https://github.com/MonacoProtocol/protocol/releases/tag/v0.14.1) | `monacoUXKtUi6vKsQwaLyxmXKSievfNWEcYXTgkbCih` |
